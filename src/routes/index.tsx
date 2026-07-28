@@ -7,8 +7,8 @@ import {
   Gauge,
   Layers,
   LineChart,
-  Lock,
   Settings,
+  ShieldCheck,
   Snowflake,
   Sparkle,
   TrendingDown,
@@ -55,7 +55,7 @@ const navItems = [
   { label: "Compare", icon: LineChart },
   { label: "Certify", icon: BadgeCheck },
   { label: "Rightsize", icon: Gauge, active: true },
-  { label: "Govern", icon: Lock, locked: true },
+  { label: "Govern", icon: ShieldCheck, href: "#govern" },
 ];
 
 const topNav = ["Analyzer", "Calculators", "Models", "Intelligence", "Blog", "Plans"];
@@ -100,22 +100,19 @@ function Dashboard() {
               </span>
             </div>
             <nav className="space-y-1">
-              {navItems.map(({ label, icon: Icon, active, locked }) => (
+              {navItems.map(({ label, icon: Icon, active, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href ?? "#"}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                     active
                       ? "bg-primary-soft font-semibold text-primary"
-                      : locked
-                        ? "text-muted-foreground/50"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <Icon className="size-4" />
                   {label}
-                  {locked && <Lock className="ml-auto size-3" />}
                 </a>
               ))}
             </nav>
@@ -406,7 +403,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden rounded-2xl border border-saving/20 bg-saving-soft p-5">
+                <div id="govern" className="relative overflow-hidden rounded-2xl border border-saving/20 bg-saving-soft p-5">
                   <Sparkle className="absolute -top-3 -right-3 size-20 text-saving/10" />
                   <p className="text-sm font-semibold text-saving">
                     Govern would run these automatically
