@@ -261,7 +261,17 @@ function Dashboard() {
                   />
                   <p className="eyebrow">Step {p.step}</p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className={`num text-4xl text-${p.tone}`}>{p.value}</span>
+                    <span
+                      className={`num text-4xl ${
+                        p.tone === "saving"
+                          ? "text-saving"
+                          : p.tone === "opportunity"
+                            ? "text-opportunity"
+                            : "text-spend"
+                      }`}
+                    >
+                      {p.value}
+                    </span>
                     <span className="text-xs text-muted-foreground">{p.unit}</span>
                   </div>
                   <p className="mt-3 text-sm font-semibold">{p.title}</p>
