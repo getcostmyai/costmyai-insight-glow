@@ -55,7 +55,7 @@ const navItems = [
   { label: "Compare", icon: LineChart },
   { label: "Certify", icon: BadgeCheck },
   { label: "Rightsize", icon: Gauge, active: true },
-  { label: "Govern", icon: Lock, locked: true },
+  { label: "Govern", icon: ShieldCheck, href: "#govern" },
 ];
 
 const topNav = ["Analyzer", "Calculators", "Models", "Intelligence", "Blog", "Plans"];
