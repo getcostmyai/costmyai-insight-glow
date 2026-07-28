@@ -403,7 +403,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden rounded-2xl border border-saving/20 bg-saving-soft p-5">
+                <div id="govern" className="relative overflow-hidden rounded-2xl border border-saving/20 bg-saving-soft p-5">
                   <Sparkle className="absolute -top-3 -right-3 size-20 text-saving/10" />
                   <p className="text-sm font-semibold text-saving">
                     Govern would run these automatically
