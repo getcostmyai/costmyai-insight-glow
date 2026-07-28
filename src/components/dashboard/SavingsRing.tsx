@@ -32,11 +32,21 @@ export function SavingsRing({ captured, available }: Props) {
           cy={size / 2}
           r={r}
           fill="none"
+          stroke="oklch(1 0 0 / 0.12)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
           stroke="url(#ringAvailable)"
           strokeWidth={stroke}
           strokeLinecap="round"
-          opacity={0.28}
+          strokeDasharray={`${c * (1 - pct) - 10} ${c}`}
+          strokeDashoffset={-(c * pct + 5)}
         />
+
         <circle
           cx={size / 2}
           cy={size / 2}
