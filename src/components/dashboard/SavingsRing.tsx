@@ -23,8 +23,8 @@ export function SavingsRing({ captured, available }: Props) {
             <stop offset="100%" stopColor="oklch(0.52 0.13 165)" />
           </linearGradient>
           <linearGradient id="ringAvailable" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.82 0.15 82)" />
-            <stop offset="100%" stopColor="oklch(0.66 0.16 55)" />
+            <stop offset="0%" stopColor="oklch(0.78 0.11 195)" />
+            <stop offset="100%" stopColor="oklch(0.58 0.12 200)" />
           </linearGradient>
         </defs>
         <circle
