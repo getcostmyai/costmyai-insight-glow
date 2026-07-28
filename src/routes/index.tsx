@@ -153,7 +153,7 @@ function Dashboard() {
                 </div>
                 <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">
                   You can stop paying{" "}
-                  <span className="num text-[oklch(0.86_0.16_92)]">
+                  <span className="num text-[oklch(0.83_0.11_195)]">
                     {usd(kpis.availableSaving)}
                   </span>{" "}
                   <span className="text-white/80">a month — today.</span>
@@ -174,7 +174,7 @@ function Dashboard() {
                     label="Still on the table"
                     value={usd(kpis.availableSaving)}
                     sub={`${kpis.certifiedSwitches} certified switches`}
-                    accent="oklch(0.86 0.16 92)"
+                    accent="oklch(0.83 0.11 195)"
                   />
                   <HeroStat
                     label="Annualised upside"
@@ -194,7 +194,7 @@ function Dashboard() {
                 <SavingsRing captured={kpis.activeSaving} available={kpis.availableSaving} />
                 <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
                   <Legend color="oklch(0.65 0.15 158)" label="Captured" />
-                  <Legend color="oklch(0.75 0.16 70)" label="Available" />
+                  <Legend color="oklch(0.72 0.11 195)" label="Available" />
                 </div>
               </div>
             </div>
