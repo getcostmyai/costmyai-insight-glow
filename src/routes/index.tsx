@@ -71,8 +71,20 @@ const navItems = [
 const topNav = ["Analyzer", "Calculators", "Models", "Intelligence", "Blog", "Plans"];
 
 function Dashboard() {
+  const [range, setRange] = useState<RangeKey>("30d");
+  const [metric, setMetric] = useState<ChartMetric>("spend");
+  const { series, live } = useLiveTotals(range);
+  const prev = previousTotals(range);
+
+  const activeRange = ranges.find((r) => r.key === range)!;
   const totalOpportunity = kpis.activeSaving + kpis.availableSaving;
-  const annualised = totalOpportunity * 12;
+  const captureRate = totalOpportunity > 0 ? kpis.activeSaving / totalOpportunity : 0;
+  const spendDelta = prev.spend > 0 ? ((live.spend - prev.spend) / prev.spend) * 100 : 0;
+  const runRateMonthly = (live.spend / rangeHours(range)) * 720;
+  const totalTokens = live.inputTokens + live.outputTokens;
+  const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
+
+
 
   return (
     <div className="min-h-screen bg-background">
