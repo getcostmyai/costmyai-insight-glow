@@ -144,9 +144,13 @@ function Dashboard() {
             />
             <div className="relative grid gap-10 lg:grid-cols-[1.15fr_auto] lg:items-center">
               <div>
-                <div className="flex items-center gap-2 text-xs text-white/70">
-                  <span className="animate-pulse-dot inline-block size-2 rounded-full bg-[oklch(0.78_0.18_150)]" />
-                  Live · last rule execution synced {gatewaySpend.syncedAgo}
+                <div className="flex flex-wrap items-center gap-3 text-xs text-white/70">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="animate-pulse-dot inline-block size-2 rounded-full bg-[oklch(0.78_0.18_150)]" />
+                    Live · streaming from your gateway
+                  </span>
+                  <span className="hidden sm:inline text-white/35">|</span>
+                  <RangeToggle range={range} onChange={setRange} dark />
                 </div>
                 <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">
                   You can stop paying{" "}
@@ -160,24 +164,34 @@ function Dashboard() {
                   quality-checked against your own traffic — same output, lower bill.
                 </p>
 
-                <div className="mt-8 grid gap-6 sm:grid-cols-3">
+                <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
                   <HeroStat
-                    label="Already saving"
-                    value={usd(kpis.activeSaving)}
-                    sub={`${kpis.activeSwitches} active switches`}
-                    accent="oklch(0.82 0.16 155)"
+                    label={`Spend · ${activeRange.long}`}
+                    value={usd(live.spend)}
+                    sub={
+                      <span className={spendDelta >= 0 ? "text-white/70" : "text-white/70"}>
+                        {spendDelta >= 0 ? "▲" : "▼"} {Math.abs(spendDelta).toFixed(1)}% vs previous
+                      </span>
+                    }
+                    accent="oklch(0.85 0.1 300)"
                   />
                   <HeroStat
-                    label="Still on the table"
-                    value={usd(kpis.availableSaving)}
-                    sub={`${kpis.certifiedSwitches} certified switches`}
+                    label="Projected month-end"
+                    value={usd(runRateMonthly, 0)}
+                    sub={`${usd(runRateMonthly - totalOpportunity, 0)} if all switches run`}
+                    accent="oklch(0.9 0.03 285)"
+                  />
+                  <HeroStat
+                    label="Blended cost / 1M tok"
+                    value={usd(costPerMillion)}
+                    sub={`${compact(live.inputTokens + live.outputTokens)} tokens processed`}
                     accent="oklch(0.83 0.11 195)"
                   />
                   <HeroStat
-                    label="Annualised upside"
-                    value={usd(annualised, 0)}
-                    sub="if all switches stay on"
-                    accent="oklch(0.85 0.1 300)"
+                    label="Savings captured"
+                    value={`${Math.round(captureRate * 100)}%`}
+                    sub={`${usd(kpis.activeSaving, 0)} of ${usd(totalOpportunity, 0)} identified`}
+                    accent="oklch(0.82 0.16 155)"
                   />
                 </div>
 
@@ -201,36 +215,48 @@ function Dashboard() {
           <section className="card-surface p-6 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="eyebrow">Gateway spend · last 30 days</p>
+                <p className="eyebrow">Gateway usage · {activeRange.long}</p>
                 <div className="mt-3 flex flex-wrap items-baseline gap-x-8 gap-y-2">
-                  <Metric value="$2.3k" label="tracked" tone="text-spend" />
-                  <Metric value="99,944" label="requests" />
-                  <Metric value="594M" label="tokens" />
+                  <Metric value={usd(live.spend)} label="spend" tone="text-spend" live />
+                  <Metric value={int(live.requests)} label="requests" live />
+                  <Metric value={compact(live.inputTokens)} label="input tok" live />
+                  <Metric value={compact(live.outputTokens)} label="output tok" live />
                 </div>
               </div>
-              <div className="flex gap-1 rounded-full bg-muted p-1 text-xs font-medium">
-                {["Spend", "Requests", "$/1M tok"].map((t, i) => (
-                  <button
-                    key={t}
-                    className={`rounded-full px-3 py-1.5 transition-colors ${
-                      i === 0
-                        ? "bg-card text-primary shadow-[var(--shadow-card)]"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+              <div className="flex flex-col items-end gap-2">
+                <RangeToggle range={range} onChange={setRange} />
+                <div className="flex gap-1 rounded-full bg-muted p-1 text-xs font-medium">
+                  {(
+                    [
+                      ["spend", "Spend"],
+                      ["requests", "Requests"],
+                      ["tokens", "Tokens"],
+                    ] as [ChartMetric, string][]
+                  ).map(([key, t]) => (
+                    <button
+                      key={key}
+                      onClick={() => setMetric(key)}
+                      className={`rounded-full px-3 py-1.5 transition-colors ${
+                        metric === key
+                          ? "bg-card text-primary shadow-[var(--shadow-card)]"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="mt-6">
-              <SpendChart />
+              <SpendChart series={series} metric={metric} />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {gatewaySpend.excludedModels} models excluded from the spend total — no pricing data
-              available.
+              available. Synced {gatewaySpend.syncedAgo}.
             </p>
           </section>
+
 
           {/* 3 — How we got there */}
           <section>
