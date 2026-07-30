@@ -478,6 +478,46 @@ function Dashboard() {
   );
 }
 
+function RangeToggle({
+  range,
+  onChange,
+  dark,
+}: {
+  range: RangeKey;
+  onChange: (r: RangeKey) => void;
+  dark?: boolean;
+}) {
+  return (
+    <div
+      className={`inline-flex gap-1 rounded-full p-1 text-xs font-medium ${
+        dark ? "bg-white/10" : "bg-muted"
+      }`}
+    >
+      {ranges.map((r) => {
+        const on = r.key === range;
+        return (
+          <button
+            key={r.key}
+            onClick={() => onChange(r.key)}
+            aria-pressed={on}
+            className={`rounded-full px-3 py-1 transition-colors ${
+              on
+                ? dark
+                  ? "bg-white/90 text-[oklch(0.22_0.07_285)]"
+                  : "bg-card text-primary shadow-[var(--shadow-card)]"
+                : dark
+                  ? "text-white/70 hover:text-white"
+                  : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {r.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function HeroStat({
   label,
   value,
@@ -486,19 +526,23 @@ function HeroStat({
 }: {
   label: string;
   value: string;
-  sub: string;
+  sub: React.ReactNode;
   accent: string;
 }) {
   return (
     <div className="border-l border-white/15 pl-4">
       <p className="text-[11px] font-semibold tracking-widest text-white/55 uppercase">{label}</p>
-      <div className="num mt-1.5 text-2xl" style={{ color: accent }}>
+      <div
+        className="num mt-1.5 text-2xl tabular-nums"
+        style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
+      >
         {value}
       </div>
       <p className="mt-0.5 text-[11px] text-white/55">{sub}</p>
     </div>
   );
 }
+
 
 function Legend({ color, label }: { color: string; label: string }) {
   return (
