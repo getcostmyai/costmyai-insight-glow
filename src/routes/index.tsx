@@ -553,14 +553,35 @@ function Legend({ color, label }: { color: string; label: string }) {
   );
 }
 
-function Metric({ value, label, tone }: { value: string; label: string; tone?: string }) {
+function Metric({
+  value,
+  label,
+  tone,
+  live,
+}: {
+  value: string;
+  label: string;
+  tone?: string;
+  live?: boolean;
+}) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className={`num text-2xl ${tone ?? "text-foreground"}`}>{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span
+        className={`num text-2xl ${tone ?? "text-foreground"}`}
+        style={{ fontVariantNumeric: "tabular-nums" }}
+      >
+        {value}
+      </span>
+      <span className="flex items-baseline gap-1 text-xs text-muted-foreground">
+        {label}
+        {live && (
+          <span className="animate-pulse-dot inline-block size-1.5 rounded-full bg-saving" />
+        )}
+      </span>
     </div>
   );
 }
+
 
 function SectionTitle({
   eyebrow,
