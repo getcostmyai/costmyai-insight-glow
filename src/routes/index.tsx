@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
-  ChevronDown,
   Gauge,
   Layers,
   LineChart,
@@ -15,8 +15,17 @@ import {
   Zap,
 } from "lucide-react";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
-import { SpendChart } from "@/components/dashboard/SpendChart";
+import { SpendChart, type ChartMetric } from "@/components/dashboard/SpendChart";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
+import {
+  compact,
+  int,
+  previousTotals,
+  rangeHours,
+  ranges,
+  useLiveTotals,
+  type RangeKey,
+} from "@/lib/gateway-metrics";
 import {
   activeSwitches,
   cheaperHost,
@@ -27,6 +36,7 @@ import {
   qualityMatched,
   usd,
 } from "@/lib/dashboard-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
