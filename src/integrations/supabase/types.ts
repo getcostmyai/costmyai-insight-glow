@@ -62,6 +62,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_fixture: boolean
           margin: number
           method: string
           source_run_id: string | null
@@ -73,6 +74,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_fixture?: boolean
           margin: number
           method?: string
           source_run_id?: string | null
@@ -84,6 +86,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_fixture?: boolean
           margin?: number
           method?: string
           source_run_id?: string | null
@@ -97,6 +100,7 @@ export type Database = {
       benchmarks: {
         Row: {
           id: string
+          is_fixture: boolean
           measured_at: string
           model_key: string
           sample_size: number | null
@@ -109,6 +113,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_fixture?: boolean
           measured_at?: string
           model_key: string
           sample_size?: number | null
@@ -121,6 +126,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_fixture?: boolean
           measured_at?: string
           model_key?: string
           sample_size?: number | null
@@ -254,9 +260,14 @@ export type Database = {
           host_label: string
           id: string
           input_usd_per_mtok: number
+          is_fixture: boolean
+          median_latency_ms: number | null
           model_key: string
           output_usd_per_mtok: number
           region: string
+          source: string | null
+          source_run_id: string | null
+          throughput_tps: number | null
           verified_at: string
         }
         Insert: {
@@ -264,9 +275,14 @@ export type Database = {
           host_label: string
           id?: string
           input_usd_per_mtok: number
+          is_fixture?: boolean
+          median_latency_ms?: number | null
           model_key: string
           output_usd_per_mtok: number
           region?: string
+          source?: string | null
+          source_run_id?: string | null
+          throughput_tps?: number | null
           verified_at?: string
         }
         Update: {
@@ -274,9 +290,14 @@ export type Database = {
           host_label?: string
           id?: string
           input_usd_per_mtok?: number
+          is_fixture?: boolean
+          median_latency_ms?: number | null
           model_key?: string
           output_usd_per_mtok?: number
           region?: string
+          source?: string | null
+          source_run_id?: string | null
+          throughput_tps?: number | null
           verified_at?: string
         }
         Relationships: [
