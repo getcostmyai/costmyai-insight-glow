@@ -36,16 +36,16 @@ describe("usage rollups — the series and every engine-derived list", () => {
 
   it("includes the 11-day-old workload at 30 days", () => {
     const { current } = partitionRollups(rollups, rangeWindow(30, NOW));
-    expect(current.map((r) => r.bucket_start)).toContain(ago(11));
+    expect(current.map((r: { bucket_start: string }) => r.bucket_start)).toContain(ago(11));
     expect(current).toHaveLength(3);
   });
 
   it("excludes the same 11-day-old workload at 7 days", () => {
     const { current, previous } = partitionRollups(rollups, rangeWindow(7, NOW));
-    expect(current.map((r) => r.bucket_start)).not.toContain(ago(11));
+    expect(current.map((r: { bucket_start: string }) => r.bucket_start)).not.toContain(ago(11));
     expect(current).toHaveLength(1);
     // It lands in the comparison window instead, so the delta stays honest.
-    expect(previous.map((r) => r.bucket_start)).toContain(ago(11));
+    expect(previous.map((r: { bucket_start: string }) => r.bucket_start)).toContain(ago(11));
   });
 
   it("excludes it at 24 hours too", () => {
@@ -62,12 +62,12 @@ describe("active switches", () => {
 
   it("shows the 11-day-old switch at 30 days", () => {
     const rows = selectSwitchesInWindow(switches, rangeWindow(30, NOW));
-    expect(rows.map((s) => s.to_model)).toEqual(["gpt-5.5-mini", "qwen3-coder-next"]);
+    expect(rows.map((s: { to_model: string }) => s.to_model)).toEqual(["gpt-5.5-mini", "qwen3-coder-next"]);
   });
 
   it("drops the 11-day-old switch at 7 days", () => {
     const rows = selectSwitchesInWindow(switches, rangeWindow(7, NOW));
-    expect(rows.map((s) => s.to_model)).toEqual(["qwen3-coder-next"]);
+    expect(rows.map((s: { to_model: string }) => s.to_model)).toEqual(["qwen3-coder-next"]);
   });
 
   it("drops both at 24 hours", () => {
@@ -77,17 +77,23 @@ describe("active switches", () => {
 
 describe("billing reconciliation", () => {
   const captures = [
-    { period_start: agoDate(41), period_end: agoDate(11), provider: "openai" }, // 11-day-old close
-    { period_start: agoDate(30), period_end: agoDate(1), provider: "azure" },
+    // Closed 11 days ago, covering the month before that.
+    { period_start: agoDate(41), period_end: agoDate(11), provider: "openai" },
+    // A short period fully inside the last week.
+    { period_start: agoDate(5), period_end: agoDate(1), provider: "azure" },
   ];
 
   it("shows the period that closed 11 days ago at 30 days", () => {
     const rows = selectCapturesInWindow(captures, rangeWindow(30, NOW));
-    expect(rows.map((c) => c.provider)).toEqual(["openai", "azure"]);
+    expect(rows.map((c: { provider: string }) => c.provider)).toEqual(["openai", "azure"]);
   });
 
-  it("drops it at 7 days", () => {
+  it("drops it at 7 days, keeping only periods contained in the window", () => {
     const rows = selectCapturesInWindow(captures, rangeWindow(7, NOW));
-    expect(rows.map((c) => c.provider)).toEqual(["azure"]);
+    expect(rows.map((c: { provider: string }) => c.provider)).toEqual(["azure"]);
+  });
+
+  it("drops a month-long period at 24 hours rather than passing it off as a day", () => {
+    expect(selectCapturesInWindow(captures, rangeWindow(1, NOW))).toHaveLength(0);
   });
 });
