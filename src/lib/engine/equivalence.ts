@@ -1,5 +1,6 @@
 import { arbitrageBaseline, MIN_MONTHLY_SAVING_USD, sortRecommendations } from "./arbitrage";
 import { cheaperWins, costOfUsage, indexPrices, round2, toMonthly } from "./cost";
+import { expectedLatency, latencyNote, type LatencyEstimate } from "./latency";
 import {
   DEFAULT_OBJECTIVE,
   KIND_MIN_PLAN,
@@ -147,6 +148,8 @@ export function findQualityMatches(
     /** Cheaper + quality-equal, but dropped on latency. Split by *why*. */
     let droppedUnmeasured = 0;
     let droppedTooSlow = 0;
+    let slowestSeenMs = 0;
+    let winningLatency: LatencyEstimate | null = null;
 
     for (const [modelKey, candidatePrices] of byModel) {
       if (modelKey === u.model_key) continue;
@@ -159,12 +162,14 @@ export function findQualityMatches(
         if (cost >= baseline.cost) continue; // must actually be cheaper
         if (objective.objective === "latency" && objective.maxLatencyMs != null) {
           // Unmeasured latency is not "fast enough" — we refuse rather than assume.
-          if (price.median_latency_ms == null) {
+          const est = expectedLatency(price, u);
+          if (est == null) {
             droppedUnmeasured++;
             continue;
           }
-          if (price.median_latency_ms > objective.maxLatencyMs) {
+          if (est.ms > objective.maxLatencyMs) {
             droppedTooSlow++;
+            slowestSeenMs = Math.max(slowestSeenMs, est.ms);
             continue;
           }
         }
@@ -188,7 +193,7 @@ export function findQualityMatches(
           "latency_ceiling_unmet",
           droppedTooSlow === 0
             ? `${droppedUnmeasured} cheaper quality-equal host${droppedUnmeasured === 1 ? " has" : "s have"} no measured latency yet, so none can be proven under the ${objective.maxLatencyMs}ms ceiling.`
-            : `${droppedTooSlow} cheaper quality-equal host${droppedTooSlow === 1 ? "" : "s"} measured above the ${objective.maxLatencyMs}ms ceiling${droppedUnmeasured > 0 ? ` and ${droppedUnmeasured} have no measured latency yet` : ""}.`,
+            : `${droppedTooSlow} cheaper quality-equal host${droppedTooSlow === 1 ? "" : "s"} come in above the ${objective.maxLatencyMs}ms ceiling for this workload's output length (slowest ${slowestSeenMs}ms)${droppedUnmeasured > 0 ? `, and ${droppedUnmeasured} have no measured latency yet` : ""}.`,
         );
       } else {
         refuse(
@@ -202,6 +207,7 @@ export function findQualityMatches(
 
 
     const winner = pickByObjective(clearing, objective);
+    if (objective.objective === "latency") winningLatency = expectedLatency(winner.price, u);
     const saving = toMonthly(baseline.cost - winner.cost, u.days);
     if (saving < MIN_MONTHLY_SAVING_USD) {
       refuse(u, "saving_below_floor", `Best equal-quality option saves under $1/month.`);
@@ -221,7 +227,7 @@ export function findQualityMatches(
       monthlySavingUsd: round2(saving),
       savingPct: round2(((baseline.cost - winner.cost) / baseline.cost) * 100),
       basis: "Quality-matched cheaper model",
-      note: `${winner.score.toFixed(2)} vs ${currentScore.score.toFixed(2)} on ${currentScore.suite}/${u.task_hint}; bar ${bar.toFixed(2)} (margin ±${margin.toFixed(2)}).`,
+      note: `${winner.score.toFixed(2)} vs ${currentScore.score.toFixed(2)} on ${currentScore.suite}/${u.task_hint}; bar ${bar.toFixed(2)} (margin ±${margin.toFixed(2)}).${winningLatency ? ` ${latencyNote(winningLatency)}.` : ""}`,
       qualityDelta: round2(winner.score - currentScore.score),
       marginUsed: margin,
       objective: objective.objective,

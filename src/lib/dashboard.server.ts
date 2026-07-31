@@ -168,7 +168,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       supabase
         .from("host_prices")
         .select(
-          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, verified_at",
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope, verified_at",
         ),
       supabase
         .from("benchmarks")
@@ -280,6 +280,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     input_usd_per_mtok: Number(p.input_usd_per_mtok),
     output_usd_per_mtok: Number(p.output_usd_per_mtok),
     median_latency_ms: p.median_latency_ms == null ? null : Number(p.median_latency_ms),
+    median_ttft_ms: p.median_ttft_ms == null ? null : Number(p.median_ttft_ms),
+    output_tps: p.output_tps == null ? null : Number(p.output_tps),
+    latency_scope: (p.latency_scope as "host" | "model" | null) ?? null,
   })) as PriceRow[];
 
   const result = runPipeline({

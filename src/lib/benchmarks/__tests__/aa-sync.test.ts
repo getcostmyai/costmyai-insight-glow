@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+
 import {
   chooseEval,
+  latencyRowFor,
   marginFor,
   suiteFor,
   transformAaPayload,
@@ -159,5 +161,31 @@ describe("fail-closed flips to certified once real margins exist", () => {
     );
     expect(recommendations).toHaveLength(0);
     expect(refusals[0].reason).toBe("no_candidate_clears_bar");
+  });
+});
+
+describe("latency rows from the live feed shape", () => {
+  const model = {
+    slug: "gpt-oss-120b",
+    name: "gpt-oss-120b (high)",
+    evaluations: {},
+    median_time_to_first_token_seconds: 0.546,
+    median_output_tokens_per_second: 193.605,
+  };
+
+  it("converts the published medians into stored units and records the scope", () => {
+    expect(latencyRowFor("gpt-oss-120b", model)).toEqual({
+      model_key: "gpt-oss-120b",
+      median_ttft_ms: 546,
+      output_tps: 193.61,
+      scope: "model",
+      source: "artificialanalysis.ai/gpt-oss-120b#median_time_to_first_token_seconds",
+    });
+  });
+
+  it("leaves a model unmeasured when either component is missing", () => {
+    expect(latencyRowFor("x", { ...model, median_output_tokens_per_second: null })).toBeNull();
+    expect(latencyRowFor("x", { ...model, median_time_to_first_token_seconds: null })).toBeNull();
+    expect(latencyRowFor("x", { ...model, median_output_tokens_per_second: 0 })).toBeNull();
   });
 });

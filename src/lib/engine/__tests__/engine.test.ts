@@ -4,6 +4,7 @@ import { findHostArbitrage } from "../arbitrage";
 import { evaluateAutonomous, DEFAULT_AUTONOMOUS_POLICY } from "../autonomous";
 import { costOf } from "../cost";
 import { findQualityMatches } from "../equivalence";
+import { expectedLatency } from "../latency";
 import { resolveObjective } from "../objectives";
 import { findOversized, requiredTierFor } from "../rightsize";
 import type {
@@ -143,6 +144,107 @@ describe("equivalence (Certify)", () => {
       () => ({ objective: "quality_floor", qualityFloorScore: 89.4 }),
     );
     expect(recommendations[0].toModel).toBe("mid-model");
+  });
+});
+
+/**
+ * Real numbers from the Artificial Analysis feed: gpt-oss-120b publishes
+ * median_time_to_first_token_seconds = 0.546 and 193.605 output tokens/sec.
+ * Latency is per-workload, so the same host clears a ceiling for a short
+ * classification and misses it for a long generation.
+ */
+describe("latency (measured, not assumed)", () => {
+  // weak-model widens the spread so the Goodhart guard does not fire first; it
+  // has no price row, so it is never a candidate.
+  const benchmarks = [
+    bench("big-model", 90),
+    bench("mid-model", 89.5),
+    bench("cheap-model", 89.2),
+    bench("weak-model", 70),
+  ];
+  const measured = (
+    model_key: string,
+    inp: number,
+    out: number,
+    ttft: number,
+    tps: number,
+  ): PriceRow => ({
+    ...price(model_key, "alpha", inp, out),
+    median_ttft_ms: ttft,
+    output_tps: tps,
+    latency_scope: "model",
+  });
+
+  const short = usage({ requests: 10_000, output_tokens: 400_000 }); // 40 tokens/request
+  const long = usage({ requests: 10_000, output_tokens: 10_000_000 }); // 1,000 tokens/request
+
+  it("derives end-to-end latency from ttft plus the workload's own output length", () => {
+    const p = measured("mid-model", 4, 12, 546, 193.605);
+    // 546ms + 40 tokens / 193.605 tps = 753ms
+    expect(expectedLatency(p, short)!.ms).toBe(753);
+    // same host, 1,000-token responses = 5,711ms
+    expect(expectedLatency(p, long)!.ms).toBe(5711);
+  });
+
+  it("reports scope so a model-wide median is never sold as a host measurement", () => {
+    expect(expectedLatency(measured("mid-model", 4, 12, 546, 193.605), short)!.scope).toBe("model");
+    const hostTimed = { ...price("mid-model", "alpha", 4, 12, 300) };
+    expect(expectedLatency(hostTimed, short)).toEqual({ ms: 300, scope: "host", derived: false });
+  });
+
+  it("returns null when the feed has published no latency at all", () => {
+    expect(expectedLatency(price("mid-model", "alpha", 4, 12), short)).toBeNull();
+  });
+
+  it("recommends a candidate whose measured latency clears the ceiling", () => {
+    const timed = [
+      measured("big-model", 10, 30, 546, 193.605),
+      measured("mid-model", 4, 12, 546, 193.605), // 752ms for this workload
+      measured("cheap-model", 1, 3, 900, 20), // 2,900ms — cheaper but too slow
+    ];
+    const { recommendations, refusals } = findQualityMatches(
+      [short],
+      timed,
+      benchmarks,
+      margins,
+      () => ({ objective: "latency", maxLatencyMs: 1200 }),
+    );
+    expect(refusals).toHaveLength(0);
+    expect(recommendations[0].toModel).toBe("mid-model");
+    expect(recommendations[0].note).toContain("753ms expected");
+    expect(recommendations[0].note).toContain("not per endpoint");
+  });
+
+  it("refuses when every measured candidate exceeds the ceiling, and says so with the measurement", () => {
+    const timed = [
+      measured("big-model", 10, 30, 546, 193.605),
+      measured("mid-model", 4, 12, 546, 193.605), // 5,711ms on 1,000-token output
+      measured("cheap-model", 1, 3, 900, 20),
+    ];
+    const { recommendations, refusals } = findQualityMatches(
+      [long],
+      timed,
+      benchmarks,
+      margins,
+      () => ({ objective: "latency", maxLatencyMs: 1200 }),
+    );
+    expect(recommendations).toHaveLength(0);
+    expect(refusals[0].reason).toBe("latency_ceiling_unmet");
+    expect(refusals[0].detail).toContain("above the 1200ms ceiling");
+    expect(refusals[0].detail).toContain("slowest 50900ms");
+  });
+
+  it("distinguishes unmeasured from measured-but-slow in the refusal", () => {
+    const { refusals } = findQualityMatches(
+      [short],
+      [price("big-model", "alpha", 10, 30), price("mid-model", "alpha", 4, 12)],
+      benchmarks,
+      margins,
+      () => ({ objective: "latency", maxLatencyMs: 1200 }),
+    );
+    expect(refusals[0].reason).toBe("latency_ceiling_unmet");
+    expect(refusals[0].detail).toContain("no measured latency yet");
+    expect(refusals[0].detail).not.toContain("above the");
   });
 });
 
