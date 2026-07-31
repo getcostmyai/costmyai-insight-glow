@@ -14,6 +14,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { requirePlan, resolvePlan } from "../billing/guard.server";
+import { writeAccountObjective } from "../dashboard/objective-write";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
@@ -92,7 +93,7 @@ async function grantPaidPlan(orgId: string, plan: "certify" | "rightsize" | "gov
   if (error) throw error;
 }
 
-async function makeRecommendation(orgId: string, fromModel: string) {
+async function makeRecommendation(orgId: string, fromModel: string, taskHint = "generation") {
   const { data, error } = await admin
     .from("recommendations")
     .insert({
@@ -103,7 +104,7 @@ async function makeRecommendation(orgId: string, fromModel: string) {
       from_host: "openai",
       to_model: fromModel,
       to_host: "azure",
-      task_hint: "generation",
+      task_hint: taskHint,
       monthly_saving_usd: 120,
       saving_pct: 18,
       basis: "same model, cheaper host",
@@ -237,7 +238,7 @@ describe("apply_switch — identity and integrity", () => {
     const first = await owner.client.rpc("apply_switch", { _rec_id: rec });
     expect(first.error).toBeNull();
 
-    const again = await makeRecommendation(paidOrg, "gpt-5.5-dup");
+    const again = await makeRecommendation(paidOrg, "gpt-5.5-dup", "summarisation");
     const { error } = await owner.client.rpc("apply_switch", { _rec_id: again });
     expect(error?.message ?? "").toMatch(/already has an active switch/i);
     await admin.from("recommendations").delete().eq("id", again);
@@ -326,19 +327,22 @@ describe("objectives — Certify entitlement, written through RLS", () => {
     await grantPaidPlan(paidOrg, "govern");
     await expect(requirePlan(owner.client, paidOrg, "certify", ENV)).resolves.toBe("govern");
 
-    const { error } = await owner.client.from("objectives").upsert(
-      {
-        org_id: paidOrg,
-        model_key: null,
-        host: null,
-        task_hint: null,
-        objective: "latency",
-        max_latency_ms: 1200,
-        created_by: owner.id,
-      },
-      { onConflict: "org_id,model_key,host,task_hint" },
-    );
-    expect(error).toBeNull();
+    await writeAccountObjective(owner.client, paidOrg, owner.id, {
+      objective: "latency",
+      quality_floor_score: null,
+      max_latency_ms: 1200,
+    });
+    // Writing again must update the same row, not fail and not duplicate it.
+    await writeAccountObjective(owner.client, paidOrg, owner.id, {
+      objective: "quality_floor",
+      quality_floor_score: 70,
+      max_latency_ms: null,
+    });
+    await writeAccountObjective(owner.client, paidOrg, owner.id, {
+      objective: "latency",
+      quality_floor_score: null,
+      max_latency_ms: 1200,
+    });
 
     const row = await admin
       .from("objectives")
@@ -347,14 +351,29 @@ describe("objectives — Certify entitlement, written through RLS", () => {
       .is("model_key", null)
       .single();
     expect(row.data).toMatchObject({ objective: "latency", max_latency_ms: 1200 });
+
+    const all = await admin
+      .from("objectives")
+      .select("id")
+      .eq("org_id", paidOrg)
+      .is("model_key", null);
+    expect(all.data ?? []).toHaveLength(1);
   }, 30_000);
 
   it("refuses an ordinary member writing an objective", async () => {
+    await expect(
+      writeAccountObjective(member.client, paidOrg, member.id, {
+        objective: "cost",
+        quality_floor_score: null,
+        max_latency_ms: null,
+      }),
+    ).rejects.toThrow(/owners and admins/i);
+
     const { error } = await member.client.from("objectives").insert({
       org_id: paidOrg,
       model_key: "gpt-5.5",
       host: "openai",
-      task_hint: "generation",
+      task_hint: taskHint,
       objective: "cost",
     });
     expect(error).not.toBeNull();

@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import { paymentsEnvironment } from "./billing/env.server";
 import { requirePlan } from "./billing/guard.server";
+import { writeAccountObjective } from "./dashboard/objective-write";
 import type { ObjectiveKind } from "./engine/types";
 
 /**
