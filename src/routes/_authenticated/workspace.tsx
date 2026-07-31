@@ -115,7 +115,7 @@ function FirstWorkspace({ email }: { email: string | null }) {
             </button>
           </form>
           <p className="mt-4 text-xs text-muted-foreground">
-            Starts on Compare (free): same model, cheaper host. Upgrade any time.
+            Next you pick a rung. Compare is free; Certify, Rightsize and Govern are paid.
           </p>
         </div>
       </div>
