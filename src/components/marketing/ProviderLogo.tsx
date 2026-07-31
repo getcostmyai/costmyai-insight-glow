@@ -54,6 +54,8 @@ const DOMAINS: Record<string, string> = {
   Ionstream: "ionstream.ai",
   IonStream: "ionstream.ai",
   "Io Net": "io.net",
+  Mancer: "mancer.tech",
+  "Mancer 2": "mancer.tech",
   Meta: "meta.com",
   Minimax: "minimax.io",
   Mistral: "mistral.ai",
