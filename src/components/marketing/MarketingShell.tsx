@@ -17,7 +17,6 @@ const NAV = [
   { to: "/models", label: "Models" },
   { to: "/", label: "How it works", hash: "how" },
   { to: "/pricing", label: "Pricing" },
-  { to: "/demo", label: "Live demo" },
 ] as const;
 
 function useSignedIn() {
