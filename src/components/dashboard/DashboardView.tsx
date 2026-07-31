@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -27,6 +27,14 @@ import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { supabase } from "@/integrations/supabase/client";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
+import {
+  activateOpportunity,
+  pauseSwitch,
+  resumeSwitch,
+  rollbackSwitch,
+  setObjective as setObjectiveFn,
+  type OpportunityKind,
+} from "@/lib/switches.functions";
 
 const navItems = [
   { label: "Overview", icon: Layers },
@@ -43,6 +51,9 @@ const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): SwitchRow =
   fromHost: o.fromHostLabel || o.fromHost,
   toModel: o.toModel,
   toHost: o.toHostLabel || o.toHost,
+  fromHostKey: o.fromHost,
+  toHostKey: o.toHost,
+  taskHint: o.taskHint,
   kind,
   monthlySaving: o.monthlySaving,
   savingPct: o.savingPct,
@@ -65,6 +76,78 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const [objective, setObjective] = useState<ObjectiveKind>("cost");
   const { data } = useSuspenseQuery(dashboardQuery(range, objective, scope));
   const session = useSessionUser();
+  const queryClient = useQueryClient();
+  /** The demo workspace is read-only by design; only "mine" gets live controls. */
+  const canAct = scope === "mine";
+  const [actionError, setActionError] = useState<{ key: string; message: string } | null>(null);
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  const asMessage = (e: unknown) =>
+    e instanceof Error ? e.message : "That action could not be completed.";
+
+  const activate = useMutation({
+    mutationFn: (v: {
+      key: string;
+      kind: OpportunityKind;
+      fromModel: string;
+      fromHost: string;
+      toModel: string;
+      toHost: string;
+      taskHint: string;
+    }) =>
+      activateOpportunity({
+        data: {
+          orgId: data.workspace.id,
+          kind: v.kind,
+          fromModel: v.fromModel,
+          fromHost: v.fromHost,
+          toModel: v.toModel,
+          toHost: v.toHost,
+          taskHint: v.taskHint,
+        },
+      }),
+    onSuccess: async () => {
+      setActionError(null);
+      await refresh();
+    },
+    onError: (e, v) => setActionError({ key: v.key, message: asMessage(e) }),
+  });
+
+  const lifecycle = useMutation({
+    mutationFn: (v: { key: string; switchId: string; action: "pause" | "resume" | "rollback" }) => {
+      const payload = { data: { orgId: data.workspace.id, switchId: v.switchId } };
+      if (v.action === "pause") return pauseSwitch(payload);
+      if (v.action === "resume") return resumeSwitch(payload);
+      return rollbackSwitch(payload);
+    },
+    onSuccess: async () => {
+      setActionError(null);
+      await refresh();
+    },
+    onError: (e, v) => setActionError({ key: v.key, message: asMessage(e) }),
+  });
+
+  const objectiveMutation = useMutation({
+    mutationFn: (v: ObjectiveKind) =>
+      setObjectiveFn({ data: { orgId: data.workspace.id, objective: v } }),
+    onSuccess: async () => {
+      setActionError(null);
+      await refresh();
+    },
+    onError: (e) => setActionError({ key: "objective", message: asMessage(e) }),
+  });
+
+  const chooseObjective = (v: ObjectiveKind) => {
+    setObjective(v);
+    // On your own workspace the choice is persisted (Certify); on the demo it is
+    // a local preview of what that objective would recommend.
+    if (canAct) objectiveMutation.mutate(v);
+  };
+
+  const errorFor = (key: string) => (actionError?.key === key ? actionError.message : null);
+  const busy = (key: string) =>
+    (activate.isPending && activate.variables?.key === key) ||
+    (lifecycle.isPending && lifecycle.variables?.key === key);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -444,13 +527,32 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               <RungEmpty state={dataState} kind="host_arbitrage" />
             ) : (
               <div className="space-y-3">
-                {data.hostArbitrage.map((row, i) => (
-                  <SwitchCard
-                    key={`${row.fromModel}-${row.toHost}-${row.taskHint}`}
-                    row={asSwitchRow(row, "host")}
-                    rank={i + 1}
-                  />
-                ))}
+                {data.hostArbitrage.map((row, i) => {
+                  const key = `host:${row.fromModel}|${row.fromHost}|${row.toHost}|${row.taskHint}`;
+                  return (
+                    <SwitchCard
+                      key={key}
+                      row={asSwitchRow(row, "host")}
+                      rank={i + 1}
+                      pending={busy(key)}
+                      error={errorFor(key)}
+                      onActivate={
+                        canAct
+                          ? () =>
+                              activate.mutate({
+                                key,
+                                kind: "host_arbitrage",
+                                fromModel: row.fromModel,
+                                fromHost: row.fromHost,
+                                toModel: row.toModel,
+                                toHost: row.toHost,
+                                taskHint: row.taskHint,
+                              })
+                          : undefined
+                      }
+                    />
+                  );
+                })}
               </div>
             )}
           </section>
@@ -465,7 +567,7 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               aside={
                 <ObjectiveSelect
                   value={objective}
-                  onChange={setObjective}
+                  onChange={chooseObjective}
                   locked={!rungs.quality_match.unlocked}
                   requiredPlan={rungs.quality_match.requiredPlan}
                 />
@@ -482,13 +584,32 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               <RungEmpty state={dataState} kind="quality_match" />
             ) : (
               <div className="space-y-3">
-                {data.qualityMatched.map((row, i) => (
-                  <SwitchCard
-                    key={`${row.fromModel}-${row.toModel}-${row.taskHint}`}
-                    row={asSwitchRow(row, "quality")}
-                    rank={i + 1}
-                  />
-                ))}
+                {data.qualityMatched.map((row, i) => {
+                  const key = `quality:${row.fromModel}|${row.toModel}|${row.taskHint}`;
+                  return (
+                    <SwitchCard
+                      key={key}
+                      row={asSwitchRow(row, "quality")}
+                      rank={i + 1}
+                      pending={busy(key)}
+                      error={errorFor(key)}
+                      onActivate={
+                        canAct
+                          ? () =>
+                              activate.mutate({
+                                key,
+                                kind: "quality_match",
+                                fromModel: row.fromModel,
+                                fromHost: row.fromHost,
+                                toModel: row.toModel,
+                                toHost: row.toHost,
+                                taskHint: row.taskHint,
+                              })
+                          : undefined
+                      }
+                    />
+                  );
+                })}
               </div>
             )}
           </section>
