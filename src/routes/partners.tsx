@@ -81,12 +81,9 @@ function PartnersPage() {
             free rung already cuts their bill, and you keep earning for as long as they stay.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a
-              href="mailto:partners@costmyai.com?subject=Partner%20program%20application"
-              className="btn-gradient px-5 py-2.5 text-sm"
-            >
-              Apply to become a partner
-            </a>
+            <Link to="/partners/apply" className="btn-gradient px-5 py-2.5 text-sm">
+              Apply to become a Partner
+            </Link>
             <a
               href={BOOK_DEMO_URL}
               target="_blank"
@@ -161,12 +158,9 @@ function PartnersPage() {
               partners too.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <a
-                href="mailto:partners@costmyai.com?subject=Partner%20program%20application"
-                className="btn-gradient px-5 py-2.5 text-sm"
-              >
-                Apply to become a partner
-              </a>
+              <Link to="/partners/apply" className="btn-gradient px-5 py-2.5 text-sm">
+                Apply to become a Partner
+              </Link>
               <Link
                 to="/pricing"
                 className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-muted"

@@ -1,0 +1,162 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/integrations/supabase/types";
+import {
+  normalizeContact,
+  routeApplication,
+  validateContact,
+  type ActiveClientBucket,
+  type ApplicationInput,
+  type ApplicationStatus,
+  type StartingSoonBucket,
+} from "./partner-application";
+import { notifyReviewers } from "./partner-application-notify.server";
+
+export interface StoredApplication {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  company: string;
+  activeClients: string;
+  startingSoon: string;
+  path: "meeting" | "async";
+  escalated: boolean;
+  status: ApplicationStatus;
+  reviewerNote: string | null;
+  createdAt: string;
+  notifiedAt: string | null;
+  notifyError: string | null;
+}
+
+/**
+ * The applicant is anonymous, so the row is written with service credentials
+ * after the server has re-validated everything. Nothing about the submission
+ * grants read access: `partner_applications` holds personal contact details and
+ * only a platform admin can ever see it.
+ */
+export async function submitApplication(input: ApplicationInput) {
+  const errors = validateContact(input);
+  if (Object.keys(errors).length) {
+    throw new Error(Object.values(errors)[0] ?? "Please check your details");
+  }
+  const contact = normalizeContact(input);
+  const routing = routeApplication(input.activeClients, input.startingSoon);
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  // One live application per business email — a re-submit updates the open one
+  // rather than filling the review queue with duplicates of the same person.
+  const existing = await supabaseAdmin
+    .from("partner_applications")
+    .select("id")
+    .eq("email", contact.email)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const row = {
+    first_name: contact.firstName,
+    last_name: contact.lastName,
+    email: contact.email,
+    phone: contact.phone,
+    company: contact.company,
+    active_clients_bucket: input.activeClients,
+    starting_soon_bucket: input.startingSoon,
+    routed_path: routing.path,
+    escalated: routing.escalated,
+  };
+
+  const saved = existing.data
+    ? await supabaseAdmin
+        .from("partner_applications")
+        .update(row)
+        .eq("id", existing.data.id)
+        .select("id")
+        .single()
+    : await supabaseAdmin.from("partner_applications").insert(row).select("id").single();
+
+  if (saved.error) throw saved.error;
+
+  // The three-day promise cannot depend on someone remembering to open a page,
+  // so the alert fires here. A failed alert is recorded on the row, never
+  // swallowed and never allowed to lose the application itself.
+  const alert = await notifyReviewers({
+    id: saved.data.id,
+    name: `${contact.firstName} ${contact.lastName}`,
+    email: contact.email,
+    phone: contact.phone,
+    company: contact.company,
+    activeClients: input.activeClients,
+    startingSoon: input.startingSoon,
+    path: routing.path,
+    escalated: routing.escalated,
+  });
+
+  await supabaseAdmin
+    .from("partner_applications")
+    .update({
+      notified_at: alert.sent ? new Date().toISOString() : null,
+      notify_error: alert.sent ? null : alert.error,
+    })
+    .eq("id", saved.data.id);
+
+  return { id: saved.data.id, ...routing };
+}
+
+type AdminClient = SupabaseClient<Database>;
+
+/** Reads run through the caller's own client, so RLS decides who is an admin. */
+export async function listApplications(supabase: AdminClient): Promise<StoredApplication[]> {
+  const { data, error } = await supabase
+    .from("partner_applications")
+    .select(
+      "id, first_name, last_name, email, phone, company, active_clients_bucket, starting_soon_bucket, routed_path, escalated, status, reviewer_note, created_at, notified_at, notify_error",
+    )
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    firstName: r.first_name,
+    lastName: r.last_name,
+    email: r.email,
+    phone: r.phone,
+    company: r.company,
+    activeClients: r.active_clients_bucket,
+    startingSoon: r.starting_soon_bucket,
+    path: r.routed_path,
+    escalated: r.escalated,
+    status: r.status,
+    reviewerNote: r.reviewer_note,
+    createdAt: r.created_at,
+    notifiedAt: r.notified_at,
+    notifyError: r.notify_error,
+  }));
+}
+
+export async function setApplicationStatus(
+  supabase: AdminClient,
+  userId: string,
+  id: string,
+  status: ApplicationStatus,
+  note: string | null,
+) {
+  const { error } = await supabase
+    .from("partner_applications")
+    .update({
+      status,
+      reviewer_note: note,
+      reviewed_by: userId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  // RLS refuses the write for anyone who is not a platform admin; zero rows
+  // updated is indistinguishable from "not found" on purpose.
+  if (error) throw new Error("Application not found");
+}
+
+export type { ActiveClientBucket, StartingSoonBucket };

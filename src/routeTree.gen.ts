@@ -18,6 +18,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
@@ -26,6 +27,7 @@ import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
@@ -77,6 +79,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnersApplyRoute = PartnersApplyRouteImport.update({
+  id: '/partners_/apply',
+  path: '/partners/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LegalTermsRoute = LegalTermsRouteImport.update({
   id: '/legal/terms',
   path: '/legal/terms',
@@ -117,6 +124,12 @@ const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminPartnerApplicationsRoute =
+  AuthenticatedAdminPartnerApplicationsRouteImport.update({
+    id: '/admin/partner-applications',
+    path: '/admin/partner-applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicV1EventsRoute = ApiPublicV1EventsRouteImport.update({
   id: '/api/public/v1/events',
   path: '/api/public/v1/events',
@@ -166,6 +179,8 @@ export interface FileRoutesByFullPath {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/partners/apply': typeof PartnersApplyRoute
+  '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -190,6 +205,8 @@ export interface FileRoutesByTo {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/partners/apply': typeof PartnersApplyRoute
+  '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -216,6 +233,8 @@ export interface FileRoutesById {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/partners_/apply': typeof PartnersApplyRoute
+  '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -242,6 +261,8 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/partners/apply'
+    | '/admin/partner-applications'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -266,6 +287,8 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/partners/apply'
+    | '/admin/partner-applications'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -291,6 +314,8 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/partners_/apply'
+    | '/_authenticated/admin/partner-applications'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -312,6 +337,7 @@ export interface RootRouteChildren {
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
+  PartnersApplyRoute: typeof PartnersApplyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
@@ -385,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partners_/apply': {
+      id: '/partners_/apply'
+      path: '/partners/apply'
+      fullPath: '/partners/apply'
+      preLoaderRoute: typeof PartnersApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/legal/terms': {
       id: '/legal/terms'
       path: '/legal/terms'
@@ -441,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/partner-applications': {
+      id: '/_authenticated/admin/partner-applications'
+      path: '/admin/partner-applications'
+      fullPath: '/admin/partner-applications'
+      preLoaderRoute: typeof AuthenticatedAdminPartnerApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/v1/events': {
       id: '/api/public/v1/events'
       path: '/api/public/v1/events'
@@ -492,6 +532,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
+  AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -500,6 +541,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
+  AuthenticatedAdminPartnerApplicationsRoute:
+    AuthenticatedAdminPartnerApplicationsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -518,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalMethodologyRoute: LegalMethodologyRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
+  PartnersApplyRoute: PartnersApplyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,

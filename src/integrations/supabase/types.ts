@@ -693,6 +693,69 @@ export type Database = {
           },
         ]
       }
+      partner_applications: {
+        Row: {
+          active_clients_bucket: string
+          company: string
+          created_at: string
+          email: string
+          escalated: boolean
+          first_name: string
+          id: string
+          last_name: string
+          notified_at: string | null
+          notify_error: string | null
+          phone: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          routed_path: Database["public"]["Enums"]["partner_application_path"]
+          starting_soon_bucket: string
+          status: Database["public"]["Enums"]["partner_application_status"]
+          updated_at: string
+        }
+        Insert: {
+          active_clients_bucket: string
+          company: string
+          created_at?: string
+          email: string
+          escalated?: boolean
+          first_name: string
+          id?: string
+          last_name: string
+          notified_at?: string | null
+          notify_error?: string | null
+          phone: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          routed_path: Database["public"]["Enums"]["partner_application_path"]
+          starting_soon_bucket: string
+          status?: Database["public"]["Enums"]["partner_application_status"]
+          updated_at?: string
+        }
+        Update: {
+          active_clients_bucket?: string
+          company?: string
+          created_at?: string
+          email?: string
+          escalated?: boolean
+          first_name?: string
+          id?: string
+          last_name?: string
+          notified_at?: string | null
+          notify_error?: string | null
+          phone?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          routed_path?: Database["public"]["Enums"]["partner_application_path"]
+          starting_soon_bucket?: string
+          status?: Database["public"]["Enums"]["partner_application_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       partner_tier_audit: {
         Row: {
           actor: string | null
@@ -1679,6 +1742,12 @@ export type Database = {
       app_role: "owner" | "admin" | "member"
       commission_status: "pending" | "approved" | "paid" | "clawed_back"
       objective_kind: "cost" | "latency" | "quality_floor"
+      partner_application_path: "meeting" | "async"
+      partner_application_status:
+        | "pending"
+        | "reviewed"
+        | "approved"
+        | "rejected"
       partner_role: "owner" | "member"
       partner_status: "pending" | "active" | "suspended"
       plan_tier: "compare" | "certify" | "rightsize" | "govern"
@@ -1817,6 +1886,13 @@ export const Constants = {
       app_role: ["owner", "admin", "member"],
       commission_status: ["pending", "approved", "paid", "clawed_back"],
       objective_kind: ["cost", "latency", "quality_floor"],
+      partner_application_path: ["meeting", "async"],
+      partner_application_status: [
+        "pending",
+        "reviewed",
+        "approved",
+        "rejected",
+      ],
       partner_role: ["owner", "member"],
       partner_status: ["pending", "active", "suspended"],
       plan_tier: ["compare", "certify", "rightsize", "govern"],
