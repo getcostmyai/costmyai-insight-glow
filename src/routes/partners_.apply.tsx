@@ -7,7 +7,6 @@ import {
   ArrowRight,
   CalendarCheck,
   CheckCircle2,
-  ClipboardList,
   Loader2,
   PlayCircle,
 } from "lucide-react";
@@ -471,5 +470,3 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
     </div>
   );
 }
-
-export { ClipboardList };
