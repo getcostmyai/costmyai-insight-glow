@@ -119,9 +119,8 @@ export async function readCatalog(): Promise<CatalogPayload> {
       cheapestOutput: hosts.length ? Math.min(...hosts.map((h) => h.output)) : null,
       scores,
       ...named,
-      intelligence: present.length
-        ? Math.round((present.reduce((a, b) => a + b, 0) / present.length) * 10) / 10
-        : null,
+      intelligence: publishedIndex ? publishedIndex.score : null,
+
       ttftMs: withLatency ? Number(withLatency.median_ttft_ms) : null,
       outputTps: withLatency ? Number(withLatency.output_tps) : null,
     };
