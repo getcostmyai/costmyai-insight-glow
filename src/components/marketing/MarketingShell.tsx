@@ -160,7 +160,7 @@ export function MarketingFooter() {
               </FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
-              <FooterLink to="/demo">Dashboard</FooterLink>
+              <FooterExternal href={BOOK_DEMO_URL}>Book a Demo</FooterExternal>
             </FooterColumn>
             <FooterColumn title="Company">
               <FooterLink to="/" hash="neutrality">
