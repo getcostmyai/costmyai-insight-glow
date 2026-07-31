@@ -125,8 +125,14 @@ export function Estimator() {
     setStep(next);
   };
 
+  /** A genuinely clean start: every input returns to its initial value. */
   const reset = () => {
     mutation.reset();
+    setSpend(4000);
+    setDistribution("even");
+    setWorkload("chat");
+    setProvider(null);
+    setModelKey(null);
     setDir(-1);
     setStep(0);
   };
