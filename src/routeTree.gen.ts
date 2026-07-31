@@ -18,6 +18,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
@@ -75,6 +76,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersApplyRoute = PartnersApplyRouteImport.update({
+  id: '/partners_/apply',
+  path: '/partners/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalTermsRoute = LegalTermsRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/partners/apply': typeof PartnersApplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/partners/apply': typeof PartnersApplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/partners_/apply': typeof PartnersApplyRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/partners/apply'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/partners/apply'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/partners_/apply'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -312,6 +324,7 @@ export interface RootRouteChildren {
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
+  PartnersApplyRoute: typeof PartnersApplyRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners_/apply': {
+      id: '/partners_/apply'
+      path: '/partners/apply'
+      fullPath: '/partners/apply'
+      preLoaderRoute: typeof PartnersApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/terms': {
@@ -518,6 +538,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalMethodologyRoute: LegalMethodologyRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
+  PartnersApplyRoute: PartnersApplyRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
