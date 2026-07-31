@@ -138,20 +138,51 @@ export async function ingestBillingCaptures(
     const estimatedUsd = await estimateForPeriod(orgId, provider, capture.period_start, capture.period_end);
     const { deltaUsd, deltaPct, verdict, note } = verdictFor(estimatedUsd, capture.invoiced_usd);
 
-    // One reconciliation per capture: replaced on re-push, never appended to.
-    await db.from("billing_reconciliations").delete().eq("capture_id", row.id);
-    const { error: reconError } = await db.from("billing_reconciliations").insert({
-      org_id: orgId,
-      capture_id: row.id,
-      estimated_usd: estimatedUsd,
-      invoiced_usd: capture.invoiced_usd,
-      delta_usd: deltaUsd,
-      delta_pct: deltaPct,
-      verdict,
-      note: capture.coverage_note ? `${note} ${capture.coverage_note}` : note,
-      computed_at: new Date().toISOString(),
-    });
-    if (reconError) throw new Error(`reconciliation failed: ${reconError.message}`);
+    // Append-only ledger: find the current row, and only restate if the figures
+    // actually moved. An identical re-push is a no-op, not ledger noise.
+    const { data: current } = await db
+      .from("billing_reconciliations")
+      .select("id, estimated_usd, invoiced_usd, verdict, note")
+      .eq("capture_id", row.id)
+      .is("superseded_at", null)
+      .order("computed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const finalNote = capture.coverage_note ? `${note} ${capture.coverage_note}` : note;
+    const unchanged =
+      current !== null &&
+      Number(current.estimated_usd) === estimatedUsd &&
+      Number(current.invoiced_usd) === capture.invoiced_usd &&
+      current.verdict === verdict &&
+      current.note === finalNote;
+
+    let supersedesId: string | null = null;
+    if (!unchanged) {
+      if (current) {
+        // Stamp, never edit the figures themselves.
+        const { error: stampError } = await db
+          .from("billing_reconciliations")
+          .update({ superseded_at: new Date().toISOString() })
+          .eq("id", current.id)
+          .is("superseded_at", null);
+        if (stampError) throw new Error(`supersede failed: ${stampError.message}`);
+        supersedesId = current.id;
+      }
+      const { error: reconError } = await db.from("billing_reconciliations").insert({
+        org_id: orgId,
+        capture_id: row.id,
+        estimated_usd: estimatedUsd,
+        invoiced_usd: capture.invoiced_usd,
+        delta_usd: deltaUsd,
+        delta_pct: deltaPct,
+        verdict,
+        note: finalNote,
+        supersedes_id: supersedesId,
+        computed_at: new Date().toISOString(),
+      });
+      if (reconError) throw new Error(`reconciliation failed: ${reconError.message}`);
+    }
 
     if (capture.coverage_note) coverageNotes.push(capture.coverage_note);
 
@@ -166,6 +197,8 @@ export async function ingestBillingCaptures(
       verdict,
       note,
       coverageNote: capture.coverage_note,
+      restated: !unchanged && supersedesId !== null,
+      supersedesId,
     });
   }
 
