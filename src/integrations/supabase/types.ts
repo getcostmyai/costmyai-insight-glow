@@ -450,6 +450,53 @@ export type Database = {
           },
         ]
       }
+      org_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          org_id: string
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          org_id: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          org_id?: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           billing_interval: string
@@ -1127,6 +1174,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { _invite_id: string }; Returns: string }
       create_organization: { Args: { _name: string }; Returns: string }
       has_org_role: {
         Args: {
