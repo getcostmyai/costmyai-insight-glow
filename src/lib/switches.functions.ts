@@ -34,6 +34,153 @@ export interface SwitchResult {
   status: "active" | "paused" | "rolled_back";
 }
 
+export type OpportunityKind = "host_arbitrage" | "quality_match" | "rightsize";
+
+const KINDS: OpportunityKind[] = ["host_arbitrage", "quality_match", "rightsize"];
+const MIN_PLAN: Record<OpportunityKind, string> = {
+  host_arbitrage: "compare",
+  quality_match: "certify",
+  rightsize: "rightsize",
+};
+
+/**
+ * Activate a switch straight from a dashboard row.
+ *
+ * The row the browser clicked is only an identifier: the saving, the basis and
+ * the destination are re-derived here by re-running the engine over the
+ * caller's own traffic, so nothing a client posts can inflate a recommendation.
+ * The derived row is persisted through a SECURITY DEFINER upsert (manager-only,
+ * demo workspace refused) and then applied by `apply_switch`.
+ */
+export const activateOpportunity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      orgId: string;
+      kind: OpportunityKind;
+      fromModel: string;
+      fromHost: string;
+      toModel: string;
+      toHost: string;
+      taskHint: string;
+      autonomous?: boolean;
+    }) => {
+      if (!UUID.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
+      if (!KINDS.includes(data?.kind)) throw new Error("Unknown recommendation");
+      const text = (v: unknown) => String(v ?? "").slice(0, 200);
+      if (!text(data.fromModel) || !text(data.toModel)) throw new Error("Unknown recommendation");
+      return {
+        orgId: data.orgId,
+        kind: data.kind,
+        fromModel: text(data.fromModel),
+        fromHost: text(data.fromHost),
+        toModel: text(data.toModel),
+        toHost: text(data.toHost),
+        taskHint: text(data.taskHint),
+        autonomous: Boolean(data.autonomous),
+      };
+    },
+  )
+  .handler(async ({ data, context }): Promise<SwitchResult> => {
+    await requirePlan(
+      context.supabase,
+      data.orgId,
+      data.autonomous ? "govern" : "rightsize",
+      paymentsEnvironment(),
+    );
+
+    const { buildDashboardSnapshot } = await import("./dashboard.server");
+    const snapshot = await buildDashboardSnapshot({
+      days: 30,
+      orgId: data.orgId,
+      client: context.supabase as never,
+    });
+
+    const same = (a: string, b: string) => a === b;
+    let found:
+      | {
+          monthlySaving: number;
+          savingPct: number;
+          basis: string;
+          note: string;
+          qualityDelta: number | null;
+          toModel: string;
+          toHost: string;
+        }
+      | undefined;
+
+    if (data.kind === "rightsize") {
+      const o = snapshot.oversized.find(
+        (r) =>
+          same(r.model, data.fromModel) &&
+          same(r.hostKey, data.fromHost) &&
+          same(r.task, data.taskHint) &&
+          (r.toModel ?? "") === data.toModel,
+      );
+      if (o) {
+        found = {
+          monthlySaving: o.wasted,
+          savingPct: o.savingPct,
+          basis: "right-sized",
+          note: o.note,
+          qualityDelta: null,
+          toModel: o.toModel ?? "",
+          // Right-sizing swaps the model, never the provider: the destination
+          // host is the workload's own, not whatever the client posted.
+          toHost: o.hostKey,
+        };
+      }
+    } else {
+      const pool =
+        data.kind === "host_arbitrage" ? snapshot.hostArbitrage : snapshot.qualityMatched;
+      const o = pool.find(
+        (r) =>
+          same(r.fromModel, data.fromModel) &&
+          same(r.taskHint, data.taskHint) &&
+          same(r.toModel, data.toModel),
+      );
+      if (o) {
+        found = {
+          monthlySaving: o.monthlySaving,
+          savingPct: o.savingPct,
+          basis: o.basis,
+          note: o.note,
+          qualityDelta: o.qualityDelta,
+          toModel: o.toModel,
+          toHost: o.toHost,
+        };
+      }
+    }
+
+    if (!found || !found.toModel) {
+      throw new Error("That recommendation is no longer current. Refresh and try again.");
+    }
+
+    const { data: recId, error: recError } = await context.supabase.rpc("upsert_recommendation", {
+      _org_id: data.orgId,
+      _kind: data.kind,
+      _min_plan: MIN_PLAN[data.kind],
+      _from_model: data.fromModel,
+      _from_host: data.fromHost,
+      _to_model: found.toModel,
+      _to_host: found.toHost || data.toHost,
+      _task_hint: data.taskHint,
+      _monthly_saving: found.monthlySaving,
+      _saving_pct: found.savingPct,
+      _basis: found.basis,
+      _note: found.note,
+      _quality_delta: found.qualityDelta,
+    } as never);
+    if (recError) throw plainly(recError.message);
+
+    const { data: switchId, error } = await context.supabase.rpc("apply_switch", {
+      _rec_id: recId as string,
+      _autonomous: data.autonomous,
+    });
+    if (error) throw plainly(error.message);
+    return { switchId: switchId as string, status: "active" };
+  });
+
 /** Rightsize: put a recommended switch live. Govern: let it run autonomously. */
 export const activateSwitch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

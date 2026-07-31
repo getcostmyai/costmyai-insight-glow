@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -8,6 +8,10 @@ import {
   Gauge,
   Layers,
   LineChart,
+  Loader2,
+  Pause,
+  Play,
+  Undo2,
   Scale,
   Settings,
   ShieldCheck,
@@ -27,6 +31,14 @@ import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { supabase } from "@/integrations/supabase/client";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
+import {
+  activateOpportunity,
+  pauseSwitch,
+  resumeSwitch,
+  rollbackSwitch,
+  setObjective as setObjectiveFn,
+  type OpportunityKind,
+} from "@/lib/switches.functions";
 
 const navItems = [
   { label: "Overview", icon: Layers },
@@ -43,6 +55,9 @@ const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): SwitchRow =
   fromHost: o.fromHostLabel || o.fromHost,
   toModel: o.toModel,
   toHost: o.toHostLabel || o.toHost,
+  fromHostKey: o.fromHost,
+  toHostKey: o.toHost,
+  taskHint: o.taskHint,
   kind,
   monthlySaving: o.monthlySaving,
   savingPct: o.savingPct,
@@ -65,6 +80,81 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const [objective, setObjective] = useState<ObjectiveKind>("cost");
   const { data } = useSuspenseQuery(dashboardQuery(range, objective, scope));
   const session = useSessionUser();
+  const queryClient = useQueryClient();
+  /** The demo workspace is read-only by design; only "mine" gets live controls. */
+  const canAct = scope === "mine";
+  const [actionError, setActionError] = useState<{ key: string; message: string } | null>(null);
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  const asMessage = (e: unknown) =>
+    e instanceof Error ? e.message : "That action could not be completed.";
+
+  const activate = useMutation({
+    mutationFn: (v: {
+      key: string;
+      kind: OpportunityKind;
+      fromModel: string;
+      fromHost: string;
+      toModel: string;
+      toHost: string;
+      taskHint: string;
+    }) =>
+      activateOpportunity({
+        data: {
+          orgId: data.workspace.id,
+          kind: v.kind,
+          fromModel: v.fromModel,
+          fromHost: v.fromHost,
+          toModel: v.toModel,
+          toHost: v.toHost,
+          taskHint: v.taskHint,
+        },
+      }),
+    onSuccess: async () => {
+      setActionError(null);
+      await refresh();
+    },
+    onError: (e, v) => setActionError({ key: v.key, message: asMessage(e) }),
+  });
+
+  const lifecycle = useMutation({
+    mutationFn: (v: { key: string; switchId: string; action: "pause" | "resume" | "rollback" }) => {
+      const payload = { data: { orgId: data.workspace.id, switchId: v.switchId } };
+      if (v.action === "pause") return pauseSwitch(payload);
+      if (v.action === "resume") return resumeSwitch(payload);
+      return rollbackSwitch(payload);
+    },
+    onSuccess: async () => {
+      setActionError(null);
+      await refresh();
+    },
+    onError: (e, v) => setActionError({ key: v.key, message: asMessage(e) }),
+  });
+
+  const objectiveMutation = useMutation({
+    mutationFn: (v: ObjectiveKind) =>
+      setObjectiveFn({ data: { orgId: data.workspace.id, objective: v } }),
+    onSuccess: async () => {
+      setActionError(null);
+      await refresh();
+    },
+    onError: (e) => setActionError({ key: "objective", message: asMessage(e) }),
+  });
+
+  const chooseObjective = (v: ObjectiveKind) => {
+    setObjective(v);
+    // On your own workspace the choice is persisted (Certify); on the demo it is
+    // a local preview of what that objective would recommend.
+    if (canAct) objectiveMutation.mutate(v);
+  };
+
+  const rsKey = (o: { model: string; hostKey: string; task: string }) =>
+    `rightsize:${o.model}|${o.hostKey}|${o.task}`;
+
+  const errorFor = (key: string) => (actionError?.key === key ? actionError.message : null);
+  const busy = (key: string) =>
+    (activate.isPending && activate.variables?.key === key) ||
+    (lifecycle.isPending && lifecycle.variables?.key === key);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -444,13 +534,32 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               <RungEmpty state={dataState} kind="host_arbitrage" />
             ) : (
               <div className="space-y-3">
-                {data.hostArbitrage.map((row, i) => (
-                  <SwitchCard
-                    key={`${row.fromModel}-${row.toHost}-${row.taskHint}`}
-                    row={asSwitchRow(row, "host")}
-                    rank={i + 1}
-                  />
-                ))}
+                {data.hostArbitrage.map((row, i) => {
+                  const key = `host:${row.fromModel}|${row.fromHost}|${row.toHost}|${row.taskHint}`;
+                  return (
+                    <SwitchCard
+                      key={key}
+                      row={asSwitchRow(row, "host")}
+                      rank={i + 1}
+                      pending={busy(key)}
+                      error={errorFor(key)}
+                      onActivate={
+                        canAct
+                          ? () =>
+                              activate.mutate({
+                                key,
+                                kind: "host_arbitrage",
+                                fromModel: row.fromModel,
+                                fromHost: row.fromHost,
+                                toModel: row.toModel,
+                                toHost: row.toHost,
+                                taskHint: row.taskHint,
+                              })
+                          : undefined
+                      }
+                    />
+                  );
+                })}
               </div>
             )}
           </section>
@@ -463,12 +572,19 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               badge={`${data.qualityMatched.length} certified`}
               badgeTone="saving"
               aside={
-                <ObjectiveSelect
-                  value={objective}
-                  onChange={setObjective}
-                  locked={!rungs.quality_match.unlocked}
-                  requiredPlan={rungs.quality_match.requiredPlan}
-                />
+                <div className="flex flex-col items-start gap-1 sm:items-end">
+                  <ObjectiveSelect
+                    value={objective}
+                    onChange={chooseObjective}
+                    locked={!rungs.quality_match.unlocked}
+                    requiredPlan={rungs.quality_match.requiredPlan}
+                  />
+                  {errorFor("objective") ? (
+                    <p className="max-w-xs text-[11px] text-destructive sm:text-right">
+                      {errorFor("objective")}
+                    </p>
+                  ) : null}
+                </div>
               }
             />
             {!rungs.quality_match.unlocked ? (
@@ -482,13 +598,32 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               <RungEmpty state={dataState} kind="quality_match" />
             ) : (
               <div className="space-y-3">
-                {data.qualityMatched.map((row, i) => (
-                  <SwitchCard
-                    key={`${row.fromModel}-${row.toModel}-${row.taskHint}`}
-                    row={asSwitchRow(row, "quality")}
-                    rank={i + 1}
-                  />
-                ))}
+                {data.qualityMatched.map((row, i) => {
+                  const key = `quality:${row.fromModel}|${row.toModel}|${row.taskHint}`;
+                  return (
+                    <SwitchCard
+                      key={key}
+                      row={asSwitchRow(row, "quality")}
+                      rank={i + 1}
+                      pending={busy(key)}
+                      error={errorFor(key)}
+                      onActivate={
+                        canAct
+                          ? () =>
+                              activate.mutate({
+                                key,
+                                kind: "quality_match",
+                                fromModel: row.fromModel,
+                                fromHost: row.fromHost,
+                                toModel: row.toModel,
+                                toHost: row.toHost,
+                                taskHint: row.taskHint,
+                              })
+                          : undefined
+                      }
+                    />
+                  );
+                })}
               </div>
             )}
           </section>
@@ -535,6 +670,38 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                       </span>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
+                    {o.toModel ? (
+                      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-opportunity/20 pt-3">
+                        <span className="text-xs text-muted-foreground">
+                          Right-size to{" "}
+                          <span className="font-mono text-foreground">{o.toModel}</span>
+                        </span>
+                        {canAct ? (
+                          <button
+                            type="button"
+                            disabled={busy(rsKey(o))}
+                            onClick={() =>
+                              activate.mutate({
+                                key: rsKey(o),
+                                kind: "rightsize",
+                                fromModel: o.model,
+                                fromHost: o.hostKey,
+                                toModel: o.toModel!,
+                                toHost: o.hostKey,
+                                taskHint: o.task,
+                              })
+                            }
+                            className="ml-auto inline-flex items-center gap-2 rounded-full bg-opportunity px-3.5 py-1.5 text-xs font-semibold text-white transition-transform active:scale-95 disabled:opacity-60"
+                          >
+                            {busy(rsKey(o)) ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                            Right-size now
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {errorFor(rsKey(o)) ? (
+                      <p className="mt-2 text-xs text-destructive">{errorFor(rsKey(o))}</p>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -602,6 +769,19 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                         </span>
                         <span className="num text-lg text-saving">+{usd(s.saved)}</span>
                       </div>
+                      <SwitchControls
+                        state="active"
+                        busy={busy(`switch:${s.switchId}`)}
+                        error={errorFor(`switch:${s.switchId}`)}
+                        canAct={canAct}
+                        onAction={(action) =>
+                          lifecycle.mutate({
+                            key: `switch:${s.switchId}`,
+                            switchId: s.switchId,
+                            action,
+                          })
+                        }
+                      />
                     </div>
                   ))
                 )}
@@ -619,6 +799,32 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                     </p>
                   </div>
                 </div>
+
+                {data.frozenSwitches.map((s) => (
+                  <div key={s.switchId} className="card-surface p-5">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="font-mono text-sm text-muted-foreground">{s.fromModel}</span>
+                      <ArrowRight className="size-3.5 text-frozen" />
+                      <span className="font-mono text-sm font-semibold">{s.toModel}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Paused · {s.toHost} · since {s.since}
+                    </p>
+                    <SwitchControls
+                      state="paused"
+                      busy={busy(`switch:${s.switchId}`)}
+                      error={errorFor(`switch:${s.switchId}`)}
+                      canAct={canAct}
+                      onAction={(action) =>
+                        lifecycle.mutate({
+                          key: `switch:${s.switchId}`,
+                          switchId: s.switchId,
+                          action,
+                        })
+                      }
+                    />
+                  </div>
+                ))}
 
                 <div
                   id="govern"
@@ -862,4 +1068,64 @@ function LocalTime({ iso }: { iso: string }) {
   const [text, setText] = useState("");
   useEffect(() => setText(new Date(iso).toLocaleTimeString("en-US")), [iso]);
   return <span suppressHydrationWarning>{text}</span>;
+}
+
+/**
+ * Lifecycle controls for one switch. Pause is reversible, rollback is terminal —
+ * the labels say so, because the database will not undo it.
+ */
+function SwitchControls({
+  state,
+  busy,
+  error,
+  canAct,
+  onAction,
+}: {
+  state: "active" | "paused";
+  busy: boolean;
+  error: string | null;
+  canAct: boolean;
+  onAction: (action: "pause" | "resume" | "rollback") => void;
+}) {
+  if (!canAct) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {state === "active" ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onAction("pause")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60"
+        >
+          <Pause className="size-3.5" />
+          Pause
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onAction("resume")}
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          <Play className="size-3.5" />
+          Resume
+        </button>
+      )}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          if (window.confirm("Roll this switch back for good? Traffic returns to the original model and the switch cannot be resumed.")) {
+            onAction("rollback");
+          }
+        }}
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive disabled:opacity-60"
+      >
+        <Undo2 className="size-3.5" />
+        Roll back
+      </button>
+      {busy ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
+      {error ? <span className="text-xs text-destructive">{error}</span> : null}
+    </div>
+  );
 }

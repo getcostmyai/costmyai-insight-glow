@@ -1213,6 +1213,24 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["switch_status"]
       }
+      upsert_recommendation: {
+        Args: {
+          _basis: string
+          _from_host: string
+          _from_model: string
+          _kind: Database["public"]["Enums"]["rec_kind"]
+          _min_plan: Database["public"]["Enums"]["plan_tier"]
+          _monthly_saving: number
+          _note?: string
+          _org_id: string
+          _quality_delta?: number
+          _saving_pct: number
+          _task_hint: string
+          _to_host: string
+          _to_model: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "member"
