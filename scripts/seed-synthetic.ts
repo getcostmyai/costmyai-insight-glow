@@ -20,6 +20,7 @@ import {
   type SyntheticEvent,
 } from "../src/lib/synthetic/generator";
 import { aggregateRollups, buildBilling, buildProfiles } from "../src/lib/synthetic/profiles";
+import { sizeWorkloads } from "../src/lib/synthetic/sizing";
 import { SYNTHETIC_WORKLOADS } from "../src/lib/synthetic/workloads";
 
 const ORG_ID = "00000000-0000-0000-0000-000000000001";
@@ -48,12 +49,16 @@ const to = new Date(now.getTime() + HOUR_MS);
 const from = new Date(to.getTime() - WINDOW_DAYS * DAY_MS);
 const rawFrom = new Date(to.getTime() - RAW_EVENT_HOURS * HOUR_MS);
 
+// Request rates are solved per model against the live synced price, not chosen
+// by hand and not scaled flat: an expensive model needs a couple of dozen calls
+// a day to carry its share of the bill, a cheap one needs tens of thousands.
+const sized = sizeWorkloads(SYNTHETIC_WORKLOADS, priceFor);
+
 const allEvents: SyntheticEvent[] = [];
-for (const workload of SYNTHETIC_WORKLOADS) {
-  if (!priceFor(workload.modelKey, workload.host)) {
-    throw new Error(`No price for ${workload.modelKey}@${workload.host} — refusing to seed uncosted usage.`);
-  }
-  allEvents.push(...generateEvents({ workload, from, to, seed: SEED }));
+for (const workload of sized) {
+  allEvents.push(
+    ...generateEvents({ workload, from, to, windowStart: from, windowEnd: to, seed: SEED }),
+  );
 }
 allEvents.sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
 
@@ -151,6 +156,9 @@ console.error(
       profiles: profiles.length,
       billing_pairs: billing.length,
       monthly_spend_usd: Math.round(totalCost * 100) / 100,
+      requests_per_day_by_model: Object.fromEntries(
+        sized.map((w) => [`${w.modelKey}@${w.host}`, w.requestsPerDay]),
+      ),
     },
     null,
     2,
