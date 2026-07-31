@@ -24,8 +24,11 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
     const [rollups, prices, benchmarks, margins, models] = await Promise.all([
       supabase
         .from("usage_rollups")
-        .select("model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd")
+        .select(
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+        )
         .eq("org_id", DEMO_ORG_ID)
+        .eq("granularity", data.days === 1 ? "hour" : "day")
         .gte("bucket_start", since),
       supabase
         .from("host_prices")
@@ -53,7 +56,8 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
       throw new Error("Could not load usage data");
     }
 
-    // Collapse daily rollups into one aggregate per workload.
+    // Collapse rollups into one aggregate per workload.
+    const shapes = new Map<string, { p50: number[]; p95: number[] }>();
     const byWorkload = new Map<string, UsageAggregate>();
     for (const r of rollups.data ?? []) {
       const key = `${r.model_key}|${r.host}|${r.task_hint}`;
@@ -72,9 +76,28 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
       existing.output_tokens += Number(r.output_tokens);
       existing.cost_usd += Number(r.cost_usd);
       byWorkload.set(key, existing);
+
+      // Response-length shape drives the rightsize dispersion test. Median of
+      // the bucket medians, so one quiet hour cannot rewrite a verdict.
+      const shape = shapes.get(key) ?? { p50: [], p95: [] };
+      if (r.output_p50) shape.p50.push(Number(r.output_p50));
+      if (r.output_p95) shape.p95.push(Number(r.output_p95));
+      shapes.set(key, shape);
     }
 
-    const usage = [...byWorkload.values()];
+    const medianOf = (values: number[]) => {
+      if (values.length === 0) return null;
+      const s = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(s.length / 2);
+      return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+    };
+
+    const usage = [...byWorkload.entries()].map(([key, u]) => ({
+      ...u,
+      output_p50: medianOf(shapes.get(key)?.p50 ?? []),
+      output_p95: medianOf(shapes.get(key)?.p95 ?? []),
+    }));
+
     const result = runPipeline({
       usage,
       prices: (prices.data ?? []).map((p) => ({
