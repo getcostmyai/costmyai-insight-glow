@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
 import { Wordmark } from "./Wordmark";
 
@@ -13,7 +14,8 @@ import { Wordmark } from "./Wordmark";
  */
 
 const NAV = [
-  { to: "/", label: "Product", hash: "how" },
+  { to: "/models", label: "Models" },
+  { to: "/", label: "How it works", hash: "how" },
   { to: "/pricing", label: "Pricing" },
   { to: "/demo", label: "Live demo" },
 ] as const;
@@ -111,7 +113,7 @@ export function MarketingNav() {
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
         <div className="flex flex-wrap items-start justify-between gap-10">
           <div className="max-w-xs">
             <Wordmark className="text-[17px]" />
@@ -121,25 +123,41 @@ export function MarketingFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-14 gap-y-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-14 gap-y-8 sm:grid-cols-4">
             <FooterColumn title="Product">
+              <FooterLink to="/" hash="estimator">
+                Estimator
+              </FooterLink>
+              <FooterLink to="/models">Models</FooterLink>
               <FooterLink to="/" hash="how">
-                How it works
+                Intelligence
               </FooterLink>
-              <FooterLink to="/pricing">Pricing</FooterLink>
-              <FooterLink to="/demo">Live demo</FooterLink>
+              <FooterLink to="/pricing">Plans</FooterLink>
+              <FooterLink to="/" hash="architecture">
+                API
+              </FooterLink>
             </FooterColumn>
-            <FooterColumn title="Trust">
-              <FooterLink to="/" hash="neutrality">
-                Neutrality charter
+            <FooterColumn title="Resources">
+              <FooterLink to="/" hash="faq">
+                FAQ
               </FooterLink>
-              <FooterLink to="/" hash="privacy-by-design">
-                Zero credentials
+              <FooterLink to="/legal/methodology">Methodology</FooterLink>
+              <FooterLink to="/models">Data Sources</FooterLink>
+              <FooterLink to="/demo">Dashboard</FooterLink>
+            </FooterColumn>
+            <FooterColumn title="Company">
+              <FooterLink to="/" hash="neutrality">
+                About
+              </FooterLink>
+              <FooterExternal href={BOOK_DEMO_URL}>Contact</FooterExternal>
+              <FooterLink to="/" hash="neutrality">
+                Press
               </FooterLink>
             </FooterColumn>
             <FooterColumn title="Legal">
               <FooterLink to="/legal/privacy">Privacy</FooterLink>
               <FooterLink to="/legal/terms">Terms</FooterLink>
+              <FooterLink to="/legal/terms">Disclaimer</FooterLink>
             </FooterColumn>
           </div>
         </div>
@@ -179,6 +197,19 @@ function FooterLink({
     >
       {children}
     </Link>
+  );
+}
+
+function FooterExternal({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {children}
+    </a>
   );
 }
 
