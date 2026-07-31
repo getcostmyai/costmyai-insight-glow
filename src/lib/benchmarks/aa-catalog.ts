@@ -133,15 +133,22 @@ export const MARGIN_METHOD = "binomial_wald_95";
 export interface TransformResult {
   scores: ScoreRow[];
   margins: { suite: string; task_class: string; margin: number; method: string }[];
+  /** Which evaluation was chosen to represent each task class, and why. */
+  chosenEvals: { task_class: string; suite: string; label: string; covered: number; sampleSize: number }[];
   matchedModels: string[];
   unmatchedModels: string[];
   skipped: { model_key: string; task_class: string; reason: string }[];
 }
 
+/** The suite name carries the evaluation, so a score can never be read against another eval's margin. */
+export function suiteFor(spec: EvalSpec): string {
+  return `${AA_SUITE}:${spec.field}`;
+}
+
 /**
  * Turns a raw AA payload plus our catalogue into rows ready for upsert.
- * A model with no score for a task class is left out entirely — the engine's
- * fail-closed path is the correct outcome there, not an imputed number.
+ * A model with no score on the chosen evaluation is left out entirely — the
+ * engine's fail-closed path is the correct outcome there, not an imputed number.
  */
 export function transformAaPayload(models: AaModel[], catalogKeys: string[]): TransformResult {
   const bySlug = new Map(models.map((m) => [m.slug, m]));
@@ -149,7 +156,9 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   const matchedModels: string[] = [];
   const unmatchedModels: string[] = [];
   const skipped: TransformResult["skipped"] = [];
+  const chosenEvals: TransformResult["chosenEvals"] = [];
 
+  const resolved = new Map<string, AaModel>();
   for (const key of catalogKeys) {
     const slug = AA_SLUG_ALIASES[key] ?? key;
     const model = bySlug.get(slug);
@@ -158,38 +167,64 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
       continue;
     }
     matchedModels.push(key);
+    resolved.set(key, model);
+  }
 
-    for (const [taskClass, spec] of Object.entries(TASK_EVALS)) {
+  for (const [taskClass, candidates] of Object.entries(TASK_EVAL_CANDIDATES)) {
+    const choice = chooseEval(
+      candidates,
+      (spec) =>
+        [...resolved.values()].filter((m) => m.evaluations?.[spec.field] != null).length,
+      resolved.size,
+    );
+    if (!choice) {
+      skipped.push({
+        model_key: "*",
+        task_class: taskClass,
+        reason: "No evaluation with a published item count covers enough of the catalogue.",
+      });
+      continue;
+    }
+
+    const { spec } = choice;
+    const suite = suiteFor(spec);
+    chosenEvals.push({
+      task_class: taskClass,
+      suite,
+      label: spec.label,
+      covered: choice.covered,
+      sampleSize: spec.sampleSize,
+    });
+
+    for (const [key, model] of resolved) {
       const raw = model.evaluations?.[spec.field];
       if (raw == null || Number.isNaN(Number(raw))) {
         skipped.push({
           model_key: key,
           task_class: taskClass,
-          reason: `${spec.label} not reported for ${slug}`,
+          reason: `${spec.label} not reported for ${model.slug}`,
         });
         continue;
       }
       scores.push({
         model_key: key,
-        suite: AA_SUITE,
+        suite,
         task_class: taskClass,
         score: toPoints(Number(raw)),
         sample_size: spec.sampleSize,
-        source: `artificialanalysis.ai/${slug}#${spec.field}`,
+        source: `artificialanalysis.ai/${model.slug}#${spec.field}`,
       });
+    }
+
+    const margin = marginFor(
+      scores.filter((s) => s.suite === suite && s.task_class === taskClass).map((s) => s.score),
+      spec.sampleSize,
+    );
+    if (Number.isFinite(margin)) {
+      margins.push({ suite, task_class: taskClass, margin, method: MARGIN_METHOD });
     }
   }
 
-  const margins = Object.entries(TASK_EVALS)
-    .map(([taskClass, spec]) => {
-      const rows = scores.filter((s) => s.task_class === taskClass);
-      const margin = marginFor(
-        rows.map((r) => r.score),
-        spec.sampleSize,
-      );
-      return { suite: AA_SUITE, task_class: taskClass, margin, method: MARGIN_METHOD };
-    })
-    .filter((m) => Number.isFinite(m.margin));
-
-  return { scores, margins, matchedModels, unmatchedModels, skipped };
+  return { scores, margins, chosenEvals, matchedModels, unmatchedModels, skipped };
 }
+
