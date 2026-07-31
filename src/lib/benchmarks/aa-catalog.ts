@@ -34,11 +34,50 @@ export interface EvalSpec {
   label: string;
 }
 
-export const TASK_EVALS: Record<string, EvalSpec> = {
-  generation: { field: "mmlu_pro", sampleSize: 12032, label: "MMLU-Pro" },
-  code: { field: "livecodebench", sampleSize: 1055, label: "LiveCodeBench" },
-  classification: { field: "ifbench", sampleSize: 294, label: "IFBench" },
+/**
+ * Candidate evaluations per task class, in preference order. Only evaluations
+ * with a published, fixed item count appear here — without `n` there is no
+ * honest margin, and a task class with no usable evaluation simply goes
+ * unscored rather than being scored against something unmeasurable.
+ */
+export const TASK_EVAL_CANDIDATES: Record<string, EvalSpec[]> = {
+  generation: [
+    { field: "mmlu_pro", sampleSize: 12032, label: "MMLU-Pro" },
+    { field: "gpqa", sampleSize: 198, label: "GPQA Diamond" },
+    { field: "hle", sampleSize: 2500, label: "Humanity's Last Exam" },
+  ],
+  code: [
+    { field: "livecodebench", sampleSize: 1055, label: "LiveCodeBench" },
+    { field: "scicode", sampleSize: 338, label: "SciCode" },
+    { field: "terminalbench_hard", sampleSize: 89, label: "Terminal-Bench Hard" },
+  ],
+  classification: [
+    { field: "ifbench", sampleSize: 294, label: "IFBench" },
+    { field: "tau2", sampleSize: 285, label: "tau2-bench" },
+  ],
 };
+
+/**
+ * A task class must be scored on ONE evaluation for every model, or the scores
+ * are not comparable and no equivalence claim holds. Pick the first candidate
+ * that covers at least this share of the catalogue; if none does, the
+ * best-covered candidate wins, ties broken by preference order.
+ */
+export const COVERAGE_TARGET = 0.8;
+
+export function chooseEval(
+  candidates: EvalSpec[],
+  coverageOf: (spec: EvalSpec) => number,
+  catalogueSize: number,
+): { spec: EvalSpec; covered: number } | null {
+  if (catalogueSize === 0) return null;
+  const scored = candidates.map((spec) => ({ spec, covered: coverageOf(spec) }));
+  const clearing = scored.find((c) => c.covered / catalogueSize >= COVERAGE_TARGET);
+  if (clearing) return clearing;
+  const best = scored.reduce((a, b) => (b.covered > a.covered ? b : a), scored[0]);
+  return best && best.covered > 1 ? best : null;
+}
+
 
 /**
  * Composite indices (artificial_analysis_*_index) are deliberately NOT used.
