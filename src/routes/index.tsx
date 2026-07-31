@@ -52,7 +52,7 @@ function HomePage() {
     <MarketingShell>
       <Hero stats={stats} />
       <ProviderMarquee stats={stats} />
-      <LiveStats stats={stats} />
+
       <Estimator />
       <VideoSection />
       <Architecture />
