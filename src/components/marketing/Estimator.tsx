@@ -449,7 +449,17 @@ function BelowThreshold({ r }: { r: Extract<EstimatorResult, { state: "below_thr
   );
 }
 
+/** Each refusal is named for what it actually is, not for its internal code. */
+const REFUSAL_TITLE: Record<string, string> = {
+  benchmark_not_discriminating: "Switch not certifiable",
+  no_cheaper_equal: "No certifiable switch found",
+  model_not_in_catalog: "Cannot assess",
+  shape_only: "Cannot assess without a named model",
+  no_baseline_score: "Cannot assess — model unscored",
+};
+
 const REFUSAL_LEAD: Record<string, string> = {
+
   benchmark_not_discriminating:
     "We will not certify a switch the benchmark cannot separate — on your own traffic the picture is far sharper than a single assumed workload shape.",
   no_cheaper_equal:
