@@ -71,6 +71,8 @@ export interface SwitchOpportunity {
 export interface OversizedWorkload {
   model: string;
   host: string;
+  /** Raw provider key behind the label — right-sizing stays on the same host. */
+  hostKey: string;
   task: string;
   toModel: string | null;
   wasted: number;
@@ -400,6 +402,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       (r): OversizedWorkload => ({
         model: r.fromModel,
         host: r.fromHostLabel || r.fromHost,
+        hostKey: r.fromHost,
         task: r.taskHint,
         toModel: r.toModel,
         wasted: round2(r.monthlySavingUsd),

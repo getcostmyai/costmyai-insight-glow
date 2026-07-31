@@ -113,6 +113,7 @@ export const activateOpportunity = createServerFn({ method: "POST" })
       const o = snapshot.oversized.find(
         (r) =>
           same(r.model, data.fromModel) &&
+          same(r.hostKey, data.fromHost) &&
           same(r.task, data.taskHint) &&
           (r.toModel ?? "") === data.toModel,
       );
@@ -124,7 +125,9 @@ export const activateOpportunity = createServerFn({ method: "POST" })
           note: o.note,
           qualityDelta: null,
           toModel: o.toModel ?? "",
-          toHost: data.toHost,
+          // Right-sizing swaps the model, never the provider: the destination
+          // host is the workload's own, not whatever the client posted.
+          toHost: o.hostKey,
         };
       }
     } else {

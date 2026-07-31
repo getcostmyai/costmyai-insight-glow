@@ -8,6 +8,10 @@ import {
   Gauge,
   Layers,
   LineChart,
+  Loader2,
+  Pause,
+  Play,
+  Undo2,
   Scale,
   Settings,
   ShieldCheck,
@@ -143,6 +147,9 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
     // a local preview of what that objective would recommend.
     if (canAct) objectiveMutation.mutate(v);
   };
+
+  const rsKey = (o: { model: string; hostKey: string; task: string }) =>
+    `rightsize:${o.model}|${o.hostKey}|${o.task}`;
 
   const errorFor = (key: string) => (actionError?.key === key ? actionError.message : null);
   const busy = (key: string) =>
@@ -656,6 +663,38 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                       </span>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
+                    {o.toModel ? (
+                      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-opportunity/20 pt-3">
+                        <span className="text-xs text-muted-foreground">
+                          Right-size to{" "}
+                          <span className="font-mono text-foreground">{o.toModel}</span>
+                        </span>
+                        {canAct ? (
+                          <button
+                            type="button"
+                            disabled={busy(rsKey(o))}
+                            onClick={() =>
+                              activate.mutate({
+                                key: rsKey(o),
+                                kind: "rightsize",
+                                fromModel: o.model,
+                                fromHost: o.hostKey,
+                                toModel: o.toModel!,
+                                toHost: o.hostKey,
+                                taskHint: o.task,
+                              })
+                            }
+                            className="ml-auto inline-flex items-center gap-2 rounded-full bg-opportunity px-3.5 py-1.5 text-xs font-semibold text-white transition-transform active:scale-95 disabled:opacity-60"
+                          >
+                            {busy(rsKey(o)) ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                            Right-size now
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {errorFor(rsKey(o)) ? (
+                      <p className="mt-2 text-xs text-destructive">{errorFor(rsKey(o))}</p>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -723,6 +762,19 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                         </span>
                         <span className="num text-lg text-saving">+{usd(s.saved)}</span>
                       </div>
+                      <SwitchControls
+                        state="active"
+                        busy={busy(`switch:${s.switchId}`)}
+                        error={errorFor(`switch:${s.switchId}`)}
+                        canAct={canAct}
+                        onAction={(action) =>
+                          lifecycle.mutate({
+                            key: `switch:${s.switchId}`,
+                            switchId: s.switchId,
+                            action,
+                          })
+                        }
+                      />
                     </div>
                   ))
                 )}
@@ -740,6 +792,32 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                     </p>
                   </div>
                 </div>
+
+                {data.frozenSwitches.map((s) => (
+                  <div key={s.switchId} className="card-surface p-5">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="font-mono text-sm text-muted-foreground">{s.fromModel}</span>
+                      <ArrowRight className="size-3.5 text-frozen" />
+                      <span className="font-mono text-sm font-semibold">{s.toModel}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Paused · {s.toHost} · since {s.since}
+                    </p>
+                    <SwitchControls
+                      state="paused"
+                      busy={busy(`switch:${s.switchId}`)}
+                      error={errorFor(`switch:${s.switchId}`)}
+                      canAct={canAct}
+                      onAction={(action) =>
+                        lifecycle.mutate({
+                          key: `switch:${s.switchId}`,
+                          switchId: s.switchId,
+                          action,
+                        })
+                      }
+                    />
+                  </div>
+                ))}
 
                 <div
                   id="govern"
@@ -983,4 +1061,64 @@ function LocalTime({ iso }: { iso: string }) {
   const [text, setText] = useState("");
   useEffect(() => setText(new Date(iso).toLocaleTimeString("en-US")), [iso]);
   return <span suppressHydrationWarning>{text}</span>;
+}
+
+/**
+ * Lifecycle controls for one switch. Pause is reversible, rollback is terminal —
+ * the labels say so, because the database will not undo it.
+ */
+function SwitchControls({
+  state,
+  busy,
+  error,
+  canAct,
+  onAction,
+}: {
+  state: "active" | "paused";
+  busy: boolean;
+  error: string | null;
+  canAct: boolean;
+  onAction: (action: "pause" | "resume" | "rollback") => void;
+}) {
+  if (!canAct) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {state === "active" ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onAction("pause")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60"
+        >
+          <Pause className="size-3.5" />
+          Pause
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onAction("resume")}
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          <Play className="size-3.5" />
+          Resume
+        </button>
+      )}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          if (window.confirm("Roll this switch back for good? Traffic returns to the original model and the switch cannot be resumed.")) {
+            onAction("rollback");
+          }
+        }}
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive disabled:opacity-60"
+      >
+        <Undo2 className="size-3.5" />
+        Roll back
+      </button>
+      {busy ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
+      {error ? <span className="text-xs text-destructive">{error}</span> : null}
+    </div>
+  );
 }
