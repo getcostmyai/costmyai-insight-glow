@@ -29,7 +29,7 @@ const customer = await stripe.customers.create({ email: "e2e-test@costmyai.dev",
 const session = await stripe.checkout.sessions.create({
   line_items: [{ price: price.id, quantity: 1 }],
   mode: "subscription",
-  ui_mode: "hosted",
+  ui_mode: "hosted_page",
   success_url: "https://example.com/done?s={CHECKOUT_SESSION_ID}",
   customer: customer.id,
   managed_payments: { enabled: true },
