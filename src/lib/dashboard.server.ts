@@ -220,10 +220,12 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const shapes = new Map<string, { p50: number[]; p95: number[] }>();
   const byWorkload = new Map<string, UsageAggregate>();
 
-  for (const r of rollups.data ?? []) {
-    const isCurrent = r.bucket_start >= windowStart;
-    addTo(isCurrent ? totals : previous, r);
-    if (!isCurrent) continue;
+  const split = partitionRollups(rollups.data ?? [], w);
+  for (const r of split.previous) addTo(previous, r);
+
+  for (const r of split.current) {
+    addTo(totals, r);
+
 
     const label = bucketLabel(r.bucket_start, days);
     const point = buckets.get(label) ?? {
