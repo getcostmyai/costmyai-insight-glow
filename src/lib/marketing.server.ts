@@ -19,22 +19,28 @@ export interface MarketingStats {
   modelCount: number;
   /** Distinct providers we hold a verified price for. */
   providerCount: number;
-  /** Real price moves (up or down) recorded against a provider feed this calendar month. */
-  priceChangesThisMonth: number;
+  /**
+   * Real price moves (up or down) we caught between two of our own syncs.
+   *
+   * This is everything we have, not a calendar-month figure: price_history only
+   * contains what we observed ourselves, and OpenRouter publishes current
+   * prices only — there is no historical pricing endpoint to backfill from. The
+   * count is therefore always paired with `trackingSince` so the page can state
+   * the window it actually covers instead of implying a full month.
+   */
+  priceChangesTracked: number;
+  /** First observation in price_history — the honest start of our coverage. */
+  trackingSince: string | null;
   /** Provider display names, only for hosts backed by a real live price row. */
   providers: string[];
   /** True only when a pricing sync has actually completed successfully. */
   live: boolean;
 }
 
-export async function readMarketingStats(now: number = Date.now()): Promise<MarketingStats> {
+export async function readMarketingStats(_now: number = Date.now()): Promise<MarketingStats> {
   const supabase = createPublicServerClient();
 
-  const monthStart = new Date(now);
-  monthStart.setUTCDate(1);
-  monthStart.setUTCHours(0, 0, 0, 0);
-
-  const [models, prices, snapshot, changesThisMonth] = await Promise.all([
+  const [models, prices, snapshot, changes, firstObservation] = await Promise.all([
     supabase.from("model_catalog").select("model_key", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("host_prices").select("host, host_label").eq("is_active", true).limit(MAX_CATALOG_ROWS),
     supabase
@@ -50,8 +56,13 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
     supabase
       .from("price_history")
       .select("id", { count: "exact", head: true })
-      .in("change_kind", ["increase", "decrease"])
-      .gte("observed_at", monthStart.toISOString()),
+      .in("change_kind", ["increase", "decrease"]),
+    supabase
+      .from("price_history")
+      .select("observed_at")
+      .order("observed_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const priceRows = prices.data ?? [];
@@ -62,7 +73,8 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
   return {
     modelCount: models.count ?? 0,
     providerCount: providers.length,
-    priceChangesThisMonth: changesThisMonth.count ?? 0,
+    priceChangesTracked: changes.count ?? 0,
+    trackingSince: firstObservation.data?.observed_at ?? null,
     providers,
     live: Boolean(snapshot.data?.synced_at),
   };
