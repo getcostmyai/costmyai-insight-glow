@@ -154,6 +154,7 @@ describe("equivalence (Certify)", () => {
  * classification and misses it for a long generation.
  */
 describe("latency (measured, not assumed)", () => {
+  const benchmarks = [bench("big-model", 90), bench("mid-model", 89.5), bench("cheap-model", 89.2)];
   const measured = (
     model_key: string,
     inp: number,
@@ -172,8 +173,8 @@ describe("latency (measured, not assumed)", () => {
 
   it("derives end-to-end latency from ttft plus the workload's own output length", () => {
     const p = measured("mid-model", 4, 12, 546, 193.605);
-    // 546ms + 40 tokens / 193.605 tps = 752ms
-    expect(expectedLatency(p, short)!.ms).toBe(752);
+    // 546ms + 40 tokens / 193.605 tps = 753ms
+    expect(expectedLatency(p, short)!.ms).toBe(753);
     // same host, 1,000-token responses = 5,711ms
     expect(expectedLatency(p, long)!.ms).toBe(5711);
   });
@@ -203,7 +204,7 @@ describe("latency (measured, not assumed)", () => {
     );
     expect(refusals).toHaveLength(0);
     expect(recommendations[0].toModel).toBe("mid-model");
-    expect(recommendations[0].note).toContain("752ms expected");
+    expect(recommendations[0].note).toContain("753ms expected");
     expect(recommendations[0].note).toContain("not per endpoint");
   });
 
