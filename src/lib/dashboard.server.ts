@@ -288,6 +288,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     benchmarks: (benchmarks.data ?? []).map((b) => ({ ...b, score: Number(b.score) })) as BenchmarkRow[],
     margins: (margins.data ?? []).map((m) => ({ ...m, margin: Number(m.margin) })) as MarginRow[],
     models: (models.data ?? []) as ModelRow[],
+    objectives: objectiveRows,
   });
 
   const toOpportunity = (r: Recommendation): SwitchOpportunity => ({
@@ -305,49 +306,80 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     qualityDelta: r.qualityDelta,
   });
 
-  const hostArbitrage = result.hostArbitrage.map(toOpportunity);
-  const qualityMatched = result.qualityMatched.map(toOpportunity);
-  const oversized: OversizedWorkload[] = result.oversized.map((r) => ({
-    model: r.fromModel,
-    host: r.fromHostLabel || r.fromHost,
-    task: r.taskHint,
-    toModel: r.toModel,
-    wasted: round2(r.monthlySavingUsd),
-    savingPct: Math.round(r.savingPct),
-    note: r.note,
-  }));
+  // ---- Plan gating: the check always runs, the detail is what a plan buys ----
+  const arbitrageRung = gateRung(
+    "host_arbitrage",
+    plan,
+    result.hostArbitrage.map(toOpportunity),
+    (r) => r.monthlySaving,
+  );
+  const qualityRung = gateRung(
+    "quality_match",
+    plan,
+    result.qualityMatched.map(toOpportunity),
+    (r) => r.monthlySaving,
+  );
+  const oversizedRung = gateRung(
+    "rightsize",
+    plan,
+    result.oversized.map(
+      (r): OversizedWorkload => ({
+        model: r.fromModel,
+        host: r.fromHostLabel || r.fromHost,
+        task: r.taskHint,
+        toModel: r.toModel,
+        wasted: round2(r.monthlySavingUsd),
+        savingPct: Math.round(r.savingPct),
+        note: r.note,
+      }),
+    ),
+    (o) => o.wasted,
+  );
 
-  // ---- What is already running ---------------------------------------------
-  const activeSwitches: ActiveSwitchRow[] = (switches.data ?? [])
-    .filter((s) => s.status === "active")
-    .map((s) => {
-      const activeDays = Math.max(1, (now - new Date(s.activated_at).getTime()) / DAY_MS);
-      return {
-        fromModel: s.from_model,
-        fromHost: s.from_host,
-        toModel: s.to_model,
-        toHost: s.to_host,
-        badge: s.badge,
-        basis: s.basis,
-        activatedAt: s.activated_at,
-        since: new Date(s.activated_at).toISOString().slice(0, 10),
-        saved: round2(Number(s.saved_usd)),
-        monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
-        autonomous: s.autonomous,
-      };
-    });
+  const hostArbitrage = arbitrageRung.items;
+  const qualityMatched = qualityRung.items;
+  const oversized = oversizedRung.items;
 
-  const frozen = (switches.data ?? []).filter((s) => s.status === "paused").length;
+  // ---- What is already running, inside the selected window -------------------
+  const activeSwitches: ActiveSwitchRow[] = selectSwitchesInWindow(
+    (switches.data ?? []).filter((s) => s.status === "active"),
+    w,
+  ).map((s) => {
+    const activeDays = Math.max(1, (now - new Date(s.activated_at).getTime()) / DAY_MS);
+    return {
+      fromModel: s.from_model,
+      fromHost: s.from_host,
+      toModel: s.to_model,
+      toHost: s.to_host,
+      badge: s.badge,
+      basis: s.basis,
+      activatedAt: s.activated_at,
+      since: new Date(s.activated_at).toISOString().slice(0, 10),
+      saved: round2(Number(s.saved_usd)),
+      monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
+      autonomous: s.autonomous,
+    };
+  });
+
+  /** Switches running from before the window — real, but not this window's news. */
+  const switchesOutsideWindow =
+    (switches.data ?? []).filter((s) => s.status === "active").length - activeSwitches.length;
+
+  const frozen = selectSwitchesInWindow(
+    (switches.data ?? []).filter((s) => s.status === "paused"),
+    w,
+  ).length;
 
   // ---- Reconciliation: current ledger rows only (append-only history behind) --
   const reconciliation: ReconciliationRow[] = [];
-  const { data: captures } = await supabase
+  const { data: allCaptures } = await supabase
     .from("billing_captures")
     .select("id, provider, period_start, period_end")
     .eq("org_id", DEMO_ORG_ID)
     .order("period_end", { ascending: false })
-    .limit(6);
-  if (captures?.length) {
+    .limit(24);
+  const captures = selectCapturesInWindow(allCaptures ?? [], w).slice(0, 6);
+  if (captures.length) {
     const { data: recons } = await supabase
       .from("billing_reconciliations")
       .select("capture_id, estimated_usd, invoiced_usd, delta_pct, verdict")
@@ -370,6 +402,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       });
     }
   }
+  const reconciliationOutsideWindow = (allCaptures ?? []).length - captures.length;
 
   // ---- Coverage honesty ------------------------------------------------------
   const pricedPairs = new Set(priceRows.map((p) => `${p.model_key}|${p.host}`));
@@ -383,15 +416,27 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     .at(-1) as string | undefined;
 
   const availableMonthly = round2(
-    [...hostArbitrage, ...qualityMatched].reduce((s, r) => s + r.monthlySaving, 0) +
-      oversized.reduce((s, o) => s + o.wasted, 0),
+    arbitrageRung.unlockedMonthly + qualityRung.unlockedMonthly + oversizedRung.unlockedMonthly,
+  );
+  const lockedMonthly = round2(
+    arbitrageRung.lockedMonthly + qualityRung.lockedMonthly + oversizedRung.lockedMonthly,
   );
   const activeMonthly = round2(activeSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+
+  const dataState: DataState = deriveDataState({
+    hasEverIngested: (firstEvent.data ?? []).length > 0,
+    rowsInWindow: split.current.length,
+  });
 
   return {
     days,
     generatedAt: new Date(now).toISOString(),
-    workspace: { name: org.data?.name ?? "Demo workspace", plan: org.data?.plan ?? "rightsize" },
+    workspace: { name: org.data?.name ?? "Demo workspace", plan },
+    plan,
+    upgradePlan: nextPlan(plan),
+    objective,
+    dataState,
+    firstEventAt: (firstEvent.data ?? [])[0]?.bucket_start ?? null,
     series,
     totals: {
       spend: round2(totals.spend),
@@ -410,15 +455,38 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     hostArbitrage,
     qualityMatched,
     oversized,
+    rungs: {
+      host_arbitrage: {
+        unlocked: arbitrageRung.unlocked,
+        requiredPlan: arbitrageRung.requiredPlan,
+        lockedCount: arbitrageRung.lockedCount,
+        lockedMonthly: round2(arbitrageRung.lockedMonthly),
+      },
+      quality_match: {
+        unlocked: qualityRung.unlocked,
+        requiredPlan: qualityRung.requiredPlan,
+        lockedCount: qualityRung.lockedCount,
+        lockedMonthly: round2(qualityRung.lockedMonthly),
+      },
+      rightsize: {
+        unlocked: oversizedRung.unlocked,
+        requiredPlan: oversizedRung.requiredPlan,
+        lockedCount: oversizedRung.lockedCount,
+        lockedMonthly: round2(oversizedRung.lockedMonthly),
+      },
+    },
     activeSwitches,
+    switchesOutsideWindow,
     frozen,
     savings: {
       activeMonthly,
       availableMonthly,
+      lockedMonthly,
       certifiedCount: hostArbitrage.length + qualityMatched.length,
       savedToDate: round2(activeSwitches.reduce((s, a) => s + a.saved, 0)),
     },
     reconciliation,
+    reconciliationOutsideWindow,
     coverage: {
       untrackedModels: untracked.size,
       pricesSyncedAgo: relativeAgo(lastVerified ?? null, now),
@@ -426,5 +494,6 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     },
   };
 }
+
 
 export type DashboardSnapshot = Awaited<ReturnType<typeof buildDashboardSnapshot>>;
