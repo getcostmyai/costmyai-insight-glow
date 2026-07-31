@@ -11,6 +11,8 @@ export function SwitchCard({
   error,
   actionLabel = "Switch now",
   disabledHint,
+  ctaHref,
+  ctaLabel,
 }: {
   row: SwitchRow;
   rank: number;
@@ -20,6 +22,9 @@ export function SwitchCard({
   error?: string | null;
   actionLabel?: string;
   disabledHint?: string;
+  /** Where the read-only demo sends the visitor instead of activating. */
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
