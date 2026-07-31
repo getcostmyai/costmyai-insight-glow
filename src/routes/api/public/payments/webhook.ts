@@ -14,6 +14,8 @@ import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
  * server itself stamped onto the subscription at checkout.
  */
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 let _supabase: ReturnType<typeof createClient<Database>> | null = null;
 function getSupabase() {
   if (!_supabase) {
@@ -106,7 +108,7 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
   // The workspace record follows the subscription, in both directions. When
   // the paid period is genuinely over the workspace goes back to Compare —
   // there is no grace beyond what was paid for.
-  await getSupabase()
+  const orgWrite = await getSupabase()
     .from("organizations")
     .update({
       plan: (grantsAccess(status, periodEnd)
@@ -121,6 +123,10 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);
+
+  if (orgWrite.error) {
+    throw new Error(`organizations write failed: ${orgWrite.error.message}`);
+  }
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
