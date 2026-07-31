@@ -1,0 +1,12 @@
+import { createClient } from "@supabase/supabase-js";
+const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+const stamp = Date.now();
+const email = `pv-${stamp}@costmyai-test.dev`, password = "Preview-Partner-2026!";
+const u = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+const uid = u.data.user!.id;
+const { data: p } = await admin.from("partners").insert({ name: `Preview Partners ${stamp}`, referral_code: `preview-${stamp}`, status: "active", created_by: uid }).select("id").single();
+await admin.from("partner_users").insert({ partner_id: p!.id, user_id: uid, role: "owner" });
+const { data: org } = await admin.from("organizations").insert({ name: `Referred Acme ${stamp}`, slug: `referred-acme-${stamp}`, plan: "rightsize", created_by: uid, referred_by_partner_id: p!.id, referred_at: new Date().toISOString() }).select("id").single();
+await admin.rpc("accrue_commission", { _org_id: org!.id, _invoice_id: `pv_${stamp}_1`, _revenue_usd: 6000, _environment: "sandbox" });
+await admin.rpc("accrue_commission", { _org_id: org!.id, _invoice_id: `pv_${stamp}_2`, _revenue_usd: 1200, _environment: "sandbox" });
+console.log(JSON.stringify({ email, password, uid, partner: p!.id, org: org!.id }));

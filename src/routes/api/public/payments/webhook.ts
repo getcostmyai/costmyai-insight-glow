@@ -129,6 +129,43 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
   }
 }
 
+/**
+ * Partner commission accrues off the money that actually moved — a paid
+ * invoice, not a subscription state change. The workspace is resolved from the
+ * subscription row the server itself wrote, never from anything on the
+ * invoice, and the accrual is idempotent per (partner, invoice) so provider
+ * retries cannot pay a partner twice.
+ */
+async function accrueCommission(invoice: any, env: StripeEnv) {
+  const subscriptionId =
+    typeof invoice.subscription === "string"
+      ? invoice.subscription
+      : (invoice.subscription?.id ?? invoice.parent?.subscription_details?.subscription ?? null);
+  if (!subscriptionId) return;
+
+  const { data: sub } = await getSupabase()
+    .from("subscriptions")
+    .select("org_id")
+    .eq("stripe_subscription_id", subscriptionId)
+    .maybeSingle();
+  if (!sub?.org_id) return;
+
+  const revenue = Number(invoice.amount_paid ?? 0) / 100;
+  if (revenue <= 0) return;
+
+  const line = invoice.lines?.data?.[0];
+  const { error } = await getSupabase().rpc("accrue_commission", {
+    _org_id: sub.org_id,
+    _invoice_id: String(invoice.id),
+    _revenue_usd: revenue,
+    _subscription_id: subscriptionId,
+    _period_start: isoFrom(line?.period?.start) ?? undefined,
+    _period_end: isoFrom(line?.period?.end) ?? undefined,
+    _environment: env,
+  });
+  if (error) throw new Error(`commission accrual failed: ${error.message}`);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
@@ -140,8 +177,10 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "customer.subscription.deleted":
       await syncSubscription({ ...event.data.object, status: "canceled" }, env);
       break;
-    case "checkout.session.completed":
     case "invoice.paid":
+      await accrueCommission(event.data.object, env);
+      break;
+    case "checkout.session.completed":
       // Subscription state is carried by the customer.subscription.* events.
       break;
     default:
