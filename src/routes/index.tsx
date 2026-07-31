@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -602,7 +602,7 @@ function Dashboard() {
 
           <p className="pb-6 text-center text-xs text-muted-foreground">
             Savings computed from your tracked traffic and current provider pricing · last read{" "}
-            {new Date(data.generatedAt).toLocaleTimeString("en-US")}.
+            <LocalTime iso={data.generatedAt} />.
           </p>
         </main>
       </div>
@@ -754,4 +754,11 @@ function SectionTitle({
       )}
     </div>
   );
+}
+
+/** Server and browser time zones differ, so the clock is rendered after hydration. */
+function LocalTime({ iso }: { iso: string }) {
+  const [text, setText] = useState("");
+  useEffect(() => setText(new Date(iso).toLocaleTimeString("en-US")), [iso]);
+  return <span suppressHydrationWarning>{text}</span>;
 }
