@@ -1065,6 +1065,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_organization: { Args: { _name: string }; Returns: string }
       has_org_role: {
         Args: {
           _org_id: string
@@ -1077,6 +1078,13 @@ export type Database = {
       org_is_synthetic: { Args: { _org_id: string }; Returns: boolean }
       org_plan: {
         Args: { _org_id: string }
+        Returns: Database["public"]["Enums"]["plan_tier"]
+      }
+      set_org_plan: {
+        Args: {
+          _org_id: string
+          _plan: Database["public"]["Enums"]["plan_tier"]
+        }
         Returns: Database["public"]["Enums"]["plan_tier"]
       }
     }

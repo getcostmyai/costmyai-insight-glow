@@ -1,9 +1,12 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import type { ObjectiveKind } from "./engine/types";
-import { getDashboardSnapshot } from "./dashboard.functions";
+import { getDashboardSnapshot, getMyDashboardSnapshot } from "./dashboard.functions";
 
 export type RangeKey = "24h" | "7d" | "30d";
+
+/** "demo" reads the public synthetic workspace; "mine" reads the caller's own. */
+export type DashboardScope = "demo" | "mine";
 
 export const ranges: { key: RangeKey; label: string; long: string; days: 1 | 7 | 30 }[] = [
   { key: "24h", label: "24h", long: "last 24 hours", days: 1 },
@@ -13,10 +16,17 @@ export const ranges: { key: RangeKey; label: string; long: string; days: 1 | 7 |
 
 export const rangeFor = (key: RangeKey) => ranges.find((r) => r.key === key)!;
 
-export const dashboardQuery = (range: RangeKey, objective: ObjectiveKind = "cost") =>
+export const dashboardQuery = (
+  range: RangeKey,
+  objective: ObjectiveKind = "cost",
+  scope: DashboardScope = "demo",
+) =>
   queryOptions({
-    queryKey: ["dashboard", range, objective],
-    queryFn: () => getDashboardSnapshot({ data: { days: rangeFor(range).days, objective } }),
+    queryKey: ["dashboard", scope, range, objective],
+    queryFn: () => {
+      const data = { days: rangeFor(range).days, objective };
+      return scope === "mine" ? getMyDashboardSnapshot({ data }) : getDashboardSnapshot({ data });
+    },
     staleTime: 60_000,
     // Switching range keeps the last window on screen instead of blanking it.
     placeholderData: keepPreviousData,

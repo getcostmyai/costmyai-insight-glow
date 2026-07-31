@@ -141,12 +141,29 @@ function relativeAgo(iso: string | null, now: number) {
 export interface SnapshotInput {
   days: RangeDays;
   objective?: ObjectiveSelection | null;
+  /** Whose workspace to read. Defaults to the public demo org. */
+  orgId?: string;
+  /**
+   * Supabase client to read through. Defaults to the anon publishable client,
+   * which RLS confines to the demo org. Authenticated callers pass their own
+   * request-scoped client so RLS answers as that member — the org id alone
+   * never grants access to a workspace the caller is not a member of.
+   */
+  client?: DashboardClient;
 }
 
+export type DashboardClient = ReturnType<typeof createPublicServerClient>;
+
 export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
-  const { days, objective: requestedObjective } =
-    typeof input === "number" ? { days: input, objective: null } : input;
-  const supabase = createPublicServerClient();
+  const {
+    days,
+    objective: requestedObjective,
+    orgId = DEMO_ORG_ID,
+    client,
+  } = typeof input === "number"
+    ? { days: input, objective: null, orgId: DEMO_ORG_ID, client: undefined }
+    : input;
+  const supabase = client ?? createPublicServerClient();
   const now = Date.now();
   const granularity = days === 1 ? "hour" : "day";
   const w = rangeWindow(days, now);
@@ -160,7 +177,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         .select(
           "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
         )
-        .eq("org_id", DEMO_ORG_ID)
+        .eq("org_id", orgId)
         .eq("granularity", granularity)
         .gte("bucket_start", previousStart)
         .order("bucket_start", { ascending: true })
@@ -184,21 +201,21 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         .select(
           "from_model, from_host, to_model, to_host, basis, badge, autonomous, status, activated_at, saved_usd",
         )
-        .eq("org_id", DEMO_ORG_ID)
+        .eq("org_id", orgId)
         .order("saved_usd", { ascending: false }),
-      supabase.from("organizations").select("name, plan").eq("id", DEMO_ORG_ID).maybeSingle(),
+      supabase.from("organizations").select("name, plan").eq("id", orgId).maybeSingle(),
       // Onboarding needs "has this workspace ever ingested anything", which is a
       // different question from "is there traffic in the selected window".
       supabase
         .from("usage_rollups")
         .select("bucket_start")
-        .eq("org_id", DEMO_ORG_ID)
+        .eq("org_id", orgId)
         .order("bucket_start", { ascending: true })
         .limit(1),
       supabase
         .from("objectives")
         .select("model_key, host, task_hint, objective, quality_floor_score, max_latency_ms")
-        .eq("org_id", DEMO_ORG_ID),
+        .eq("org_id", orgId),
     ]);
 
   const firstError =
@@ -208,7 +225,12 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     throw new Error("Could not load usage data");
   }
 
-  const plan = (org.data?.plan ?? "rightsize") as PlanTier;
+  if (!org.data) {
+    // RLS returned nothing: either the org does not exist, or the caller is not
+    // a member of it. Both are "not yours" as far as the dashboard is concerned.
+    throw new Error("Workspace not found");
+  }
+  const plan = org.data.plan as PlanTier;
   const objective = effectiveSelection(plan, requestedObjective);
   const objectiveRows = mergeObjectives((storedObjectives.data ?? []) as ObjectiveRow[], objective);
 
@@ -378,7 +400,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const { data: allCaptures } = await supabase
     .from("billing_captures")
     .select("id, provider, period_start, period_end")
-    .eq("org_id", DEMO_ORG_ID)
+    .eq("org_id", orgId)
     .order("period_end", { ascending: false })
     .limit(24);
   const captures = selectCapturesInWindow(allCaptures ?? [], w).slice(0, 6);
@@ -434,7 +456,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   return {
     days,
     generatedAt: new Date(now).toISOString(),
-    workspace: { name: org.data?.name ?? "Demo workspace", plan },
+    workspace: { id: orgId, name: org.data.name, plan },
     plan,
     upgradePlan: nextPlan(plan),
     objective,
