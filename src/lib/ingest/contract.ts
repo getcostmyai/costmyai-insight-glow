@@ -59,8 +59,10 @@ export function providerForHost(host: string): string {
   const normalised = host.trim().toLowerCase();
   const direct = HOST_TO_PROVIDER.get(normalised);
   if (direct) return direct;
-  for (const [fragment, provider] of HOST_TO_PROVIDER) {
-    if (normalised.includes(fragment)) return provider;
+  // Longest fragment first: "openai.azure.com" must beat the bare "openai".
+  const fragments = [...HOST_TO_PROVIDER.keys()].sort((a, b) => b.length - a.length);
+  for (const fragment of fragments) {
+    if (normalised.includes(fragment)) return HOST_TO_PROVIDER.get(fragment)!;
   }
   return normalised;
 }
