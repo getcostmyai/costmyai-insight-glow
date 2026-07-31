@@ -1,13 +1,29 @@
+import type { ObjectiveRow } from "./engine/objectives";
 import { runPipeline } from "./engine/pipeline";
 import type {
   BenchmarkRow,
   MarginRow,
   ModelRow,
+  PlanTier,
   PriceRow,
   Recommendation,
   UsageAggregate,
 } from "./engine/types";
+import { deriveDataState, type DataState } from "./dashboard/onboarding";
+import {
+  effectiveSelection,
+  mergeObjectives,
+  type ObjectiveSelection,
+} from "./dashboard/objective";
+import { gateRung, nextPlan } from "./dashboard/plan";
+import {
+  partitionRollups,
+  rangeWindow,
+  selectCapturesInWindow,
+  selectSwitchesInWindow,
+} from "./dashboard/window";
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
+
 
 /**
  * The dashboard's single read.
