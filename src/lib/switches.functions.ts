@@ -75,7 +75,7 @@ export const pauseSwitch = createServerFn({ method: "POST" })
     const { error } = await context.supabase.rpc("set_switch_state", {
       _switch_id: data.switchId,
       _status: "paused",
-      _reason: data.reason || null,
+      _reason: data.reason || undefined,
     });
     if (error) throw plainly(error.message);
     return { switchId: data.switchId, status: "paused" };
@@ -95,7 +95,7 @@ export const resumeSwitch = createServerFn({ method: "POST" })
     const { error } = await context.supabase.rpc("set_switch_state", {
       _switch_id: data.switchId,
       _status: "active",
-      _reason: null,
+      _reason: undefined,
     });
     if (error) throw plainly(error.message);
     return { switchId: data.switchId, status: "active" };
@@ -115,7 +115,7 @@ export const rollbackSwitch = createServerFn({ method: "POST" })
     const { error } = await context.supabase.rpc("set_switch_state", {
       _switch_id: data.switchId,
       _status: "rolled_back",
-      _reason: data.reason || null,
+      _reason: data.reason || undefined,
     });
     if (error) throw plainly(error.message);
     return { switchId: data.switchId, status: "rolled_back" };
