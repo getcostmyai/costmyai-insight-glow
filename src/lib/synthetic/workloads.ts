@@ -98,11 +98,14 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     requestsPerDay: 378,
     inputP50: 2900,
     inputSpread: 1.8,
-    outputP50: 1250,
-    outputP95: 2900,
+    // Templated drafting: long-ish but highly uniform output. This is what an
+    // oversized workload actually looks like in the wild — a frontier model
+    // doing fill-in-the-blanks work.
+    outputP50: 1240,
+    outputP95: 1520,
     latencyP50Ms: 7100,
     errorRate: 0.006,
-    label: "In-product drafting",
+    label: "In-product drafting (templated)",
   },
   {
     modelKey: "claude-opus-4-7",
@@ -124,8 +127,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     requestsPerDay: 133,
     inputP50: 4100,
     inputSpread: 1.9,
-    outputP50: 1150,
-    outputP95: 2500,
+    outputP50: 430,
+    outputP95: 690,
     latencyP50Ms: 5200,
     errorRate: 0.004,
     label: "Inline assistant",
