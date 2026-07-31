@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
 
 import { estimateSavingFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
+import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import {
   CONSERVATIVE_HIGH,
   CONSERVATIVE_LOW,
@@ -124,8 +125,14 @@ export function Estimator() {
     setStep(next);
   };
 
+  /** A genuinely clean start: every input returns to its initial value. */
   const reset = () => {
     mutation.reset();
+    setSpend(4000);
+    setDistribution("even");
+    setWorkload("chat");
+    setProvider(null);
+    setModelKey(null);
     setDir(-1);
     setStep(0);
   };
@@ -389,9 +396,14 @@ function StartCompare() {
       <Link to="/auth" className="btn-gradient px-5 py-2.5 text-sm">
         Start Compare, free <ArrowRight className="h-4 w-4" />
       </Link>
-      <Link to="/demo" className="btn-quiet px-5 py-2.5 text-sm">
-        See it on live data
-      </Link>
+      <a
+        href={BOOK_DEMO_URL}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="btn-quiet px-5 py-2.5 text-sm"
+      >
+        Book a Demo
+      </a>
     </div>
   );
 }
@@ -411,13 +423,19 @@ function NotADeadEnd({ lead }: { lead: string }) {
         <Link to="/auth" className="btn-gradient px-5 py-2.5 text-sm">
           Start Compare, free <ArrowRight className="h-4 w-4" />
         </Link>
-        <Link to="/demo" className="btn-quiet px-5 py-2.5 text-sm">
-          See it on live data
-        </Link>
+        <a
+          href={BOOK_DEMO_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="btn-quiet px-5 py-2.5 text-sm"
+        >
+          Book a Demo
+        </a>
       </div>
     </div>
   );
 }
+
 
 function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
   return (

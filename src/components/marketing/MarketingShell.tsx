@@ -17,7 +17,6 @@ const NAV = [
   { to: "/models", label: "Models" },
   { to: "/", label: "How it works", hash: "how" },
   { to: "/pricing", label: "Pricing" },
-  { to: "/demo", label: "Live demo" },
 ] as const;
 
 function useSignedIn() {
@@ -60,7 +59,16 @@ export function MarketingNav() {
                 {item.label}
               </Link>
             ))}
+            <a
+              href={BOOK_DEMO_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Book a Demo
+            </a>
           </nav>
+
         </div>
 
         <div className="flex items-center gap-2">
@@ -97,6 +105,15 @@ export function MarketingNav() {
               {item.label}
             </Link>
           ))}
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={() => setOpen(false)}
+            className="block py-2 text-sm font-medium text-muted-foreground"
+          >
+            Book a Demo
+          </a>
           <Link
             to={signedIn ? "/workspace" : "/auth"}
             onClick={() => setOpen(false)}
@@ -143,7 +160,7 @@ export function MarketingFooter() {
               </FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
-              <FooterLink to="/demo">Dashboard</FooterLink>
+              <FooterExternal href={BOOK_DEMO_URL}>Book a Demo</FooterExternal>
             </FooterColumn>
             <FooterColumn title="Company">
               <FooterLink to="/" hash="neutrality">

@@ -4,6 +4,7 @@ import { ArrowRight, Loader2, Mail } from "lucide-react";
 
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
 export const Route = createFileRoute("/auth")({
   // Renders on the server like every other route: all session reads live in
@@ -180,8 +181,13 @@ function AuthPage() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           CostMyAI never asks for your provider API keys.{" "}
-          <a href="/" className="underline underline-offset-2 hover:text-foreground">
-            See the demo workspace
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Book a Demo
           </a>
         </p>
       </div>
