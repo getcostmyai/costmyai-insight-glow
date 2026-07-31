@@ -1,7 +1,7 @@
 import { costOf, DAYS_IN_MONTH } from "@/lib/engine/cost";
 import type { PriceRow } from "@/lib/engine/types";
 
-import { DAY_MS, lognormalSigma } from "./generator";
+import { DAY_MS, growthFactor, lognormalSigma } from "./generator";
 import { lifecycleFactor, type SyntheticWorkload } from "./workloads";
 
 /**
@@ -40,7 +40,12 @@ export function expectedTokens(median: number, p95: number): number {
  */
 export function activeFraction(workload: SyntheticWorkload, windowDays: number): number {
   let sum = 0;
-  for (let d = 0; d < windowDays; d++) sum += lifecycleFactor(windowDays - 0.5 - d, workload);
+  // Weighted by the same gentle growth trend the generator applies, because a
+  // workload that only exists at the end of the window lives entirely on the
+  // busier days — ignoring that overshoots its share of the bill.
+  for (let d = 0; d < windowDays; d++) {
+    sum += lifecycleFactor(windowDays - 0.5 - d, workload) * growthFactor(d, windowDays);
+  }
   return sum / windowDays;
 }
 

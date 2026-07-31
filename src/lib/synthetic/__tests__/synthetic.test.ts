@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { costOf } from "@/lib/engine/cost";
+import { MIN_RIGHTSIZE_SAMPLE } from "@/lib/engine/rightsize";
 import type { ModelRow, PriceRow } from "@/lib/engine/types";
 import {
   bucketStart,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/synthetic/generator";
 import { aggregateRollups, buildBilling, buildProfiles, oversizedProfiles } from "@/lib/synthetic/profiles";
 import { activeFraction, sizeWorkloads, TARGET_MONTHLY_SPEND_USD } from "@/lib/synthetic/sizing";
-import { lifecycleFactor, SYNTHETIC_WORKLOADS } from "@/lib/synthetic/workloads";
+import { lifecycleFactor, SYNTHETIC_BILLING_PROVIDERS, SYNTHETIC_WORKLOADS } from "@/lib/synthetic/workloads";
 
 const price = (model: string, host: string, i: number, o: number): PriceRow => ({
   model_key: model,
@@ -211,6 +212,14 @@ describe("workload profiles", () => {
     expect(research.complexityScore).toBeGreaterThan(classifier.complexityScore);
   });
 
+  it("refuses to call a thinly-observed workload oversized", () => {
+    const o1 = profiles.find((p) => p.modelKey === "o1-pro")!;
+    // Winding down: ~50 requests left in the window. Too few for dispersion to
+    // mean anything, so the check declines rather than guessing.
+    expect(o1.requests).toBeLessThan(MIN_RIGHTSIZE_SAMPLE);
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("o1-pro");
+  });
+
   it("flags the templated and short frontier workloads as oversized, and nothing else", () => {
     expect(oversizedProfiles(profiles).map((p) => p.modelKey).sort()).toEqual([
       "claude-opus-4-7-fast",
@@ -220,8 +229,9 @@ describe("workload profiles", () => {
   });
 
   it("never marks a workload oversized when the shape genuinely needs the tier", () => {
-    const research = profiles.find((p) => p.modelKey === "o1-pro")!;
-    expect(research.requiredTier).toBe("frontier");
+    const composer = profiles.find((p) => p.modelKey === "gpt-5.5")!;
+    expect(composer.requiredTier).toBe("frontier");
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("gpt-5.5");
   });
 
   it("normalises cost to a 30-day month", () => {
@@ -251,7 +261,7 @@ describe("billing reconciliation", () => {
   it("derives the estimate from the same priced rollups the dashboard shows", () => {
     const pairs = buildBilling(daily, FROM, TO, {});
     const openaiSpend = daily
-      .filter((r) => r.host === "api.openai.com")
+      .filter((r) => SYNTHETIC_BILLING_PROVIDERS.openai.includes(r.host))
       .reduce((s, r) => s + r.costUsd, 0);
     expect(pairs.find((p) => p.provider === "openai")!.estimatedUsd).toBeCloseTo(openaiSpend, 1);
   });

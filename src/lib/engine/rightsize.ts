@@ -9,6 +9,15 @@ import {
   type UsageAggregate,
 } from "./types";
 
+/**
+ * A workload has to be observed enough times before its shape means anything.
+ * Response-length dispersion collapses toward 1 on a thin sample — a genuinely
+ * open-ended workload that ran fifty times looks deceptively uniform — so a
+ * downgrade below this many observed requests would be a guess dressed up as a
+ * measurement. Under it, the check refuses instead.
+ */
+export const MIN_RIGHTSIZE_SAMPLE = 200;
+
 export const TIER_RANK: Record<ModelTier, number> = { economy: 0, standard: 1, frontier: 2 };
 
 export interface WorkloadShape {
@@ -85,6 +94,8 @@ export function findOversized(
   for (const u of usage) {
     const observed = tierOf.get(u.model_key);
     if (!observed) continue;
+    // Not enough evidence to call this workload oversized.
+    if (u.requests < MIN_RIGHTSIZE_SAMPLE) continue;
     const required = requiredTierFor(u);
     if (TIER_RANK[observed] <= TIER_RANK[required]) continue;
 
