@@ -88,6 +88,16 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
     .select("id");
   if (retireError) throw retireError;
 
+  // Every run is recorded, successful or not, so a customer can always see when
+  // the numbers behind a recommendation were last measured.
+  await supabase.from("pricing_snapshots").insert({
+    feed: AA_FEED,
+    status: "ok",
+    rows_upserted: result.scores.length + result.margins.length,
+    is_fixture: false,
+    synced_at: syncedAt,
+  });
+
   return {
     runId,
     fetchedModels: models.length,
@@ -100,3 +110,20 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
     fixturesRetired: retired?.length ?? 0,
   };
 }
+
+/** Records a failed run so a stale dashboard can say why it is stale. */
+export async function recordSyncFailure(message: string): Promise<void> {
+  try {
+    await adminClient().from("pricing_snapshots").insert({
+      feed: AA_FEED,
+      status: "error",
+      rows_upserted: 0,
+      error_detail: message.slice(0, 500),
+      is_fixture: false,
+      synced_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("could not record benchmark sync failure", err);
+  }
+}
+
