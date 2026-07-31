@@ -115,10 +115,10 @@ export async function runSyntheticTick(origin: string): Promise<TickReport> {
   let bucketsRebuilt = 0;
 
   for (let i = 0; i < payload.length; i += BATCH) {
-    const res = await fetch(`${origin}/api/public/ingest`, {
+    const res = await fetch(`${origin}/api/public/v1/events`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${ingestKey}` },
-      body: JSON.stringify({ events: payload.slice(i, i + BATCH) }),
+      body: JSON.stringify({ v: 1, events: payload.slice(i, i + BATCH) }),
     });
     if (!res.ok) {
       throw new Error(`ingest rejected the tick [${res.status}]: ${await res.text()}`);

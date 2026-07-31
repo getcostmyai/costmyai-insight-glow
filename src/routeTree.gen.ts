@@ -11,7 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiPublicIngestRouteImport } from './routes/api/public/ingest'
+import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
+import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 
@@ -25,9 +26,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicIngestRoute = ApiPublicIngestRouteImport.update({
-  id: '/api/public/ingest',
-  path: '/api/public/ingest',
+const ApiPublicV1EventsRoute = ApiPublicV1EventsRouteImport.update({
+  id: '/api/public/v1/events',
+  path: '/api/public/v1/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1BillingRoute = ApiPublicV1BillingRouteImport.update({
+  id: '/api/public/v1/billing',
+  path: '/api/public/v1/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSyntheticTickRoute = ApiPublicSyntheticTickRouteImport.update({
@@ -44,55 +50,62 @@ const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
+  '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/events': typeof ApiPublicV1EventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
+  '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/events': typeof ApiPublicV1EventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
+  '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/events': typeof ApiPublicV1EventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/sitemap.xml'
-    | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
+    | '/api/public/v1/billing'
+    | '/api/public/v1/events'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/sitemap.xml'
-    | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
+    | '/api/public/v1/billing'
+    | '/api/public/v1/events'
   id:
     | '__root__'
     | '/'
     | '/sitemap.xml'
-    | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
+    | '/api/public/v1/billing'
+    | '/api/public/v1/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  ApiPublicIngestRoute: typeof ApiPublicIngestRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
+  ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
+  ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -111,11 +124,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/ingest': {
-      id: '/api/public/ingest'
-      path: '/api/public/ingest'
-      fullPath: '/api/public/ingest'
-      preLoaderRoute: typeof ApiPublicIngestRouteImport
+    '/api/public/v1/events': {
+      id: '/api/public/v1/events'
+      path: '/api/public/v1/events'
+      fullPath: '/api/public/v1/events'
+      preLoaderRoute: typeof ApiPublicV1EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/billing': {
+      id: '/api/public/v1/billing'
+      path: '/api/public/v1/billing'
+      fullPath: '/api/public/v1/billing'
+      preLoaderRoute: typeof ApiPublicV1BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/synthetic/tick': {
@@ -138,10 +158,21 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  ApiPublicIngestRoute: ApiPublicIngestRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
+  ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
+  ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

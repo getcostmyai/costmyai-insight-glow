@@ -3,14 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ingestBatchSchema } from "@/lib/ingest/schema";
 
 /**
- * Metadata ingest.
+ * Metadata ingest — v1.
  *
  * Public prefix because customer middleware calls it directly; every request is
- * authenticated by workspace API key before anything is read from the body.
- * The payload is metadata only — the schema is strict, so a body carrying
- * prompt or completion text is rejected rather than trimmed.
+ * authenticated by a hashed, workspace-scoped ingest token before anything is
+ * read from the body. The payload is metadata only — the schema is strict, so a
+ * body carrying prompt, completion or credential fields is rejected rather than
+ * trimmed. Batched, idempotent, and rollups re-derived from the stored events.
  */
-export const Route = createFileRoute("/api/public/ingest")({
+export const Route = createFileRoute("/api/public/v1/events")({
   server: {
     handlers: {
       POST: async ({ request }) => {
@@ -19,7 +20,16 @@ export const Route = createFileRoute("/api/public/ingest")({
 
         const { authenticateApiKey, ingestEvents } = await import("@/lib/ingest/ingest.server");
         const authed = await authenticateApiKey(rawKey);
-        if (!authed) return new Response("Unauthorized", { status: 401 });
+        if (!authed) {
+          return Response.json(
+            {
+              error: "Unauthorized",
+              detail:
+                "Send a current workspace ingest token as 'Authorization: Bearer <token>'. A rotated or revoked token stops working immediately — generate a new one in Settings and restart the container.",
+            },
+            { status: 401 },
+          );
+        }
 
         let body: unknown;
         try {
