@@ -52,6 +52,13 @@ function WorkspacePage() {
     <div className="relative">
       <div className="absolute right-6 top-6 z-50 flex items-center gap-2">
         <Link
+          to="/settings"
+          className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
+        >
+          <KeyRound className="h-3.5 w-3.5" />
+          Connect
+        </Link>
+        <Link
           to="/team"
           className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
         >
@@ -60,6 +67,7 @@ function WorkspacePage() {
         </Link>
         <SignOutButton inline />
       </div>
+
       <DashboardView scope="mine" />
     </div>
   );
