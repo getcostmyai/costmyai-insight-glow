@@ -154,24 +154,42 @@ export const setObjective = createServerFn({ method: "POST" })
 
     // Account-wide default: the null workload scope. Per-workload overrides stay
     // more specific and keep winning in the engine's resolver.
-    const { error } = await context.supabase
+    //
+    // The uniqueness of that scope is an expression index (COALESCE(model_key,'*')
+    // …), which PostgREST cannot target with ON CONFLICT — an upsert here fails
+    // with 42P10. So update first, and only insert when no row existed.
+    const fields = {
+      objective: data.objective,
+      quality_floor_score: data.qualityFloorScore,
+      max_latency_ms: data.maxLatencyMs,
+    };
+    const updated = await context.supabase
       .from("objectives")
-      .upsert(
-        {
-          org_id: data.orgId,
-          model_key: null,
-          host: null,
-          task_hint: null,
-          objective: data.objective,
-          quality_floor_score: data.qualityFloorScore,
-          max_latency_ms: data.maxLatencyMs,
-          created_by: context.userId,
-        },
-        { onConflict: "org_id,model_key,host,task_hint" },
-      );
+      .update(fields)
+      .eq("org_id", data.orgId)
+      .is("model_key", null)
+      .is("host", null)
+      .is("task_hint", null)
+      .select("id");
+
+    let error = updated.error;
+    if (!error && (updated.data ?? []).length === 0) {
+      const inserted = await context.supabase.from("objectives").insert({
+        org_id: data.orgId,
+        model_key: null,
+        host: null,
+        task_hint: null,
+        created_by: context.userId,
+        ...fields,
+      });
+      // A concurrent write won the race: the row now exists, and the update
+      // above has already been applied by that writer's own request.
+      error = inserted.error?.code === "23505" ? null : inserted.error;
+    }
     if (error) {
       if (error.code === "42501") throw new Error("Only workspace owners and admins can do that.");
       throw error;
     }
+
     return { objective: data.objective };
   });
