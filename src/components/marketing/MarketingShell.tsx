@@ -105,6 +105,15 @@ export function MarketingNav() {
               {item.label}
             </Link>
           ))}
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={() => setOpen(false)}
+            className="block py-2 text-sm font-medium text-muted-foreground"
+          >
+            Book a Demo
+          </a>
           <Link
             to={signedIn ? "/workspace" : "/auth"}
             onClick={() => setOpen(false)}
