@@ -122,42 +122,68 @@ function relativeAgo(iso: string | null, now: number) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-export async function buildDashboardSnapshot(days: RangeDays) {
+export interface SnapshotInput {
+  days: RangeDays;
+  objective?: ObjectiveSelection | null;
+}
+
+export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
+  const { days, objective: requestedObjective } =
+    typeof input === "number" ? { days: input, objective: null } : input;
   const supabase = createPublicServerClient();
   const now = Date.now();
   const granularity = days === 1 ? "hour" : "day";
-  const windowStart = new Date(now - days * DAY_MS).toISOString();
-  const previousStart = new Date(now - 2 * days * DAY_MS).toISOString();
+  const w = rangeWindow(days, now);
+  const windowStart = w.start;
+  const previousStart = w.previousStart;
 
-  const [rollups, prices, benchmarks, margins, models, switches, org] = await Promise.all([
-    supabase
-      .from("usage_rollups")
-      .select(
-        "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
-      )
-      .eq("org_id", DEMO_ORG_ID)
-      .eq("granularity", granularity)
-      .gte("bucket_start", previousStart)
-      .order("bucket_start", { ascending: true })
-      .limit(100_000),
-    supabase
-      .from("host_prices")
-      .select(
-        "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, verified_at",
-      ),
-    supabase.from("benchmarks").select("model_key, suite, task_class, score").eq("is_fixture", false),
-    supabase
-      .from("benchmark_margins")
-      .select("suite, task_class, margin, method, synced_at, source_run_id")
-      .eq("is_fixture", false),
-    supabase.from("model_catalog").select("model_key, display_name, vendor, tier"),
-    supabase
-      .from("switches")
-      .select("from_model, from_host, to_model, to_host, basis, badge, autonomous, status, activated_at, saved_usd")
-      .eq("org_id", DEMO_ORG_ID)
-      .order("saved_usd", { ascending: false }),
-    supabase.from("organizations").select("name, plan").eq("id", DEMO_ORG_ID).maybeSingle(),
-  ]);
+  const [rollups, prices, benchmarks, margins, models, switches, org, firstEvent, storedObjectives] =
+    await Promise.all([
+      supabase
+        .from("usage_rollups")
+        .select(
+          "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+        )
+        .eq("org_id", DEMO_ORG_ID)
+        .eq("granularity", granularity)
+        .gte("bucket_start", previousStart)
+        .order("bucket_start", { ascending: true })
+        .limit(100_000),
+      supabase
+        .from("host_prices")
+        .select(
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, verified_at",
+        ),
+      supabase
+        .from("benchmarks")
+        .select("model_key, suite, task_class, score")
+        .eq("is_fixture", false),
+      supabase
+        .from("benchmark_margins")
+        .select("suite, task_class, margin, method, synced_at, source_run_id")
+        .eq("is_fixture", false),
+      supabase.from("model_catalog").select("model_key, display_name, vendor, tier"),
+      supabase
+        .from("switches")
+        .select(
+          "from_model, from_host, to_model, to_host, basis, badge, autonomous, status, activated_at, saved_usd",
+        )
+        .eq("org_id", DEMO_ORG_ID)
+        .order("saved_usd", { ascending: false }),
+      supabase.from("organizations").select("name, plan").eq("id", DEMO_ORG_ID).maybeSingle(),
+      // Onboarding needs "has this workspace ever ingested anything", which is a
+      // different question from "is there traffic in the selected window".
+      supabase
+        .from("usage_rollups")
+        .select("bucket_start")
+        .eq("org_id", DEMO_ORG_ID)
+        .order("bucket_start", { ascending: true })
+        .limit(1),
+      supabase
+        .from("objectives")
+        .select("model_key, host, task_hint, objective, quality_floor_score, max_latency_ms")
+        .eq("org_id", DEMO_ORG_ID),
+    ]);
 
   const firstError =
     rollups.error ?? prices.error ?? benchmarks.error ?? margins.error ?? models.error ?? switches.error;
@@ -165,6 +191,11 @@ export async function buildDashboardSnapshot(days: RangeDays) {
     console.error("dashboard snapshot read failed", firstError);
     throw new Error("Could not load usage data");
   }
+
+  const plan = (org.data?.plan ?? "rightsize") as PlanTier;
+  const objective = effectiveSelection(plan, requestedObjective);
+  const objectiveRows = mergeObjectives((storedObjectives.data ?? []) as ObjectiveRow[], objective);
+
 
   // ---- Series + window totals, split into current and previous window -------
   const buckets = new Map<string, SeriesPoint>();
