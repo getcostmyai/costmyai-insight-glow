@@ -13,6 +13,9 @@ import {
   type WorkloadId,
 } from "@/lib/estimator/spec";
 
+
+/** Fixed locale so SSR and client render identical digits. */
+const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(n);
 /**
  * The public estimator.
  *
@@ -58,7 +61,7 @@ export function Estimator() {
           <div className="card-surface p-7">
             <Field label="Monthly AI spend">
               <div className="flex items-baseline gap-3">
-                <p className="num text-3xl text-foreground">${spend.toLocaleString()}</p>
+                <p className="num text-3xl text-foreground">${fmtNum(spend)}</p>
                 <span className="text-sm text-muted-foreground">/ month</span>
               </div>
               <input
@@ -222,7 +225,7 @@ function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
       </div>
 
       <p className="num mt-3 text-4xl text-saving sm:text-[2.75rem]">
-        ${Math.round(r.lowUsd).toLocaleString()}–${Math.round(r.highUsd).toLocaleString()}
+        ${fmtNum(Math.round(r.lowUsd))}–${fmtNum(Math.round(r.highUsd))}
       </p>
       <p className="mt-1.5 text-sm text-muted-foreground">
         on a <span className="num">{r.savingPct}%</span> price delta for this workload shape
