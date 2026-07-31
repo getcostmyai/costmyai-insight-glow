@@ -1,23 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, BadgeCheck, Handshake, Infinity as InfinityIcon, Receipt } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
+import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 
 export const Route = createFileRoute("/partners")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
   head: () => ({
     meta: [
-      { title: "Become a partner — earn 15–35% for the lifetime of the account" },
+      { title: "Become a Partner — lifetime commission on every account you refer" },
       {
         name: "description",
         content:
-          "Refer teams to CostMyAI and earn 15–35% of what they pay, for as long as they pay. Lifetime attribution, commission written only on real paid invoices, transparent tiers.",
+          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. Lifetime attribution, commission written only on real paid invoices, transparent tiers.",
       },
       { property: "og:title", content: "Become a CostMyAI partner" },
       {
         property: "og:description",
         content:
-          "15–35% lifetime commission on referred revenue, paid on real invoices — never estimated.",
+          "Lifetime commission on referred revenue, paid on real invoices — never estimated.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -26,13 +30,6 @@ export const Route = createFileRoute("/partners")({
   component: PartnersPage,
 });
 
-const TIERS = [
-  { name: "Starter", from: "$0", rate: "15%" },
-  { name: "Bronze", from: "$5K", rate: "20%" },
-  { name: "Silver", from: "$10K", rate: "25%" },
-  { name: "Gold", from: "$40K", rate: "30%" },
-  { name: "Platinum", from: "$130K", rate: "35%" },
-] as const;
 
 const PROMISES = [
   {
@@ -59,6 +56,9 @@ const STEPS = [
 ] as const;
 
 function PartnersPage() {
+  const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
+  const range = formatRateRange(ladder);
+
   return (
     <MarketingShell>
       <section className="px-5 pb-14 pt-16 sm:px-8 sm:pt-24">
@@ -68,8 +68,13 @@ function PartnersPage() {
             Partner program
           </div>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
-            Earn <span className="text-primary num tabular-nums">15–35%</span> for the lifetime of
-            every account you refer.
+            Earn{" "}
+            {range ? (
+              <span className="text-primary num tabular-nums">{range}</span>
+            ) : (
+              <span className="text-primary">commission</span>
+            )}{" "}
+            for the lifetime of every account you refer.
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
             If you advise teams on their AI stack, CostMyAI is an easy first recommendation: the
@@ -100,19 +105,28 @@ function PartnersPage() {
           <h2 className="text-2xl font-semibold tracking-tight">Commission ladder</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Your rate is set by lifetime referred revenue and applies to everything your referrals
-            pay from that point on.
+            pay from that point on. These rungs are read live from the same table that prices your
+            payouts.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
-            {TIERS.map((t) => (
-              <div key={t.name} className="rounded-2xl border border-border bg-background p-5 text-center">
+            {ladder.tiers.map((t) => (
+              <div
+                key={t.tier}
+                className="rounded-2xl border border-border bg-background p-5 text-center"
+              >
                 <p className="text-xs text-muted-foreground">{t.name}</p>
-                <p className="num mt-2 text-2xl font-semibold tabular-nums text-primary">{t.rate}</p>
-                <p className="num mt-1 text-xs tabular-nums text-muted-foreground">from {t.from}</p>
+                <p className="num mt-2 text-2xl font-semibold tabular-nums text-primary">
+                  {formatRate(t.ratePct)}
+                </p>
+                <p className="num mt-1 text-xs tabular-nums text-muted-foreground">
+                  from {formatThreshold(t.minLifetimeUsd)}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
       <section className="px-5 py-16 sm:px-8">
         <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-3">
