@@ -18,8 +18,8 @@ export interface MarketingStats {
   modelCount: number;
   /** Distinct providers we hold a verified price for. */
   providerCount: number;
-  /** Real price rows moved by sync runs in the current calendar month. */
-  priceChangesThisMonth: number;
+  /** Real price rows re-verified against a provider feed this calendar month. */
+  pricesVerifiedThisMonth: number;
   /** Provider display names, only for hosts backed by a real live price row. */
   providers: string[];
   /** True only when a pricing sync has actually completed successfully. */
@@ -33,7 +33,7 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
 
-  const [models, prices, snapshot, monthRuns] = await Promise.all([
+  const [models, prices, snapshot, verifiedThisMonth] = await Promise.all([
     supabase.from("model_catalog").select("model_key", { count: "exact", head: true }),
     supabase.from("host_prices").select("host, host_label"),
     supabase
@@ -43,11 +43,14 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
       .order("synced_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // A "price change" needs a real price row that a feed re-verified this
+    // month. Summing `rows_upserted` counted benchmark and latency writes as
+    // price movement, which is a claim we cannot back.
     supabase
-      .from("pricing_snapshots")
-      .select("rows_upserted")
-      .eq("status", "ok")
-      .gte("synced_at", monthStart.toISOString()),
+      .from("host_prices")
+      .select("id", { count: "exact", head: true })
+      .eq("is_fixture", false)
+      .gte("verified_at", monthStart.toISOString()),
   ]);
 
   const priceRows = prices.data ?? [];
@@ -58,7 +61,7 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
   return {
     modelCount: models.count ?? 0,
     providerCount: providers.length,
-    priceChangesThisMonth: (monthRuns.data ?? []).reduce((sum, r) => sum + (r.rows_upserted ?? 0), 0),
+    pricesVerifiedThisMonth: verifiedThisMonth.count ?? 0,
     providers,
     live: Boolean(snapshot.data?.synced_at),
   };
