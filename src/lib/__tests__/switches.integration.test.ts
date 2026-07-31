@@ -373,7 +373,7 @@ describe("objectives — Certify entitlement, written through RLS", () => {
       org_id: paidOrg,
       model_key: "gpt-5.5",
       host: "openai",
-      task_hint: taskHint,
+      task_hint: "generation",
       objective: "cost",
     });
     expect(error).not.toBeNull();
