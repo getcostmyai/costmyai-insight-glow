@@ -8,11 +8,15 @@ interface Props {
 /** Apple-style progress ring: how much of the identified saving is actually captured. */
 export function SavingsRing({ captured, available }: Props) {
   const total = captured + available;
-  const pct = total > 0 ? captured / total : 0;
+  // Rounded before it reaches the DOM: the raw ratio carries float noise that
+  // differs by a fraction between the server render and the client, which React
+  // reports as a hydration mismatch. Two decimals is far below one pixel here.
+  const pct = total > 0 ? Math.round((captured / total) * 10_000) / 10_000 : 0;
   const size = 240;
   const stroke = 18;
   const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
+  const c = Math.round(2 * Math.PI * r * 100) / 100;
+
 
   return (
     <div className="relative mx-auto" style={{ width: size, height: size }}>
