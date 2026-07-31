@@ -40,7 +40,7 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         .eq("is_fixture", false),
       supabase
         .from("benchmark_margins")
-        .select("suite, task_class, margin")
+        .select("suite, task_class, margin, method, synced_at, source_run_id")
         .eq("is_fixture", false),
 
       supabase.from("model_catalog").select("model_key, display_name, vendor, tier"),
@@ -101,6 +101,18 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
 
     return {
       days: data.days,
+      // Provenance for every equivalence claim on screen: which evaluation,
+      // which measured band, measured when. Nothing is asserted uncited.
+      evidence: (margins.data ?? []).map((m) => ({
+        taskClass: m.task_class,
+        suite: m.suite,
+        evaluation: m.suite.split(":")[1] ?? m.suite,
+        margin: Number(m.margin),
+        method: m.method,
+        measuredAt: m.synced_at,
+        runId: m.source_run_id,
+        scoredModels: (benchmarks.data ?? []).filter((b) => b.suite === m.suite).length,
+      })),
       totals: { spend: totalSpend, requests: totalRequests, inputTokens, outputTokens },
       ...result,
     };
