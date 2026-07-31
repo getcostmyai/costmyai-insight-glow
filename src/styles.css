@@ -279,6 +279,46 @@
   animation: pulse-dot 2.2s ease-in-out infinite;
 }
 
+/* Estimator step transitions: quick, spring-ish, purposeful. */
+@keyframes step-in-right {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes step-in-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-18px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@utility step-in-right {
+  animation: step-in-right 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility step-in-left {
+  animation: step-in-left 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-in-right,
+  .step-in-left,
+  .animate-scale-in {
+    animation: none;
+  }
+}
+
+
 /* ---------------------------------------------------------------------------
  * Marketing utilities. Every front-facing CTA is .btn-gradient — there is no
  * second CTA style, which is what keeps the brand gradient from being retyped
