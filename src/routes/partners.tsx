@@ -1,23 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, BadgeCheck, Handshake, Infinity as InfinityIcon, Receipt } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
+import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 
 export const Route = createFileRoute("/partners")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
   head: () => ({
     meta: [
-      { title: "Become a partner — earn 15–35% for the lifetime of the account" },
+      { title: "Become a Partner — lifetime commission on every account you refer" },
       {
         name: "description",
         content:
-          "Refer teams to CostMyAI and earn 15–35% of what they pay, for as long as they pay. Lifetime attribution, commission written only on real paid invoices, transparent tiers.",
+          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. Lifetime attribution, commission written only on real paid invoices, transparent tiers.",
       },
       { property: "og:title", content: "Become a CostMyAI partner" },
       {
         property: "og:description",
         content:
-          "15–35% lifetime commission on referred revenue, paid on real invoices — never estimated.",
+          "Lifetime commission on referred revenue, paid on real invoices — never estimated.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -26,13 +30,6 @@ export const Route = createFileRoute("/partners")({
   component: PartnersPage,
 });
 
-const TIERS = [
-  { name: "Starter", from: "$0", rate: "15%" },
-  { name: "Bronze", from: "$5K", rate: "20%" },
-  { name: "Silver", from: "$10K", rate: "25%" },
-  { name: "Gold", from: "$40K", rate: "30%" },
-  { name: "Platinum", from: "$130K", rate: "35%" },
-] as const;
 
 const PROMISES = [
   {
