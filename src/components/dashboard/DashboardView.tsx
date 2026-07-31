@@ -24,6 +24,8 @@ import { dashboardQuery, ranges, rangeFor, type RangeKey, type DashboardScope } 
 import type { ObjectiveKind } from "@/lib/engine/types";
 import type { SwitchOpportunity } from "@/lib/dashboard.server";
 import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
+import { useSessionUser } from "@/hooks/use-session-user";
+import { supabase } from "@/integrations/supabase/client";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
 
 const navItems = [
@@ -62,6 +64,13 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const [metric, setMetric] = useState<ChartMetric>("spend");
   const [objective, setObjective] = useState<ObjectiveKind>("cost");
   const { data } = useSuspenseQuery(dashboardQuery(range, objective, scope));
+  const session = useSessionUser();
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    window.location.assign("/auth");
+  }
+
 
   const { series, live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const activeRange = rangeFor(range);
@@ -131,7 +140,22 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-4">
-            {scope === "demo" ? (
+            {/* Session-driven, never route-driven: after an OAuth callback the
+                session arrives asynchronously and this must follow it. */}
+            {session.ready && session.signedIn ? (
+              <>
+                <span className="hidden max-w-[180px] truncate text-sm text-muted-foreground sm:block">
+                  {session.email}
+                </span>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : session.ready ? (
               <a
                 href="/auth"
                 className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
@@ -140,10 +164,14 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               </a>
             ) : null}
             <a
-              href={scope === "demo" ? "/auth" : "#govern"}
+              href={session.ready && session.signedIn ? "/workspace" : "/auth"}
               className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95"
             >
-              {scope === "demo" ? "See if you're overpaying" : "Connect a gateway"}
+              {session.ready && session.signedIn
+                ? scope === "demo"
+                  ? "Go to my workspace"
+                  : "Connect a gateway"
+                : "See if you're overpaying"}
             </a>
           </div>
 
