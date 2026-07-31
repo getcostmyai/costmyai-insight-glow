@@ -1,5 +1,7 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { AA_INTELLIGENCE_SUITE } from "@/lib/benchmarks/aa-catalog";
+
 
 export interface CatalogRow {
   model_key: string;
@@ -18,8 +20,9 @@ export interface CatalogRow {
   gpqa: number | null;
   ifbench: number | null;
   coding: number | null;
-  /** Mean of the benchmark scores actually present. null when none are. */
+  /** AA's own published Intelligence Index, verbatim. null = not published. */
   intelligence: number | null;
+
   /** Feed-published medians, model-scope. null = unmeasured. */
   ttftMs: number | null;
   outputTps: number | null;
@@ -98,9 +101,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       const col = SUITE_COLUMN[s.suite];
       if (col) named[col] = s.score;
     }
-    const present = [named.gpqa, named.ifbench, named.coding].filter(
-      (v): v is number => v != null,
-    );
+    // AA's own published composite — read straight through, never derived here.
+    const publishedIndex = scores.find((s) => s.suite === AA_INTELLIGENCE_SUITE);
+
 
     // Latency is published per model, not per endpoint — every host row for a
     // model carries the same medians, so the first measured one is the model's.
@@ -119,9 +122,8 @@ export async function readCatalog(): Promise<CatalogPayload> {
       cheapestOutput: hosts.length ? Math.min(...hosts.map((h) => h.output)) : null,
       scores,
       ...named,
-      intelligence: present.length
-        ? Math.round((present.reduce((a, b) => a + b, 0) / present.length) * 10) / 10
-        : null,
+      intelligence: publishedIndex ? publishedIndex.score : null,
+
       ttftMs: withLatency ? Number(withLatency.median_ttft_ms) : null,
       outputTps: withLatency ? Number(withLatency.output_tps) : null,
     };

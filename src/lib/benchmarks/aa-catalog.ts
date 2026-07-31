@@ -106,6 +106,15 @@ export const EXCLUDED_FIELDS = [
   "artificial_analysis_math_index",
 ];
 
+/**
+ * AA's published Intelligence Index — a real, independently-computed composite.
+ * Display-only: excluded above from every certification path, stored under its
+ * own suite so it can never be mistaken for an evaluation with a margin.
+ */
+export const AA_INTELLIGENCE_FIELD = "artificial_analysis_intelligence_index";
+export const AA_INTELLIGENCE_SUITE = `${AA_SUITE}:intelligence_index`;
+
+
 export interface AaModel {
   slug: string;
   name: string;
@@ -158,9 +167,11 @@ export interface ScoreRow {
   suite: string;
   task_class: string;
   score: number;
-  sample_size: number;
+  /** null for a published composite: AA gives no item count, so no margin exists. */
+  sample_size: number | null;
   source: string;
 }
+
 
 /** AA reports accuracies as 0-1 fractions; we store 0-100 points throughout. */
 export function toPoints(fraction: number): number {
@@ -319,6 +330,30 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
       margins.push({ suite, task_class: taskClass, margin, method: MARGIN_METHOD });
     }
   }
+
+  /*
+   * AA's own published composite, stored verbatim for display only.
+   *
+   * It is NOT an evaluation with an item count, so it gets no margin row and is
+   * filed under task_class "index" — a class no workload ever carries, so the
+   * equivalence engine can never read it. That keeps EXCLUDED_FIELDS' rule
+   * intact (no certification against a blended index) while letting the catalog
+   * show AA's real number instead of an average we computed ourselves.
+   */
+  for (const [key, model] of resolved) {
+    const raw = model.evaluations?.[AA_INTELLIGENCE_FIELD];
+    if (raw == null || Number.isNaN(Number(raw))) continue;
+    scores.push({
+      model_key: key,
+      suite: AA_INTELLIGENCE_SUITE,
+      task_class: "index",
+      score: Math.round(Number(raw) * 10) / 10,
+      sample_size: null,
+      source: `artificialanalysis.ai/${model.slug}#${AA_INTELLIGENCE_FIELD}`,
+    });
+  }
+
+
 
   return { scores, latencies, margins, chosenEvals, matchedModels, unmatchedModels, skipped };
 }
