@@ -95,7 +95,6 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
         latency_scope: l.scope,
         latency_source_run_id: runId,
         latency_measured_at: syncedAt,
-        source: l.source,
       })
       .eq("model_key", l.model_key)
       .select("id");
