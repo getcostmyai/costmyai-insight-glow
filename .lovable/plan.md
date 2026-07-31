@@ -1,72 +1,66 @@
-# CostMyAI — path to market-ready
+# CostMyAI — build order (v6, final)
 
-## Answer up front
+## Design scope — two visual languages, scoped by page type
 
-Yes, this is buildable end to end here, with two honest boundaries:
+**Dashboard** (Overview, Compare, Certify, Rightsize, Govern, Settings, Workspace): current build preserved **exactly** — dark hero card, existing palette and tokens, captured ring, card styling, layout, typography. No changes.
 
-1. **The verification engine runs in the customer's environment.** It is a middleware/proxy package they install — it cannot live inside this web app. What lives here is the ingest API it posts metadata to, the API-key system, and the docs/snippets. Your Replit version can be salvaged for this; I'd rewrite it as a small, dependency-light package with one job: forward the request unchanged, emit `{model, host, task_hint, input_tokens, output_tokens, latency, status}` — no prompt content.
-2. **Certify and Rightsize need real benchmark data.** I can build the schema, the equivalence scoring, the price matrix and the admin tooling to load and version it — but the quality data itself must come from you (your benchmarks, or a licensed/scraped public set). Without it, Certify recommendations are not defensible, and defensibility is the whole product.
+**Marketing / front-facing** (front page, pricing, about, blog, docs, legal): light, Apple-style, spacious. **Not** the dark-hero dashboard style. Built from the real brand gradient values, defined once and reused — never redefined per page:
 
-## Stack decision
+```css
+--gradient-brand: linear-gradient(135deg,#6366f1 0%,#7c3aed 55%,#9333ea 100%);
+--gradient-brand-soft: linear-gradient(135deg,rgba(99,102,241,.82) 0%,rgba(124,58,237,.82) 100%);
+--wash-hero: radial-gradient(ellipse 130% 100% at 50% 0%,rgba(123,97,255,.17) 0%,rgba(255,255,255,0) 90%);
+--wash-section: radial-gradient(ellipse 120% 80% at 50% 0%,rgba(123,97,255,.13) 0%,rgba(255,255,255,0) 85%);
+--texture-dots: radial-gradient(circle,hsl(var(--muted-foreground)/.09) 1px,transparent 1px); /* 26px pitch */
+```
 
-Lovable Cloud (Postgres + auth + server functions), not Clerk + Neon.
+One `.btn-gradient` utility on `--gradient-brand` for every CTA button and solid-fill CTA block; `--wash-hero` behind hero sections, `--wash-section` behind secondary ones; `--gradient-brand-soft` for the heavier card state; dots optional for depth.
 
-- Neon vs Cloud Postgres: same Postgres. Cloud removes a second account, a connection-pooling setup and a separate migration pipeline. No functional upside to Neon at your stage.
-- Clerk's real upsides are polished org/team management and enterprise SSO. Cloud covers email+password, Google, Apple and SAML SSO natively; org/seat modelling I'd build as a `organizations` + `memberships` + `user_roles` schema, which you need anyway for plan gating. Revisit Clerk only if you sell to enterprises demanding SCIM provisioning.
-- Stripe: native Lovable payments integration, no key wrangling, test mode from day one.
-- Loops: connected via secret + server-side API calls for lifecycle email (welcome, connect-your-stack nudge, weekly savings digest, trial/upgrade, switch-activated receipt).
+**Both languages:** the CostMyAI wordmark with "My" in brand purple, and the hard no-serif-numerals rule.
 
-## Build order
+**No serif numerals — hard constraint, everywhere.** Every dollar figure, token count, percentage and date renders sans-serif or a tabular-numeral mono face, regardless of the page's headline/body font. Enforced by a check over number-rendering components run in CI, not left to review.
 
-### Phase 0 — Replit triage (before I write product code)
-You give me the Replit repo (zip or GitHub). I audit it and produce a written verdict per module: keep / rewrite / kill, with the reasoning. Specifically I need to see:
-- the verification-engine middleware
-- the ingest endpoint and its payload shape
-- whatever price matrix / host catalogue exists
-- any benchmark or quality-equivalence data
-- current DB schema
+**Zero-credentials:** schema invariant enforced by a test that fails on any credential-shaped column. No server-side provider key, no `openai-billing-fetcher.ts`, no `OPENAI_ADMIN_KEY`. Billing reconciliation is customer-push only.
 
-Output of this phase is a short report plus a canonical event schema. Nothing is ported blindly.
+**Deliberately deferred:** cross-tenant admin/oversight panel (managing orgs across tenants, manual plan-entitlement adjustment). Not in Phases 1–8 beyond Phase 7's partner-tier override tooling; scoped separately when needed. Recorded as a decision, not a gap.
 
-### Phase 1 — Data model and analysis engine (the core)
-- Schema: `organizations`, `memberships`, `user_roles`, `api_keys` (hashed), `usage_events` (raw metadata), `usage_rollups` (hourly/daily aggregates), `model_catalog`, `host_prices`, `benchmarks`, `equivalence_pairs`, `workload_profiles`, `recommendations`, `switches`, `switch_events`. RLS on everything, org-scoped.
-- **Compare**: join observed `(model, host)` against `host_prices`, project monthly saving from the org's own volume. Deterministic, no benchmarks needed — this is why it's free.
-- **Certify**: Compare, then candidate models within a quality band from `benchmarks`, filtered by task class. Emits a certified/refused verdict with the basis recorded, so the dashboard can keep showing "4 certified · 8 refused".
-- **Rightsize**: adds workload complexity classification (token shape, task hint, output length distribution) vs model tier → flags oversized usage with wasted-spend estimate.
-- **Govern**: the same pipeline plus an autonomous policy evaluator (guardrails: max spend delta, quality floor, rollback on error-rate spike) writing switch decisions.
-- Recomputation runs as a server function on a schedule; dashboard reads materialised `recommendations`.
+### Phase 1 — Schema, benchmark sync, engine *(starts now)*
+Migrations first: full model incl. `benchmark_margins`, `pricing_snapshots`, billing captures/reconciliations, `routing_rules` (no credential column), `plan_entitlements`, `objectives`, `is_synthetic` on every tenant-scoped table, GRANTs and RLS throughout.
 
-### Phase 2 — Ingestion
-- `POST /api/public/v1/events` — API-key auth (hashed, org-scoped), Zod-validated, batched, idempotent. Explicit rejection of any prompt/content field.
-- Key management UI, rotation, last-seen indicator, "waiting for first event" onboarding state.
-- Rollup job so the dashboard never scans raw events.
+Then the **live Artificial Analysis sync** (24h) — real sync only, no manual-entry path; fixture-backed for dev/test until access lands, never surfaced as product data.
 
-### Phase 3 — Accounts, billing, gating
-- Auth: email+password and Google. Org creation on signup, invite teammates.
-- Stripe: four products, monthly + annual prices — Compare free · Certify $69/$58 · Rightsize $389/$324 · Govern $899/$749. Checkout, customer portal, webhook → `subscriptions` table.
-- One server-side `requirePlan(tier)` gate used by every analysis function and route. Locked tiers show a real preview of what they'd unlock, priced against the $50–80 competitors.
-- Loops lifecycle emails on the events above.
+Then the **engine**: one shared cost function (C3) and four separately-tested checks — arbitrage with deterministic tie-break; equivalence picking the **cheapest model clearing the bar**, bar from the stored per-benchmark margin not a hardcoded 1.0 (C1, C2), discrimination/Goodhart as real code; **rightsize as a first-class check** (observed shape only, computed for every org on every plan to power the upsell teaser); autonomous gate overlapping the equivalent band (C5). **Objective selection (Clause 07)**: cost default, latency and quality-floor as real alternatives, per-workload overriding account-wide.
 
-### Phase 4 — Manual + autonomous switching
-- Rightsize: manual switch from the dashboard → writes routing config the engine polls; before/after tracking so "saved since" is measured, not modelled.
-- Govern: policy editor, autonomous switch log, kill switch, rollback.
+*Tests:* C1 tie + alphabetical fallback; C2 boundary both directions; each objective winning differently on one fixture; rightsize matrix incl. correct-size negatives; autonomous gate + cooldown; credential-column schema test.
 
-### Phase 5 — Market-ready polish
-- Marketing site with your architecture diagram, pricing page, docs/quickstart, legal pages, analytics, seeded demo org so prospects see a full dashboard before connecting anything.
+### Phase 2 — Synthetic ecosystem *(parallel once schema lands)*
+Live pricing from day one; benchmarks on fixtures until access arrives, since the generator produces **traffic, never verdicts**. $15–20k/month solved backwards per model against live pricing and re-solved on price change; concentrated power-law distribution; **no showcase floor**; drift posted through the same public ingest endpoint a real customer uses every 30–120s; workload-set evolution on ~week ramps; `is_synthetic` isolation via RLS predicate and write-side guard; external demo gated behind a flag until live sync is on.
 
-## Technical notes
+**Visibly live numbers:** tokens in/out, requests and spend all move within a minute or two — real rate underneath, honest interpolation between ~10s refreshes reconciling to the true value, precision chosen so movement shows, counters freeze if the generator stops. Tested at t=0/t=90s per counter, plus reconciliation and freeze tests.
 
-- Lovable Cloud is Postgres with RLS; every table is org-scoped and roles live in a separate `user_roles` table (never on profiles) to avoid privilege escalation.
-- Analysis runs in server functions; the ingest endpoint is a public server route with signature/key verification inside the handler.
-- Scheduled recomputation via pg_cron hitting a public route with a shared secret.
-- Existing dashboard UI stays — it gets rewired from `src/lib/dashboard-data.ts` to real queries, so the design work you already approved is preserved.
+### Phase 3A — Ingestion hardening
+`/api/public/v1/events` and `/api/public/v1/billing`: hashed org-scoped tokens, Zod rejecting any prompt/content field, idempotent, batched, rollups, versioned payload contract.
 
-## What I need from you
+### Phase 3B — Verification Engine + customer onboarding
+Existing `packages/gateway` / `gateway-container` **repointed, not rebuilt** — local execution-key resolution, pass-through proxy and token counting preserved; endpoint paths read from one config constant; auth switched to the new ingest token; audit-flagged code dropped on the way through. Ships `@costmyai/engine` (npm) and the container image, dashboard-generated ingest token (shown once, hashed, rotatable, last-seen), **offline-safe local queueing so a CostMyAI outage never affects customer inference**, and a quickstart verified by executing it verbatim in a clean environment.
 
-1. The Replit repo.
-2. Whatever benchmark/quality data exists, and where the price matrix comes from (manual, scraped, provider APIs).
-3. Confirmation of the free-tier limit for Compare (e.g. events/month or connected models).
+*Tests:* clean-container quickstart run; network-partition drain test; payload capture asserting no prompt content; **configured-paths-match-live-routes test**; rotated-token error clarity.
 
-## Suggested first step
+### Phase 4 — Dashboard rewired *(dashboard design untouched)*
+Real queries and live engine output behind the existing components; locked rungs show real previews incl. the rightsize teaser; objective selector surfaced; "waiting for first event" state wired to 3B. *Tests:* period toggle headline vs direct engine call, **and every list asserted to filter by period** (11-day-old rule present at 30d, absent at 7d, per list); visual regression asserting hero/ring/cards unchanged.
 
-Phase 0 + Phase 1 schema in one go: I audit Replit, then land the database and the Compare engine end to end against seeded data. That gives a working, provable core before any billing code exists.
+### Phase 5 — Accounts, plans, gating
+Auth, org invites, Stripe, one server-side `requirePlan(tier)`, `LAUNCH_FREE_UNTIL` single-sourced (C7).
+
+### Phase 6 — Switching
+Manual switch writing `routing_rules` the engine polls; measured before/after. Then Govern: policy editor, autonomous writer, kill switch, rollback, full audit.
+
+### Phase 7 — Partner / affiliate program
+`partners`, `partner_users` with own auth surface and RLS boundary, `partner_tiers` ($5K/$10K/$40K/$130K → 15/20/25/30/35%), `referred_by_partner_id`, `commission_ledger` with lifetime semantics and payout status; partner dashboard; admin tier assignment with audited override. Movable to directly after Phase 5.
+
+### Phase 8 — Marketing surface + copy
+Marketing pages built in the light Apple-style language above on the shared gradient tokens; freshness sourced live from `pricing_snapshots.synced_at` (C6); resolver docs corrected (C4); C8 dead re-check and `hosts[0]` assumption removed; pricing and legal. *Tests:* no-serif-numeral check across marketing components; CTA audit asserting every CTA resolves to `.btn-gradient`.
+
+**Not built:** Analyzer CSV page or route, server-side provider billing fetch, manual benchmark entry, compatibility shims for retired ingest paths, cross-tenant admin panel (deferred, above).
+
+**Needed from you:** Artificial Analysis API access (key + tier) when convenient — nothing else blocks Phase 1.
