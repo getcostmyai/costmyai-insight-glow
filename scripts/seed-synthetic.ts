@@ -25,7 +25,7 @@ import { SYNTHETIC_WORKLOADS } from "../src/lib/synthetic/workloads";
 
 const ORG_ID = "00000000-0000-0000-0000-000000000001";
 const WINDOW_DAYS = 30;
-const RAW_EVENT_HOURS = 48;
+const RAW_EVENT_HOURS = 30; // always covers the whole current UTC day, so today's day bucket can be rebuilt from raw events
 const SEED = process.env.SYNTHETIC_SEED ?? "costmyai-demo-v1";
 
 function q(sql: string): any[] {
