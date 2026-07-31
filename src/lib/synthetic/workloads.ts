@@ -58,6 +58,30 @@ export interface SyntheticWorkload {
 export const DEFAULT_RAMP_DAYS = 7;
 
 /**
+ * How present a workload is at a given moment, 0 (absent) to 1 (fully ramped).
+ * `daysAgo` is measured back from the end of the window.
+ */
+export function lifecycleFactor(daysAgo: number, workload: SyntheticWorkload): number {
+  const lc = workload.lifecycle;
+  if (!lc) return 1;
+  const ramp = Math.max(lc.rampDays ?? DEFAULT_RAMP_DAYS, 0.5);
+  let factor = 1;
+
+  if (lc.introducedDaysAgo !== undefined) {
+    // Nothing before adoption, then a week-long ramp to steady state.
+    factor *= clamp01((lc.introducedDaysAgo - daysAgo) / ramp);
+  }
+  if (lc.retiringSinceDaysAgo !== undefined) {
+    factor *= 1 - clamp01((lc.retiringSinceDaysAgo - daysAgo) / ramp);
+  }
+  return factor;
+}
+
+function clamp01(n: number): number {
+  return Math.min(1, Math.max(0, n));
+}
+
+/**
  * Thirteen workloads across five vendors and eight hosts — the shape of a
  * mid-size AI product's bill: a few expensive reasoning paths carrying most of
  * the spend, one big coding workload, two very high-cadence classifier paths

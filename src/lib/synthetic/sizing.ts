@@ -2,7 +2,7 @@ import { costOf, DAYS_IN_MONTH } from "@/lib/engine/cost";
 import type { PriceRow } from "@/lib/engine/types";
 
 import { DAY_MS, lognormalSigma } from "./generator";
-import { DEFAULT_RAMP_DAYS, type SyntheticWorkload } from "./workloads";
+import { lifecycleFactor, type SyntheticWorkload } from "./workloads";
 
 /**
  * Volume sizing.
@@ -30,29 +30,6 @@ export const TARGET_MONTHLY_SPEND_USD = 17_500;
 export function expectedTokens(median: number, p95: number): number {
   const sigma = lognormalSigma(median, p95);
   return median * Math.exp((sigma * sigma) / 2);
-}
-
-/** How present a workload is at a given moment, 0 (absent) to 1 (fully ramped). */
-export function lifecycleFactor(daysAgo: number, workload: SyntheticWorkload): number {
-  const lc = workload.lifecycle;
-  if (!lc) return 1;
-  const ramp = Math.max(lc.rampDays ?? DEFAULT_RAMP_DAYS, 0.5);
-  let factor = 1;
-
-  if (lc.introducedDaysAgo !== undefined) {
-    // Not yet adopted, then a week-long ramp to steady state.
-    const elapsed = lc.introducedDaysAgo - daysAgo;
-    factor *= clamp01(elapsed / ramp);
-  }
-  if (lc.retiringSinceDaysAgo !== undefined) {
-    const elapsed = lc.retiringSinceDaysAgo - daysAgo;
-    factor *= 1 - clamp01(elapsed / ramp);
-  }
-  return factor;
-}
-
-function clamp01(n: number): number {
-  return Math.min(1, Math.max(0, n));
 }
 
 /**
