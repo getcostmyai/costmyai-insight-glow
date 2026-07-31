@@ -157,6 +157,8 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   const unmatchedModels: string[] = [];
   const skipped: TransformResult["skipped"] = [];
   const chosenEvals: TransformResult["chosenEvals"] = [];
+  const margins: TransformResult["margins"] = [];
+
 
   const resolved = new Map<string, AaModel>();
   for (const key of catalogKeys) {
