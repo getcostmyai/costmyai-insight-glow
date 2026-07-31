@@ -18,6 +18,7 @@ import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/ev
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -63,12 +64,19 @@ const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
   path: '/api/public/sync/benchmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
@@ -79,6 +87,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
@@ -91,6 +100,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/workspace'
+    | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/workspace'
+    | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
@@ -124,6 +136,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/_authenticated/workspace'
+    | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
@@ -135,6 +148,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
@@ -206,6 +220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncBenchmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
