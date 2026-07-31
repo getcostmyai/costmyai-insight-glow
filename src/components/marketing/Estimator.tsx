@@ -467,7 +467,7 @@ function Refused({ r }: { r: Extract<EstimatorResult, { state: "refused" }> }) {
     <div>
       <div className="flex items-center gap-2">
         <ShieldAlert className="h-4 w-4 text-primary" />
-        <p className="eyebrow">{r.reason.replace(/_/g, " ")}</p>
+        <p className="eyebrow">{REFUSAL_TITLE[r.reason] ?? r.reason.replace(/_/g, " ")}</p>
       </div>
       <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">{r.headline}</p>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{r.detail}</p>
