@@ -73,14 +73,6 @@ function Hero({ stats }: { stats: MarketingStats }) {
     <section className="relative overflow-hidden wash-hero">
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
       <div className="relative mx-auto max-w-3xl px-5 pb-24 pt-24 text-center sm:px-8 sm:pb-28 sm:pt-32">
-        {stats.live ? (
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
-            <span className="font-semibold text-foreground">Live</span> pricing across{" "}
-            <span className="num font-semibold text-foreground">{stats.modelCount}</span> models
-          </span>
-        ) : null}
-
         <h1 className="mt-6 text-[2.9rem] font-bold leading-[1.02] tracking-[-0.035em] sm:text-[4.2rem]">
           Stop overpaying <span className="text-gradient-brand">for AI.</span>
         </h1>
