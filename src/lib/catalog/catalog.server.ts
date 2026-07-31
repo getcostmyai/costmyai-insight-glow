@@ -55,7 +55,13 @@ export async function readCatalog(): Promise<CatalogPayload> {
       )
       .eq("is_active", true)
       .limit(MAX_CATALOG_ROWS),
-    supabase.from("benchmarks").select("model_key, suite, task_class, score").limit(MAX_CATALOG_ROWS),
+    // Oldest first, so the newest measurement is the one that lands in a column.
+    supabase
+      .from("benchmarks")
+      .select("model_key, suite, task_class, score, measured_at")
+      .order("measured_at", { ascending: true })
+      .limit(MAX_CATALOG_ROWS),
+
     supabase
       .from("pricing_snapshots")
       .select("synced_at")
