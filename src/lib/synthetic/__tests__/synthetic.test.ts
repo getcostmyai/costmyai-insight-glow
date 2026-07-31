@@ -13,7 +13,8 @@ import {
   rollupEvents,
 } from "@/lib/synthetic/generator";
 import { aggregateRollups, buildBilling, buildProfiles, oversizedProfiles } from "@/lib/synthetic/profiles";
-import { SYNTHETIC_WORKLOADS } from "@/lib/synthetic/workloads";
+import { activeFraction, sizeWorkloads, TARGET_MONTHLY_SPEND_USD } from "@/lib/synthetic/sizing";
+import { lifecycleFactor, SYNTHETIC_WORKLOADS } from "@/lib/synthetic/workloads";
 
 const price = (model: string, host: string, i: number, o: number): PriceRow => ({
   model_key: model,
@@ -35,6 +36,8 @@ const PRICES: PriceRow[] = [
   price("gpt-oss-120b", "api.deepinfra.com", 0.15, 0.6),
   price("deepseek-v4-flash", "api.venice.ai", 0.28, 1.12),
   price("qwen3-32b", "api.groq.com", 0.29, 0.59),
+  price("gpt-5-6-terra", "openai", 1, 4),
+  price("gpt-5-6-luna", "openai", 0.2, 0.8),
 ];
 const priceFor = (m: string, h: string) => PRICES.find((p) => p.model_key === m && p.host === h);
 
@@ -50,13 +53,24 @@ const MODELS: ModelRow[] = [
   { model_key: "gpt-oss-120b", display_name: "gpt-oss-120b", vendor: "openai", tier: "standard" },
   { model_key: "deepseek-v4-flash", display_name: "DeepSeek V4 Flash", vendor: "deepseek", tier: "economy" },
   { model_key: "qwen3-32b", display_name: "Qwen3 32B", vendor: "alibaba", tier: "economy" },
+  { model_key: "gpt-5-6-terra", display_name: "GPT-5.6 Terra", vendor: "openai", tier: "standard" },
+  { model_key: "gpt-5-6-luna", display_name: "GPT-5.6 Luna", vendor: "openai", tier: "economy" },
 ];
 
+const WINDOW_DAYS = 30;
 const TO = new Date("2026-07-31T00:00:00.000Z");
-const FROM = new Date(TO.getTime() - 7 * DAY_MS);
+const FROM = new Date(TO.getTime() - WINDOW_DAYS * DAY_MS);
+
+// Sized against a smaller target than production so the suite stays fast; the
+// distribution logic under test is identical at any target.
+const TEST_TARGET_USD = 1000;
+const SIZED = sizeWorkloads(SYNTHETIC_WORKLOADS, priceFor, {
+  windowDays: WINDOW_DAYS,
+  targetMonthlyUsd: TEST_TARGET_USD,
+});
 
 function eventsFor(workloadIndex = 0, seed = "test") {
-  return generateEvents({ workload: SYNTHETIC_WORKLOADS[workloadIndex], from: FROM, to: TO, seed });
+  return generateEvents({ workload: SIZED[workloadIndex], from: FROM, to: TO, seed });
 }
 
 describe("deterministic generation", () => {
@@ -103,9 +117,9 @@ describe("event shape", () => {
     expect(failed.every((e) => e.inputTokens > 0 && e.outputTokens === 0)).toBe(true);
   });
 
-  it("lands within 12% of the configured daily cadence", () => {
-    const perDay = events.length / 7;
-    const target = SYNTHETIC_WORKLOADS[1].requestsPerDay;
+  it("lands within 12% of the solved daily cadence", () => {
+    const perDay = events.length / WINDOW_DAYS;
+    const target = SIZED[1].requestsPerDay;
     expect(Math.abs(perDay - target) / target).toBeLessThan(0.12);
   });
 
@@ -123,7 +137,7 @@ describe("event shape", () => {
       .map((e) => e.outputTokens)
       .sort((a, b) => a - b);
     const p50 = percentile(outputs, 50);
-    expect(Math.abs(p50 - SYNTHETIC_WORKLOADS[1].outputP50) / SYNTHETIC_WORKLOADS[1].outputP50).toBeLessThan(0.1);
+    expect(Math.abs(p50 - SIZED[1].outputP50) / SIZED[1].outputP50).toBeLessThan(0.1);
   });
 
   it("draws log-normally around the median", () => {
@@ -135,7 +149,7 @@ describe("event shape", () => {
 });
 
 describe("rollups are derived, never asserted", () => {
-  const events = SYNTHETIC_WORKLOADS.flatMap((_, i) => eventsFor(i));
+  const events = SIZED.flatMap((_, i) => eventsFor(i));
   const hourly = rollupEvents(events, "hour", priceFor);
   const daily = rollupEvents(events, "day", priceFor);
 
@@ -179,11 +193,11 @@ describe("rollups are derived, never asserted", () => {
 
 describe("workload profiles", () => {
   const daily = rollupEvents(
-    SYNTHETIC_WORKLOADS.flatMap((_, i) => eventsFor(i)),
+    SIZED.flatMap((_, i) => eventsFor(i)),
     "day",
     priceFor,
   );
-  const usage = aggregateRollups(daily, 7);
+  const usage = aggregateRollups(daily, WINDOW_DAYS);
   const profiles = buildProfiles(usage, MODELS, priceFor);
 
   it("profiles every workload", () => {
@@ -213,13 +227,13 @@ describe("workload profiles", () => {
   it("normalises cost to a 30-day month", () => {
     const p = profiles.find((x) => x.modelKey === "qwen3-32b")!;
     const u = usage.find((x) => x.model_key === "qwen3-32b")!;
-    expect(p.monthlyCostUsd).toBeCloseTo((u.cost_usd / 7) * 30, 1);
+    expect(p.monthlyCostUsd).toBeCloseTo((u.cost_usd / WINDOW_DAYS) * 30, 1);
   });
 });
 
 describe("billing reconciliation", () => {
   const daily = rollupEvents(
-    SYNTHETIC_WORKLOADS.flatMap((_, i) => eventsFor(i)),
+    SIZED.flatMap((_, i) => eventsFor(i)),
     "day",
     priceFor,
   );
