@@ -1,9 +1,26 @@
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
 import { usd } from "@/lib/dashboard-data";
 
 /** One certified switch opportunity, ranked by saving. */
-export function SwitchCard({ row, rank }: { row: SwitchRow; rank: number }) {
+export function SwitchCard({
+  row,
+  rank,
+  onActivate,
+  pending = false,
+  error,
+  actionLabel = "Switch now",
+  disabledHint,
+}: {
+  row: SwitchRow;
+  rank: number;
+  /** Absent on the public demo: the row is read-only there. */
+  onActivate?: () => void;
+  pending?: boolean;
+  error?: string | null;
+  actionLabel?: string;
+  disabledHint?: string;
+}) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
       <div className="flex w-full min-w-0 items-center gap-4">
@@ -26,6 +43,7 @@ export function SwitchCard({ row, rank }: { row: SwitchRow; rank: number }) {
               <ShieldCheck className="size-3" /> Certified
             </span>
           </div>
+          {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
         </div>
       </div>
 
@@ -47,9 +65,24 @@ export function SwitchCard({ row, rank }: { row: SwitchRow; rank: number }) {
             />
           </div>
         </div>
-        <button className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-glow)] transition-transform active:scale-95">
-          Switch now
-        </button>
+        {onActivate ? (
+          <button
+            type="button"
+            onClick={onActivate}
+            disabled={pending}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-glow)] transition-transform active:scale-95 disabled:opacity-60"
+          >
+            {pending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            {pending ? "Switching…" : actionLabel}
+          </button>
+        ) : (
+          <span
+            title={disabledHint ?? "Sign in to your own workspace to activate switches"}
+            className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground"
+          >
+            {actionLabel}
+          </span>
+        )}
       </div>
     </div>
   );
