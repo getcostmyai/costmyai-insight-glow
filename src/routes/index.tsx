@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -7,6 +8,7 @@ import {
   Gauge,
   Layers,
   LineChart,
+  Scale,
   Settings,
   ShieldCheck,
   Snowflake,
@@ -17,26 +19,10 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { SpendChart, type ChartMetric } from "@/components/dashboard/SpendChart";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import {
-  compact,
-  int,
-  previousTotals,
-  rangeHours,
-  ranges,
-  useLiveTotals,
-  type RangeKey,
-} from "@/lib/gateway-metrics";
-import {
-  activeSwitches,
-  cheaperHost,
-  gatewaySpend,
-  kpis,
-  overpowered,
-  pipeline,
-  qualityMatched,
-  usd,
-} from "@/lib/dashboard-data";
-
+import { dashboardQuery, ranges, rangeFor, type RangeKey } from "@/lib/dashboard-queries";
+import type { SwitchOpportunity } from "@/lib/dashboard.server";
+import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
+import { usd, type SwitchRow } from "@/lib/dashboard-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +43,20 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(dashboardQuery("30d")),
+  errorComponent: () => (
+    <div className="mx-auto max-w-lg p-16 text-center">
+      <h1 className="text-xl font-semibold">Usage data is unavailable</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        We could not read your gateway rollups just now. Refresh in a moment.
+      </p>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-lg p-16 text-center text-sm text-muted-foreground">
+      Workspace not found.
+    </div>
+  ),
   component: Dashboard,
 });
 
@@ -70,21 +70,70 @@ const navItems = [
 
 const topNav = ["Analyzer", "Calculators", "Models", "Intelligence", "Blog", "Plans"];
 
+const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): SwitchRow => ({
+  fromModel: o.fromModel,
+  fromHost: o.fromHostLabel || o.fromHost,
+  toModel: o.toModel,
+  toHost: o.toHostLabel || o.toHost,
+  kind,
+  monthlySaving: o.monthlySaving,
+  savingPct: o.savingPct,
+  basis: o.basis,
+  note: o.note,
+  qualityDelta: o.qualityDelta,
+});
+
 function Dashboard() {
   const [range, setRange] = useState<RangeKey>("30d");
   const [metric, setMetric] = useState<ChartMetric>("spend");
-  const { series, live } = useLiveTotals(range);
-  const prev = previousTotals(range);
+  const { data } = useSuspenseQuery(dashboardQuery(range));
 
-  const activeRange = ranges.find((r) => r.key === range)!;
-  const totalOpportunity = kpis.activeSaving + kpis.availableSaving;
-  const captureRate = totalOpportunity > 0 ? kpis.activeSaving / totalOpportunity : 0;
-  const spendDelta = prev.spend > 0 ? ((live.spend - prev.spend) / prev.spend) * 100 : 0;
+  const { series, live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
+  const activeRange = rangeFor(range);
+
+  const { savings, stats, coverage, activeSwitches, reconciliation } = data;
+  const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
+  const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
+  const spendDelta =
+    data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
   const runRateMonthly = (live.spend / rangeHours(range)) * 720;
   const totalTokens = live.inputTokens + live.outputTokens;
   const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
 
-
+  const pipelineSteps = [
+    {
+      step: 1,
+      title: "Host Arbitrage Check",
+      detail: "Same model weights, cheaper provider",
+      value: stats.hostCertified,
+      unit: "workloads certified",
+      tone: "saving" as const,
+    },
+    {
+      step: 2,
+      title: "Quality Check",
+      detail: `${stats.qualityCertified} certified · ${stats.qualityRefused} refused`,
+      value: stats.qualityEvaluated,
+      unit: "workloads evaluated",
+      tone: "saving" as const,
+    },
+    {
+      step: 3,
+      title: "Right-Size Check",
+      detail: "Premium models on low-complexity tasks",
+      value: stats.oversizedFlagged,
+      unit: "workloads flagged",
+      tone: "opportunity" as const,
+    },
+    {
+      step: 4,
+      title: "Manual Switch",
+      detail: "Rerouting traffic right now",
+      value: activeSwitches.length,
+      unit: "active switches",
+      tone: "spend" as const,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,9 +165,9 @@ function Dashboard() {
         <aside className="hidden w-56 shrink-0 lg:block">
           <div className="sticky top-24 space-y-6">
             <div>
-              <p className="text-sm font-semibold">Preview User</p>
+              <p className="text-sm font-semibold">{data.workspace.name}</p>
               <span className="mt-2 inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase">
-                Rightsize
+                {data.workspace.plan}
               </span>
             </div>
             <nav className="space-y-1">
@@ -171,18 +220,18 @@ function Dashboard() {
                     <span className="animate-pulse-dot inline-block size-2 rounded-full bg-[oklch(0.78_0.18_150)]" />
                     Live · streaming from your gateway
                   </span>
-                  <span className="hidden sm:inline text-white/35">|</span>
+                  <span className="hidden text-white/35 sm:inline">|</span>
                   <RangeToggle range={range} onChange={setRange} dark />
                 </div>
                 <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">
                   You can stop paying{" "}
                   <span className="num text-[oklch(0.83_0.11_195)]">
-                    {usd(kpis.availableSaving)}
+                    {usd(savings.availableMonthly)}
                   </span>{" "}
                   <span className="text-white/80">a month — today.</span>
                 </h1>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  {kpis.certifiedSwitches} certified switches are waiting. Every one of them is
+                  {savings.certifiedCount} certified switches are waiting. Every one of them is
                   quality-checked against your own traffic — same output, lower bill.
                 </p>
 
@@ -191,7 +240,7 @@ function Dashboard() {
                     label={`Spend · ${activeRange.long}`}
                     value={usd(live.spend)}
                     sub={
-                      <span className={spendDelta >= 0 ? "text-white/70" : "text-white/70"}>
+                      <span className="text-white/70">
                         {spendDelta >= 0 ? "▲" : "▼"} {Math.abs(spendDelta).toFixed(1)}% vs previous
                       </span>
                     }
@@ -200,19 +249,19 @@ function Dashboard() {
                   <HeroStat
                     label="Projected month-end"
                     value={usd(runRateMonthly, 0)}
-                    sub={`${usd(runRateMonthly - totalOpportunity, 0)} if all switches run`}
+                    sub={`${usd(Math.max(0, runRateMonthly - savings.availableMonthly), 0)} if all switches run`}
                     accent="oklch(0.9 0.03 285)"
                   />
                   <HeroStat
                     label="Blended cost / 1M tok"
                     value={usd(costPerMillion)}
-                    sub={`${compact(live.inputTokens + live.outputTokens)} tokens processed`}
+                    sub={`${compact(totalTokens)} tokens processed`}
                     accent="oklch(0.83 0.11 195)"
                   />
                   <HeroStat
                     label="Savings captured"
                     value={`${Math.round(captureRate * 100)}%`}
-                    sub={`${usd(kpis.activeSaving, 0)} of ${usd(totalOpportunity, 0)} identified`}
+                    sub={`${usd(savings.activeMonthly, 0)} of ${usd(totalOpportunity, 0)} identified`}
                     accent="oklch(0.82 0.16 155)"
                   />
                 </div>
@@ -224,7 +273,10 @@ function Dashboard() {
               </div>
 
               <div className="lg:pl-6">
-                <SavingsRing captured={kpis.activeSaving} available={kpis.availableSaving} />
+                <SavingsRing
+                  captured={savings.activeMonthly}
+                  available={savings.availableMonthly}
+                />
                 <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
                   <Legend color="oklch(0.65 0.15 158)" label="Captured" />
                   <Legend color="oklch(0.72 0.11 195)" label="Available" />
@@ -274,11 +326,12 @@ function Dashboard() {
               <SpendChart series={series} metric={metric} />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {gatewaySpend.excludedModels} models excluded from the spend total — no pricing data
-              available. Synced {gatewaySpend.syncedAgo}.
+              {coverage.untrackedModels > 0
+                ? `${coverage.untrackedModels} model${coverage.untrackedModels === 1 ? "" : "s"} excluded from the spend total — no pricing data available. `
+                : "Every model in this window has live pricing coverage. "}
+              Prices verified {coverage.pricesSyncedAgo}.
             </p>
           </section>
-
 
           {/* 3 — How we got there */}
           <section>
@@ -288,7 +341,7 @@ function Dashboard() {
               hint="Four automated checks run against your live traffic."
             />
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {pipeline.map((p) => (
+              {pipelineSteps.map((p) => (
                 <div
                   key={p.step}
                   className="card-surface relative overflow-hidden p-5 transition-transform hover:-translate-y-0.5"
@@ -332,29 +385,45 @@ function Dashboard() {
               eyebrow="Ranked by monthly saving"
               title="Same model, cheaper host"
               hint="Identical model weights, a cheaper provider. Zero quality risk."
-              badge={`${cheaperHost.length} certified`}
+              badge={`${data.hostArbitrage.length} certified`}
               badgeTone="saving"
             />
-            <div className="space-y-3">
-              {cheaperHost.map((row, i) => (
-                <SwitchCard key={row.fromModel + row.toHost} row={row} rank={i + 1} />
-              ))}
-            </div>
+            {data.hostArbitrage.length === 0 ? (
+              <EmptyState text="No host arbitrage left in this window — every workload is already on its cheapest verified provider." />
+            ) : (
+              <div className="space-y-3">
+                {data.hostArbitrage.map((row, i) => (
+                  <SwitchCard
+                    key={`${row.fromModel}-${row.toHost}-${row.taskHint}`}
+                    row={asSwitchRow(row, "host")}
+                    rank={i + 1}
+                  />
+                ))}
+              </div>
+            )}
           </section>
 
           <section>
             <SectionTitle
               eyebrow="Quality-matched"
               title="Cheaper model, same measured quality"
-              hint="Benchmarked against your own prompts before we recommend the swap."
-              badge={`${qualityMatched.length} certified`}
+              hint={`Benchmarked against ${coverage.evaluations} measured evaluation bands before we recommend the swap.`}
+              badge={`${data.qualityMatched.length} certified`}
               badgeTone="saving"
             />
-            <div className="space-y-3">
-              {qualityMatched.map((row, i) => (
-                <SwitchCard key={row.fromModel + row.toModel} row={row} rank={i + 1} />
-              ))}
-            </div>
+            {data.qualityMatched.length === 0 ? (
+              <EmptyState text={`No cheaper model cleared the measured quality bar — ${data.refusals} candidate swaps were refused rather than guessed.`} />
+            ) : (
+              <div className="space-y-3">
+                {data.qualityMatched.map((row, i) => (
+                  <SwitchCard
+                    key={`${row.fromModel}-${row.toModel}-${row.taskHint}`}
+                    row={asSwitchRow(row, "quality")}
+                    rank={i + 1}
+                  />
+                ))}
+              </div>
+            )}
           </section>
 
           {/* 5 — Waste */}
@@ -363,35 +432,39 @@ function Dashboard() {
               eyebrow="Attention needed"
               title="Overpowered for the task"
               hint="Frontier-tier models running work an economy tier handles."
-              badge={`${overpowered.length} workloads`}
+              badge={`${data.oversized.length} workloads`}
               badgeTone="opportunity"
             />
-            <div className="grid gap-4 lg:grid-cols-2">
-              {overpowered.map((o) => (
-                <div
-                  key={o.model}
-                  className="rounded-2xl border border-opportunity/25 bg-opportunity-soft p-5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="font-mono text-base font-semibold">{o.model}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">{o.host}</span>
+            {data.oversized.length === 0 ? (
+              <EmptyState text="No oversized workloads detected in this window." />
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {data.oversized.map((o) => (
+                  <div
+                    key={`${o.model}-${o.host}-${o.task}`}
+                    className="rounded-2xl border border-opportunity/25 bg-opportunity-soft p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <span className="font-mono text-base font-semibold">{o.model}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">{o.host}</span>
+                      </div>
+                      <span className="rounded-full bg-opportunity px-2.5 py-1 text-[10px] font-bold tracking-wider text-white uppercase">
+                        {o.task}
+                      </span>
                     </div>
-                    <span className="rounded-full bg-opportunity px-2.5 py-1 text-[10px] font-bold tracking-wider text-white uppercase">
-                      {o.tier}
-                    </span>
+                    <div className="mt-4 flex items-end gap-2">
+                      <TrendingDown className="mb-1 size-4 text-opportunity" />
+                      <span className="num text-3xl text-opportunity">{usd(o.wasted, 0)}</span>
+                      <span className="pb-1 text-xs text-muted-foreground">
+                        estimated monthly overspend
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
                   </div>
-                  <div className="mt-4 flex items-end gap-2">
-                    <TrendingDown className="mb-1 size-4 text-opportunity" />
-                    <span className="num text-3xl text-opportunity">{usd(o.wasted, 0)}</span>
-                    <span className="pb-1 text-xs text-muted-foreground">
-                      estimated monthly overspend
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* 6 — Proof: what's already running */}
@@ -399,45 +472,51 @@ function Dashboard() {
             <SectionTitle
               eyebrow="Working for you right now"
               title="Active switches"
-              hint="Rerouting live traffic, ranked by certify basis."
-              badge={`${kpis.activeSwitches} live`}
+              hint="Rerouting live traffic, ranked by amount saved."
+              badge={`${activeSwitches.length} live`}
               badgeTone="spend"
             />
             <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
               <div className="space-y-3">
-                {activeSwitches.map((s) => (
-                  <div key={s.fromModel} className="card-surface p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${
-                          s.badge === "Proven switch"
-                            ? "bg-saving-soft text-saving"
-                            : "bg-primary-soft text-primary"
-                        }`}
-                      >
-                        <Zap className="size-3" />
-                        {s.badge}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {s.basis} · since {s.since}
-                      </span>
+                {activeSwitches.length === 0 ? (
+                  <EmptyState text="Nothing rerouted yet. Activating a certified switch starts the meter here." />
+                ) : (
+                  activeSwitches.map((s) => (
+                    <div key={`${s.fromModel}-${s.toHost}`} className="card-surface p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${
+                            s.badge === "Proven switch"
+                              ? "bg-saving-soft text-saving"
+                              : "bg-primary-soft text-primary"
+                          }`}
+                        >
+                          <Zap className="size-3" />
+                          {s.badge}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {s.basis} · since {s.since}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="font-mono text-sm text-muted-foreground">
+                          {s.fromModel}
+                        </span>
+                        <ArrowRight className="size-3.5 text-primary" />
+                        <span className="font-mono text-sm font-semibold text-primary">
+                          {s.toModel}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{s.toHost}</span>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                        <span className="text-xs text-muted-foreground">
+                          Saved since activation · {usd(s.monthlyRate, 0)}/mo run-rate
+                        </span>
+                        <span className="num text-lg text-saving">+{usd(s.saved)}</span>
+                      </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-mono text-sm text-muted-foreground">
-                        {s.fromModel}
-                      </span>
-                      <ArrowRight className="size-3.5 text-primary" />
-                      <span className="font-mono text-sm font-semibold text-primary">
-                        {s.toModel}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">{s.toHost}</span>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                      <span className="text-xs text-muted-foreground">Saved since activation</span>
-                      <span className="num text-lg text-saving">+{usd(s.saved)}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               <div className="space-y-4">
@@ -446,12 +525,17 @@ function Dashboard() {
                     <Snowflake className="size-5 text-frozen" />
                   </div>
                   <div>
-                    <div className="num text-3xl text-frozen">{kpis.frozen}</div>
-                    <p className="text-xs text-muted-foreground">frozen switches · all healthy</p>
+                    <div className="num text-3xl text-frozen">{data.frozen}</div>
+                    <p className="text-xs text-muted-foreground">
+                      frozen switches · {data.frozen === 0 ? "all healthy" : "review needed"}
+                    </p>
                   </div>
                 </div>
 
-                <div id="govern" className="relative overflow-hidden rounded-2xl border border-saving/20 bg-saving-soft p-5">
+                <div
+                  id="govern"
+                  className="relative overflow-hidden rounded-2xl border border-saving/20 bg-saving-soft p-5"
+                >
                   <Sparkle className="absolute -top-3 -right-3 size-20 text-saving/10" />
                   <p className="text-sm font-semibold text-saving">
                     Govern would run these automatically
@@ -469,12 +553,66 @@ function Dashboard() {
             </div>
           </section>
 
+          {/* 7 — Trust: estimate vs the real invoice */}
+          {reconciliation.length > 0 && (
+            <section>
+              <SectionTitle
+                eyebrow="Verified against your invoice"
+                title="Estimated versus invoiced"
+                hint="Your provider's own billing total, checked against what our metadata said it should cost."
+                badge={`${reconciliation.filter((r) => r.verdict === "match").length}/${reconciliation.length} within tolerance`}
+                badgeTone="saving"
+              />
+              <div className="card-surface divide-y divide-border overflow-hidden">
+                {reconciliation.map((r) => (
+                  <div
+                    key={`${r.provider}-${r.periodStart}`}
+                    className="flex flex-wrap items-center gap-x-6 gap-y-2 p-5"
+                  >
+                    <Scale className="size-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-32">
+                      <p className="text-sm font-semibold capitalize">{r.provider}</p>
+                      <p className="num text-[11px] text-muted-foreground">
+                        {r.periodStart} → {r.periodEnd}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="eyebrow">Estimated</p>
+                      <p className="num text-base">{usd(r.estimatedUsd)}</p>
+                    </div>
+                    <div>
+                      <p className="eyebrow">Invoiced</p>
+                      <p className="num text-base">{usd(r.invoicedUsd)}</p>
+                    </div>
+                    <span
+                      className={`num ml-auto rounded-full px-3 py-1 text-xs font-semibold ${
+                        r.verdict === "match"
+                          ? "bg-saving-soft text-saving"
+                          : "bg-opportunity-soft text-opportunity"
+                      }`}
+                    >
+                      {r.deltaPct >= 0 ? "+" : ""}
+                      {r.deltaPct.toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <p className="pb-6 text-center text-xs text-muted-foreground">
-            Savings estimated from your tracked traffic and current provider pricing.
+            Savings computed from your tracked traffic and current provider pricing · last read{" "}
+            {new Date(data.generatedAt).toLocaleTimeString("en-US")}.
           </p>
         </main>
       </div>
     </div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="card-surface p-6 text-sm text-muted-foreground">{text}</div>
   );
 }
 
@@ -543,7 +681,6 @@ function HeroStat({
   );
 }
 
-
 function Legend({ color, label }: { color: string; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -581,7 +718,6 @@ function Metric({
     </div>
   );
 }
-
 
 function SectionTitle({
   eyebrow,
