@@ -9,6 +9,7 @@ import type {
   Recommendation,
   UsageAggregate,
 } from "./engine/types";
+import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import {
   effectiveSelection,
@@ -133,16 +134,6 @@ function medianOf(values: number[]) {
   return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
 }
 
-function relativeAgo(iso: string | null, now: number) {
-  if (!iso) return "never";
-  const mins = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60_000));
-  if (mins < 2) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.round(mins / 60);
-  if (hours < 48) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
-}
-
 export interface SnapshotInput {
   days: RangeDays;
   objective?: ObjectiveSelection | null;
@@ -201,6 +192,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     firstEvent,
     storedObjectives,
     subscription,
+    pricingSnapshot,
   ] =
     await Promise.all([
       supabase
@@ -255,6 +247,16 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         .eq("org_id", orgId)
         .eq("environment", paymentsEnvironment())
         .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Freshness is a property of the sync run, not of individual price rows:
+      // max(host_prices.verified_at) keeps looking recent even after the feed
+      // has stopped running and nothing new was upserted.
+      supabase
+        .from("pricing_snapshots")
+        .select("synced_at")
+        .eq("status", "ok")
+        .order("synced_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
     ]);
@@ -502,11 +504,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const untracked = new Set(
     usage.filter((u) => !pricedPairs.has(`${u.model_key}|${u.host}`)).map((u) => u.model_key),
   );
-  const lastVerified = (prices.data ?? [])
-    .map((p) => p.verified_at)
-    .filter(Boolean)
-    .sort()
-    .at(-1) as string | undefined;
+  const lastPricingSync = pricingSnapshot.data?.synced_at ?? null;
 
   const availableMonthly = round2(
     arbitrageRung.unlockedMonthly + qualityRung.unlockedMonthly + oversizedRung.unlockedMonthly,
@@ -591,7 +589,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     reconciliationOutsideWindow,
     coverage: {
       untrackedModels: untracked.size,
-      pricesSyncedAgo: relativeAgo(lastVerified ?? null, now),
+      pricesSyncedAgo: relativeAgo(lastPricingSync, now),
       evaluations: (margins.data ?? []).length,
     },
   };

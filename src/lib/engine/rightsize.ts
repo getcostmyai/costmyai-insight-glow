@@ -1,5 +1,5 @@
 import { arbitrageBaseline, sortRecommendations } from "./arbitrage";
-import { indexPrices, round2, toMonthly } from "./cost";
+import { costOfUsage, indexPrices, round2, toMonthly } from "./cost";
 import {
   KIND_MIN_PLAN,
   type ModelRow,
@@ -103,13 +103,14 @@ export function findOversized(
     if (!baseline) continue;
 
     // Cheapest price point among models that sit at the required tier.
+    // Priced through costOfUsage so this rung uses the one cost formula every
+    // other rung uses — a local copy of the arithmetic is how two rungs start
+    // quoting different savings for the same pair.
     let target: { price: PriceRow; cost: number } | null = null;
     for (const m of models) {
       if (m.tier !== required) continue;
       for (const price of byModel.get(m.model_key) ?? []) {
-        const cost =
-          (u.input_tokens / 1_000_000) * price.input_usd_per_mtok +
-          (u.output_tokens / 1_000_000) * price.output_usd_per_mtok;
+        const cost = costOfUsage(price, u);
         if (!target || cost < target.cost) target = { price, cost };
       }
     }
