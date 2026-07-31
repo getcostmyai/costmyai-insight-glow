@@ -468,6 +468,28 @@ function Neutrality() {
             ))}
           </div>
 
+          <div className="mt-10 rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 backdrop-blur-sm sm:p-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold tracking-tight">
+                  Why we refuse to match a headline from Auriko.
+                </h3>
+                <p className="mt-2 text-[15px] leading-relaxed opacity-85">
+                  Tools like Auriko advertise cost reduction by citing their own internal reports —
+                  not independent, third-party verification. CostMyAI will not certify a switch we
+                  cannot prove against a published, independent benchmark. A global routing dial
+                  that silently reroutes traffic might move most of your workloads; we would refuse
+                  to certify most of those moves because they lack per-workload proof. When the
+                  benchmark cannot separate the models, you get a refusal and the reason — not a
+                  weaker suggestion dressed up as a saving.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-10 text-center">
             <Link
               to="/legal/methodology"
