@@ -18,16 +18,16 @@ export const Route = createFileRoute("/_authenticated/billing")({
   }),
   head: () => ({
     meta: [
-      { title: "Choose your rung — CostMyAI" },
+      { title: "Choose your level — CostMyAI" },
       {
         name: "description",
         content:
           "Compare is free. Certify, Rightsize and Govern unlock quality-matched switches, oversized-workload detection and autonomous switching.",
       },
-      { property: "og:title", content: "Choose your rung — CostMyAI" },
+      { property: "og:title", content: "Choose your level — CostMyAI" },
       {
         property: "og:description",
-        content: "Four rungs, priced as sold: Compare free, Certify, Rightsize and Govern paid.",
+        content: "Four levels, priced as sold: Compare free, Certify, Rightsize and Govern paid.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -100,7 +100,7 @@ function BillingPage() {
                 {PLAN_META[current].label} is live on {org.name}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {PLAN_META[current].blurb} Your workspace is provisioned on this rung now.
+                {PLAN_META[current].blurb} Your workspace is provisioned on this level now.
               </p>
               <button
                 onClick={() => {
@@ -133,9 +133,9 @@ function BillingPage() {
       <PaymentTestModeBanner />
       <div className="mx-auto max-w-6xl px-6 py-16">
         <p className="eyebrow">{org.name}</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Choose your rung</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Choose your level</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Every rung runs on your own measured traffic. Compare is free forever. The paid rungs add
+          Every level runs on your own measured traffic. Compare is free forever. The paid levels add
           the checks and the switching that turn those findings into money off the bill.
         </p>
 
@@ -166,7 +166,7 @@ function BillingPage() {
               busyPlan={null}
             />
             <p className="mt-8 text-center text-xs text-muted-foreground">
-              Prices are per workspace. Cancel any time — you keep the rung until the period you
+              Prices are per workspace. Cancel any time — you keep the level until the period you
               paid for ends.
             </p>
           </div>

@@ -4,7 +4,7 @@ import { effectivePlan, isEntitledTo, subscriptionIsCurrent } from "../entitleme
 
 /**
  * The rebuild carries no launch-free promotion. These tests exist to make that
- * structural: a paid rung is reachable only through a live subscription, and
+ * structural: a paid level is reachable only through a live subscription, and
  * nothing about a date, an environment, or a workspace record alone can open
  * one.
  */
@@ -18,12 +18,12 @@ describe("plan entitlement", () => {
     expect(isEntitledTo("compare", "compare", null, now)).toBe(true);
   });
 
-  it("refuses a paid rung when the workspace record claims it but nothing is paid", () => {
+  it("refuses a paid level when the workspace record claims it but nothing is paid", () => {
     expect(effectivePlan("govern", null, now)).toBe("compare");
     expect(isEntitledTo("certify", "govern", null, now)).toBe(false);
   });
 
-  it("grants the rung while the subscription is active", () => {
+  it("grants the level while the subscription is active", () => {
     const sub = {
       plan: "rightsize" as const,
       status: "active",

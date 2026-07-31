@@ -24,7 +24,7 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { SpendChart, type ChartMetric } from "@/components/dashboard/SpendChart";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import { ObjectiveSelect, RungEmpty, RungLocked } from "@/components/dashboard/RungState";
+import { ObjectiveSelect, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import { dashboardQuery, ranges, rangeFor, type RangeKey, type DashboardScope } from "@/lib/dashboard-queries";
 import type { ObjectiveKind } from "@/lib/engine/types";
 import type { SwitchOpportunity } from "@/lib/dashboard.server";
@@ -170,7 +170,7 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const { series, live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const activeRange = rangeFor(range);
 
-  const { savings, stats, coverage, activeSwitches, reconciliation, rungs, dataState, plan } = data;
+  const { savings, stats, coverage, activeSwitches, reconciliation, levels, dataState, plan } = data;
   const waiting = dataState !== "ready";
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
@@ -528,15 +528,15 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               badge={`${data.hostArbitrage.length} certified`}
               badgeTone="saving"
             />
-            {!rungs.host_arbitrage.unlocked ? (
-              <RungLocked
-                requiredPlan={rungs.host_arbitrage.requiredPlan}
-                count={rungs.host_arbitrage.lockedCount}
-                monthly={rungs.host_arbitrage.lockedMonthly}
+            {!levels.host_arbitrage.unlocked ? (
+              <LevelLocked
+                requiredPlan={levels.host_arbitrage.requiredPlan}
+                count={levels.host_arbitrage.lockedCount}
+                monthly={levels.host_arbitrage.lockedMonthly}
                 what="cheaper-host"
               />
             ) : data.hostArbitrage.length === 0 ? (
-              <RungEmpty state={dataState} kind="host_arbitrage" />
+              <LevelEmpty state={dataState} kind="host_arbitrage" />
             ) : (
               <div className="space-y-3">
                 {data.hostArbitrage.map((row, i) => {
@@ -583,8 +583,8 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                   <ObjectiveSelect
                     value={objective}
                     onChange={chooseObjective}
-                    locked={!rungs.quality_match.unlocked}
-                    requiredPlan={rungs.quality_match.requiredPlan}
+                    locked={!levels.quality_match.unlocked}
+                    requiredPlan={levels.quality_match.requiredPlan}
                   />
                   {errorFor("objective") ? (
                     <p className="max-w-xs text-[11px] text-destructive sm:text-right">
@@ -594,15 +594,15 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                 </div>
               }
             />
-            {!rungs.quality_match.unlocked ? (
-              <RungLocked
-                requiredPlan={rungs.quality_match.requiredPlan}
-                count={rungs.quality_match.lockedCount}
-                monthly={rungs.quality_match.lockedMonthly}
+            {!levels.quality_match.unlocked ? (
+              <LevelLocked
+                requiredPlan={levels.quality_match.requiredPlan}
+                count={levels.quality_match.lockedCount}
+                monthly={levels.quality_match.lockedMonthly}
                 what="quality-matched"
               />
             ) : data.qualityMatched.length === 0 ? (
-              <RungEmpty state={dataState} kind="quality_match" />
+              <LevelEmpty state={dataState} kind="quality_match" />
             ) : (
               <div className="space-y-3">
                 {data.qualityMatched.map((row, i) => {
@@ -646,15 +646,15 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               badge={`${data.oversized.length} workloads`}
               badgeTone="opportunity"
             />
-            {!rungs.rightsize.unlocked ? (
-              <RungLocked
-                requiredPlan={rungs.rightsize.requiredPlan}
-                count={rungs.rightsize.lockedCount}
-                monthly={rungs.rightsize.lockedMonthly}
+            {!levels.rightsize.unlocked ? (
+              <LevelLocked
+                requiredPlan={levels.rightsize.requiredPlan}
+                count={levels.rightsize.lockedCount}
+                monthly={levels.rightsize.lockedMonthly}
                 what="oversized-workload"
               />
             ) : data.oversized.length === 0 ? (
-              <RungEmpty state={dataState} kind="rightsize" />
+              <LevelEmpty state={dataState} kind="rightsize" />
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {data.oversized.map((o) => (

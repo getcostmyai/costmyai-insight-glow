@@ -78,7 +78,7 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
           <Kpi
             label="Referred workspaces"
             value={String(referrals.length)}
-            sub={`${paying} on a paid rung`}
+            sub={`${paying} on a paid level`}
           />
         </section>
 
@@ -110,7 +110,7 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
             </div>
           )}
           <p className="mt-4 text-xs text-muted-foreground">
-            You see that a workspace is yours and which rung it is on — never its spend, usage or
+            You see that a workspace is yours and which level it is on — never its spend, usage or
             people.
           </p>
         </section>

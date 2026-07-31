@@ -327,7 +327,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
   ],
 };
 
-const RUNGS = ["compare", "certify", "rightsize", "govern"] as const;
+const LEVELS = ["compare", "certify", "rightsize", "govern"] as const;
 
 function Pricing({ stats }: { stats: MarketingStats }) {
   const [yearly, setYearly] = useState(true);
@@ -362,7 +362,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {RUNGS.map((plan) => {
+          {LEVELS.map((plan) => {
             const meta = PLAN_META[plan];
             const price = yearly ? meta.yearly : meta.monthly;
             const featured = plan === "rightsize";

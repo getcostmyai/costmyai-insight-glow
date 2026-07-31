@@ -100,8 +100,8 @@ function FirstWorkspace({ email }: { email: string | null }) {
     try {
       await createWorkspace({ data: { name } });
       await queryClient.invalidateQueries({ queryKey: ["my-workspaces"] });
-      // The workspace exists on Compare; choosing a rung is the next step, and
-      // any paid rung goes through checkout before it is provisioned.
+      // The workspace exists on Compare; choosing a level is the next step, and
+      // any paid level goes through checkout before it is provisioned.
       navigate({ to: "/billing" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create the workspace.");
@@ -141,7 +141,7 @@ function FirstWorkspace({ email }: { email: string | null }) {
             </button>
           </form>
           <p className="mt-4 text-xs text-muted-foreground">
-            Next you pick a rung. Compare is free; Certify, Rightsize and Govern are paid.
+            Next you pick a level. Compare is free; Certify, Rightsize and Govern are paid.
           </p>
         </div>
       </div>

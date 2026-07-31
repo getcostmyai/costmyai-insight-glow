@@ -45,7 +45,7 @@ const PROMISES = [
   {
     icon: BadgeCheck,
     title: "Tiers you can see",
-    body: "Your rate rises with referred revenue on a published ladder. Your dashboard shows exactly how far you are from the next rung.",
+    body: "Your rate rises with referred revenue on a published ladder. Your dashboard shows exactly how far you are from the next level.",
   },
 ] as const;
 
@@ -78,7 +78,7 @@ function PartnersPage() {
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
             If you advise teams on their AI stack, CostMyAI is an easy first recommendation: the
-            free rung already cuts their bill, and you keep earning for as long as they stay.
+            free level already cuts their bill, and you keep earning for as long as they stay.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/partners/apply" className="btn-gradient px-5 py-2.5 text-sm">
@@ -102,7 +102,7 @@ function PartnersPage() {
           <h2 className="text-2xl font-semibold tracking-tight">Commission ladder</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Your rate is set by lifetime referred revenue and applies to everything your referrals
-            pay from that point on. These rungs are read live from the same table that prices your
+            pay from that point on. These levels are read live from the same table that prices your
             payouts.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -153,7 +153,7 @@ function PartnersPage() {
           <div className="mt-10 rounded-2xl border border-border bg-background p-6">
             <h3 className="text-sm font-semibold">What a partner can and cannot see</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              You see which workspaces are yours, which rung they are on, and every dollar you have
+              You see which workspaces are yours, which level they are on, and every dollar you have
               earned. You never see their spend, their usage or their people. Neutrality applies to
               partners too.
             </p>

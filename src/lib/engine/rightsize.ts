@@ -75,7 +75,7 @@ export function requiredTierFor(u: UsageAggregate): ModelTier {
 }
 
 /**
- * Rung 3 — Rightsize.
+ * Level 3 — Rightsize.
  *
  * Runs for every org on every plan; the plan only controls whether the result is
  * shown in full or as a locked teaser. Savings are measured against the Compare
@@ -103,8 +103,8 @@ export function findOversized(
     if (!baseline) continue;
 
     // Cheapest price point among models that sit at the required tier.
-    // Priced through costOfUsage so this rung uses the one cost formula every
-    // other rung uses — a local copy of the arithmetic is how two rungs start
+    // Priced through costOfUsage so this level uses the one cost formula every
+    // other level uses — a local copy of the arithmetic is how two levels start
     // quoting different savings for the same pair.
     let target: { price: PriceRow; cost: number } | null = null;
     for (const m of models) {

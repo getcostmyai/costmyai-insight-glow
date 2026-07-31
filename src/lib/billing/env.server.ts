@@ -7,7 +7,7 @@ export type StripeEnvName = "sandbox" | "live";
  * side it means. The answer is taken from the client token baked into the
  * build — the same token checkout itself runs against — so a preview build can
  * never resolve a live subscription and a live build can never be unlocked by
- * a test one. An unrecognised token fails closed to sandbox: paid rungs stay
+ * a test one. An unrecognised token fails closed to sandbox: paid levels stay
  * shut rather than opening on a guess.
  */
 export function paymentsEnvironment(): StripeEnvName {

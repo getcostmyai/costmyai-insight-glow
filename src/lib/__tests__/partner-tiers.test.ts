@@ -15,7 +15,7 @@ const ROWS: PartnerTierRow[] = [
 ];
 
 describe("partner commission ladder", () => {
-  it("orders rungs by tier regardless of row order", () => {
+  it("orders levels by tier regardless of row order", () => {
     expect(toLadder(ROWS).tiers.map((t) => t.name)).toEqual(["Starter", "Silver", "Platinum"]);
   });
 
@@ -28,7 +28,7 @@ describe("partner commission ladder", () => {
     expect(formatRateRange(toLadder(changed))).toBe("20–40%");
   });
 
-  it("collapses to a single rate when the ladder has one rung", () => {
+  it("collapses to a single rate when the ladder has one level", () => {
     expect(formatRateRange(toLadder([ROWS[1]!]))).toBe("15%");
   });
 

@@ -34,7 +34,7 @@ export function formatRate(pct: number): string {
   return `${trim(pct)}%`;
 }
 
-/** "15–35%", or a single rate when the ladder has one rung, null when empty. */
+/** "15–35%", or a single rate when the ladder has one level, null when empty. */
 export function formatRateRange(ladder: PartnerLadder): string | null {
   if (ladder.minRatePct === null || ladder.maxRatePct === null) return null;
   if (ladder.minRatePct === ladder.maxRatePct) return formatRate(ladder.minRatePct);
