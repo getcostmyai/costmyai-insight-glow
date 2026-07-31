@@ -263,3 +263,132 @@ describe("billing reconciliation", () => {
     expect(new Set(a.map((p) => p.idempotencyKey)).size).toBe(a.length);
   });
 });
+
+describe("volume is solved against live pricing, not scaled flat", () => {
+  it("hits the target monthly spend from the generated events themselves", () => {
+    const daily = rollupEvents(
+      SIZED.flatMap((_, i) => eventsFor(i)),
+      "day",
+      priceFor,
+    );
+    const spend = daily.reduce((s, r) => s + r.costUsd, 0);
+    expect(Math.abs(spend - TEST_TARGET_USD) / TEST_TARGET_USD).toBeLessThan(0.1);
+  });
+
+  it("gives an expensive model orders of magnitude fewer requests than a cheap one", () => {
+    const o1 = SIZED.find((w) => w.modelKey === "o1-pro")!;
+    const qwen = SIZED.find((w) => w.modelKey === "qwen3-32b")!;
+    // o1-pro carries 6.7x the spend share on a fraction of the request count.
+    expect(o1.spendShare / qwen.spendShare).toBeGreaterThan(5);
+    expect(qwen.requestsPerDay / o1.requestsPerDay).toBeGreaterThan(100);
+  });
+
+  it("prices a request through the engine cost function, expected tokens not median", () => {
+    const w = SIZED.find((x) => x.modelKey === "gpt-5.5")!;
+    const p = priceFor(w.modelKey, w.host)!;
+    // Right-skewed token draws bill above the median, so the per-request cost
+    // must exceed the naive median-based figure or the target is undershot.
+    const naive = costOf(p, w.inputP50, w.outputP50);
+    expect(w.costPerRequestUsd).toBeGreaterThan(naive);
+  });
+
+  it("refuses to size a workload with no synced price", () => {
+    expect(() => sizeWorkloads(SYNTHETIC_WORKLOADS, () => undefined)).toThrow(/No live price/);
+  });
+
+  it("keeps the spend distribution concentrated, not uniform", () => {
+    const shares = [...SYNTHETIC_WORKLOADS].sort((a, b) => b.spendShare - a.spendShare);
+    const top3 = shares.slice(0, 3).reduce((s, w) => s + w.spendShare, 0);
+    expect(top3).toBeGreaterThan(0.4);
+    expect(shares.at(-1)!.spendShare).toBeLessThan(0.02);
+  });
+
+  it("sizes the production ecosystem inside the specified $15k-$20k band", () => {
+    const sized = sizeWorkloads(SYNTHETIC_WORKLOADS, priceFor);
+    const monthly = sized.reduce(
+      (s, w) => s + w.requestsPerDay * 30 * w.costPerRequestUsd * activeFraction(w, 30),
+      0,
+    );
+    expect(monthly).toBeGreaterThan(15_000);
+    expect(monthly).toBeLessThan(20_000);
+    expect(TARGET_MONTHLY_SPEND_USD).toBe(17_500);
+  });
+});
+
+describe("workload-set evolution", () => {
+  const arriving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "gpt-5-6-terra")!;
+  const leaving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "o1-pro")!;
+
+  it("has both new arrivals and phase-outs in the set", () => {
+    expect(SYNTHETIC_WORKLOADS.filter((w) => w.lifecycle?.introducedDaysAgo).length).toBeGreaterThan(1);
+    expect(SYNTHETIC_WORKLOADS.filter((w) => w.lifecycle?.retiringSinceDaysAgo).length).toBeGreaterThan(1);
+  });
+
+  it("ramps a new model up from nothing to steady state over about a week", () => {
+    expect(lifecycleFactor(12, arriving)).toBe(0);
+    expect(lifecycleFactor(11, arriving)).toBeCloseTo(0, 5);
+    expect(lifecycleFactor(7.5, arriving)).toBeCloseTo(0.5, 1);
+    expect(lifecycleFactor(4, arriving)).toBe(1);
+    expect(lifecycleFactor(0, arriving)).toBe(1);
+  });
+
+  it("ramps a retiring workload down on the same shape", () => {
+    expect(lifecycleFactor(10, leaving)).toBe(1);
+    expect(lifecycleFactor(5.5, leaving)).toBeCloseTo(0.5, 1);
+    expect(lifecycleFactor(1, leaving)).toBe(0);
+  });
+
+  it("only uses models that carry a live synced price", () => {
+    for (const w of SYNTHETIC_WORKLOADS) expect(priceFor(w.modelKey, w.host)).toBeDefined();
+  });
+
+  it("shows an arrival growing and a retirement draining in the generated traffic", () => {
+    const idx = SIZED.findIndex((w) => w.modelKey === "gpt-5-6-terra");
+    const events = eventsFor(idx);
+    const half = new Date(TO.getTime() - 5 * DAY_MS);
+    const before = events.filter((e) => e.occurredAt < half).length / 25;
+    const after = events.filter((e) => e.occurredAt >= half).length / 5;
+    expect(after).toBeGreaterThan(before * 2);
+
+    const outIdx = SIZED.findIndex((w) => w.modelKey === "o1-pro");
+    const out = eventsFor(outIdx);
+    const lastTwoDays = out.filter((e) => e.occurredAt >= new Date(TO.getTime() - 2 * DAY_MS)).length;
+    expect(lastTwoDays).toBe(0);
+  });
+
+  it("keeps sizing honest across a ramp: a part-time workload still hits its share", () => {
+    const w = SIZED.find((x) => x.modelKey === "gpt-5-6-luna")!;
+    const events = generateEvents({ workload: w, from: FROM, to: TO, seed: "test" });
+    const spend = rollupEvents(events, "day", priceFor).reduce((s, r) => s + r.costUsd, 0);
+    expect(Math.abs(spend - w.targetMonthlyUsd) / w.targetMonthlyUsd).toBeLessThan(0.15);
+  });
+});
+
+describe("live traffic is a continuation of the same curve", () => {
+  const workload = SIZED.find((w) => w.modelKey === "gpt-oss-120b")!;
+  const hourStart = new Date(TO.getTime() - HOUR_MS);
+
+  const slice = (from: Date, to: Date) =>
+    generateEvents({ workload, from, to, windowStart: FROM, windowEnd: TO, seed: "test" });
+
+  it("splits an hour into minute slices with no gaps or duplicates", () => {
+    const whole = slice(hourStart, TO);
+    const pieces = [];
+    for (let t = hourStart.getTime(); t < TO.getTime(); t += 60_000) {
+      pieces.push(...slice(new Date(t), new Date(t + 60_000)));
+    }
+    expect(pieces).toEqual(whole);
+  });
+
+  it("emits only events inside the requested slice", () => {
+    const from = new Date(hourStart.getTime() + 17 * 60_000);
+    const to = new Date(from.getTime() + 90_000);
+    expect(slice(from, to).every((e) => e.occurredAt >= from && e.occurredAt < to)).toBe(true);
+  });
+
+  it("is deterministic per slice, so a retried tick cannot double-count", () => {
+    const from = new Date(hourStart.getTime() + 5 * 60_000);
+    const to = new Date(from.getTime() + 60_000);
+    expect(slice(from, to)).toEqual(slice(from, to));
+  });
+});
