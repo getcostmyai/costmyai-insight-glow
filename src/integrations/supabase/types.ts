@@ -1046,6 +1046,7 @@ export type Database = {
       }
       is_org_manager: { Args: { _org_id: string }; Returns: boolean }
       is_org_member: { Args: { _org_id: string }; Returns: boolean }
+      org_is_synthetic: { Args: { _org_id: string }; Returns: boolean }
       org_plan: {
         Args: { _org_id: string }
         Returns: Database["public"]["Enums"]["plan_tier"]
