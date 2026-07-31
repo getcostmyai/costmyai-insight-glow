@@ -114,6 +114,34 @@
     oklch(0.17 0.04 282) 100%
   );
 
+  /*
+   * Marketing language — one set of brand gradient values, defined here and
+   * reused by every front-facing page. Never redefined per page: a second copy
+   * is how two pages quietly drift apart.
+   */
+  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #7c3aed 55%, #9333ea 100%);
+  --gradient-brand-soft: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.82) 0%,
+    rgba(124, 58, 237, 0.82) 100%
+  );
+  --wash-hero: radial-gradient(
+    ellipse 130% 100% at 50% 0%,
+    rgba(123, 97, 255, 0.17) 0%,
+    rgba(255, 255, 255, 0) 90%
+  );
+  --wash-section: radial-gradient(
+    ellipse 120% 80% at 50% 0%,
+    rgba(123, 97, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0) 85%
+  );
+  --texture-dots: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--muted-foreground) 9%, transparent) 1px,
+    transparent 1px
+  );
+
+
   --shadow-card: 0 1px 2px oklch(0.2 0.02 280 / 0.04), 0 8px 24px -12px oklch(0.2 0.02 280 / 0.12);
   --shadow-float:
     0 2px 4px oklch(0.2 0.02 280 / 0.04), 0 20px 48px -20px oklch(0.2 0.02 280 / 0.22);
@@ -236,4 +264,86 @@
 
 @utility animate-pulse-dot {
   animation: pulse-dot 2.2s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+ * Marketing utilities. Every front-facing CTA is .btn-gradient — there is no
+ * second CTA style, which is what keeps the brand gradient from being retyped
+ * (and mistyped) page by page. Asserted by a test over the marketing routes.
+ * ------------------------------------------------------------------------ */
+
+@utility btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-image: var(--gradient-brand);
+  color: oklch(0.99 0 0);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: 0 10px 30px -12px rgba(124, 58, 237, 0.65);
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.25s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: saturate(1.08);
+    box-shadow: 0 16px 40px -14px rgba(124, 58, 237, 0.75);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@utility btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-card);
+  color: var(--color-foreground);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition:
+    background-color 0.2s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &:hover {
+    background-color: var(--color-secondary);
+    transform: translateY(-1px);
+  }
+}
+
+@utility wash-hero {
+  background-image: var(--wash-hero);
+}
+
+@utility wash-section {
+  background-image: var(--wash-section);
+}
+
+@utility texture-dots {
+  background-image: var(--texture-dots);
+  background-size: 26px 26px;
+}
+
+@utility text-gradient-brand {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility fill-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+
+@utility fill-gradient-brand-soft {
+  background-image: var(--gradient-brand-soft);
 }

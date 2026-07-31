@@ -201,11 +201,24 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   const margins: TransformResult["margins"] = [];
   const latencies: LatencyRow[] = [];
 
-
+  /*
+   * Resolution is exact-match only (audit C4).
+   *
+   * A catalogue key maps to an AA slug either identically or through one
+   * explicit alias in AA_SLUG_ALIASES. There is no normalisation pass, no
+   * punctuation stripping, and no nearest-name fallback: "gpt-5.5" and
+   * "gpt-5-5-mini" differ by a suffix but are different models, and a fuzzy
+   * matcher that bridged them would attach one model's benchmark score to
+   * another's price. An unmatched key is recorded in `unmatchedModels` and
+   * simply carries no score — the engine then refuses to certify it, which is
+   * the correct outcome. Widen coverage by adding an alias, never by loosening
+   * the match.
+   */
   const resolved = new Map<string, AaModel>();
   for (const key of catalogKeys) {
     const slug = AA_SLUG_ALIASES[key] ?? key;
     const model = bySlug.get(slug);
+
     if (!model) {
       unmatchedModels.push(key);
       continue;

@@ -1,0 +1,193 @@
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { Menu, X } from "lucide-react";
+
+import { supabase } from "@/integrations/supabase/client";
+
+import { Wordmark } from "./Wordmark";
+
+/**
+ * The marketing chrome: light, spacious, Apple-adjacent — deliberately not the
+ * dark dashboard language. Every page-level CTA inside this shell uses the
+ * shared .btn-gradient utility, so the brand gradient has exactly one source.
+ */
+
+const NAV = [
+  { to: "/", label: "Product", hash: "how" },
+  { to: "/pricing", label: "Pricing" },
+  { to: "/demo", label: "Live demo" },
+] as const;
+
+function useSignedIn() {
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (alive) setSignedIn(Boolean(data.session));
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSignedIn(Boolean(session));
+    });
+    return () => {
+      alive = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+  return signedIn;
+}
+
+export function MarketingNav() {
+  const signedIn = useSignedIn();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-border/70 glass">
+      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-3.5 sm:px-8">
+        <div className="flex min-w-0 items-center gap-8">
+          <Link to="/" className="shrink-0 text-[17px]">
+            <Wordmark />
+          </Link>
+          <nav className="hidden items-center gap-7 md:flex">
+            {NAV.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                hash={"hash" in item ? item.hash : undefined}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            to={signedIn ? "/workspace" : "/auth"}
+            className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+          >
+            {signedIn ? "Your workspace" : "Sign in"}
+          </Link>
+          <Link to="/auth" className="btn-gradient px-4 py-2 text-sm">
+            Start free
+          </Link>
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border md:hidden"
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {open ? (
+        <nav className="border-t border-border bg-card px-5 py-3 md:hidden">
+          {NAV.map((item) => (
+            <Link
+              key={item.label}
+              to={item.to}
+              hash={"hash" in item ? item.hash : undefined}
+              onClick={() => setOpen(false)}
+              className="block py-2 text-sm font-medium text-muted-foreground"
+            >
+              {item.label}
+            </Link>
+          ))}
+          <Link
+            to={signedIn ? "/workspace" : "/auth"}
+            onClick={() => setOpen(false)}
+            className="block py-2 text-sm font-medium text-muted-foreground"
+          >
+            {signedIn ? "Your workspace" : "Sign in"}
+          </Link>
+        </nav>
+      ) : null}
+    </header>
+  );
+}
+
+export function MarketingFooter() {
+  return (
+    <footer className="border-t border-border bg-card">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <div className="flex flex-wrap items-start justify-between gap-10">
+          <div className="max-w-xs">
+            <Wordmark className="text-[17px]" />
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Certified, quality-checked switches that cut AI spend without touching output
+              quality. We never hold your provider keys.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-14 gap-y-8 sm:grid-cols-3">
+            <FooterColumn title="Product">
+              <FooterLink to="/" hash="how">
+                How it works
+              </FooterLink>
+              <FooterLink to="/pricing">Pricing</FooterLink>
+              <FooterLink to="/demo">Live demo</FooterLink>
+            </FooterColumn>
+            <FooterColumn title="Trust">
+              <FooterLink to="/" hash="neutrality">
+                Neutrality charter
+              </FooterLink>
+              <FooterLink to="/" hash="privacy-by-design">
+                Zero credentials
+              </FooterLink>
+            </FooterColumn>
+            <FooterColumn title="Legal">
+              <FooterLink to="/legal/privacy">Privacy</FooterLink>
+              <FooterLink to="/legal/terms">Terms</FooterLink>
+            </FooterColumn>
+          </div>
+        </div>
+
+        <p className="mt-12 text-xs text-muted-foreground">
+          <span className="num">©</span> CostMyAI. Prices and benchmarks are sourced from public
+          provider and evaluation feeds; every recommendation states the measurement it rests on.
+        </p>
+      </div>
+    </footer>
+  );
+}
+
+function FooterColumn({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="eyebrow">{title}</p>
+      <div className="mt-3 flex flex-col gap-2">{children}</div>
+    </div>
+  );
+}
+
+function FooterLink({
+  to,
+  hash,
+  children,
+}: {
+  to: string;
+  hash?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      hash={hash}
+      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {children}
+    </Link>
+  );
+}
+
+export function MarketingShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background">
+      <MarketingNav />
+      <main>{children}</main>
+      <MarketingFooter />
+    </div>
+  );
+}

@@ -6,7 +6,9 @@ import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
+  // Renders on the server like every other route: all session reads live in
+  // effects, so there is nothing here that differs between server and client.
+  // `ssr: false` used to short-circuit that and produced a hydration mismatch.
   head: () => ({
     meta: [
       { title: "Sign in — CostMyAI" },
