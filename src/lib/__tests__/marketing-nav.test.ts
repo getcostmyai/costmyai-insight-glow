@@ -37,8 +37,9 @@ describe("marketing nav", () => {
 
   it("drives the account icon off the session, with two distinct icons", () => {
     expect(SHELL).toMatch(/onAuthStateChange/);
-    expect(SHELL).toMatch(/signedIn\s*\?\s*<CircleUserRound/);
-    expect(SHELL).toMatch(/:\s*<LogIn/);
+    expect(SHELL).toMatch(/signedIn\s*\?\s*\(?\s*<CircleUserRound/);
+    expect(SHELL).toMatch(/:\s*\(?\s*<LogIn/);
+
     expect(SHELL).toMatch(/aria-label=\{signedIn \?/);
   });
 
