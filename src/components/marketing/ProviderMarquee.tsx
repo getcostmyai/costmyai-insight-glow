@@ -15,7 +15,7 @@ import type { MarketingStats } from "@/lib/marketing.functions";
  */
 function LiveStat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-start gap-0.5">
+    <div className="flex flex-col items-center gap-0.5">
       <span className="inline-flex items-baseline gap-2">
         <span className="num text-xl font-semibold leading-none text-gradient-brand sm:text-2xl">
           {value.toLocaleString("en-US")}
@@ -25,7 +25,7 @@ function LiveStat({ value, label }: { value: number; label: string }) {
           Live
         </span>
       </span>
-      <span className="whitespace-nowrap text-[11px] leading-tight text-muted-foreground">
+      <span className="whitespace-nowrap text-center text-[11px] leading-tight text-muted-foreground">
         {label}
       </span>
     </div>
@@ -56,7 +56,7 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
   return (
     <section className="border-y border-border bg-card">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:px-8">
-        <div className="flex flex-wrap items-center gap-6 sm:gap-10">
+        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
           <LiveStat value={stats.modelCount} label="Models" />
           <LiveStat value={stats.providerCount} label="Providers" />
           <LiveStat value={stats.priceChangesTracked} label={trackedLabel(stats.trackingSince)} />
