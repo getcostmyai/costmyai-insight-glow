@@ -144,6 +144,9 @@ export function findQualityMatches(
     type Candidate = { price: PriceRow; cost: number; score: number };
     const clearing: Candidate[] = [];
     let anyClearedBar = false;
+    /** Cheaper + quality-equal, but dropped on latency. Split by *why*. */
+    let droppedUnmeasured = 0;
+    let droppedTooSlow = 0;
 
     for (const [modelKey, candidatePrices] of byModel) {
       if (modelKey === u.model_key) continue;
@@ -154,12 +157,16 @@ export function findQualityMatches(
       for (const price of candidatePrices) {
         const cost = costOfUsage(price, u);
         if (cost >= baseline.cost) continue; // must actually be cheaper
-        if (
-          objective.objective === "latency" &&
-          objective.maxLatencyMs != null &&
-          (price.median_latency_ms == null || price.median_latency_ms > objective.maxLatencyMs)
-        ) {
-          continue;
+        if (objective.objective === "latency" && objective.maxLatencyMs != null) {
+          // Unmeasured latency is not "fast enough" — we refuse rather than assume.
+          if (price.median_latency_ms == null) {
+            droppedUnmeasured++;
+            continue;
+          }
+          if (price.median_latency_ms > objective.maxLatencyMs) {
+            droppedTooSlow++;
+            continue;
+          }
         }
         clearing.push({ price, cost, score: s.score });
       }
@@ -174,15 +181,25 @@ export function findQualityMatches(
       continue;
     }
     if (clearing.length === 0) {
-      refuse(
-        u,
-        objective.objective === "latency" ? "latency_ceiling_unmet" : "no_cheaper_candidate",
-        objective.objective === "latency"
-          ? `Quality-equal options exist but none meet the ${objective.maxLatencyMs}ms ceiling at a lower price.`
-          : `Quality-equal options exist but none price below the current best host.`,
-      );
+      const latencyDropped = droppedUnmeasured + droppedTooSlow;
+      if (objective.objective === "latency" && latencyDropped > 0) {
+        refuse(
+          u,
+          "latency_ceiling_unmet",
+          droppedTooSlow === 0
+            ? `${droppedUnmeasured} cheaper quality-equal host${droppedUnmeasured === 1 ? " has" : "s have"} no measured latency yet, so none can be proven under the ${objective.maxLatencyMs}ms ceiling.`
+            : `${droppedTooSlow} cheaper quality-equal host${droppedTooSlow === 1 ? "" : "s"} measured above the ${objective.maxLatencyMs}ms ceiling${droppedUnmeasured > 0 ? ` and ${droppedUnmeasured} have no measured latency yet` : ""}.`,
+        );
+      } else {
+        refuse(
+          u,
+          "no_cheaper_candidate",
+          `Quality-equal options exist but none price below the current best host.`,
+        );
+      }
       continue;
     }
+
 
     const winner = pickByObjective(clearing, objective);
     const saving = toMonthly(baseline.cost - winner.cost, u.days);
