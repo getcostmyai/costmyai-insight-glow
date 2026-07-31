@@ -102,9 +102,12 @@ export type EstimatorResult =
   | {
       state: "below_threshold";
       highUsd: number;
+      /** The materiality floor the estimate failed to clear. */
+      floorUsd: number;
       fromModelLabel: string;
       taskClass: string;
     }
+
   | {
       state: "refused";
       reason: EstimatorRefusal;

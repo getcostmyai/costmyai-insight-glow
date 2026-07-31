@@ -31,7 +31,19 @@ export const estimatorOptionsQuery = () =>
 export interface EstimatorOptions {
   providers: { label: string; models: number }[];
   models: { model_key: string; display_name: string }[];
+  /**
+   * Pre-computed saving *rates* (fractions) produced by the same
+   * resolveEstimate the authoritative endpoint runs, one per selection ×
+   * workload. null means that combination has no certifiable switch — the
+   * client shows no indicative figure there rather than inventing one.
+   */
+  bands: {
+    workloads: string[];
+    byProvider: Record<string, (number | null)[]>;
+    byModel: Record<string, (number | null)[]>;
+  };
 }
+
 
 export const getEstimatorOptions = createServerFn({ method: "GET" }).handler(
   async (): Promise<EstimatorOptions> => {
