@@ -16,6 +16,8 @@ import {
   type ObjectiveSelection,
 } from "./dashboard/objective";
 import { gateRung, nextPlan } from "./dashboard/plan";
+import { effectivePlan, type SubscriptionState } from "./billing/entitlement";
+import { paymentsEnvironment } from "./billing/env.server";
 import {
   partitionRollups,
   rangeWindow,
@@ -154,6 +156,21 @@ export interface SnapshotInput {
 
 export type DashboardClient = ReturnType<typeof createPublicServerClient>;
 
+function toSubscriptionState(row: {
+  plan: unknown;
+  status: unknown;
+  current_period_end: unknown;
+  cancel_at_period_end: unknown;
+} | null): SubscriptionState | null {
+  if (!row) return null;
+  return {
+    plan: row.plan as PlanTier,
+    status: row.status as string,
+    currentPeriodEnd: (row.current_period_end as string | null) ?? null,
+    cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
+  };
+}
+
 export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const {
     days,
@@ -170,7 +187,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const windowStart = w.start;
   const previousStart = w.previousStart;
 
-  const [rollups, prices, benchmarks, margins, models, switches, org, firstEvent, storedObjectives] =
+  const [
+    rollups,
+    prices,
+    benchmarks,
+    margins,
+    models,
+    switches,
+    org,
+    firstEvent,
+    storedObjectives,
+    subscription,
+  ] =
     await Promise.all([
       supabase
         .from("usage_rollups")
