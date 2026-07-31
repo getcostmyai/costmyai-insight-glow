@@ -1,4 +1,5 @@
-import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
 import { usd } from "@/lib/dashboard-data";
 
