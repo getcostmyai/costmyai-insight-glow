@@ -62,6 +62,13 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const [metric, setMetric] = useState<ChartMetric>("spend");
   const [objective, setObjective] = useState<ObjectiveKind>("cost");
   const { data } = useSuspenseQuery(dashboardQuery(range, objective, scope));
+  const session = useSessionUser();
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    window.location.assign("/auth");
+  }
+
 
   const { series, live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const activeRange = rangeFor(range);
