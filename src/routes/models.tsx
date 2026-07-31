@@ -116,27 +116,107 @@ function ModelsPage() {
   );
 }
 
+/** "text+image->text" -> "Multimodal" / "Text". Straight read of the catalog field. */
+function modalityLabel(modality: string): string {
+  const inputs = (modality.split("->")[0] ?? "").split("+").filter(Boolean);
+  return inputs.length > 1 ? "Multimodal" : "Text";
+}
+
+function Metric({
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  label: string;
+  value: string | null;
+  tone?: string;
+  hint?: string;
+}) {
+  return (
+    <div className="rounded-lg bg-secondary px-3 py-2">
+      <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </p>
+      {value === null ? (
+        <p className="num mt-0.5 text-sm text-muted-foreground/50" title="No score on record">
+          —
+        </p>
+      ) : (
+        <p className={`num mt-0.5 text-sm font-semibold ${tone ?? ""}`} title={hint}>
+          {value}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ModelCard({ row }: { row: CatalogRow }) {
   return (
-    <div className="card-surface grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto]">
-      <div className="min-w-0">
-        <p className="text-lg font-semibold tracking-tight">{row.display_name}</p>
-        <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{row.model_key}</p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <Tag>{row.vendor}</Tag>
-          <Tag>{row.tier}</Tag>
-          {row.is_reasoning ? <Tag>reasoning</Tag> : null}
-          {row.context_window ? (
-            <Tag>
-              <span className="num">{(row.context_window / 1000).toFixed(0)}k</span> ctx
-            </Tag>
-          ) : null}
+    <div className="card-surface space-y-5 p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-lg font-semibold tracking-tight">{row.display_name}</p>
+          <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{row.model_key}</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Tag>{row.vendor}</Tag>
+            <Tag>{modalityLabel(row.modality)}</Tag>
+            <Tag>{row.tier}</Tag>
+            {row.is_reasoning ? <Tag>reasoning</Tag> : null}
+            {row.context_window ? (
+              <Tag>
+                <span className="num">{(row.context_window / 1000).toFixed(0)}k</span> ctx
+              </Tag>
+            ) : null}
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="eyebrow">Cheapest host</p>
+          <p className="num mt-1 text-sm">
+            {row.cheapestInput === null ? (
+              <span className="text-muted-foreground">No verified price</span>
+            ) : (
+              <>
+                ${row.cheapestInput.toFixed(2)} in / ${row.cheapestOutput?.toFixed(2)} out
+                <span className="text-muted-foreground"> per 1M</span>
+              </>
+            )}
+          </p>
         </div>
       </div>
 
-      <div className="min-w-0">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <Metric
+          label="Intelligence"
+          value={row.intelligence === null ? null : row.intelligence.toFixed(1)}
+          tone="text-primary"
+          hint="Mean of the benchmark scores we hold for this model — no imputed values"
+        />
+        <Metric
+          label="IFBench"
+          value={row.ifbench === null ? null : row.ifbench.toFixed(1)}
+        />
+        <Metric label="GPQA" value={row.gpqa === null ? null : row.gpqa.toFixed(1)} />
+        <Metric
+          label="Coding"
+          value={row.coding === null ? null : row.coding.toFixed(1)}
+          hint="SciCode"
+        />
+        <Metric
+          label="TTFT"
+          value={row.ttftMs === null ? null : `${(row.ttftMs / 1000).toFixed(2)}s`}
+          hint="Median time to first token, published per model across hosts"
+        />
+        <Metric
+          label="Speed"
+          value={row.outputTps === null ? null : `${row.outputTps.toFixed(0)} t/s`}
+          hint="Median output tokens per second, published per model across hosts"
+        />
+      </div>
+
+      <div>
         <p className="eyebrow">Hosts</p>
-        <div className="mt-2 space-y-1.5">
+        <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
           {row.hosts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No verified price on record.</p>
           ) : (
@@ -154,24 +234,6 @@ function ModelCard({ row }: { row: CatalogRow }) {
           )}
         </div>
       </div>
-
-      <div className="lg:text-right">
-        <p className="eyebrow">Benchmarks</p>
-        {row.scores.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Unscored</p>
-        ) : (
-          <div className="mt-2 space-y-1">
-            {row.scores.map((s) => (
-              <p key={`${s.task_class}:${s.suite}`} className="text-sm">
-                <span className="text-muted-foreground">
-                  {s.task_class} · {s.suite}{" "}
-                </span>
-                <span className="num font-semibold">{s.score.toFixed(1)}</span>
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -183,6 +245,7 @@ function Tag({ children }: { children: React.ReactNode }) {
     </span>
   );
 }
+
 
 function FilterChip({
   active,
