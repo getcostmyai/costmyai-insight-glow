@@ -47,7 +47,7 @@ export async function loadPlanState(
   };
 }
 
-/** The rung this workspace may actually use right now. */
+/** The level this workspace may actually use right now. */
 export async function resolvePlan(
   supabase: SupabaseClient<any, any, any>,
   orgId: string,

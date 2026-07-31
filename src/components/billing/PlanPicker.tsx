@@ -4,7 +4,7 @@ import { monthlyRate, type BillingInterval } from "@/lib/billing/catalog";
 import { PLAN_META, PLAN_ORDER, type PlanTier } from "@/lib/engine/types";
 
 /**
- * The four rungs, priced as they are actually sold. Compare is free and always
+ * The four levels, priced as they are actually sold. Compare is free and always
  * available; the rest are paid from day one.
  */
 

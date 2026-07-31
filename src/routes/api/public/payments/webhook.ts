@@ -7,7 +7,7 @@ import { PLAN_BY_PRICE_ID } from "@/lib/billing/catalog";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
 /**
- * The only thing in the system that may move a workspace onto a paid rung.
+ * The only thing in the system that may move a workspace onto a paid level.
  *
  * Nothing here trusts the browser: the request is rejected unless it carries a
  * valid provider signature, and the workspace is identified from metadata the
@@ -43,7 +43,7 @@ function isoFrom(seconds: number | null | undefined): string | null {
   return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
 
-/** Statuses where the workspace still gets the rung it paid for. */
+/** Statuses where the workspace still gets the level it paid for. */
 function grantsAccess(status: string, periodEnd: string | null): boolean {
   const future = periodEnd === null || new Date(periodEnd).getTime() > Date.now();
   if (["active", "trialing", "past_due"].includes(status)) return future;

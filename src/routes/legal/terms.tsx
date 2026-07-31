@@ -76,7 +76,7 @@ function TermsPage() {
           <p>
             Compare is free. Paid plans are billed monthly or yearly through Stripe and renew until
             cancelled. Cancelling stops the next renewal and keeps access until the end of the paid
-            period; downgrading pauses capabilities above your new rung without deleting your
+            period; downgrading pauses capabilities above your new level without deleting your
             history.
           </p>
         </Section>

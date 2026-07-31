@@ -12,8 +12,8 @@ import type { ObjectiveKind } from "./engine/types";
  *
  * PROJECT RULE (Phase 5 carry-forward): `requirePlan(...)` is the first
  * statement of every handler in this file, before any read, write or branch.
- * Manual switching is the Rightsize rung; autonomous switching is Govern;
- * objective selection is Certify. A workspace that is not paying for the rung
+ * Manual switching is the Rightsize level; autonomous switching is Govern;
+ * objective selection is Certify. A workspace that is not paying for the level
  * is refused here, server-side, with no promotional bypass of any kind.
  *
  * Identity is a separate gate underneath: the database's SECURITY DEFINER

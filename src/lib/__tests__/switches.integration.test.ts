@@ -5,7 +5,7 @@
  * gates are proved separately, because they protect different things:
  *
  *   1. the plan gate — `requirePlan` refuses a workspace that is not paying for
- *      the rung, and allows it the moment a live subscription exists;
+ *      the level, and allows it the moment a live subscription exists;
  *   2. the identity gate — the SECURITY DEFINER functions re-derive the actor
  *      from auth.uid(), so a manager of one workspace cannot act on another,
  *      an ordinary member cannot switch at all, and the demo org is read-only.
@@ -144,15 +144,15 @@ afterAll(async () => {
   for (const id of userIds) await admin.auth.admin.deleteUser(id);
 }, 60_000);
 
-describe("plan gate — requirePlan is what stands between a free org and a paid rung", () => {
-  it("refuses every paid rung on a Compare workspace", async () => {
+describe("plan gate — requirePlan is what stands between a free org and a paid level", () => {
+  it("refuses every paid level on a Compare workspace", async () => {
     await expect(requirePlan(owner.client, freeOrg, "certify", ENV)).rejects.toThrow(/certify/i);
     await expect(requirePlan(owner.client, freeOrg, "rightsize", ENV)).rejects.toThrow(/rightsize/i);
     await expect(requirePlan(owner.client, freeOrg, "govern", ENV)).rejects.toThrow(/govern/i);
     expect(await resolvePlan(owner.client, freeOrg, ENV)).toBe("compare");
   }, 30_000);
 
-  it("allows exactly the rung paid for, and nothing above it", async () => {
+  it("allows exactly the level paid for, and nothing above it", async () => {
     await grantPaidPlan(paidOrg, "rightsize");
     expect(await resolvePlan(owner.client, paidOrg, ENV)).toBe("rightsize");
     await expect(requirePlan(owner.client, paidOrg, "certify", ENV)).resolves.toBe("rightsize");

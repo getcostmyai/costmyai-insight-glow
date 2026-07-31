@@ -79,7 +79,7 @@ export interface EquivalenceResult {
 }
 
 /**
- * Rung 2 — Certify.
+ * Level 2 — Certify.
  *
  * Picks the CHEAPEST model that clears the quality bar, not the highest-scoring
  * one among the cheaper options (audit finding C1). The bar is the current

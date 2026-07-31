@@ -16,7 +16,7 @@ import {
   mergeObjectives,
   type ObjectiveSelection,
 } from "./dashboard/objective";
-import { gateRung, nextPlan } from "./dashboard/plan";
+import { gateLevel, nextPlan } from "./dashboard/plan";
 import { effectivePlan, type SubscriptionState } from "./billing/entitlement";
 import { paymentsEnvironment } from "./billing/env.server";
 import {
@@ -286,10 +286,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   }
 
   // What the workspace may actually use. The recorded plan is never trusted on
-  // its own — a paid rung has to be backed by a live subscription, or the
+  // its own — a paid level has to be backed by a live subscription, or the
   // dashboard locks it exactly as it would for a workspace that never paid.
   // The demo workspace is the one exception: it sells nothing and bills nobody,
-  // so it shows every rung by design.
+  // so it shows every level by design.
   const recordedPlan = org.data.plan as PlanTier;
   const plan = org.data.is_synthetic
     ? recordedPlan
@@ -396,19 +396,19 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   });
 
   // ---- Plan gating: the check always runs, the detail is what a plan buys ----
-  const arbitrageRung = gateRung(
+  const arbitrageLevel = gateLevel(
     "host_arbitrage",
     plan,
     result.hostArbitrage.map(toOpportunity),
     (r) => r.monthlySaving,
   );
-  const qualityRung = gateRung(
+  const qualityLevel = gateLevel(
     "quality_match",
     plan,
     result.qualityMatched.map(toOpportunity),
     (r) => r.monthlySaving,
   );
-  const oversizedRung = gateRung(
+  const oversizedLevel = gateLevel(
     "rightsize",
     plan,
     result.oversized.map(
@@ -426,9 +426,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     (o) => o.wasted,
   );
 
-  const hostArbitrage = arbitrageRung.items;
-  const qualityMatched = qualityRung.items;
-  const oversized = oversizedRung.items;
+  const hostArbitrage = arbitrageLevel.items;
+  const qualityMatched = qualityLevel.items;
+  const oversized = oversizedLevel.items;
 
   // ---- What is already running, inside the selected window -------------------
   const toSwitchRow = (s: {
@@ -518,10 +518,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const lastPricingSync = pricingSnapshot.data?.synced_at ?? null;
 
   const availableMonthly = round2(
-    arbitrageRung.unlockedMonthly + qualityRung.unlockedMonthly + oversizedRung.unlockedMonthly,
+    arbitrageLevel.unlockedMonthly + qualityLevel.unlockedMonthly + oversizedLevel.unlockedMonthly,
   );
   const lockedMonthly = round2(
-    arbitrageRung.lockedMonthly + qualityRung.lockedMonthly + oversizedRung.lockedMonthly,
+    arbitrageLevel.lockedMonthly + qualityLevel.lockedMonthly + oversizedLevel.lockedMonthly,
   );
   const activeMonthly = round2(activeSwitches.reduce((s, a) => s + a.monthlyRate, 0));
 
@@ -538,7 +538,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       name: org.data.name,
       plan,
       // What was bought vs. what is still being paid for. When these differ the
-      // rung is locked and the workspace can see exactly why.
+      // level is locked and the workspace can see exactly why.
       recordedPlan,
       billingStatus: (subscription.data?.status as string | null) ?? null,
     },
@@ -565,24 +565,24 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     hostArbitrage,
     qualityMatched,
     oversized,
-    rungs: {
+    levels: {
       host_arbitrage: {
-        unlocked: arbitrageRung.unlocked,
-        requiredPlan: arbitrageRung.requiredPlan,
-        lockedCount: arbitrageRung.lockedCount,
-        lockedMonthly: round2(arbitrageRung.lockedMonthly),
+        unlocked: arbitrageLevel.unlocked,
+        requiredPlan: arbitrageLevel.requiredPlan,
+        lockedCount: arbitrageLevel.lockedCount,
+        lockedMonthly: round2(arbitrageLevel.lockedMonthly),
       },
       quality_match: {
-        unlocked: qualityRung.unlocked,
-        requiredPlan: qualityRung.requiredPlan,
-        lockedCount: qualityRung.lockedCount,
-        lockedMonthly: round2(qualityRung.lockedMonthly),
+        unlocked: qualityLevel.unlocked,
+        requiredPlan: qualityLevel.requiredPlan,
+        lockedCount: qualityLevel.lockedCount,
+        lockedMonthly: round2(qualityLevel.lockedMonthly),
       },
       rightsize: {
-        unlocked: oversizedRung.unlocked,
-        requiredPlan: oversizedRung.requiredPlan,
-        lockedCount: oversizedRung.lockedCount,
-        lockedMonthly: round2(oversizedRung.lockedMonthly),
+        unlocked: oversizedLevel.unlocked,
+        requiredPlan: oversizedLevel.requiredPlan,
+        lockedCount: oversizedLevel.lockedCount,
+        lockedMonthly: round2(oversizedLevel.lockedMonthly),
       },
     },
     activeSwitches,

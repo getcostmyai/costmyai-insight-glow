@@ -7,7 +7,7 @@ import { PAID_PLANS, priceIdFor, type BillingInterval } from "./billing/catalog"
 import { effectivePlan, type SubscriptionState } from "./billing/entitlement";
 
 /**
- * Billing for the four rungs.
+ * Billing for the four levels.
  *
  * Compare is free. Certify, Rightsize and Govern are reachable only through a
  * real checkout — there is no promotional path, and no request the browser can

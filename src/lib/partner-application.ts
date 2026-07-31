@@ -17,7 +17,7 @@ export const ACTIVE_CLIENT_BUCKETS = [
 ] as const;
 export type ActiveClientBucket = (typeof ACTIVE_CLIENT_BUCKETS)[number];
 
-/** The rungs that clear the scale threshold on their own. */
+/** The levels that clear the scale threshold on their own. */
 export const AT_SCALE_BUCKETS: readonly ActiveClientBucket[] = ["101–300", "301–1,000", "1,000+"];
 
 export const STARTING_SOON_BUCKETS = ["0", "1", "2", "3+"] as const;

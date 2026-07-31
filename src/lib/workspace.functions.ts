@@ -72,12 +72,12 @@ export const createWorkspace = createServerFn({ method: "POST" })
 export const setWorkspacePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { orgId: string; plan: PlanTier }) => {
-    // Only the free rung can be set from the app. Certify, Rightsize and Govern
+    // Only the free level can be set from the app. Certify, Rightsize and Govern
     // are reachable through a real checkout and the signed webhook, and nothing
     // else — an owner cannot grant their own workspace a paid tier by calling
     // this. Downgrading to Compare is a legitimate self-service action.
     if (data?.plan !== "compare") {
-      throw new Error("Paid rungs are set by checkout, not by request.");
+      throw new Error("Paid levels are set by checkout, not by request.");
     }
     if (!/^[0-9a-f-]{36}$/i.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
     return { orgId: data.orgId, plan: data.plan };

@@ -308,7 +308,7 @@ function ApplyPage() {
                 <dl className="mt-4 space-y-4 text-sm">
                   <Faq q="What do I earn?">
                     {formatRateRange(ladder)
-                      ? `${formatRateRange(ladder)} of what your referrals pay, set by your lifetime referred revenue. The rungs today: ${ladder.tiers
+                      ? `${formatRateRange(ladder)} of what your referrals pay, set by your lifetime referred revenue. The levels today: ${ladder.tiers
                           .map((t) => `${t.name} ${formatRate(t.ratePct)} from ${formatThreshold(t.minLifetimeUsd)}`)
                           .join(", ")}.`
                       : "The commission ladder is published on the partner page and read straight from our payout table."}

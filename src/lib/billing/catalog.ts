@@ -1,12 +1,12 @@
 import { PLAN_META, type PlanTier } from "../engine/types";
 
 /**
- * The four rungs as they are actually sold.
+ * The four levels as they are actually sold.
  *
  * Compare is free and has no price — it is what a workspace gets on creation.
  * Everything above it is paid, from the day the product goes live: there is no
  * promotional period, no launch-free window, and no environment variable that
- * can hand out a paid rung. A workspace is on a paid tier because a live
+ * can hand out a paid level. A workspace is on a paid tier because a live
  * subscription says so, or it is not on it at all.
  */
 
@@ -24,7 +24,7 @@ export const PAID_PLANS: PaidPlan[] = [
   { plan: "govern", priceIds: { monthly: "govern_monthly", yearly: "govern_yearly" } },
 ];
 
-/** Reverse map used by the webhook to turn a purchased price back into a rung. */
+/** Reverse map used by the webhook to turn a purchased price back into a level. */
 export const PLAN_BY_PRICE_ID: Record<string, PlanTier> = PAID_PLANS.reduce(
   (acc, p) => {
     acc[p.priceIds.monthly] = p.plan;

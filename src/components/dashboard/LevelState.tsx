@@ -7,11 +7,11 @@ import type { ObjectiveKind, PlanTier, RecKind } from "@/lib/engine/types";
 import { PLAN_META } from "@/lib/engine/types";
 
 /**
- * The three things a rung can show when it has no rows for you: a real result,
+ * The three things a level can show when it has no rows for you: a real result,
  * a paywall, or a setup step. They are deliberately different objects — a
  * workspace with no traffic must never be told its check came back clean.
  */
-export function RungEmpty({ state, kind }: { state: DataState; kind: RecKind }) {
+export function LevelEmpty({ state, kind }: { state: DataState; kind: RecKind }) {
   const copy = emptyCopy(state, kind);
   const waiting = copy.tone === "waiting";
   const Icon = state === "awaiting_first_event" ? PlugZap : waiting ? Clock : ShieldCheck;
@@ -41,10 +41,10 @@ export function RungEmpty({ state, kind }: { state: DataState; kind: RecKind }) 
 }
 
 /**
- * A locked rung. The count and the money are the engine's real output over the
+ * A locked level. The count and the money are the engine's real output over the
  * workspace's real traffic — only the row detail is withheld.
  */
-export function RungLocked({
+export function LevelLocked({
   requiredPlan,
   count,
   monthly,
@@ -79,7 +79,7 @@ export function RungLocked({
         </div>
         <div className="text-right">
           <div className="num text-3xl text-primary blur-[0.5px] select-none">{usd(monthly, 0)}</div>
-          <p className="text-[11px] text-muted-foreground">per month behind this rung</p>
+          <p className="text-[11px] text-muted-foreground">per month behind this level</p>
         </div>
         <button className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95">
           <Sparkles className="size-4" />

@@ -3,19 +3,19 @@ import { KIND_MIN_PLAN, PLAN_ORDER, planAtLeast, type PlanTier, type RecKind } f
 /**
  * Plan gating for the dashboard.
  *
- * Locked rungs are not hidden and are not faked: the engine still runs the
+ * Locked levels are not hidden and are not faked: the engine still runs the
  * check over the workspace's real traffic, and the locked card shows the true
  * number of findings and the true money behind them. Only the row-level detail
  * is withheld, which is the thing the upgrade actually buys.
  */
 
-export const rungOrder: RecKind[] = ["host_arbitrage", "quality_match", "rightsize"];
+export const levelOrder: RecKind[] = ["host_arbitrage", "quality_match", "rightsize"];
 
 export interface Gated<T> {
   kind: RecKind;
   requiredPlan: PlanTier;
   unlocked: boolean;
-  /** Rows to render. Empty for a locked rung — nothing leaks past the paywall. */
+  /** Rows to render. Empty for a locked level — nothing leaks past the paywall. */
   items: T[];
   /** Real count of findings behind the lock. Zero when unlocked. */
   lockedCount: number;
@@ -25,7 +25,7 @@ export interface Gated<T> {
   unlockedMonthly: number;
 }
 
-export function gateRung<T>(
+export function gateLevel<T>(
   kind: RecKind,
   plan: PlanTier,
   items: T[],

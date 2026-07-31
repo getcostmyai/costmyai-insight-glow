@@ -26,7 +26,7 @@ export function arbitrageBaseline(
 }
 
 /**
- * Rung 1 — Compare (free).
+ * Level 1 — Compare (free).
  * Same model, cheaper host. Zero quality risk, so it always runs first.
  */
 export function findHostArbitrage(usage: UsageAggregate[], prices: PriceRow[]): Recommendation[] {
