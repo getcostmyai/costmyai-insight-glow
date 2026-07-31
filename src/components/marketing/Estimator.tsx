@@ -167,7 +167,11 @@ export function Estimator() {
 
             <div className="text-right">
               <p className="eyebrow">
-                {showResult ? "Result" : indicative ? "Indicative" : "Indicative"}
+                {showResult
+                  ? "Result"
+                  : indicative
+                    ? `Indicative · ${basisLabel}`
+                    : "Indicative"}
               </p>
               <p
                 className={`num text-2xl leading-tight tabular-nums transition-colors duration-300 ${
@@ -179,7 +183,13 @@ export function Estimator() {
                   <span className="ml-1 text-xs font-medium text-muted-foreground">/ mo</span>
                 ) : null}
               </p>
+              {!showResult && !indicative ? (
+                <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                  Pick a workload and a provider — spend alone is not a measurement
+                </p>
+              ) : null}
             </div>
+
           </div>
 
           {/* ---------------- body ---------------- */}
