@@ -79,6 +79,7 @@ export interface OversizedWorkload {
 }
 
 export interface ActiveSwitchRow {
+  switchId: string;
   fromModel: string;
   fromHost: string;
   toModel: string;
@@ -227,7 +228,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       supabase
         .from("switches")
         .select(
-          "from_model, from_host, to_model, to_host, basis, badge, autonomous, status, activated_at, saved_usd",
+          "id, from_model, from_host, to_model, to_host, basis, badge, autonomous, status, activated_at, saved_usd",
         )
         .eq("org_id", orgId)
         .order("saved_usd", { ascending: false }),
@@ -414,12 +415,21 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const oversized = oversizedRung.items;
 
   // ---- What is already running, inside the selected window -------------------
-  const activeSwitches: ActiveSwitchRow[] = selectSwitchesInWindow(
-    (switches.data ?? []).filter((s) => s.status === "active"),
-    w,
-  ).map((s) => {
+  const toSwitchRow = (s: {
+    id: string;
+    from_model: string;
+    from_host: string;
+    to_model: string;
+    to_host: string;
+    badge: string;
+    basis: string;
+    activated_at: string;
+    saved_usd: number | string;
+    autonomous: boolean;
+  }): ActiveSwitchRow => {
     const activeDays = Math.max(1, (now - new Date(s.activated_at).getTime()) / DAY_MS);
     return {
+      switchId: s.id,
       fromModel: s.from_model,
       fromHost: s.from_host,
       toModel: s.to_model,
@@ -432,16 +442,23 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
       autonomous: s.autonomous,
     };
-  });
+  };
+
+  const activeSwitches: ActiveSwitchRow[] = selectSwitchesInWindow(
+    (switches.data ?? []).filter((s) => s.status === "active"),
+    w,
+  ).map(toSwitchRow);
 
   /** Switches running from before the window — real, but not this window's news. */
   const switchesOutsideWindow =
     (switches.data ?? []).filter((s) => s.status === "active").length - activeSwitches.length;
 
-  const frozen = selectSwitchesInWindow(
+  /** Paused switches in the window — shown so they can be resumed or rolled back. */
+  const frozenSwitches: ActiveSwitchRow[] = selectSwitchesInWindow(
     (switches.data ?? []).filter((s) => s.status === "paused"),
     w,
-  ).length;
+  ).map(toSwitchRow);
+  const frozen = frozenSwitches.length;
 
   // ---- Reconciliation: current ledger rows only (append-only history behind) --
   const reconciliation: ReconciliationRow[] = [];
@@ -557,6 +574,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       },
     },
     activeSwitches,
+    frozenSwitches,
     switchesOutsideWindow,
     frozen,
     savings: {
