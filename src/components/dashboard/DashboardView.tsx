@@ -572,12 +572,19 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               badge={`${data.qualityMatched.length} certified`}
               badgeTone="saving"
               aside={
-                <ObjectiveSelect
-                  value={objective}
-                  onChange={chooseObjective}
-                  locked={!rungs.quality_match.unlocked}
-                  requiredPlan={rungs.quality_match.requiredPlan}
-                />
+                <div className="flex flex-col items-start gap-1 sm:items-end">
+                  <ObjectiveSelect
+                    value={objective}
+                    onChange={chooseObjective}
+                    locked={!rungs.quality_match.unlocked}
+                    requiredPlan={rungs.quality_match.requiredPlan}
+                  />
+                  {errorFor("objective") ? (
+                    <p className="max-w-xs text-[11px] text-destructive sm:text-right">
+                      {errorFor("objective")}
+                    </p>
+                  ) : null}
+                </div>
               }
             />
             {!rungs.quality_match.unlocked ? (
