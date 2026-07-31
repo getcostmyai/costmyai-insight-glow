@@ -25,12 +25,7 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
       <div className="marquee-mask relative">
         <div className="flex w-max animate-marquee items-center gap-12 pr-12">
           {lane.map((name, i) => (
-            <span
-              key={`${name}-${i}`}
-              className="whitespace-nowrap text-lg font-semibold tracking-tight text-muted-foreground/70"
-            >
-              {name}
-            </span>
+            <ProviderLogo key={`${name}-${i}`} label={name} />
           ))}
         </div>
       </div>
