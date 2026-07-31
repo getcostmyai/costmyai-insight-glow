@@ -896,6 +896,8 @@ export type Database = {
           is_synthetic: boolean
           model_key: string
           org_id: string
+          output_p50: number | null
+          output_p95: number | null
           output_tokens: number
           requests: number
           task_hint: string
@@ -910,6 +912,8 @@ export type Database = {
           is_synthetic?: boolean
           model_key: string
           org_id: string
+          output_p50?: number | null
+          output_p95?: number | null
           output_tokens?: number
           requests?: number
           task_hint?: string
@@ -924,6 +928,8 @@ export type Database = {
           is_synthetic?: boolean
           model_key?: string
           org_id?: string
+          output_p50?: number | null
+          output_p95?: number | null
           output_tokens?: number
           requests?: number
           task_hint?: string
