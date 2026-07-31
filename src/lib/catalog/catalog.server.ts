@@ -1,4 +1,5 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
+import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
 
 export interface CatalogRow {
   model_key: string;
@@ -25,9 +26,17 @@ export async function readCatalog(): Promise<CatalogPayload> {
   const supabase = createPublicServerClient();
 
   const [modelsRes, pricesRes, benchRes, snapshot] = await Promise.all([
-    supabase.from("model_catalog").select("model_key, display_name, vendor, tier, is_reasoning, context_window"),
-    supabase.from("host_prices").select("model_key, host_label, input_usd_per_mtok, output_usd_per_mtok"),
-    supabase.from("benchmarks").select("model_key, suite, task_class, score"),
+    supabase
+      .from("model_catalog")
+      .select("model_key, display_name, vendor, tier, is_reasoning, context_window")
+      .eq("is_active", true)
+      .limit(MAX_CATALOG_ROWS),
+    supabase
+      .from("host_prices")
+      .select("model_key, host_label, input_usd_per_mtok, output_usd_per_mtok")
+      .eq("is_active", true)
+      .limit(MAX_CATALOG_ROWS),
+    supabase.from("benchmarks").select("model_key, suite, task_class, score").limit(MAX_CATALOG_ROWS),
     supabase
       .from("pricing_snapshots")
       .select("synced_at")
