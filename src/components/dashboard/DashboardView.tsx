@@ -131,7 +131,22 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-4">
-            {scope === "demo" ? (
+            {/* Session-driven, never route-driven: after an OAuth callback the
+                session arrives asynchronously and this must follow it. */}
+            {session.ready && session.signedIn ? (
+              <>
+                <span className="hidden max-w-[180px] truncate text-sm text-muted-foreground sm:block">
+                  {session.email}
+                </span>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : session.ready ? (
               <a
                 href="/auth"
                 className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
@@ -140,10 +155,14 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
               </a>
             ) : null}
             <a
-              href={scope === "demo" ? "/auth" : "#govern"}
+              href={session.ready && session.signedIn ? "/workspace" : "/auth"}
               className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95"
             >
-              {scope === "demo" ? "See if you're overpaying" : "Connect a gateway"}
+              {session.ready && session.signedIn
+                ? scope === "demo"
+                  ? "Go to my workspace"
+                  : "Connect a gateway"
+                : "See if you're overpaying"}
             </a>
           </div>
 
