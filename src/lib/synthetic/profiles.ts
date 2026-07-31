@@ -58,6 +58,8 @@ export interface WorkloadProfileRow {
   requiredTier: ModelTier;
   observedTier: ModelTier;
   monthlyCostUsd: number;
+  /** Observed request count — the evidence the rightsize verdict rests on. */
+  requests: number;
 }
 
 /**
@@ -98,6 +100,7 @@ export function buildProfiles(
         requiredTier: requiredTierFor(u),
         observedTier,
         monthlyCostUsd: round2(monthly),
+        requests: u.requests,
       };
     })
     .sort((a, b) => b.monthlyCostUsd - a.monthlyCostUsd);
