@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.org_is_synthetic(uuid) FROM anon;
