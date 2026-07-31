@@ -57,6 +57,7 @@ function WorkspacePage() {
 
 function FirstWorkspace({ email }: { email: string | null }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const suggested = useMemo(() => suggestWorkspaceName(email), [email]);
   const [name, setName] = useState(suggested);
   const [busy, setBusy] = useState(false);
@@ -74,6 +75,9 @@ function FirstWorkspace({ email }: { email: string | null }) {
     try {
       await createWorkspace({ data: { name } });
       await queryClient.invalidateQueries({ queryKey: ["my-workspaces"] });
+      // The workspace exists on Compare; choosing a rung is the next step, and
+      // any paid rung goes through checkout before it is provisioned.
+      navigate({ to: "/billing" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create the workspace.");
       setBusy(false);
