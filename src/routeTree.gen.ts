@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicIngestRouteImport } from './routes/api/public/ingest'
+import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
+import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 
@@ -28,6 +30,16 @@ const IndexRoute = IndexRouteImport.update({
 const ApiPublicIngestRoute = ApiPublicIngestRouteImport.update({
   id: '/api/public/ingest',
   path: '/api/public/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1EventsRoute = ApiPublicV1EventsRouteImport.update({
+  id: '/api/public/v1/events',
+  path: '/api/public/v1/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1BillingRoute = ApiPublicV1BillingRouteImport.update({
+  id: '/api/public/v1/billing',
+  path: '/api/public/v1/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSyntheticTickRoute = ApiPublicSyntheticTickRouteImport.update({
@@ -47,6 +59,8 @@ export interface FileRoutesByFullPath {
   '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
+  '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/events': typeof ApiPublicV1EventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +68,8 @@ export interface FileRoutesByTo {
   '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
+  '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/events': typeof ApiPublicV1EventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +78,8 @@ export interface FileRoutesById {
   '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
+  '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/events': typeof ApiPublicV1EventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,6 +89,8 @@ export interface FileRouteTypes {
     | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
+    | '/api/public/v1/billing'
+    | '/api/public/v1/events'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -78,6 +98,8 @@ export interface FileRouteTypes {
     | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
+    | '/api/public/v1/billing'
+    | '/api/public/v1/events'
   id:
     | '__root__'
     | '/'
@@ -85,6 +107,8 @@ export interface FileRouteTypes {
     | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
     | '/api/public/synthetic/tick'
+    | '/api/public/v1/billing'
+    | '/api/public/v1/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,6 +117,8 @@ export interface RootRouteChildren {
   ApiPublicIngestRoute: typeof ApiPublicIngestRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
+  ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
+  ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -118,6 +144,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/events': {
+      id: '/api/public/v1/events'
+      path: '/api/public/v1/events'
+      fullPath: '/api/public/v1/events'
+      preLoaderRoute: typeof ApiPublicV1EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/billing': {
+      id: '/api/public/v1/billing'
+      path: '/api/public/v1/billing'
+      fullPath: '/api/public/v1/billing'
+      preLoaderRoute: typeof ApiPublicV1BillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/synthetic/tick': {
       id: '/api/public/synthetic/tick'
       path: '/api/public/synthetic/tick'
@@ -141,6 +181,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicIngestRoute: ApiPublicIngestRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
+  ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
+  ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

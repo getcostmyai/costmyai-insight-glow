@@ -1,0 +1,167 @@
+import { createClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/integrations/supabase/types";
+import { round2 } from "@/lib/engine/cost";
+
+import {
+  captureIdempotencyKey,
+  providerForHost,
+  RECONCILIATION_TOLERANCE_PCT,
+  type ReconciliationVerdict,
+} from "./contract";
+import type { BillingCapture } from "./schema";
+
+/**
+ * Billing reconciliation — estimated versus invoiced.
+ *
+ * The customer pushes what their provider actually charged; we already know
+ * what the metadata says it should have cost. The gap is the product: cached
+ * prompts, minimum billing units and rounding mean the two never match
+ * exactly, and a reconciliation that always balanced would be lying.
+ *
+ * Writes are idempotent on (org, provider, period_start, period_end): a
+ * reconnect, a retried push, or a re-run of the 30-day backfill produces
+ * exactly one capture per provider-period, updated in place.
+ */
+
+function adminClient() {
+  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+export interface ReconciledCapture {
+  provider: string;
+  periodStart: string;
+  periodEnd: string;
+  estimatedUsd: number;
+  invoicedUsd: number;
+  deltaUsd: number;
+  deltaPct: number;
+  verdict: ReconciliationVerdict;
+  note: string;
+  coverageNote?: string;
+}
+
+export interface BillingIngestResult {
+  captures: number;
+  reconciled: ReconciledCapture[];
+  coverageNotes: string[];
+}
+
+export function verdictFor(estimatedUsd: number, invoicedUsd: number) {
+  const deltaUsd = round2(invoicedUsd - estimatedUsd);
+  const deltaPct = estimatedUsd === 0 ? 0 : round2((deltaUsd / estimatedUsd) * 100);
+  const verdict: ReconciliationVerdict =
+    Math.abs(deltaPct) <= RECONCILIATION_TOLERANCE_PCT
+      ? "match"
+      : deltaUsd > 0
+        ? "under_estimated"
+        : "over_estimated";
+  const note =
+    verdict === "match"
+      ? `Within the ±${RECONCILIATION_TOLERANCE_PCT}% tolerance band.`
+      : verdict === "under_estimated"
+        ? "Invoice above metadata estimate — typically minimum billing units or untracked retries."
+        : "Invoice below metadata estimate — typically prompt caching or committed-use discounts.";
+  return { deltaUsd, deltaPct, verdict, note };
+}
+
+/**
+ * What the metadata says this provider's traffic cost across the period. Summed
+ * from day rollups, which are themselves re-derived from raw events — the same
+ * numbers the dashboard shows, never a second parallel calculation.
+ */
+export async function estimateForPeriod(
+  orgId: string,
+  provider: string,
+  periodStart: string,
+  periodEnd: string,
+): Promise<number> {
+  const db = adminClient();
+  const { data, error } = await db
+    .from("usage_rollups")
+    .select("host, cost_usd")
+    .eq("org_id", orgId)
+    .eq("granularity", "day")
+    .gte("bucket_start", `${periodStart}T00:00:00Z`)
+    .lt("bucket_start", `${periodEnd}T00:00:00Z`)
+    .limit(100_000);
+  if (error) throw new Error(`estimate failed: ${error.message}`);
+
+  let total = 0;
+  for (const row of data ?? []) {
+    if (providerForHost(row.host) !== provider) continue;
+    total += Number(row.cost_usd);
+  }
+  return round2(total);
+}
+
+export async function ingestBillingCaptures(
+  orgId: string,
+  captures: BillingCapture[],
+): Promise<BillingIngestResult> {
+  const db = adminClient();
+  const reconciled: ReconciledCapture[] = [];
+  const coverageNotes: string[] = [];
+
+  for (const capture of captures) {
+    const provider = capture.provider.trim().toLowerCase();
+    const idempotencyKey =
+      capture.idempotency_key ?? captureIdempotencyKey(provider, capture.period_start, capture.period_end);
+
+    const { data: row, error } = await db
+      .from("billing_captures")
+      .upsert(
+        {
+          org_id: orgId,
+          provider,
+          period_start: capture.period_start,
+          period_end: capture.period_end,
+          invoiced_usd: capture.invoiced_usd,
+          currency: capture.currency,
+          idempotency_key: idempotencyKey,
+          captured_at: new Date().toISOString(),
+        },
+        { onConflict: "org_id,provider,period_start,period_end" },
+      )
+      .select("id")
+      .single();
+    if (error) throw new Error(`billing capture failed: ${error.message}`);
+
+    const estimatedUsd = await estimateForPeriod(orgId, provider, capture.period_start, capture.period_end);
+    const { deltaUsd, deltaPct, verdict, note } = verdictFor(estimatedUsd, capture.invoiced_usd);
+
+    // One reconciliation per capture: replaced on re-push, never appended to.
+    await db.from("billing_reconciliations").delete().eq("capture_id", row.id);
+    const { error: reconError } = await db.from("billing_reconciliations").insert({
+      org_id: orgId,
+      capture_id: row.id,
+      estimated_usd: estimatedUsd,
+      invoiced_usd: capture.invoiced_usd,
+      delta_usd: deltaUsd,
+      delta_pct: deltaPct,
+      verdict,
+      note: capture.coverage_note ? `${note} ${capture.coverage_note}` : note,
+      computed_at: new Date().toISOString(),
+    });
+    if (reconError) throw new Error(`reconciliation failed: ${reconError.message}`);
+
+    if (capture.coverage_note) coverageNotes.push(capture.coverage_note);
+
+    reconciled.push({
+      provider,
+      periodStart: capture.period_start,
+      periodEnd: capture.period_end,
+      estimatedUsd,
+      invoicedUsd: capture.invoiced_usd,
+      deltaUsd,
+      deltaPct,
+      verdict,
+      note,
+      coverageNote: capture.coverage_note,
+    });
+  }
+
+  return { captures: reconciled.length, reconciled, coverageNotes };
+}
