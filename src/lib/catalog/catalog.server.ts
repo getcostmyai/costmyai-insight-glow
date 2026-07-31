@@ -98,9 +98,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       const col = SUITE_COLUMN[s.suite];
       if (col) named[col] = s.score;
     }
-    const present = [named.gpqa, named.ifbench, named.coding].filter(
-      (v): v is number => v != null,
-    );
+    // AA's own published composite — read straight through, never derived here.
+    const publishedIndex = scores.find((s) => s.suite === AA_INTELLIGENCE_SUITE);
+
 
     // Latency is published per model, not per endpoint — every host row for a
     // model carries the same medians, so the first measured one is the model's.
