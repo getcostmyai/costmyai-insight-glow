@@ -180,8 +180,13 @@ function AuthPage() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           CostMyAI never asks for your provider API keys.{" "}
-          <a href="/" className="underline underline-offset-2 hover:text-foreground">
-            See the demo workspace
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Book a Demo
           </a>
         </p>
       </div>
