@@ -159,9 +159,7 @@ export function MarketingFooter() {
                 Estimator
               </FooterLink>
               <FooterLink to="/models">Models</FooterLink>
-              <FooterLink to="/" hash="how">
-                Intelligence
-              </FooterLink>
+              <FooterLink to="/intelligence">Intelligence</FooterLink>
               <FooterLink to="/pricing">Plans</FooterLink>
               <FooterLink to="/" hash="architecture">
                 API
@@ -173,8 +171,10 @@ export function MarketingFooter() {
               </FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
+              <FooterLink to="/partners">Become a partner</FooterLink>
               <FooterExternal href={BOOK_DEMO_URL}>Book a Demo</FooterExternal>
             </FooterColumn>
+
             <FooterColumn title="Company">
               <FooterLink to="/" hash="neutrality">
                 About
