@@ -24,8 +24,11 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
     const [rollups, prices, benchmarks, margins, models] = await Promise.all([
       supabase
         .from("usage_rollups")
-        .select("model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd")
+        .select(
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+        )
         .eq("org_id", DEMO_ORG_ID)
+        .eq("granularity", data.days === 1 ? "hour" : "day")
         .gte("bucket_start", since),
       supabase
         .from("host_prices")
