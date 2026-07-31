@@ -16,7 +16,6 @@ export function ArchitectureDiagram() {
           icon={Boxes}
           title="Your App"
           body="Makes API requests"
-          step="01"
         />
 
         <Leg label="request" number="01" />
@@ -26,12 +25,11 @@ export function ArchitectureDiagram() {
           title="Verification Engine"
           body="Middleware in your environment"
           highlight
-          step="02"
         />
 
         <Leg label="forwarded unchanged" number="02" />
 
-        <Node icon={Cloud} title="AI Provider" body="OpenAI, Anthropic, Gemini, others" step="03" />
+        <Node icon={Cloud} title="AI Provider" body="OpenAI, Anthropic, Gemini, others" />
       </div>
 
       {/* Return leg, drawn separately — the response really does come back. */}
@@ -75,13 +73,11 @@ function Node({
   title,
   body,
   highlight = false,
-  step,
 }: {
   icon: typeof Server;
   title: string;
   body: string;
   highlight?: boolean;
-  step: string;
 }) {
   return (
     <div
@@ -99,7 +95,6 @@ function Node({
         >
           <Icon className="h-5 w-5" />
         </div>
-        <span className="num text-xs text-muted-foreground">{step}</span>
       </div>
       <p className="mt-3.5 font-semibold tracking-tight">{title}</p>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
