@@ -6,6 +6,10 @@ export interface SwitchRow {
   fromHost: string;
   toModel: string;
   toHost: string;
+  /** Raw host keys + workload, used to identify the row server-side on activate. */
+  fromHostKey: string;
+  toHostKey: string;
+  taskHint: string;
   kind: SwitchKind;
   monthlySaving: number;
   savingPct: number;
