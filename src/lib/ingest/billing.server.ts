@@ -19,9 +19,15 @@ import type { BillingCapture } from "./schema";
  * prompts, minimum billing units and rounding mean the two never match
  * exactly, and a reconciliation that always balanced would be lying.
  *
- * Writes are idempotent on (org, provider, period_start, period_end): a
+ * Captures are idempotent on (org, provider, period_start, period_end): a
  * reconnect, a retried push, or a re-run of the 30-day backfill produces
  * exactly one capture per provider-period, updated in place.
+ *
+ * Reconciliations are an APPEND-ONLY LEDGER. A restatement never edits or
+ * deletes the earlier figure: it stamps the previous current row with
+ * superseded_at and appends a new row carrying supersedes_id. If a number is
+ * ever disputed, the full chain of what was claimed and when is still there.
+ * "Current" means superseded_at IS NULL.
  */
 
 function adminClient() {
