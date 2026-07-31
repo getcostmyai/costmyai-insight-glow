@@ -26,16 +26,20 @@ describe("catalog metric columns", () => {
     expect(rows.some((r) => r.coding === null)).toBe(true);
   }, 30_000);
 
-  it("derives Intelligence only from scores actually present", async () => {
+  it("reads Intelligence from AA's published index, never from the other columns", async () => {
     const { rows } = await readCatalog();
-    for (const r of rows.slice(0, 400)) {
-      const present = [r.gpqa, r.ifbench, r.coding].filter((v): v is number => v !== null);
-      if (present.length === 0) {
-        expect(r.intelligence).toBeNull();
-      } else {
-        const mean = present.reduce((a, b) => a + b, 0) / present.length;
-        expect(r.intelligence).toBeCloseTo(Math.round(mean * 10) / 10, 5);
+    let checked = 0;
+    for (const r of rows) {
+      const published = r.scores.find((s) => s.suite === "aa:intelligence_index");
+      expect(r.intelligence).toBe(published ? published.score : null);
+      if (published) checked += 1;
+      // A model can hold GPQA/IFBench/Coding and still have no index — proof
+      // the column is not an average of the three sitting beside it.
+      if (r.intelligence === null) {
+        expect(published).toBeUndefined();
       }
     }
+    expect(checked).toBeGreaterThan(0);
   }, 30_000);
 });
+
