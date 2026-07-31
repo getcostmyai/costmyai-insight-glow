@@ -31,7 +31,8 @@ export interface MintedTokenRow extends IngestTokenRow {
  * Authorization is re-derived from the session on every call; the browser only
  * ever names a workspace, never its own rights over it.
  */
-type AuthedClient = Parameters<typeof assertManagerImpl>[0] extends never ? never : never;
+
+
 
 async function assertManager(
   supabase: {
