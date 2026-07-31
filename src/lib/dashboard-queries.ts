@@ -17,4 +17,6 @@ export const dashboardQuery = (range: RangeKey) =>
     queryKey: ["dashboard", range],
     queryFn: () => getDashboardSnapshot({ data: { days: rangeFor(range).days } }),
     staleTime: 60_000,
+    // Switching range keeps the last window on screen instead of blanking it.
+    placeholderData: keepPreviousData,
   });
