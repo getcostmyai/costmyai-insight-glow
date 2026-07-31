@@ -8,10 +8,21 @@ export interface CatalogRow {
   tier: string;
   is_reasoning: boolean;
   context_window: number | null;
+  /** e.g. "text+image->text" — straight from the catalog, never inferred. */
+  modality: string;
   hosts: { host_label: string; input: number; output: number }[];
   cheapestInput: number | null;
   cheapestOutput: number | null;
   scores: { task_class: string; suite: string; score: number }[];
+  /** Named benchmark columns. null = no score on record for this model. */
+  gpqa: number | null;
+  ifbench: number | null;
+  coding: number | null;
+  /** Mean of the benchmark scores actually present. null when none are. */
+  intelligence: number | null;
+  /** Feed-published medians, model-scope. null = unmeasured. */
+  ttftMs: number | null;
+  outputTps: number | null;
 }
 
 export interface CatalogPayload {
@@ -21,6 +32,12 @@ export interface CatalogPayload {
   live: boolean;
 }
 
+const SUITE_COLUMN: Record<string, "gpqa" | "ifbench" | "coding"> = {
+  "aa:gpqa": "gpqa",
+  "aa:ifbench": "ifbench",
+  "aa:scicode": "coding",
+};
+
 /** The public model catalog, read through the anon client — catalog data only. */
 export async function readCatalog(): Promise<CatalogPayload> {
   const supabase = createPublicServerClient();
@@ -28,12 +45,14 @@ export async function readCatalog(): Promise<CatalogPayload> {
   const [modelsRes, pricesRes, benchRes, snapshot] = await Promise.all([
     supabase
       .from("model_catalog")
-      .select("model_key, display_name, vendor, tier, is_reasoning, context_window")
+      .select("model_key, display_name, vendor, tier, is_reasoning, context_window, modality")
       .eq("is_active", true)
       .limit(MAX_CATALOG_ROWS),
     supabase
       .from("host_prices")
-      .select("model_key, host_label, input_usd_per_mtok, output_usd_per_mtok")
+      .select(
+        "model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
+      )
       .eq("is_active", true)
       .limit(MAX_CATALOG_ROWS),
     supabase.from("benchmarks").select("model_key, suite, task_class, score").limit(MAX_CATALOG_ROWS),
@@ -50,8 +69,8 @@ export async function readCatalog(): Promise<CatalogPayload> {
   const benchmarks = benchRes.data ?? [];
 
   const rows: CatalogRow[] = (modelsRes.data ?? []).map((m) => {
-    const hosts = prices
-      .filter((p) => p.model_key === m.model_key)
+    const priced = prices.filter((p) => p.model_key === m.model_key);
+    const hosts = priced
       .map((p) => ({
         host_label: p.host_label,
         input: Number(p.input_usd_per_mtok),
@@ -64,6 +83,23 @@ export async function readCatalog(): Promise<CatalogPayload> {
       .map((b) => ({ task_class: b.task_class, suite: b.suite, score: Number(b.score) }))
       .sort((a, b) => a.task_class.localeCompare(b.task_class));
 
+    const named: { gpqa: number | null; ifbench: number | null; coding: number | null } = {
+      gpqa: null,
+      ifbench: null,
+      coding: null,
+    };
+    for (const s of scores) {
+      const col = SUITE_COLUMN[s.suite];
+      if (col) named[col] = s.score;
+    }
+    const present = [named.gpqa, named.ifbench, named.coding].filter(
+      (v): v is number => v != null,
+    );
+
+    // Latency is published per model, not per endpoint — every host row for a
+    // model carries the same medians, so the first measured one is the model's.
+    const withLatency = priced.find((p) => p.median_ttft_ms != null && p.output_tps != null);
+
     return {
       model_key: m.model_key,
       display_name: m.display_name,
@@ -71,10 +107,17 @@ export async function readCatalog(): Promise<CatalogPayload> {
       tier: m.tier,
       is_reasoning: Boolean(m.is_reasoning),
       context_window: m.context_window,
+      modality: m.modality,
       hosts,
       cheapestInput: hosts.length ? hosts[0].input : null,
       cheapestOutput: hosts.length ? Math.min(...hosts.map((h) => h.output)) : null,
       scores,
+      ...named,
+      intelligence: present.length
+        ? Math.round((present.reduce((a, b) => a + b, 0) / present.length) * 10) / 10
+        : null,
+      ttftMs: withLatency ? Number(withLatency.median_ttft_ms) : null,
+      outputTps: withLatency ? Number(withLatency.output_tps) : null,
     };
   });
 
@@ -87,3 +130,4 @@ export async function readCatalog(): Promise<CatalogPayload> {
     live: Boolean(snapshot.data?.synced_at),
   };
 }
+
