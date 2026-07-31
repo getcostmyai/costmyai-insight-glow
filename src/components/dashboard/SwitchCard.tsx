@@ -1,4 +1,5 @@
-import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
 import { usd } from "@/lib/dashboard-data";
 
@@ -11,6 +12,8 @@ export function SwitchCard({
   error,
   actionLabel = "Switch now",
   disabledHint,
+  ctaHref,
+  ctaLabel,
 }: {
   row: SwitchRow;
   rank: number;
@@ -20,6 +23,9 @@ export function SwitchCard({
   error?: string | null;
   actionLabel?: string;
   disabledHint?: string;
+  /** Where the read-only demo sends the visitor instead of activating. */
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
@@ -76,12 +82,14 @@ export function SwitchCard({
             {pending ? "Switching…" : actionLabel}
           </button>
         ) : (
-          <span
+          <Link
+            to={ctaHref ?? "/auth"}
             title={disabledHint ?? "Sign in to your own workspace to activate switches"}
-            className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground"
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary-soft"
           >
-            {actionLabel}
-          </span>
+            {ctaLabel ?? "Sign in to activate"}
+            <ArrowUpRight className="size-3.5" />
+          </Link>
         )}
       </div>
     </div>

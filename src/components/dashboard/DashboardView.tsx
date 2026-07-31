@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -147,6 +148,10 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
     // a local preview of what that objective would recommend.
     if (canAct) objectiveMutation.mutate(v);
   };
+
+  /** Read-only demo: the row still needs a real destination, not a dead label. */
+  const ctaHref = session.signedIn ? "/workspace" : "/auth";
+  const ctaLabel = session.signedIn ? "Activate in your workspace" : "Sign in to activate";
 
   const rsKey = (o: { model: string; hostKey: string; task: string }) =>
     `rightsize:${o.model}|${o.hostKey}|${o.task}`;
@@ -543,6 +548,8 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                       rank={i + 1}
                       pending={busy(key)}
                       error={errorFor(key)}
+                      ctaHref={ctaHref}
+                      ctaLabel={ctaLabel}
                       onActivate={
                         canAct
                           ? () =>
@@ -607,6 +614,8 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                       rank={i + 1}
                       pending={busy(key)}
                       error={errorFor(key)}
+                      ctaHref={ctaHref}
+                      ctaLabel={ctaLabel}
                       onActivate={
                         canAct
                           ? () =>
@@ -696,7 +705,15 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                             {busy(rsKey(o)) ? <Loader2 className="size-3.5 animate-spin" /> : null}
                             Right-size now
                           </button>
-                        ) : null}
+                        ) : (
+                          <Link
+                            to={ctaHref}
+                            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-opportunity/50 px-3.5 py-1.5 text-xs font-semibold text-opportunity transition-colors hover:bg-opportunity/10"
+                          >
+                            {ctaLabel}
+                            <ArrowUpRight className="size-3" />
+                          </Link>
+                        )}
                       </div>
                     ) : null}
                     {errorFor(rsKey(o)) ? (
