@@ -47,6 +47,10 @@ export interface ReconciledCapture {
   verdict: ReconciliationVerdict;
   note: string;
   coverageNote?: string;
+  /** True when this push restated an earlier figure (a new ledger row supersedes it). */
+  restated: boolean;
+  /** The reconciliation row this one supersedes, if any. */
+  supersedesId: string | null;
 }
 
 export interface BillingIngestResult {
