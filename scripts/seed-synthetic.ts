@@ -105,9 +105,9 @@ out.push(
   `insert into public.usage_rollups (org_id, bucket_start, granularity, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95, is_synthetic) values`,
 );
 out.push(rollupValues([...dailyRollups, ...hourlyRollups]));
-out.push(
-  `on conflict (org_id, bucket_start, granularity, model_key, host, task_hint) do update set requests = excluded.requests, input_tokens = excluded.input_tokens, output_tokens = excluded.output_tokens, cost_usd = excluded.cost_usd, output_p50 = excluded.output_p50, output_p95 = excluded.output_p95;`,
-);
+// Insert-only: a reseed clears the workspace first (see scripts/README-synthetic.md),
+// so an existing row is never silently rewritten underneath a decision already made on it.
+out.push(`on conflict (org_id, bucket_start, granularity, model_key, host, task_hint) do nothing;`);
 
 out.push(
   `insert into public.workload_profiles (org_id, model_key, host, task_hint, avg_input_tokens, avg_output_tokens, complexity_score, required_tier, observed_tier, monthly_cost_usd, computed_at, is_synthetic) values`,
@@ -120,16 +120,14 @@ out.push(
     )
     .join(",\n"),
 );
-out.push(
-  `on conflict (org_id, model_key, host, task_hint) do update set avg_input_tokens = excluded.avg_input_tokens, avg_output_tokens = excluded.avg_output_tokens, complexity_score = excluded.complexity_score, required_tier = excluded.required_tier, observed_tier = excluded.observed_tier, monthly_cost_usd = excluded.monthly_cost_usd, computed_at = excluded.computed_at;`,
-);
+out.push(`on conflict (org_id, model_key, host, task_hint) do nothing;`);
 
 for (const b of billing) {
   out.push(
     `with cap as (
   insert into public.billing_captures (org_id, provider, period_start, period_end, invoiced_usd, currency, idempotency_key, is_synthetic, captured_at)
   values (${lit(ORG_ID)}, ${lit(b.provider)}, ${lit(b.periodStart)}, ${lit(b.periodEnd)}, ${b.invoicedUsd}, 'USD', ${lit(b.idempotencyKey)}, true, ${ts(to)})
-  on conflict (org_id, provider, period_start, period_end) do update set invoiced_usd = excluded.invoiced_usd, captured_at = excluded.captured_at
+  on conflict (org_id, provider, period_start, period_end) do nothing
   returning id
 )
 insert into public.billing_reconciliations (org_id, capture_id, estimated_usd, invoiced_usd, delta_usd, delta_pct, verdict, note, computed_at)
