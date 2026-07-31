@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Menu, X } from "lucide-react";
+import { CircleUserRound, LogIn, Menu, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -14,10 +14,13 @@ import { Wordmark } from "./Wordmark";
  */
 
 const NAV = [
-  { to: "/models", label: "Models" },
   { to: "/", label: "How it works", hash: "how" },
+  { to: "/models", label: "Models" },
+  { to: "/intelligence", label: "Intelligence" },
+  { to: "/partners", label: "Become a partner" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
+
 
 function useSignedIn() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -54,32 +57,41 @@ export function MarketingNav() {
                 key={item.label}
                 to={item.to}
                 hash={"hash" in item ? item.hash : undefined}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 {item.label}
               </Link>
             ))}
-            <a
-              href={BOOK_DEMO_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Book a Demo
-            </a>
           </nav>
-
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            to={signedIn ? "/workspace" : "/auth"}
-            className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="hidden rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted sm:inline-flex"
           >
-            {signedIn ? "Your workspace" : "Sign in"}
-          </Link>
+            Book a Demo
+          </a>
           <Link to="/auth" className="btn-gradient px-4 py-2 text-sm">
             Start free
+          </Link>
+          <Link
+            to={signedIn ? "/workspace" : "/auth"}
+            aria-label={signedIn ? "Your workspace — signed in" : "Sign in or sign up"}
+            title={signedIn ? "Your workspace" : "Sign in"}
+            className={
+              signedIn
+                ? "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/40 transition-colors hover:bg-primary/25"
+                : "grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+            }
+          >
+            {signedIn ? (
+              <CircleUserRound className="h-[18px] w-[18px]" />
+            ) : (
+              <LogIn className="h-[18px] w-[18px]" />
+            )}
           </Link>
           <button
             type="button"
@@ -127,6 +139,7 @@ export function MarketingNav() {
   );
 }
 
+
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-card">
@@ -146,9 +159,7 @@ export function MarketingFooter() {
                 Estimator
               </FooterLink>
               <FooterLink to="/models">Models</FooterLink>
-              <FooterLink to="/" hash="how">
-                Intelligence
-              </FooterLink>
+              <FooterLink to="/intelligence">Intelligence</FooterLink>
               <FooterLink to="/pricing">Plans</FooterLink>
               <FooterLink to="/" hash="architecture">
                 API
@@ -160,8 +171,10 @@ export function MarketingFooter() {
               </FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
+              <FooterLink to="/partners">Become a partner</FooterLink>
               <FooterExternal href={BOOK_DEMO_URL}>Book a Demo</FooterExternal>
             </FooterColumn>
+
             <FooterColumn title="Company">
               <FooterLink to="/" hash="neutrality">
                 About
