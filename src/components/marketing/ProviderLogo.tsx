@@ -42,7 +42,7 @@ export function ProviderLogo({ label, size = 28 }: { label: string; size?: numbe
           width={size}
           height={size}
           onError={() => setFailed(true)}
-          className="rounded-md object-contain opacity-80 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+          className="rounded-md object-contain opacity-100 transition duration-300 hover:opacity-90"
           style={{ width: size, height: size }}
         />
       ) : null}
