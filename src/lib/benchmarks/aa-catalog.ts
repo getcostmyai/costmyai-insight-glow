@@ -106,6 +106,15 @@ export const EXCLUDED_FIELDS = [
   "artificial_analysis_math_index",
 ];
 
+/**
+ * AA's published Intelligence Index — a real, independently-computed composite.
+ * Display-only: excluded above from every certification path, stored under its
+ * own suite so it can never be mistaken for an evaluation with a margin.
+ */
+export const AA_INTELLIGENCE_FIELD = "artificial_analysis_intelligence_index";
+export const AA_INTELLIGENCE_SUITE = `${AA_SUITE}:intelligence_index`;
+
+
 export interface AaModel {
   slug: string;
   name: string;
