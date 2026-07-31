@@ -17,7 +17,7 @@ const NAV = [
   { to: "/", label: "How it works", hash: "how" },
   { to: "/models", label: "Models" },
   { to: "/intelligence", label: "Intelligence" },
-  { to: "/partners", label: "Become a partner" },
+  { to: "/partners", label: "Become a Partner" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
 
@@ -171,7 +171,7 @@ export function MarketingFooter() {
               </FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
-              <FooterLink to="/partners">Become a partner</FooterLink>
+              <FooterLink to="/partners">Become a Partner</FooterLink>
               <FooterExternal href={BOOK_DEMO_URL}>Book a Demo</FooterExternal>
             </FooterColumn>
 
