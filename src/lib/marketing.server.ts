@@ -20,13 +20,10 @@ export interface MarketingStats {
   /** Distinct providers we hold a verified price for. */
   providerCount: number;
   /**
-   * Real price moves (up or down) we caught between two of our own syncs.
-   *
-   * This is everything we have, not a calendar-month figure: price_history only
-   * contains what we observed ourselves, and OpenRouter publishes current
-   * prices only — there is no historical pricing endpoint to backfill from. The
-   * count is therefore always paired with `trackingSince` so the page can state
-   * the window it actually covers instead of implying a full month.
+   * Real price moves (up or down) we caught between two of our own syncs during
+   * the current calendar month (UTC). The counter resets on the 1st of each
+   * month. price_history itself is append-only and never pruned — this is a
+   * read-side window only.
    */
   priceChangesTracked: number;
   /** First observation in price_history — the honest start of our coverage. */
@@ -37,8 +34,13 @@ export interface MarketingStats {
   live: boolean;
 }
 
-export async function readMarketingStats(_now: number = Date.now()): Promise<MarketingStats> {
+export async function readMarketingStats(now: number = Date.now()): Promise<MarketingStats> {
   const supabase = createPublicServerClient();
+
+  const nowDate = new Date(now);
+  const monthStart = new Date(
+    Date.UTC(nowDate.getUTCFullYear(), nowDate.getUTCMonth(), 1, 0, 0, 0, 0),
+  ).toISOString();
 
   const [models, prices, snapshot, changes, firstObservation] = await Promise.all([
     supabase.from("model_catalog").select("model_key", { count: "exact", head: true }).eq("is_active", true),
@@ -56,7 +58,8 @@ export async function readMarketingStats(_now: number = Date.now()): Promise<Mar
     supabase
       .from("price_history")
       .select("id", { count: "exact", head: true })
-      .in("change_kind", ["increase", "decrease"]),
+      .in("change_kind", ["increase", "decrease"])
+      .gte("observed_at", monthStart),
     supabase
       .from("price_history")
       .select("observed_at")

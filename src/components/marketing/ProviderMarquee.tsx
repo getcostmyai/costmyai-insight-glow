@@ -32,22 +32,6 @@ function LiveStat({ value, label }: { value: number; label: string }) {
   );
 }
 
-/**
- * The price-change count covers only the window we have actually watched: there
- * is no historical pricing feed to backfill from, so the label names the day
- * tracking started rather than implying a month we never observed.
- */
-function trackedLabel(since: string | null) {
-  if (!since) return "Price changes tracked";
-  const day = new Date(since).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  return `Price changes tracked since ${day}`;
-}
-
 export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
   if (!stats.live || stats.providers.length === 0) return null;
 
@@ -59,7 +43,7 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
         <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
           <LiveStat value={stats.modelCount} label="Models" />
           <LiveStat value={stats.providerCount} label="Providers" />
-          <LiveStat value={stats.priceChangesTracked} label={trackedLabel(stats.trackingSince)} />
+          <LiveStat value={stats.priceChangesTracked} label="Price changes this month" />
         </div>
 
         <div className="h-px w-full bg-border" />
