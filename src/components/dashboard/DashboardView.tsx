@@ -24,6 +24,8 @@ import { dashboardQuery, ranges, rangeFor, type RangeKey, type DashboardScope } 
 import type { ObjectiveKind } from "@/lib/engine/types";
 import type { SwitchOpportunity } from "@/lib/dashboard.server";
 import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
+import { useSessionUser } from "@/hooks/use-session-user";
+import { supabase } from "@/integrations/supabase/client";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
 
 const navItems = [
