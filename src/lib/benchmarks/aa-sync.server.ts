@@ -14,6 +14,8 @@ export interface SyncReport {
   matchedModels: string[];
   unmatchedModels: string[];
   scoresWritten: number;
+  latenciesWritten: number;
+  hostRowsWithLatency: number;
   marginsWritten: { task_class: string; suite: string; margin: number }[];
   chosenEvals: { task_class: string; label: string; covered: number; sampleSize: number }[];
   skipped: { model_key: string; task_class: string; reason: string }[];
@@ -80,6 +82,27 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
     if (error) throw error;
   }
 
+  // Latency: the feed measures the MODEL, so every host row serving that model
+  // gets the same median, tagged scope="model". The engine surfaces that scope
+  // instead of pretending we measured this specific endpoint.
+  let hostRowsWithLatency = 0;
+  for (const l of result.latencies) {
+    const { data: touched, error } = await supabase
+      .from("host_prices")
+      .update({
+        median_ttft_ms: l.median_ttft_ms,
+        output_tps: l.output_tps,
+        latency_scope: l.scope,
+        latency_source_run_id: runId,
+        latency_measured_at: syncedAt,
+        source: l.source,
+      })
+      .eq("model_key", l.model_key)
+      .select("id");
+    if (error) throw error;
+    hostRowsWithLatency += touched?.length ?? 0;
+  }
+
   // Seeded placeholder scores are not measurements. Once a real suite covers a
   // model, its fixture rows are marked as such so the engine never reads them.
   const { data: retired, error: retireError } = await supabase
@@ -95,7 +118,7 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
   await supabase.from("pricing_snapshots").insert({
     feed: AA_FEED,
     status: "ok",
-    rows_upserted: result.scores.length + result.margins.length,
+    rows_upserted: result.scores.length + result.margins.length + hostRowsWithLatency,
     is_fixture: false,
     synced_at: syncedAt,
   });
@@ -106,6 +129,8 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
     matchedModels: result.matchedModels,
     unmatchedModels: result.unmatchedModels,
     scoresWritten: result.scores.length,
+    latenciesWritten: result.latencies.length,
+    hostRowsWithLatency,
     marginsWritten: result.margins.map((m) => ({ task_class: m.task_class, suite: m.suite, margin: m.margin })),
     chosenEvals: result.chosenEvals.map(({ task_class, label, covered, sampleSize }) => ({ task_class, label, covered, sampleSize })),
     skipped: result.skipped,

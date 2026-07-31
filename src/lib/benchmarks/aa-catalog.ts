@@ -95,6 +95,46 @@ export interface AaModel {
   name: string;
   evaluations: Record<string, number | null>;
   median_time_to_first_answer_token?: number | null;
+  median_time_to_first_token_seconds?: number | null;
+  median_output_tokens_per_second?: number | null;
+}
+
+/**
+ * Measured latency inputs for one model.
+ *
+ * The feed publishes ONE median per model, taken across the hosts it measures —
+ * there is no per-endpoint breakdown in the API. So the scope is always "model"
+ * and travels with the value; the engine says so in every recommendation and
+ * refusal it makes on this basis rather than implying we timed that host.
+ *
+ * Two components, not one number, because end-to-end latency depends on how many
+ * tokens a workload actually generates: ttft + outputTokens / tps. A workload
+ * that emits 40 tokens and one that emits 4,000 do not share a latency.
+ */
+export interface LatencyRow {
+  model_key: string;
+  median_ttft_ms: number;
+  output_tps: number;
+  scope: "model";
+  source: string;
+}
+
+export const LATENCY_SCOPE_MODEL = "model" as const;
+
+/** Both components must be present and positive, or the model stays unmeasured. */
+export function latencyRowFor(modelKey: string, m: AaModel): LatencyRow | null {
+  const ttftSeconds = m.median_time_to_first_token_seconds;
+  const tps = m.median_output_tokens_per_second;
+  if (ttftSeconds == null || tps == null) return null;
+  if (!Number.isFinite(Number(ttftSeconds)) || !Number.isFinite(Number(tps))) return null;
+  if (Number(ttftSeconds) < 0 || Number(tps) <= 0) return null;
+  return {
+    model_key: modelKey,
+    median_ttft_ms: Math.round(Number(ttftSeconds) * 1000),
+    output_tps: Math.round(Number(tps) * 100) / 100,
+    scope: LATENCY_SCOPE_MODEL,
+    source: `artificialanalysis.ai/${m.slug}#median_time_to_first_token_seconds`,
+  };
 }
 
 export interface ScoreRow {
@@ -132,6 +172,7 @@ export const MARGIN_METHOD = "binomial_wald_95";
 
 export interface TransformResult {
   scores: ScoreRow[];
+  latencies: LatencyRow[];
   margins: { suite: string; task_class: string; margin: number; method: string }[];
   /** Which evaluation was chosen to represent each task class, and why. */
   chosenEvals: { task_class: string; suite: string; label: string; covered: number; sampleSize: number }[];
@@ -158,6 +199,7 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   const skipped: TransformResult["skipped"] = [];
   const chosenEvals: TransformResult["chosenEvals"] = [];
   const margins: TransformResult["margins"] = [];
+  const latencies: LatencyRow[] = [];
 
 
   const resolved = new Map<string, AaModel>();
@@ -170,6 +212,9 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
     }
     matchedModels.push(key);
     resolved.set(key, model);
+    const latency = latencyRowFor(key, model);
+    if (latency) latencies.push(latency);
+    else skipped.push({ model_key: key, task_class: "*", reason: `No published latency for ${model.slug}` });
   }
 
   for (const [taskClass, candidates] of Object.entries(TASK_EVAL_CANDIDATES)) {
@@ -227,6 +272,6 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
     }
   }
 
-  return { scores, margins, chosenEvals, matchedModels, unmatchedModels, skipped };
+  return { scores, latencies, margins, chosenEvals, matchedModels, unmatchedModels, skipped };
 }
 
