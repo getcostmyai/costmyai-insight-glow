@@ -40,9 +40,14 @@ function q(sql: string): any[] {
 
 export function buildSynthetic() {
   const prices: PriceRow[] = q(
-    "select model_key, host, host_label, input_usd_per_mtok::float8, output_usd_per_mtok::float8 from host_prices",
+    // current_prices resolves one winning row per model/host across price
+    // sources, so the ecosystem is sized against the same price the engine and
+    // the dashboard read — never a retired or lower-priority duplicate.
+    "select model_key, host, host_label, input_usd_per_mtok::float8, output_usd_per_mtok::float8 from current_prices",
   );
-  const models: ModelRow[] = q("select model_key, display_name, vendor, tier from model_catalog");
+  const models: ModelRow[] = q(
+    "select model_key, display_name, vendor, tier from model_catalog where is_active",
+  );
 
   const priceIndex = new Map(prices.map((p) => [`${p.model_key}|${p.host}`, p]));
   const priceFor = (modelKey: string, host: string) => priceIndex.get(`${modelKey}|${host}`);

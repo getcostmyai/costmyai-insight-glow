@@ -90,8 +90,8 @@ function clamp01(n: number): number {
  */
 export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
   {
-    modelKey: "claude-opus-4-7",
-    host: "api.anthropic.com",
+    modelKey: "anthropic/claude-opus-4.7",
+    host: "azure",
     taskHint: "generation",
     spendShare: 0.18,
     inputP50: 7400,
@@ -103,8 +103,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Escalation handling",
   },
   {
-    modelKey: "claude-opus-4-5",
-    host: "api.anthropic.com",
+    modelKey: "anthropic/claude-opus-4.5",
+    host: "anthropic",
     taskHint: "generation",
     spendShare: 0.16,
     inputP50: 6800,
@@ -116,8 +116,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Long-document analysis",
   },
   {
-    modelKey: "gpt-5.5",
-    host: "api.openai.com",
+    modelKey: "openai/gpt-5.5",
+    host: "azure",
     taskHint: "generation",
     spendShare: 0.14,
     inputP50: 3100,
@@ -129,8 +129,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Customer-facing answer composer",
   },
   {
-    modelKey: "o1-pro",
-    host: "api.openai.com",
+    modelKey: "openai/o1-pro",
+    host: "openai",
     taskHint: "generation",
     spendShare: 0.1,
     inputP50: 5200,
@@ -144,8 +144,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Deep research briefs (winding down)",
   },
   {
-    modelKey: "gpt-5.4",
-    host: "api.openai.com",
+    modelKey: "openai/gpt-5.4",
+    host: "azure",
     taskHint: "generation",
     spendShare: 0.09,
     inputP50: 2900,
@@ -160,8 +160,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "In-product drafting (templated)",
   },
   {
-    modelKey: "qwen3-coder-next",
-    host: "dashscope.aliyuncs.com",
+    modelKey: "qwen/qwen3-coder-next",
+    host: "alibaba",
     taskHint: "code",
     spendShare: 0.08,
     inputP50: 4400,
@@ -173,8 +173,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Repo-aware code assistant",
   },
   {
-    modelKey: "claude-opus-4-7-fast",
-    host: "api.anthropic.com",
+    modelKey: "anthropic/claude-opus-4.7-fast",
+    host: "anthropic",
     taskHint: "generation",
     spendShare: 0.07,
     inputP50: 4100,
@@ -186,8 +186,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Inline assistant",
   },
   {
-    modelKey: "gpt-4",
-    host: "api.openai.com",
+    modelKey: "openai/gpt-4",
+    host: "azure",
     taskHint: "generation",
     spendShare: 0.06,
     inputP50: 2400,
@@ -200,8 +200,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Legacy summarisation path (retiring)",
   },
   {
-    modelKey: "gpt-5-6-terra",
-    host: "openai",
+    modelKey: "openai/gpt-5.6-terra",
+    host: "azure",
     taskHint: "generation",
     spendShare: 0.05,
     inputP50: 5600,
@@ -215,8 +215,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Agent planner (new rollout)",
   },
   {
-    modelKey: "gpt-oss-120b",
-    host: "api.deepinfra.com",
+    modelKey: "openai/gpt-oss-120b",
+    host: "groq",
     taskHint: "generation",
     spendShare: 0.03,
     inputP50: 1800,
@@ -228,8 +228,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Bulk content rewriting",
   },
   {
-    modelKey: "deepseek-v4-flash",
-    host: "api.venice.ai",
+    modelKey: "deepseek/deepseek-v4-flash",
+    host: "venice",
     taskHint: "classification",
     spendShare: 0.02,
     inputP50: 1250,
@@ -241,8 +241,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Ticket triage",
   },
   {
-    modelKey: "qwen3-32b",
-    host: "api.groq.com",
+    modelKey: "qwen/qwen3-32b",
+    host: "groq",
     taskHint: "classification",
     spendShare: 0.015,
     inputP50: 980,
@@ -254,8 +254,8 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Intent + safety labelling",
   },
   {
-    modelKey: "gpt-5-6-luna",
-    host: "openai",
+    modelKey: "openai/gpt-5.6-luna",
+    host: "azure",
     taskHint: "classification",
     spendShare: 0.005,
     inputP50: 860,
@@ -269,12 +269,19 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
   },
 ];
 
-/** Providers the demo workspace receives invoices from, for reconciliation. */
+/**
+ * Providers the demo workspace receives invoices from, for reconciliation.
+ * Keyed by the host slugs the price importer publishes, because an invoice is
+ * reconciled against the host that actually served the traffic — Azure bills
+ * for an OpenAI model, and attributing that to OpenAI would compare a bill to
+ * spend that never went through it.
+ */
 export const SYNTHETIC_BILLING_PROVIDERS: Record<string, string[]> = {
-  openai: ["api.openai.com", "openai"],
-  anthropic: ["api.anthropic.com"],
-  alibaba: ["dashscope.aliyuncs.com"],
-  deepinfra: ["api.deepinfra.com"],
-  venice: ["api.venice.ai"],
-  groq: ["api.groq.com"],
+  openai: ["openai"],
+  azure: ["azure"],
+  anthropic: ["anthropic"],
+  alibaba: ["alibaba"],
+  groq: ["groq"],
+  venice: ["venice"],
 };
+

@@ -335,61 +335,79 @@ export type Database = {
       }
       host_prices: {
         Row: {
+          external_id: string | null
           host: string
           host_label: string
           id: string
           input_usd_per_mtok: number
+          is_active: boolean
           is_fixture: boolean
+          last_seen_at: string
           latency_measured_at: string | null
           latency_scope: string | null
           latency_source_run_id: string | null
           median_latency_ms: number | null
           median_ttft_ms: number | null
+          missed_syncs: number
           model_key: string
           output_tps: number | null
           output_usd_per_mtok: number
+          price_source: string
           region: string
           source: string | null
+          source_priority: number
           source_run_id: string | null
           throughput_tps: number | null
           verified_at: string
         }
         Insert: {
+          external_id?: string | null
           host: string
           host_label: string
           id?: string
           input_usd_per_mtok: number
+          is_active?: boolean
           is_fixture?: boolean
+          last_seen_at?: string
           latency_measured_at?: string | null
           latency_scope?: string | null
           latency_source_run_id?: string | null
           median_latency_ms?: number | null
           median_ttft_ms?: number | null
+          missed_syncs?: number
           model_key: string
           output_tps?: number | null
           output_usd_per_mtok: number
+          price_source?: string
           region?: string
           source?: string | null
+          source_priority?: number
           source_run_id?: string | null
           throughput_tps?: number | null
           verified_at?: string
         }
         Update: {
+          external_id?: string | null
           host?: string
           host_label?: string
           id?: string
           input_usd_per_mtok?: number
+          is_active?: boolean
           is_fixture?: boolean
+          last_seen_at?: string
           latency_measured_at?: string | null
           latency_scope?: string | null
           latency_source_run_id?: string | null
           median_latency_ms?: number | null
           median_ttft_ms?: number | null
+          missed_syncs?: number
           model_key?: string
           output_tps?: number | null
           output_usd_per_mtok?: number
+          price_source?: string
           region?: string
           source?: string | null
+          source_priority?: number
           source_run_id?: string | null
           throughput_tps?: number | null
           verified_at?: string
@@ -433,32 +451,85 @@ export type Database = {
           },
         ]
       }
+      model_aliases: {
+        Row: {
+          alias: string
+          created_at: string
+          model_key: string
+          source: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          model_key: string
+          source?: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          model_key?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_aliases_model_key_fkey"
+            columns: ["model_key"]
+            isOneToOne: false
+            referencedRelation: "model_catalog"
+            referencedColumns: ["model_key"]
+          },
+        ]
+      }
       model_catalog: {
         Row: {
           context_window: number | null
           created_at: string
           display_name: string
+          endpoints_synced_at: string | null
+          external_id: string | null
+          first_seen_at: string
+          is_active: boolean
           is_reasoning: boolean
+          last_seen_at: string
+          modality: string
           model_key: string
+          source: string
           tier: string
+          updated_at: string
           vendor: string
         }
         Insert: {
           context_window?: number | null
           created_at?: string
           display_name: string
+          endpoints_synced_at?: string | null
+          external_id?: string | null
+          first_seen_at?: string
+          is_active?: boolean
           is_reasoning?: boolean
+          last_seen_at?: string
+          modality?: string
           model_key: string
+          source?: string
           tier?: string
+          updated_at?: string
           vendor: string
         }
         Update: {
           context_window?: number | null
           created_at?: string
           display_name?: string
+          endpoints_synced_at?: string | null
+          external_id?: string | null
+          first_seen_at?: string
+          is_active?: boolean
           is_reasoning?: boolean
+          last_seen_at?: string
+          modality?: string
           model_key?: string
+          source?: string
           tier?: string
+          updated_at?: string
           vendor?: string
         }
         Relationships: []
@@ -823,14 +894,66 @@ export type Database = {
         }
         Relationships: []
       }
+      price_history: {
+        Row: {
+          change_kind: string
+          host: string
+          id: string
+          input_usd_per_mtok: number | null
+          model_key: string
+          observed_at: string
+          output_usd_per_mtok: number | null
+          pct_change: number | null
+          prev_input_usd_per_mtok: number | null
+          prev_output_usd_per_mtok: number | null
+          price_source: string
+          region: string
+          sync_run_id: string
+        }
+        Insert: {
+          change_kind: string
+          host: string
+          id?: string
+          input_usd_per_mtok?: number | null
+          model_key: string
+          observed_at?: string
+          output_usd_per_mtok?: number | null
+          pct_change?: number | null
+          prev_input_usd_per_mtok?: number | null
+          prev_output_usd_per_mtok?: number | null
+          price_source: string
+          region?: string
+          sync_run_id: string
+        }
+        Update: {
+          change_kind?: string
+          host?: string
+          id?: string
+          input_usd_per_mtok?: number | null
+          model_key?: string
+          observed_at?: string
+          output_usd_per_mtok?: number | null
+          pct_change?: number | null
+          prev_input_usd_per_mtok?: number | null
+          prev_output_usd_per_mtok?: number | null
+          price_source?: string
+          region?: string
+          sync_run_id?: string
+        }
+        Relationships: []
+      }
       pricing_snapshots: {
         Row: {
           created_at: string
           error_detail: string | null
           feed: string
+          finished_at: string | null
           id: string
           is_fixture: boolean
+          models_upserted: number
+          price_changes: number
           rows_upserted: number
+          run_id: string | null
           status: string
           synced_at: string
         }
@@ -838,9 +961,13 @@ export type Database = {
           created_at?: string
           error_detail?: string | null
           feed: string
+          finished_at?: string | null
           id?: string
           is_fixture?: boolean
+          models_upserted?: number
+          price_changes?: number
           rows_upserted?: number
+          run_id?: string | null
           status?: string
           synced_at?: string
         }
@@ -848,9 +975,13 @@ export type Database = {
           created_at?: string
           error_detail?: string | null
           feed?: string
+          finished_at?: string | null
           id?: string
           is_fixture?: boolean
+          models_upserted?: number
+          price_changes?: number
           rows_upserted?: number
+          run_id?: string | null
           status?: string
           synced_at?: string
         }
@@ -1410,7 +1541,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      current_prices: {
+        Row: {
+          external_id: string | null
+          host: string | null
+          host_label: string | null
+          id: string | null
+          input_usd_per_mtok: number | null
+          is_fixture: boolean | null
+          last_seen_at: string | null
+          latency_measured_at: string | null
+          latency_scope: string | null
+          median_latency_ms: number | null
+          median_ttft_ms: number | null
+          model_key: string | null
+          output_tps: number | null
+          output_usd_per_mtok: number | null
+          price_source: string | null
+          region: string | null
+          source_priority: number | null
+          throughput_tps: number | null
+          verified_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_prices_model_key_fkey"
+            columns: ["model_key"]
+            isOneToOne: false
+            referencedRelation: "model_catalog"
+            referencedColumns: ["model_key"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invite: { Args: { _invite_id: string }; Returns: string }
