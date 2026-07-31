@@ -412,7 +412,7 @@
 }
 
 @utility animate-marquee {
-  animation: marquee-scroll 38s linear infinite;
+  animation: marquee-scroll 55s linear infinite;
 }
 
 @utility marquee-mask {
