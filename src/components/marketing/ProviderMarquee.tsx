@@ -18,7 +18,7 @@ function LiveStat({ value, label }: { value: number; label: string }) {
     <div className="flex flex-col items-start gap-0.5">
       <span className="inline-flex items-baseline gap-2">
         <span className="num text-xl font-semibold leading-none text-gradient-brand sm:text-2xl">
-          {value.toLocaleString()}
+          {value.toLocaleString("en-US")}
         </span>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
@@ -39,16 +39,16 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
 
   return (
     <section className="border-y border-border bg-card">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:px-8 lg:flex-row lg:items-center lg:gap-8">
-        <div className="flex shrink-0 items-center gap-6 sm:gap-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:px-8">
+        <div className="flex flex-wrap items-center gap-6 sm:gap-10">
           <LiveStat value={stats.modelCount} label="Models" />
           <LiveStat value={stats.providerCount} label="Providers" />
-          <LiveStat value={stats.pricesVerifiedThisMonth} label="Prices verified this month" />
+          <LiveStat value={stats.priceChangesThisMonth} label="Price changes this month" />
         </div>
 
-        <div className="hidden h-10 w-px shrink-0 bg-border lg:block" />
+        <div className="h-px w-full bg-border" />
 
-        <div className="marquee-mask relative min-w-0 flex-1 overflow-hidden">
+        <div className="marquee-mask relative min-w-0 overflow-hidden">
           <div className="flex w-max animate-marquee items-center gap-10 pr-10">
             {lane.map((name, i) => (
               <ProviderLogo key={`${name}-${i}`} label={name} size={22} />
