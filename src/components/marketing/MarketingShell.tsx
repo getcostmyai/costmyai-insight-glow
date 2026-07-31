@@ -59,7 +59,16 @@ export function MarketingNav() {
                 {item.label}
               </Link>
             ))}
+            <a
+              href={BOOK_DEMO_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Book a Demo
+            </a>
           </nav>
+
         </div>
 
         <div className="flex items-center gap-2">
