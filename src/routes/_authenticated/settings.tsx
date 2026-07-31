@@ -10,6 +10,7 @@ import {
   rotateIngestToken,
   type MintedTokenRow,
 } from "@/lib/keys.functions";
+import { ReferralCard } from "@/components/partner/ReferralCard";
 import { listMyWorkspaces } from "@/lib/workspace.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -203,6 +204,7 @@ function Tokens({ orgId, orgName }: { orgId: string; orgName: string }) {
         </section>
 
         <Quickstart token={minted?.token ?? null} />
+        <ReferralCard orgId={orgId} />
       </div>
     </main>
   );

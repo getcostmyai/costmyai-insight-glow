@@ -267,6 +267,72 @@ export type Database = {
           },
         ]
       }
+      commission_ledger: {
+        Row: {
+          commission_usd: number
+          created_at: string
+          environment: string
+          id: string
+          invoice_id: string
+          org_id: string
+          paid_at: string | null
+          partner_id: string
+          period_end: string | null
+          period_start: string | null
+          rate_pct: number
+          revenue_usd: number
+          status: Database["public"]["Enums"]["commission_status"]
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          commission_usd: number
+          created_at?: string
+          environment?: string
+          id?: string
+          invoice_id: string
+          org_id: string
+          paid_at?: string | null
+          partner_id: string
+          period_end?: string | null
+          period_start?: string | null
+          rate_pct: number
+          revenue_usd: number
+          status?: Database["public"]["Enums"]["commission_status"]
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          commission_usd?: number
+          created_at?: string
+          environment?: string
+          id?: string
+          invoice_id?: string
+          org_id?: string
+          paid_at?: string | null
+          partner_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          rate_pct?: number
+          revenue_usd?: number
+          status?: Database["public"]["Enums"]["commission_status"]
+          stripe_subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_ledger_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_prices: {
         Row: {
           host: string
@@ -507,6 +573,8 @@ export type Database = {
           name: string
           plan: Database["public"]["Enums"]["plan_tier"]
           plan_valid_until: string | null
+          referred_at: string | null
+          referred_by_partner_id: string | null
           slug: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -521,6 +589,8 @@ export type Database = {
           name: string
           plan?: Database["public"]["Enums"]["plan_tier"]
           plan_valid_until?: string | null
+          referred_at?: string | null
+          referred_by_partner_id?: string | null
           slug: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -535,12 +605,163 @@ export type Database = {
           name?: string
           plan?: Database["public"]["Enums"]["plan_tier"]
           plan_valid_until?: string | null
+          referred_at?: string | null
+          referred_by_partner_id?: string | null
           slug?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_referred_by_partner_id_fkey"
+            columns: ["referred_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_tier_audit: {
+        Row: {
+          actor: string | null
+          created_at: string
+          earned_tier: number
+          from_tier: number | null
+          id: string
+          partner_id: string
+          reason: string
+          to_tier: number | null
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          earned_tier: number
+          from_tier?: number | null
+          id?: string
+          partner_id: string
+          reason: string
+          to_tier?: number | null
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          earned_tier?: number
+          from_tier?: number | null
+          id?: string
+          partner_id?: string
+          reason?: string
+          to_tier?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_tier_audit_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_tiers: {
+        Row: {
+          created_at: string
+          min_lifetime_referred_usd: number
+          name: string
+          rate_pct: number
+          tier: number
+        }
+        Insert: {
+          created_at?: string
+          min_lifetime_referred_usd: number
+          name: string
+          rate_pct: number
+          tier: number
+        }
+        Update: {
+          created_at?: string
+          min_lifetime_referred_usd?: number
+          name?: string
+          rate_pct?: number
+          tier?: number
+        }
         Relationships: []
+      }
+      partner_users: {
+        Row: {
+          created_at: string
+          id: string
+          partner_id: string
+          role: Database["public"]["Enums"]["partner_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_id: string
+          role?: Database["public"]["Enums"]["partner_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_id?: string
+          role?: Database["public"]["Enums"]["partner_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_users_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          referral_code: string
+          status: Database["public"]["Enums"]["partner_status"]
+          tier_override: number | null
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          referral_code: string
+          status?: Database["public"]["Enums"]["partner_status"]
+          tier_override?: number | null
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          referral_code?: string
+          status?: Database["public"]["Enums"]["partner_status"]
+          tier_override?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partners_tier_override_fkey"
+            columns: ["tier_override"]
+            isOneToOne: false
+            referencedRelation: "partner_tiers"
+            referencedColumns: ["tier"]
+          },
+        ]
       }
       plan_entitlements: {
         Row: {
@@ -581,6 +802,24 @@ export type Database = {
           quality_match?: boolean
           rightsize?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          note?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1175,8 +1414,24 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { _invite_id: string }; Returns: string }
+      accrue_commission: {
+        Args: {
+          _environment?: string
+          _invoice_id: string
+          _org_id: string
+          _period_end?: string
+          _period_start?: string
+          _revenue_usd: number
+          _subscription_id?: string
+        }
+        Returns: string
+      }
       apply_switch: {
         Args: { _autonomous?: boolean; _rec_id: string }
+        Returns: string
+      }
+      attach_referral: {
+        Args: { _code: string; _org_id: string }
         Returns: string
       }
       create_organization: { Args: { _name: string }; Returns: string }
@@ -1189,6 +1444,9 @@ export type Database = {
       }
       is_org_manager: { Args: { _org_id: string }; Returns: boolean }
       is_org_member: { Args: { _org_id: string }; Returns: boolean }
+      is_partner_member: { Args: { _partner_id: string }; Returns: boolean }
+      is_partner_owner: { Args: { _partner_id: string }; Returns: boolean }
+      is_platform_admin: { Args: never; Returns: boolean }
       org_has_active_subscription: {
         Args: { _env?: string; _org_id: string }
         Returns: boolean
@@ -1198,12 +1456,35 @@ export type Database = {
         Args: { _org_id: string }
         Returns: Database["public"]["Enums"]["plan_tier"]
       }
+      partner_commission_rate: {
+        Args: { _partner_id: string }
+        Returns: number
+      }
+      partner_earned_tier: { Args: { _partner_id: string }; Returns: number }
+      partner_effective_tier: { Args: { _partner_id: string }; Returns: number }
+      partner_lifetime_revenue: {
+        Args: { _partner_id: string }
+        Returns: number
+      }
+      partner_referrals: {
+        Args: { _partner_id: string }
+        Returns: {
+          id: string
+          name: string
+          plan: Database["public"]["Enums"]["plan_tier"]
+          referred_at: string
+        }[]
+      }
       set_org_plan: {
         Args: {
           _org_id: string
           _plan: Database["public"]["Enums"]["plan_tier"]
         }
         Returns: Database["public"]["Enums"]["plan_tier"]
+      }
+      set_partner_tier_override: {
+        Args: { _partner_id: string; _reason: string; _tier: number }
+        Returns: number
       }
       set_switch_state: {
         Args: {
@@ -1234,7 +1515,10 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "member"
+      commission_status: "pending" | "approved" | "paid" | "clawed_back"
       objective_kind: "cost" | "latency" | "quality_floor"
+      partner_role: "owner" | "member"
+      partner_status: "pending" | "active" | "suspended"
       plan_tier: "compare" | "certify" | "rightsize" | "govern"
       rec_kind: "host_arbitrage" | "quality_match" | "rightsize"
       rec_status: "open" | "dismissed" | "activated" | "refused"
@@ -1369,7 +1653,10 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "member"],
+      commission_status: ["pending", "approved", "paid", "clawed_back"],
       objective_kind: ["cost", "latency", "quality_floor"],
+      partner_role: ["owner", "member"],
+      partner_status: ["pending", "active", "suspended"],
       plan_tier: ["compare", "certify", "rightsize", "govern"],
       rec_kind: ["host_arbitrage", "quality_match", "rightsize"],
       rec_status: ["open", "dismissed", "activated", "refused"],

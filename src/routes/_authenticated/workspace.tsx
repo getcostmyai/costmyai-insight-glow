@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowRight, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
+import { ArrowRight, Handshake, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
 
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,13 @@ function WorkspacePage() {
         >
           <KeyRound className="h-3.5 w-3.5" />
           Connect
+        </Link>
+        <Link
+          to="/partner"
+          className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
+        >
+          <Handshake className="h-3.5 w-3.5" />
+          Partner
         </Link>
         <Link
           to="/team"
