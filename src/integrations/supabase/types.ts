@@ -1175,6 +1175,10 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { _invite_id: string }; Returns: string }
+      apply_switch: {
+        Args: { _autonomous?: boolean; _rec_id: string }
+        Returns: string
+      }
       create_organization: { Args: { _name: string }; Returns: string }
       has_org_role: {
         Args: {
@@ -1200,6 +1204,14 @@ export type Database = {
           _plan: Database["public"]["Enums"]["plan_tier"]
         }
         Returns: Database["public"]["Enums"]["plan_tier"]
+      }
+      set_switch_state: {
+        Args: {
+          _reason?: string
+          _status: Database["public"]["Enums"]["switch_status"]
+          _switch_id: string
+        }
+        Returns: Database["public"]["Enums"]["switch_status"]
       }
     }
     Enums: {
