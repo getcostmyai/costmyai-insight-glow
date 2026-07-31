@@ -15,14 +15,7 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
   const lane = [...stats.providers, ...stats.providers];
 
   return (
-    <section className="overflow-hidden border-y border-border bg-card py-10">
-      <p className="mb-7 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
-        Pricing tracked across <span className="num font-semibold text-foreground">{stats.modelCount}</span>{" "}
-        models · <span className="num font-semibold text-foreground">{stats.providerCount}</span>{" "}
-        providers live
-      </p>
-
+    <section className="overflow-hidden border-y border-border bg-card py-5">
       <div className="marquee-mask relative">
         <div className="flex w-max animate-marquee items-center gap-12 pr-12">
           {lane.map((name, i) => (
