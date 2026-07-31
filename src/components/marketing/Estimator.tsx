@@ -101,9 +101,23 @@ export function Estimator() {
     return { low: modelled * CONSERVATIVE_LOW, high: modelled * CONSERVATIVE_HIGH };
   }, [options, workload, provider, modelKey, distribution, spend]);
 
+  /**
+   * What the indicative figure actually rests on. Shown next to the number so
+   * it can never read as if spend alone produced it — including when the user
+   * steps back to Spend after choosing a workload and a provider.
+   */
+  const basisLabel = useMemo(() => {
+    const w = WORKLOADS.find((x) => x.id === workload)?.label ?? workload;
+    const where = modelKey
+      ? (options?.models.find((m) => m.model_key === modelKey)?.display_name ?? modelKey)
+      : (provider ?? null);
+    return where ? `${w} · ${where}` : w;
+  }, [workload, provider, modelKey, options]);
+
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
+
 
   const goto = (next: number) => {
     setDir(next > step ? 1 : -1);
