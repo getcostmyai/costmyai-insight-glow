@@ -1,4 +1,5 @@
 import { createPublicServerClient } from "./supabase-public.server";
+import { toLadder, type PartnerLadder } from "./partner-tiers";
 
 /**
  * The commission ladder, read from the same `partner_tiers` table the payout
@@ -6,55 +7,6 @@ import { createPublicServerClient } from "./supabase-public.server";
  * partner page never restates these numbers in copy — if the ladder changes in
  * the database, the marketing page changes with it.
  */
-export interface PartnerTierRow {
-  tier: number;
-  name: string;
-  minLifetimeUsd: number;
-  ratePct: number;
-}
-
-export interface PartnerLadder {
-  tiers: PartnerTierRow[];
-  /** Lowest rate on the ladder, e.g. 15. */
-  minRatePct: number | null;
-  /** Highest rate on the ladder, e.g. 35. */
-  maxRatePct: number | null;
-}
-
-/** "$0", "$5K", "$130K", "$1.2M" — compact, never serif, never hardcoded. */
-export function formatThreshold(usd: number): string {
-  if (usd <= 0) return "$0";
-  if (usd >= 1_000_000) return `$${trim(usd / 1_000_000)}M`;
-  if (usd >= 1_000) return `$${trim(usd / 1_000)}K`;
-  return `$${trim(usd)}`;
-}
-
-function trim(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, "");
-}
-
-/** "15%" / "17.5%" — no trailing zeros on whole rates. */
-export function formatRate(pct: number): string {
-  return `${trim(pct)}%`;
-}
-
-/** "15–35%", or a single rate when the ladder has one rung. */
-export function formatRateRange(ladder: PartnerLadder): string | null {
-  if (ladder.minRatePct === null || ladder.maxRatePct === null) return null;
-  if (ladder.minRatePct === ladder.maxRatePct) return formatRate(ladder.minRatePct);
-  return `${trim(ladder.minRatePct)}–${trim(ladder.maxRatePct)}%`;
-}
-
-export function toLadder(rows: PartnerTierRow[]): PartnerLadder {
-  const tiers = [...rows].sort((a, b) => a.tier - b.tier);
-  const rates = tiers.map((t) => t.ratePct);
-  return {
-    tiers,
-    minRatePct: rates.length ? Math.min(...rates) : null,
-    maxRatePct: rates.length ? Math.max(...rates) : null,
-  };
-}
-
 export async function readPartnerLadder(): Promise<PartnerLadder> {
   const supabase = createPublicServerClient();
   const { data, error } = await supabase
