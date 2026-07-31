@@ -1,3 +1,4 @@
+import { ProviderLogo } from "@/components/marketing/ProviderLogo";
 import type { MarketingStats } from "@/lib/marketing.functions";
 
 /**
