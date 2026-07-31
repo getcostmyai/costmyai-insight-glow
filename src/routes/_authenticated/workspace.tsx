@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowRight, Loader2, LogOut, PlugZap, Users } from "lucide-react";
+import { ArrowRight, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
 
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { supabase } from "@/integrations/supabase/client";
