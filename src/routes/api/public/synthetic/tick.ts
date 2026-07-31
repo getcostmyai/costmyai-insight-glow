@@ -7,7 +7,7 @@ import { timingSafeEqual } from "crypto";
  * Called every minute by the scheduler. It works out how much time has passed
  * since the demo workspace last received traffic, generates exactly the events
  * the ecosystem would have produced in that gap, and pushes them through the
- * real `/api/public/ingest` endpoint with a real workspace API key — the same
+ * real `/api/public/v1/events` endpoint with a real workspace API key — the same
  * path a customer's middleware takes. Nothing here writes to the database
  * directly, so the demo cannot drift away from how the product actually works.
  *
