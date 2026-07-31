@@ -1,4 +1,5 @@
 import { createPublicServerClient } from "./supabase-public.server";
+import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
 
 /**
  * The live numbers the marketing pages are allowed to state.
@@ -34,8 +35,8 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
   monthStart.setUTCHours(0, 0, 0, 0);
 
   const [models, prices, snapshot, verifiedThisMonth] = await Promise.all([
-    supabase.from("model_catalog").select("model_key", { count: "exact", head: true }),
-    supabase.from("host_prices").select("host, host_label"),
+    supabase.from("model_catalog").select("model_key", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("host_prices").select("host, host_label").eq("is_active", true).limit(MAX_CATALOG_ROWS),
     supabase
       .from("pricing_snapshots")
       .select("synced_at, status")
@@ -50,6 +51,7 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
       .from("host_prices")
       .select("id", { count: "exact", head: true })
       .eq("is_fixture", false)
+      .eq("is_active", true)
       .gte("verified_at", monthStart.toISOString()),
   ]);
 

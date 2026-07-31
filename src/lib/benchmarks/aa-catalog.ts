@@ -14,12 +14,28 @@ export const AA_SUITE = "aa";
  * (reasoning vs non-reasoning, pro vs mini) is worse than having no score.
  */
 export const AA_SLUG_ALIASES: Record<string, string> = {
-  "gpt-5.4": "gpt-5-4",
-  "gpt-5.5": "gpt-5-5",
-  "claude-opus-4-7-fast": "claude-opus-4-7-non-reasoning",
-  "llama-3.3-70b-instruct": "llama-3-3-instruct-70b",
-  "qwen3-32b": "qwen3-32b-instruct",
+  "openai/gpt-5.4": "gpt-5-4",
+  "openai/gpt-5.5": "gpt-5-5",
+  "anthropic/claude-opus-4.7-fast": "claude-opus-4-7-non-reasoning",
+  "anthropic/claude-opus-4.8-fast": "claude-opus-4-8-non-reasoning",
+  "meta-llama/llama-3.3-70b-instruct": "llama-3-3-instruct-70b",
+  "qwen/qwen3-32b": "qwen3-32b-instruct",
 };
+
+/**
+ * Catalogue keys are namespaced by the importer ("openai/gpt-5.6-terra"); AA
+ * publishes bare, dash-separated slugs ("gpt-5-6-terra"). Dropping the vendor
+ * namespace and writing dots as dashes is a deterministic rewrite of the same
+ * identifier, not a fuzzy match — no characters are removed, no suffix is
+ * ignored, so "gpt-5-5" can still never collide with "gpt-5-5-mini".
+ */
+export function aaSlugFor(modelKey: string): string {
+  const explicit = AA_SLUG_ALIASES[modelKey];
+  if (explicit) return explicit;
+  const bare = modelKey.includes("/") ? modelKey.slice(modelKey.indexOf("/") + 1) : modelKey;
+  return bare.replaceAll(".", "-");
+}
+
 
 /**
  * Which AA evaluation stands in for each workload task class, plus the published
@@ -204,23 +220,41 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   /*
    * Resolution is exact-match only (audit C4).
    *
-   * A catalogue key maps to an AA slug either identically or through one
-   * explicit alias in AA_SLUG_ALIASES. There is no normalisation pass, no
-   * punctuation stripping, and no nearest-name fallback: "gpt-5.5" and
-   * "gpt-5-5-mini" differ by a suffix but are different models, and a fuzzy
-   * matcher that bridged them would attach one model's benchmark score to
-   * another's price. An unmatched key is recorded in `unmatchedModels` and
-   * simply carries no score — the engine then refuses to certify it, which is
-   * the correct outcome. Widen coverage by adding an alias, never by loosening
-   * the match.
+   * A catalogue key maps to an AA slug either through one explicit alias in
+   * AA_SLUG_ALIASES or through aaSlugFor()'s reversible rewrite of the same
+   * identifier. There is no normalisation pass, no punctuation stripping, and
+   * no nearest-name fallback: "gpt-5.5" and "gpt-5-5-mini" differ by a suffix
+   * but are different models, and a fuzzy matcher that bridged them would
+   * attach one model's benchmark score to another's price. An unmatched key is
+   * recorded in `unmatchedModels` and simply carries no score — the engine then
+   * refuses to certify it, which is the correct outcome. Widen coverage by
+   * adding an alias, never by loosening the match.
+   *
+   * Two catalogue keys that resolve to one AA slug (the same model published
+   * under two vendor namespaces) are both dropped: there is no way to tell
+   * which one the score belongs to, and guessing would mis-certify one of them.
    */
+  const bySlugCandidates = new Map<string, string[]>();
+  for (const key of catalogKeys) {
+    const slug = aaSlugFor(key);
+    bySlugCandidates.set(slug, [...(bySlugCandidates.get(slug) ?? []), key]);
+  }
+
   const resolved = new Map<string, AaModel>();
   for (const key of catalogKeys) {
-    const slug = AA_SLUG_ALIASES[key] ?? key;
+    const slug = aaSlugFor(key);
     const model = bySlug.get(slug);
+    const ambiguous = (bySlugCandidates.get(slug) ?? []).length > 1;
 
-    if (!model) {
+    if (!model || ambiguous) {
       unmatchedModels.push(key);
+      if (model && ambiguous) {
+        skipped.push({
+          model_key: key,
+          task_class: "*",
+          reason: `Ambiguous: ${(bySlugCandidates.get(slug) ?? []).join(", ")} all resolve to ${slug}`,
+        });
+      }
       continue;
     }
     matchedModels.push(key);
@@ -229,6 +263,7 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
     if (latency) latencies.push(latency);
     else skipped.push({ model_key: key, task_class: "*", reason: `No published latency for ${model.slug}` });
   }
+
 
   for (const [taskClass, candidates] of Object.entries(TASK_EVAL_CANDIDATES)) {
     const choice = chooseEval(

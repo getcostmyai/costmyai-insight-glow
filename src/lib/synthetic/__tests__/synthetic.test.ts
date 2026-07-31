@@ -26,36 +26,36 @@ const price = (model: string, host: string, i: number, o: number): PriceRow => (
 });
 
 const PRICES: PriceRow[] = [
-  price("o1-pro", "api.openai.com", 150, 600),
-  price("gpt-5.5", "api.openai.com", 2.5, 10),
-  price("gpt-5.4", "api.openai.com", 2, 8),
-  price("gpt-4", "api.openai.com", 30, 60),
-  price("claude-opus-4-5", "api.anthropic.com", 15, 75),
-  price("claude-opus-4-7", "api.anthropic.com", 15, 75),
-  price("claude-opus-4-7-fast", "api.anthropic.com", 8, 40),
-  price("qwen3-coder-next", "dashscope.aliyuncs.com", 0.9, 3.6),
-  price("gpt-oss-120b", "api.deepinfra.com", 0.15, 0.6),
-  price("deepseek-v4-flash", "api.venice.ai", 0.28, 1.12),
-  price("qwen3-32b", "api.groq.com", 0.29, 0.59),
-  price("gpt-5-6-terra", "openai", 1, 4),
-  price("gpt-5-6-luna", "openai", 0.2, 0.8),
+  price("openai/o1-pro", "openai", 150, 600),
+  price("openai/gpt-5.5", "azure", 2.5, 10),
+  price("openai/gpt-5.4", "azure", 2, 8),
+  price("openai/gpt-4", "azure", 30, 60),
+  price("anthropic/claude-opus-4.5", "anthropic", 15, 75),
+  price("anthropic/claude-opus-4.7", "azure", 15, 75),
+  price("anthropic/claude-opus-4.7-fast", "anthropic", 8, 40),
+  price("qwen/qwen3-coder-next", "alibaba", 0.9, 3.6),
+  price("openai/gpt-oss-120b", "groq", 0.15, 0.6),
+  price("deepseek/deepseek-v4-flash", "venice", 0.28, 1.12),
+  price("qwen/qwen3-32b", "groq", 0.29, 0.59),
+  price("openai/gpt-5.6-terra", "azure", 1, 4),
+  price("openai/gpt-5.6-luna", "azure", 0.2, 0.8),
 ];
 const priceFor = (m: string, h: string) => PRICES.find((p) => p.model_key === m && p.host === h);
 
 const MODELS: ModelRow[] = [
-  { model_key: "o1-pro", display_name: "o1-pro", vendor: "openai", tier: "frontier" },
-  { model_key: "gpt-5.5", display_name: "GPT-5.5", vendor: "openai", tier: "frontier" },
-  { model_key: "gpt-5.4", display_name: "GPT-5.4", vendor: "openai", tier: "frontier" },
-  { model_key: "gpt-4", display_name: "GPT-4", vendor: "openai", tier: "frontier" },
-  { model_key: "claude-opus-4-5", display_name: "Opus 4.5", vendor: "anthropic", tier: "frontier" },
-  { model_key: "claude-opus-4-7", display_name: "Opus 4.7", vendor: "anthropic", tier: "frontier" },
-  { model_key: "claude-opus-4-7-fast", display_name: "Opus 4.7 Fast", vendor: "anthropic", tier: "frontier" },
-  { model_key: "qwen3-coder-next", display_name: "Qwen3 Coder", vendor: "alibaba", tier: "standard" },
-  { model_key: "gpt-oss-120b", display_name: "gpt-oss-120b", vendor: "openai", tier: "standard" },
-  { model_key: "deepseek-v4-flash", display_name: "DeepSeek V4 Flash", vendor: "deepseek", tier: "economy" },
-  { model_key: "qwen3-32b", display_name: "Qwen3 32B", vendor: "alibaba", tier: "economy" },
-  { model_key: "gpt-5-6-terra", display_name: "GPT-5.6 Terra", vendor: "openai", tier: "standard" },
-  { model_key: "gpt-5-6-luna", display_name: "GPT-5.6 Luna", vendor: "openai", tier: "economy" },
+  { model_key: "openai/o1-pro", display_name: "openai/o1-pro", vendor: "openai", tier: "frontier" },
+  { model_key: "openai/gpt-5.5", display_name: "GPT-5.5", vendor: "openai", tier: "frontier" },
+  { model_key: "openai/gpt-5.4", display_name: "GPT-5.4", vendor: "openai", tier: "frontier" },
+  { model_key: "openai/gpt-4", display_name: "GPT-4", vendor: "openai", tier: "frontier" },
+  { model_key: "anthropic/claude-opus-4.5", display_name: "Opus 4.5", vendor: "anthropic", tier: "frontier" },
+  { model_key: "anthropic/claude-opus-4.7", display_name: "Opus 4.7", vendor: "anthropic", tier: "frontier" },
+  { model_key: "anthropic/claude-opus-4.7-fast", display_name: "Opus 4.7 Fast", vendor: "anthropic", tier: "frontier" },
+  { model_key: "qwen/qwen3-coder-next", display_name: "Qwen3 Coder", vendor: "alibaba", tier: "standard" },
+  { model_key: "openai/gpt-oss-120b", display_name: "openai/gpt-oss-120b", vendor: "openai", tier: "standard" },
+  { model_key: "deepseek/deepseek-v4-flash", display_name: "DeepSeek V4 Flash", vendor: "deepseek", tier: "economy" },
+  { model_key: "qwen/qwen3-32b", display_name: "Qwen3 32B", vendor: "alibaba", tier: "economy" },
+  { model_key: "openai/gpt-5.6-terra", display_name: "GPT-5.6 Terra", vendor: "openai", tier: "standard" },
+  { model_key: "openai/gpt-5.6-luna", display_name: "GPT-5.6 Luna", vendor: "openai", tier: "economy" },
 ];
 
 const WINDOW_DAYS = 30;
@@ -207,36 +207,36 @@ describe("workload profiles", () => {
 
   it("scores complexity between 0 and 1, ordered by how open-ended the work is", () => {
     expect(profiles.every((p) => p.complexityScore >= 0 && p.complexityScore <= 1)).toBe(true);
-    const classifier = profiles.find((p) => p.modelKey === "qwen3-32b")!;
-    const research = profiles.find((p) => p.modelKey === "o1-pro")!;
+    const classifier = profiles.find((p) => p.modelKey === "qwen/qwen3-32b")!;
+    const research = profiles.find((p) => p.modelKey === "openai/o1-pro")!;
     expect(research.complexityScore).toBeGreaterThan(classifier.complexityScore);
   });
 
   it("refuses to call a thinly-observed workload oversized", () => {
-    const o1 = profiles.find((p) => p.modelKey === "o1-pro")!;
+    const o1 = profiles.find((p) => p.modelKey === "openai/o1-pro")!;
     // Winding down: ~50 requests left in the window. Too few for dispersion to
     // mean anything, so the check declines rather than guessing.
     expect(o1.requests).toBeLessThan(MIN_RIGHTSIZE_SAMPLE);
-    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("o1-pro");
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("openai/o1-pro");
   });
 
   it("flags the templated and short frontier workloads as oversized, and nothing else", () => {
     expect(oversizedProfiles(profiles).map((p) => p.modelKey).sort()).toEqual([
-      "claude-opus-4-7-fast",
-      "gpt-4",
-      "gpt-5.4",
+      "anthropic/claude-opus-4.7-fast",
+      "openai/gpt-4",
+      "openai/gpt-5.4",
     ]);
   });
 
   it("never marks a workload oversized when the shape genuinely needs the tier", () => {
-    const composer = profiles.find((p) => p.modelKey === "gpt-5.5")!;
+    const composer = profiles.find((p) => p.modelKey === "openai/gpt-5.5")!;
     expect(composer.requiredTier).toBe("frontier");
-    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("gpt-5.5");
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("openai/gpt-5.5");
   });
 
   it("normalises cost to a 30-day month", () => {
-    const p = profiles.find((x) => x.modelKey === "qwen3-32b")!;
-    const u = usage.find((x) => x.model_key === "qwen3-32b")!;
+    const p = profiles.find((x) => x.modelKey === "qwen/qwen3-32b")!;
+    const u = usage.find((x) => x.model_key === "qwen/qwen3-32b")!;
     expect(p.monthlyCostUsd).toBeCloseTo((u.cost_usd / WINDOW_DAYS) * 30, 1);
   });
 });
@@ -286,15 +286,15 @@ describe("volume is solved against live pricing, not scaled flat", () => {
   });
 
   it("gives an expensive model orders of magnitude fewer requests than a cheap one", () => {
-    const o1 = SIZED.find((w) => w.modelKey === "o1-pro")!;
-    const qwen = SIZED.find((w) => w.modelKey === "qwen3-32b")!;
+    const o1 = SIZED.find((w) => w.modelKey === "openai/o1-pro")!;
+    const qwen = SIZED.find((w) => w.modelKey === "qwen/qwen3-32b")!;
     // o1-pro carries 6.7x the spend share on a fraction of the request count.
     expect(o1.spendShare / qwen.spendShare).toBeGreaterThan(5);
     expect(qwen.requestsPerDay / o1.requestsPerDay).toBeGreaterThan(100);
   });
 
   it("prices a request through the engine cost function, expected tokens not median", () => {
-    const w = SIZED.find((x) => x.modelKey === "gpt-5.5")!;
+    const w = SIZED.find((x) => x.modelKey === "openai/gpt-5.5")!;
     const p = priceFor(w.modelKey, w.host)!;
     // Right-skewed token draws bill above the median, so the per-request cost
     // must exceed the naive median-based figure or the target is undershot.
@@ -326,8 +326,8 @@ describe("volume is solved against live pricing, not scaled flat", () => {
 });
 
 describe("workload-set evolution", () => {
-  const arriving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "gpt-5-6-terra")!;
-  const leaving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "o1-pro")!;
+  const arriving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "openai/gpt-5.6-terra")!;
+  const leaving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "openai/o1-pro")!;
 
   it("has both new arrivals and phase-outs in the set", () => {
     expect(SYNTHETIC_WORKLOADS.filter((w) => w.lifecycle?.introducedDaysAgo).length).toBeGreaterThan(1);
@@ -353,21 +353,21 @@ describe("workload-set evolution", () => {
   });
 
   it("shows an arrival growing and a retirement draining in the generated traffic", () => {
-    const idx = SIZED.findIndex((w) => w.modelKey === "gpt-5-6-terra");
+    const idx = SIZED.findIndex((w) => w.modelKey === "openai/gpt-5.6-terra");
     const events = eventsFor(idx);
     const half = new Date(TO.getTime() - 5 * DAY_MS);
     const before = events.filter((e) => e.occurredAt < half).length / 25;
     const after = events.filter((e) => e.occurredAt >= half).length / 5;
     expect(after).toBeGreaterThan(before * 2);
 
-    const outIdx = SIZED.findIndex((w) => w.modelKey === "o1-pro");
+    const outIdx = SIZED.findIndex((w) => w.modelKey === "openai/o1-pro");
     const out = eventsFor(outIdx);
     const lastTwoDays = out.filter((e) => e.occurredAt >= new Date(TO.getTime() - 2 * DAY_MS)).length;
     expect(lastTwoDays).toBe(0);
   });
 
   it("keeps sizing honest across a ramp: a part-time workload still hits its share", () => {
-    const w = SIZED.find((x) => x.modelKey === "gpt-5-6-luna")!;
+    const w = SIZED.find((x) => x.modelKey === "openai/gpt-5.6-luna")!;
     const events = generateEvents({ workload: w, from: FROM, to: TO, seed: "test" });
     const spend = rollupEvents(events, "day", priceFor).reduce((s, r) => s + r.costUsd, 0);
     expect(Math.abs(spend - w.targetMonthlyUsd) / w.targetMonthlyUsd).toBeLessThan(0.15);
@@ -375,7 +375,7 @@ describe("workload-set evolution", () => {
 });
 
 describe("live traffic is a continuation of the same curve", () => {
-  const workload = SIZED.find((w) => w.modelKey === "gpt-oss-120b")!;
+  const workload = SIZED.find((w) => w.modelKey === "openai/gpt-oss-120b")!;
   const hourStart = new Date(TO.getTime() - HOUR_MS);
 
   const slice = (from: Date, to: Date) =>

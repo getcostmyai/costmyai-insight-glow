@@ -7,6 +7,7 @@ import type { PriceRow } from "@/lib/engine/types";
 import { bucketStart, DAY_MS, rollupEvents, type SyntheticEvent } from "@/lib/synthetic/generator";
 
 import type { IngestEvent } from "./schema";
+import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
 
 /**
  * Metadata ingestion.
@@ -124,7 +125,8 @@ async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number
   const { data: priceRows } = await db
     .from("host_prices")
     .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
-    .eq("is_fixture", false);
+    .eq("is_fixture", false)
+    .limit(MAX_CATALOG_ROWS);
   const priceIndex = new Map((priceRows ?? []).map((p) => [`${p.model_key}|${p.host}`, p as PriceRow]));
   const priceFor = (modelKey: string, host: string) => priceIndex.get(`${modelKey}|${host}`);
 

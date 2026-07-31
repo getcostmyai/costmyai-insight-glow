@@ -27,6 +27,7 @@ import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticate
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
+import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -119,6 +120,11 @@ const ApiPublicSyntheticTickRoute = ApiPublicSyntheticTickRouteImport.update({
   path: '/api/public/synthetic/tick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
+  id: '/api/public/sync/prices',
+  path: '/api/public/sync/prices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
   id: '/api/public/sync/benchmarks',
   path: '/api/public/sync/benchmarks',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/legal/terms': typeof LegalTermsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/legal/terms': typeof LegalTermsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/legal/terms': typeof LegalTermsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
+    | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
+    | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
+    | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -276,6 +288,7 @@ export interface RootRouteChildren {
   LegalTermsRoute: typeof LegalTermsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
+  ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyntheticTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/prices': {
+      id: '/api/public/sync/prices'
+      path: '/api/public/sync/prices'
+      fullPath: '/api/public/sync/prices'
+      preLoaderRoute: typeof ApiPublicSyncPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/benchmarks': {
       id: '/api/public/sync/benchmarks'
       path: '/api/public/sync/benchmarks'
@@ -458,6 +478,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalTermsRoute: LegalTermsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
+  ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
@@ -465,13 +486,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
