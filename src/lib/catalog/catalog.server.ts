@@ -1,5 +1,7 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { AA_INTELLIGENCE_SUITE } from "@/lib/benchmarks/aa-catalog";
+
 
 export interface CatalogRow {
   model_key: string;
