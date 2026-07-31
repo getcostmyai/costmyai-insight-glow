@@ -69,9 +69,14 @@ export function growthFactor(dayIndex: number, totalDays: number): number {
   return 0.88 + 0.24 * t;
 }
 
+/** Sigma of the log-normal implied by a median and a p95. */
+export function lognormalSigma(median: number, p95: number): number {
+  return Math.max(Math.log(Math.max(p95, median * 1.01) / median) / 1.6449, 0.05);
+}
+
 /** Log-normal draw with the given median and p95. */
 export function lognormal(rand: () => number, median: number, p95: number): number {
-  const sigma = Math.max(Math.log(Math.max(p95, median * 1.01) / median) / 1.6449, 0.05);
+  const sigma = lognormalSigma(median, p95);
   // Box-Muller.
   const u1 = Math.max(rand(), 1e-9);
   const u2 = rand();
@@ -91,11 +96,15 @@ export interface SyntheticEvent {
 }
 
 export interface GenerateOptions {
-  workload: SyntheticWorkload;
-  /** Inclusive hour-aligned start. */
+  workload: SizedWorkload;
+  /** Inclusive start of the slice to emit. */
   from: Date;
-  /** Exclusive end. */
+  /** Exclusive end of the slice to emit. */
   to: Date;
+  /** Start of the ecosystem window, for the growth trend. Defaults to `from`. */
+  windowStart?: Date;
+  /** "Now" for lifecycle ramps. Defaults to `to`. */
+  windowEnd?: Date;
   seed?: string;
 }
 
@@ -103,21 +112,36 @@ export interface GenerateOptions {
  * Expand one workload into the individual metadata records the middleware
  * would have pushed. Hour by hour, so the traffic curve is real rather than
  * smeared across the day.
+ *
+ * The hour is always the unit of generation, even when only a 60-second slice
+ * is requested: the containing hour is generated and then filtered. That is
+ * what makes the live ticker a genuine continuation of the same curve rather
+ * than a second, differently-shaped source of traffic.
  */
-export function generateEvents({ workload, from, to, seed = "costmyai" }: GenerateOptions): SyntheticEvent[] {
+export function generateEvents({
+  workload,
+  from,
+  to,
+  windowStart = from,
+  windowEnd = to,
+  seed = "costmyai",
+}: GenerateOptions): SyntheticEvent[] {
   const events: SyntheticEvent[] = [];
-  const totalDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / DAY_MS));
+  const totalDays = Math.max(1, Math.round((windowEnd.getTime() - windowStart.getTime()) / DAY_MS));
   const base = hashSeed(`${seed}|${workload.modelKey}|${workload.host}|${workload.taskHint}`);
+  const firstHour = bucketStart(from, "hour").getTime();
 
-  for (let t = from.getTime(); t < to.getTime(); t += HOUR_MS) {
+  for (let t = firstHour; t < to.getTime(); t += HOUR_MS) {
     const hourStart = new Date(t);
-    const dayIndex = Math.floor((t - from.getTime()) / DAY_MS);
+    const dayIndex = Math.floor((t - windowStart.getTime()) / DAY_MS);
     const rand = mulberry32(base ^ hashSeed(String(t)));
 
+    const presence = lifecycleFactor((windowEnd.getTime() - t) / DAY_MS, workload);
     const expected =
       (workload.requestsPerDay / 24) *
       (trafficWeight(hourStart) / MEAN_WEEKLY_WEIGHT) *
-      growthFactor(dayIndex, totalDays);
+      growthFactor(dayIndex, totalDays) *
+      presence;
 
     // Fractional expectation resolved probabilistically so low-volume
     // workloads still produce whole requests at a believable cadence.
@@ -134,8 +158,11 @@ export function generateEvents({ workload, from, to, seed = "costmyai" }: Genera
           ? Math.round(workload.latencyP50Ms * (0.2 + 0.3 * rand()))
           : Math.round(workload.latencyP50Ms * (0.72 + 0.85 * rand() ** 2));
 
+      const occurredAt = new Date(t + Math.floor(rand() * HOUR_MS));
+      if (occurredAt < from || occurredAt >= to) continue;
+
       events.push({
-        occurredAt: new Date(t + Math.floor(rand() * HOUR_MS)),
+        occurredAt,
         modelKey: workload.modelKey,
         host: workload.host,
         taskHint: workload.taskHint,
@@ -148,6 +175,7 @@ export function generateEvents({ workload, from, to, seed = "costmyai" }: Genera
   }
 
   events.sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
+
   return events;
 }
 
