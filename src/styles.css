@@ -196,7 +196,20 @@
   h4 {
     letter-spacing: -0.022em;
   }
+
+  /* Hard guard: nothing may ever fall back to a serif face — especially
+     numbers. Covers SVG text, form controls and third-party markup. */
+  svg text,
+  svg tspan,
+  button,
+  input,
+  select,
+  textarea,
+  optgroup {
+    font-family: var(--font-sans);
+  }
 }
+
 
 /* Numeric display: tight, tabular, never serif */
 @utility num {
