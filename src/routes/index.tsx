@@ -68,7 +68,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
           <div className="min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
-              Live prices synced <span className="num text-foreground">{stats.pricesSyncedAgo}</span>
+              Live prices synced <span className="font-semibold text-foreground">{stats.pricesSyncedAgo}</span>
             </span>
 
             <h1 className="mt-6 text-[2.7rem] font-bold leading-[1.03] tracking-[-0.03em] sm:text-6xl">
@@ -224,8 +224,8 @@ function LiveCoverage({ stats }: { stats: MarketingStats }) {
         </div>
         <p className="mt-8 text-xs text-muted-foreground">
           Read live from the same tables the engine prices against. Pricing feed last completed{" "}
-          <span className="num text-foreground">{stats.pricesSyncedAgo}</span>; benchmark margins{" "}
-          <span className="num text-foreground">{stats.benchmarksSyncedAgo}</span>
+          <span className="font-semibold text-foreground">{stats.pricesSyncedAgo}</span>; benchmark margins{" "}
+          <span className="font-semibold text-foreground">{stats.benchmarksSyncedAgo}</span>
           {stats.marginMethod ? (
             <>
               {" "}
