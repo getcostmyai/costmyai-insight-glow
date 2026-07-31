@@ -16,6 +16,8 @@ import {
   type ObjectiveSelection,
 } from "./dashboard/objective";
 import { gateRung, nextPlan } from "./dashboard/plan";
+import { effectivePlan, type SubscriptionState } from "./billing/entitlement";
+import { paymentsEnvironment } from "./billing/env.server";
 import {
   partitionRollups,
   rangeWindow,
@@ -154,6 +156,21 @@ export interface SnapshotInput {
 
 export type DashboardClient = ReturnType<typeof createPublicServerClient>;
 
+function toSubscriptionState(row: {
+  plan: unknown;
+  status: unknown;
+  current_period_end: unknown;
+  cancel_at_period_end: unknown;
+} | null): SubscriptionState | null {
+  if (!row) return null;
+  return {
+    plan: row.plan as PlanTier,
+    status: row.status as string,
+    currentPeriodEnd: (row.current_period_end as string | null) ?? null,
+    cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
+  };
+}
+
 export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const {
     days,
@@ -170,7 +187,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const windowStart = w.start;
   const previousStart = w.previousStart;
 
-  const [rollups, prices, benchmarks, margins, models, switches, org, firstEvent, storedObjectives] =
+  const [
+    rollups,
+    prices,
+    benchmarks,
+    margins,
+    models,
+    switches,
+    org,
+    firstEvent,
+    storedObjectives,
+    subscription,
+  ] =
     await Promise.all([
       supabase
         .from("usage_rollups")
@@ -203,7 +231,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         )
         .eq("org_id", orgId)
         .order("saved_usd", { ascending: false }),
-      supabase.from("organizations").select("name, plan").eq("id", orgId).maybeSingle(),
+      supabase.from("organizations").select("name, plan, is_synthetic").eq("id", orgId).maybeSingle(),
       // Onboarding needs "has this workspace ever ingested anything", which is a
       // different question from "is there traffic in the selected window".
       supabase
@@ -216,6 +244,16 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         .from("objectives")
         .select("model_key, host, task_hint, objective, quality_floor_score, max_latency_ms")
         .eq("org_id", orgId),
+      // The plan column records what was bought; this row is what is actually
+      // being paid for right now.
+      supabase
+        .from("subscriptions")
+        .select("plan, status, current_period_end, cancel_at_period_end")
+        .eq("org_id", orgId)
+        .eq("environment", paymentsEnvironment())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   const firstError =
@@ -230,8 +268,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     // a member of it. Both are "not yours" as far as the dashboard is concerned.
     throw new Error("Workspace not found");
   }
-  const plan = org.data.plan as PlanTier;
+
+  // What the workspace may actually use. The recorded plan is never trusted on
+  // its own — a paid rung has to be backed by a live subscription, or the
+  // dashboard locks it exactly as it would for a workspace that never paid.
+  // The demo workspace is the one exception: it sells nothing and bills nobody,
+  // so it shows every rung by design.
+  const recordedPlan = org.data.plan as PlanTier;
+  const plan = org.data.is_synthetic
+    ? recordedPlan
+    : effectivePlan(recordedPlan, toSubscriptionState(subscription.data));
   const objective = effectiveSelection(plan, requestedObjective);
+
   const objectiveRows = mergeObjectives((storedObjectives.data ?? []) as ObjectiveRow[], objective);
 
 
@@ -456,7 +504,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   return {
     days,
     generatedAt: new Date(now).toISOString(),
-    workspace: { id: orgId, name: org.data.name, plan },
+    workspace: {
+      id: orgId,
+      name: org.data.name,
+      plan,
+      // What was bought vs. what is still being paid for. When these differ the
+      // rung is locked and the workspace can see exactly why.
+      recordedPlan,
+      billingStatus: (subscription.data?.status as string | null) ?? null,
+    },
     plan,
     upgradePlan: nextPlan(plan),
     objective,
