@@ -54,7 +54,14 @@ export interface PriceRow {
   output_usd_per_mtok: number;
   /** Measured median end-to-end latency. Null when the feed has not measured it. */
   median_latency_ms?: number | null;
+  /** Measured median time to first token, in ms. */
+  median_ttft_ms?: number | null;
+  /** Measured median output tokens per second. */
+  output_tps?: number | null;
+  /** Whether the latency above was measured on this endpoint or across the model's hosts. */
+  latency_scope?: "host" | "model" | null;
 }
+
 
 export interface BenchmarkRow {
   model_key: string;
