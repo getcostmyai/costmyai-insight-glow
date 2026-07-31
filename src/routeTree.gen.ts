@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicIngestRouteImport } from './routes/api/public/ingest'
+import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -29,6 +30,11 @@ const ApiPublicIngestRoute = ApiPublicIngestRouteImport.update({
   path: '/api/public/ingest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyntheticTickRoute = ApiPublicSyntheticTickRouteImport.update({
+  id: '/api/public/synthetic/tick',
+  path: '/api/public/synthetic/tick',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
   id: '/api/public/sync/benchmarks',
   path: '/api/public/sync/benchmarks',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,6 +61,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -61,18 +70,21 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
+    | '/api/public/synthetic/tick'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/sitemap.xml'
     | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
+    | '/api/public/synthetic/tick'
   id:
     | '__root__'
     | '/'
     | '/sitemap.xml'
     | '/api/public/ingest'
     | '/api/public/sync/benchmarks'
+    | '/api/public/synthetic/tick'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,6 +92,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicIngestRoute: typeof ApiPublicIngestRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
+  ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -105,6 +118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/synthetic/tick': {
+      id: '/api/public/synthetic/tick'
+      path: '/api/public/synthetic/tick'
+      fullPath: '/api/public/synthetic/tick'
+      preLoaderRoute: typeof ApiPublicSyntheticTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/benchmarks': {
       id: '/api/public/sync/benchmarks'
       path: '/api/public/sync/benchmarks'
@@ -120,6 +140,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicIngestRoute: ApiPublicIngestRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
+  ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
