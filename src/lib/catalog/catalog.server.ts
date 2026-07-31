@@ -20,8 +20,9 @@ export interface CatalogRow {
   gpqa: number | null;
   ifbench: number | null;
   coding: number | null;
-  /** Mean of the benchmark scores actually present. null when none are. */
+  /** AA's own published Intelligence Index, verbatim. null = not published. */
   intelligence: number | null;
+
   /** Feed-published medians, model-scope. null = unmeasured. */
   ttftMs: number | null;
   outputTps: number | null;
