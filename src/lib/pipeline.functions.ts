@@ -32,8 +32,17 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         .select(
           "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms",
         ),
-      supabase.from("benchmarks").select("model_key, suite, task_class, score"),
-      supabase.from("benchmark_margins").select("suite, task_class, margin"),
+      // Retired fixture rows stay in the table for audit, but the engine must
+      // only ever reason over measured data.
+      supabase
+        .from("benchmarks")
+        .select("model_key, suite, task_class, score")
+        .eq("is_fixture", false),
+      supabase
+        .from("benchmark_margins")
+        .select("suite, task_class, margin")
+        .eq("is_fixture", false),
+
       supabase.from("model_catalog").select("model_key, display_name, vendor, tier"),
     ]);
 
