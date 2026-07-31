@@ -19,7 +19,7 @@ export const Route = createFileRoute("/pricing")({
       {
         property: "og:description",
         content:
-          "Four levels, one ladder: Compare free, then Certify, Rightsize and Govern. No provider keys, no placement fees.",
+          "Four levels, one path: Compare free, then Certify, Rightsize and Govern. No provider keys, no placement fees.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -68,7 +68,7 @@ function PricingPage() {
         <div className="mx-auto max-w-6xl px-5 pb-16 pt-20 text-center sm:px-8 sm:pt-24">
           <p className="eyebrow">Pricing</p>
           <h1 className="mt-3 text-4xl font-bold tracking-[-0.03em] sm:text-5xl">
-            Pay for the level you're standing on.
+            Pay for the level you're on.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
             Compare is free forever — it finds the cheapest host for models you already run. Every
