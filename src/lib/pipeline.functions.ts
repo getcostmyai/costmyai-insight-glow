@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { runPipeline } from "./engine/rules";
+import { runPipeline } from "./engine/pipeline";
 import type {
   BenchmarkRow,
+  MarginRow,
   ModelRow,
   PriceRow,
   UsageAggregate,
@@ -20,7 +21,7 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
 
     const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
 
-    const [rollups, prices, benchmarks, models] = await Promise.all([
+    const [rollups, prices, benchmarks, margins, models] = await Promise.all([
       supabase
         .from("usage_rollups")
         .select("model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd")
@@ -28,12 +29,16 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         .gte("bucket_start", since),
       supabase
         .from("host_prices")
-        .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok"),
-      supabase.from("benchmarks").select("model_key, task_class, score"),
+        .select(
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms",
+        ),
+      supabase.from("benchmarks").select("model_key, suite, task_class, score"),
+      supabase.from("benchmark_margins").select("suite, task_class, margin"),
       supabase.from("model_catalog").select("model_key, display_name, vendor, tier"),
     ]);
 
-    const firstError = rollups.error ?? prices.error ?? benchmarks.error ?? models.error;
+    const firstError =
+      rollups.error ?? prices.error ?? benchmarks.error ?? margins.error ?? models.error;
     if (firstError) {
       console.error("pipeline snapshot read failed", firstError);
       throw new Error("Could not load usage data");
@@ -67,11 +72,16 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         ...p,
         input_usd_per_mtok: Number(p.input_usd_per_mtok),
         output_usd_per_mtok: Number(p.output_usd_per_mtok),
+        median_latency_ms: p.median_latency_ms == null ? null : Number(p.median_latency_ms),
       })) as PriceRow[],
       benchmarks: (benchmarks.data ?? []).map((b) => ({
         ...b,
         score: Number(b.score),
       })) as BenchmarkRow[],
+      margins: (margins.data ?? []).map((m) => ({
+        ...m,
+        margin: Number(m.margin),
+      })) as MarginRow[],
       models: (models.data ?? []) as ModelRow[],
     });
 

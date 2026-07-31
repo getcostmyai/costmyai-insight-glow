@@ -1,6 +1,7 @@
 export type PlanTier = "compare" | "certify" | "rightsize" | "govern";
 export type RecKind = "host_arbitrage" | "quality_match" | "rightsize";
 export type ModelTier = "economy" | "standard" | "frontier";
+export type ObjectiveKind = "cost" | "latency" | "quality_floor";
 
 export const PLAN_ORDER: PlanTier[] = ["compare", "certify", "rightsize", "govern"];
 
@@ -51,12 +52,25 @@ export interface PriceRow {
   host_label: string;
   input_usd_per_mtok: number;
   output_usd_per_mtok: number;
+  /** Measured median end-to-end latency. Null when the feed has not measured it. */
+  median_latency_ms?: number | null;
 }
 
 export interface BenchmarkRow {
   model_key: string;
+  suite: string;
   task_class: string;
   score: number;
+}
+
+/**
+ * The measured Clause 04 equivalence boundary for one suite/task_class.
+ * Never a hardcoded constant — it is synced alongside the scores it applies to.
+ */
+export interface MarginRow {
+  suite: string;
+  task_class: string;
+  margin: number;
 }
 
 export interface ModelRow {
@@ -76,6 +90,37 @@ export interface UsageAggregate {
   cost_usd: number;
   /** Number of days the aggregate covers, used to normalise to a month. */
   days: number;
+  /** Observed output-length shape. Optional; dispersion falls back to 1 when absent. */
+  output_p50?: number | null;
+  output_p95?: number | null;
+}
+
+/** Clause 07 — what the workspace is optimising for. */
+export interface Objective {
+  objective: ObjectiveKind;
+  /** Absolute score floor. Only meaningful for objective === "quality_floor". */
+  qualityFloorScore?: number | null;
+  /** Hard latency ceiling. Only meaningful for objective === "latency". */
+  maxLatencyMs?: number | null;
+}
+
+export const DEFAULT_OBJECTIVE: Objective = { objective: "cost" };
+
+export type RefusalReason =
+  | "no_baseline_price"
+  | "no_baseline_score"
+  | "benchmark_not_discriminating"
+  | "no_candidate_clears_bar"
+  | "no_cheaper_candidate"
+  | "latency_ceiling_unmet"
+  | "saving_below_floor";
+
+export interface Refusal {
+  fromModel: string;
+  fromHost: string;
+  taskHint: string;
+  reason: RefusalReason;
+  detail: string;
 }
 
 export interface Recommendation {
@@ -93,4 +138,7 @@ export interface Recommendation {
   basis: string;
   note: string;
   qualityDelta: number | null;
+  /** The measured margin the equivalence decision was made against. */
+  marginUsed?: number | null;
+  objective?: ObjectiveKind;
 }

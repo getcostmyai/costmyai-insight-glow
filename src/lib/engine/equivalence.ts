@@ -1,0 +1,239 @@
+import { arbitrageBaseline, MIN_MONTHLY_SAVING_USD, sortRecommendations } from "./arbitrage";
+import { cheaperWins, costOfUsage, indexPrices, round2, toMonthly } from "./cost";
+import {
+  DEFAULT_OBJECTIVE,
+  KIND_MIN_PLAN,
+  type BenchmarkRow,
+  type MarginRow,
+  type Objective,
+  type PriceRow,
+  type Recommendation,
+  type Refusal,
+  type UsageAggregate,
+} from "./types";
+
+/**
+ * Fallback margin, used only when the sync has not yet published a measured
+ * margin for a suite/task_class. Deliberately wide: an unmeasured boundary
+ * should refuse switches, not wave them through.
+ */
+export const UNMEASURED_MARGIN = 0.5;
+
+/**
+ * Goodhart / discrimination guard.
+ * If every model's score on a task class sits inside the measurement margin,
+ * the benchmark cannot tell them apart and must not be used to justify a switch.
+ * Requires the observed spread to exceed the margin by this factor.
+ */
+export const SEPARATION_FACTOR = 2;
+
+export interface ScoreLookup {
+  score(modelKey: string, taskClass: string): { score: number; suite: string } | null;
+  margin(suite: string, taskClass: string): number;
+  spread(taskClass: string): number;
+}
+
+/** Indexes benchmark scores and their measured margins for fast, suite-aware lookup. */
+export function buildScoreLookup(
+  benchmarks: BenchmarkRow[],
+  margins: MarginRow[],
+): ScoreLookup {
+  const byModelTask = new Map<string, BenchmarkRow>();
+  const byTask = new Map<string, number[]>();
+  for (const b of benchmarks) {
+    byModelTask.set(`${b.model_key}::${b.task_class}`, b);
+    const list = byTask.get(b.task_class) ?? [];
+    list.push(b.score);
+    byTask.set(b.task_class, list);
+  }
+
+  const marginBySuiteTask = new Map<string, number>();
+  for (const m of margins) marginBySuiteTask.set(`${m.suite}::${m.task_class}`, m.margin);
+
+  return {
+    score(modelKey, taskClass) {
+      const exact = byModelTask.get(`${modelKey}::${taskClass}`);
+      if (exact) return { score: exact.score, suite: exact.suite };
+      const fallback = byModelTask.get(`${modelKey}::generation`);
+      return fallback ? { score: fallback.score, suite: fallback.suite } : null;
+    },
+    margin(suite, taskClass) {
+      return (
+        marginBySuiteTask.get(`${suite}::${taskClass}`) ??
+        marginBySuiteTask.get(`${suite}::generation`) ??
+        UNMEASURED_MARGIN
+      );
+    },
+    spread(taskClass) {
+      const list = byTask.get(taskClass) ?? byTask.get("generation") ?? [];
+      if (list.length < 2) return 0;
+      return Math.max(...list) - Math.min(...list);
+    },
+  };
+}
+
+export interface EquivalenceResult {
+  recommendations: Recommendation[];
+  refusals: Refusal[];
+}
+
+/**
+ * Rung 2 — Certify.
+ *
+ * Picks the CHEAPEST model that clears the quality bar, not the highest-scoring
+ * one among the cheaper options (audit finding C1). The bar is the current
+ * model's score minus the MEASURED margin for that suite/task_class (C2) — never
+ * a hardcoded tolerance. Everything is priced against the Compare baseline so
+ * savings never double-count.
+ */
+export function findQualityMatches(
+  usage: UsageAggregate[],
+  prices: PriceRow[],
+  benchmarks: BenchmarkRow[],
+  margins: MarginRow[],
+  objectiveFor: (u: UsageAggregate) => Objective = () => DEFAULT_OBJECTIVE,
+): EquivalenceResult {
+  const byModel = indexPrices(prices);
+  const lookup = buildScoreLookup(benchmarks, margins);
+  const out: Recommendation[] = [];
+  const refusals: Refusal[] = [];
+
+  const refuse = (u: UsageAggregate, reason: Refusal["reason"], detail: string) =>
+    refusals.push({
+      fromModel: u.model_key,
+      fromHost: u.host,
+      taskHint: u.task_hint,
+      reason,
+      detail,
+    });
+
+  for (const u of usage) {
+    const current = (byModel.get(u.model_key) ?? []).find((p) => p.host === u.host);
+    const baseline = arbitrageBaseline(u, byModel);
+    if (!current || !baseline) {
+      refuse(u, "no_baseline_price", `No price on record for ${u.model_key} @ ${u.host}.`);
+      continue;
+    }
+
+    const currentScore = lookup.score(u.model_key, u.task_hint);
+    if (!currentScore) {
+      refuse(u, "no_baseline_score", `No benchmark score for ${u.model_key} on ${u.task_hint}.`);
+      continue;
+    }
+
+    const margin = lookup.margin(currentScore.suite, u.task_hint);
+
+    // Goodhart guard: a benchmark that cannot separate models cannot certify a switch.
+    const spread = lookup.spread(u.task_hint);
+    if (spread < margin * SEPARATION_FACTOR) {
+      refuse(
+        u,
+        "benchmark_not_discriminating",
+        `${currentScore.suite} spread on ${u.task_hint} is ${spread.toFixed(2)}, inside ${SEPARATION_FACTOR}x the ${margin.toFixed(2)} measurement margin — it cannot tell these models apart.`,
+      );
+      continue;
+    }
+
+    const objective = objectiveFor(u);
+    // quality_floor raises the bar; it never lowers it below the measured band.
+    const bar =
+      objective.objective === "quality_floor" && objective.qualityFloorScore != null
+        ? Math.max(currentScore.score - margin, objective.qualityFloorScore)
+        : currentScore.score - margin;
+
+    type Candidate = { price: PriceRow; cost: number; score: number };
+    const clearing: Candidate[] = [];
+    let anyClearedBar = false;
+
+    for (const [modelKey, candidatePrices] of byModel) {
+      if (modelKey === u.model_key) continue;
+      const s = lookup.score(modelKey, u.task_hint);
+      if (!s) continue;
+      if (s.score < bar) continue;
+      anyClearedBar = true;
+      for (const price of candidatePrices) {
+        const cost = costOfUsage(price, u);
+        if (cost >= baseline.cost) continue; // must actually be cheaper
+        if (
+          objective.objective === "latency" &&
+          objective.maxLatencyMs != null &&
+          (price.median_latency_ms == null || price.median_latency_ms > objective.maxLatencyMs)
+        ) {
+          continue;
+        }
+        clearing.push({ price, cost, score: s.score });
+      }
+    }
+
+    if (!anyClearedBar) {
+      refuse(
+        u,
+        "no_candidate_clears_bar",
+        `Nothing benchmarks at or above ${bar.toFixed(2)} on ${u.task_hint}.`,
+      );
+      continue;
+    }
+    if (clearing.length === 0) {
+      refuse(
+        u,
+        objective.objective === "latency" ? "latency_ceiling_unmet" : "no_cheaper_candidate",
+        objective.objective === "latency"
+          ? `Quality-equal options exist but none meet the ${objective.maxLatencyMs}ms ceiling at a lower price.`
+          : `Quality-equal options exist but none price below the current best host.`,
+      );
+      continue;
+    }
+
+    const winner = pickByObjective(clearing, objective);
+    const saving = toMonthly(baseline.cost - winner.cost, u.days);
+    if (saving < MIN_MONTHLY_SAVING_USD) {
+      refuse(u, "saving_below_floor", `Best equal-quality option saves under $1/month.`);
+      continue;
+    }
+
+    out.push({
+      kind: "quality_match",
+      minPlan: KIND_MIN_PLAN.quality_match,
+      fromModel: u.model_key,
+      fromHost: u.host,
+      fromHostLabel: current.host_label,
+      toModel: winner.price.model_key,
+      toHost: winner.price.host,
+      toHostLabel: winner.price.host_label,
+      taskHint: u.task_hint,
+      monthlySavingUsd: round2(saving),
+      savingPct: round2(((baseline.cost - winner.cost) / baseline.cost) * 100),
+      basis: "Quality-matched cheaper model",
+      note: `${winner.score.toFixed(2)} vs ${currentScore.score.toFixed(2)} on ${currentScore.suite}/${u.task_hint}; bar ${bar.toFixed(2)} (margin ±${margin.toFixed(2)}).`,
+      qualityDelta: round2(winner.score - currentScore.score),
+      marginUsed: margin,
+      objective: objective.objective,
+    });
+  }
+
+  return { recommendations: sortRecommendations(out), refusals };
+}
+
+/**
+ * Clause 07 — the objective decides which of the quality-clearing candidates wins.
+ * All three tie-break deterministically through cheaperWins().
+ */
+export function pickByObjective<T extends { price: PriceRow; cost: number; score: number }>(
+  candidates: T[],
+  objective: Objective,
+): T {
+  const sorted = [...candidates];
+  if (objective.objective === "latency") {
+    sorted.sort((a, b) => {
+      const la = a.price.median_latency_ms ?? Number.POSITIVE_INFINITY;
+      const lb = b.price.median_latency_ms ?? Number.POSITIVE_INFINITY;
+      if (la !== lb) return la - lb;
+      return cheaperWins(a, b);
+    });
+    return sorted[0];
+  }
+  // cost and quality_floor both take the cheapest option clearing their bar;
+  // quality_floor differs by having raised that bar before we got here.
+  sorted.sort(cheaperWins);
+  return sorted[0];
+}
