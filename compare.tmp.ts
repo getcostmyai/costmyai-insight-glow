@@ -71,13 +71,13 @@ for (const [label, res] of [
 ] as const) {
   console.log(`\n===== ${label} =====`);
   console.log("-- quality (Certify) certified --");
-  res.quality.recommendations.forEach((r: any) => console.log("  " + fmt(r)));
+  res.qualityMatched.forEach((r: any) => console.log("  " + fmt(r)));
   console.log("-- quality refusals --");
-  res.quality.refusals.forEach((r: any) =>
+  res.refusals.forEach((r: any) =>
     console.log(`  ${r.fromModel}@${r.fromHost} [${r.taskHint}] : ${r.reason} ${r.detail ?? ""}`),
   );
   console.log("-- host arbitrage (Compare) --");
-  res.arbitrage.recommendations.forEach((r: any) => console.log("  " + fmt(r)));
+  res.hostArbitrage.forEach((r: any) => console.log("  " + fmt(r)));
   console.log("-- rightsize flags --");
-  res.rightsize.recommendations.forEach((r: any) => console.log("  " + fmt(r)));
+  res.oversized.forEach((r: any) => console.log("  " + fmt(r)));
 }
