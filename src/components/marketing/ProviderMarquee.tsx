@@ -18,7 +18,7 @@ function LiveStat({ value, label }: { value: number; label: string }) {
     <div className="flex flex-col items-start gap-0.5">
       <span className="inline-flex items-baseline gap-2">
         <span className="num text-xl font-semibold leading-none text-gradient-brand sm:text-2xl">
-          {value.toLocaleString()}
+          {value.toLocaleString("en-US")}
         </span>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
