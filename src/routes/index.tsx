@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  PlugZap,
   ArrowUpRight,
   BadgeCheck,
   Gauge,
@@ -208,6 +209,25 @@ function Dashboard() {
         </aside>
 
         <main className="min-w-0 flex-1 space-y-8">
+          {dataState === "awaiting_first_event" && (
+            <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-dashed border-primary/35 bg-primary-soft/50 p-6">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <PlugZap className="size-5" />
+              </span>
+              <div className="min-w-60 flex-1">
+                <p className="text-sm font-semibold text-primary">Waiting for your first event</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Nothing has been ingested for this workspace yet, so no check has run. Point your
+                  gateway at CostMyAI — we backfill the previous 30 days on connect, so the first
+                  view is a full month of history, not an empty chart.
+                </p>
+              </div>
+              <button className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
+                Connect your gateway
+              </button>
+            </section>
+          )}
+
           {/* 1 — The headline answer */}
           <section
             className="animate-rise relative overflow-hidden rounded-3xl p-6 text-white sm:p-10"
@@ -235,8 +255,16 @@ function Dashboard() {
                   <span className="text-white/80">a month — today.</span>
                 </h1>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  {savings.certifiedCount} certified switches are waiting. Every one of them is
-                  quality-checked against your own traffic — same output, lower bill.
+                  {savings.certifiedCount} certified switches are waiting on your {plan} plan. Every
+                  one is quality-checked against your own traffic — same output, lower bill.
+                  {savings.lockedMonthly > 0 && (
+                    <>
+                      {" "}
+                      A further{" "}
+                      <span className="num text-white">{usd(savings.lockedMonthly, 0)}/mo</span> was
+                      found by checks your plan does not include yet.
+                    </>
+                  )}
                 </p>
 
                 <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
