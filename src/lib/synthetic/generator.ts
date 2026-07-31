@@ -1,7 +1,8 @@
 import { costOf } from "@/lib/engine/cost";
 import type { PriceRow } from "@/lib/engine/types";
 
-import type { SyntheticWorkload } from "./workloads";
+import type { SizedWorkload } from "./sizing";
+import { lifecycleFactor } from "./workloads";
 
 /**
  * Deterministic generator for the synthetic ecosystem.
