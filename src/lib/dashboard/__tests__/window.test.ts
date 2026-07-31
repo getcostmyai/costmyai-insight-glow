@@ -77,8 +77,8 @@ describe("active switches", () => {
 
 describe("billing reconciliation", () => {
   const captures = [
-    // Closed 11 days ago, covering the month before that.
-    { period_start: agoDate(41), period_end: agoDate(11), provider: "openai" },
+    // A period that opened 25 days ago and closed 11 days ago.
+    { period_start: agoDate(25), period_end: agoDate(11), provider: "openai" },
     // A short period fully inside the last week.
     { period_start: agoDate(5), period_end: agoDate(1), provider: "azure" },
   ];
