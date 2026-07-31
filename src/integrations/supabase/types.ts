@@ -274,8 +274,13 @@ export type Database = {
           id: string
           input_usd_per_mtok: number
           is_fixture: boolean
+          latency_measured_at: string | null
+          latency_scope: string | null
+          latency_source_run_id: string | null
           median_latency_ms: number | null
+          median_ttft_ms: number | null
           model_key: string
+          output_tps: number | null
           output_usd_per_mtok: number
           region: string
           source: string | null
@@ -289,8 +294,13 @@ export type Database = {
           id?: string
           input_usd_per_mtok: number
           is_fixture?: boolean
+          latency_measured_at?: string | null
+          latency_scope?: string | null
+          latency_source_run_id?: string | null
           median_latency_ms?: number | null
+          median_ttft_ms?: number | null
           model_key: string
+          output_tps?: number | null
           output_usd_per_mtok: number
           region?: string
           source?: string | null
@@ -304,8 +314,13 @@ export type Database = {
           id?: string
           input_usd_per_mtok?: number
           is_fixture?: boolean
+          latency_measured_at?: string | null
+          latency_scope?: string | null
+          latency_source_run_id?: string | null
           median_latency_ms?: number | null
+          median_ttft_ms?: number | null
           model_key?: string
+          output_tps?: number | null
           output_usd_per_mtok?: number
           region?: string
           source?: string | null
