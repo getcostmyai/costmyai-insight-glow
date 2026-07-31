@@ -23,8 +23,13 @@ export const MAX_CAPTURES_PER_BATCH = 100;
 /** First poll after a provider is connected looks this far back (brief §1). */
 export const BACKFILL_LOOKBACK_DAYS = 30;
 
-/** Every subsequent poll only re-reads this much, since invoices settle late. */
-export const ROLLING_WINDOW_DAYS = 7;
+/**
+ * Every subsequent poll only re-reads this much, since invoices settle late.
+ * 3 days matches the original system; captures are idempotent on
+ * (org, provider, period_start, period_end), so a wider window buys overlap
+ * margin we don't need and re-reads settled invoices for nothing.
+ */
+export const ROLLING_WINDOW_DAYS = 3;
 
 /** Anything inside this band is measurement noise, not a pricing disagreement. */
 export const RECONCILIATION_TOLERANCE_PCT = 2;
