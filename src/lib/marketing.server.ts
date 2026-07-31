@@ -18,8 +18,8 @@ export interface MarketingStats {
   modelCount: number;
   /** Distinct providers we hold a verified price for. */
   providerCount: number;
-  /** Real price rows moved by sync runs in the current calendar month. */
-  priceChangesThisMonth: number;
+  /** Real price rows re-verified against a provider feed this calendar month. */
+  pricesVerifiedThisMonth: number;
   /** Provider display names, only for hosts backed by a real live price row. */
   providers: string[];
   /** True only when a pricing sync has actually completed successfully. */
