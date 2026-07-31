@@ -504,7 +504,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   return {
     days,
     generatedAt: new Date(now).toISOString(),
-    workspace: { id: orgId, name: org.data.name, plan },
+    workspace: {
+      id: orgId,
+      name: org.data.name,
+      plan,
+      // What was bought vs. what is still being paid for. When these differ the
+      // rung is locked and the workspace can see exactly why.
+      recordedPlan,
+      billingStatus: (subscription.data?.status as string | null) ?? null,
+    },
     plan,
     upgradePlan: nextPlan(plan),
     objective,
