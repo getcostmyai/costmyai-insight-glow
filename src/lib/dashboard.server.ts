@@ -203,7 +203,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         )
         .eq("org_id", orgId)
         .order("saved_usd", { ascending: false }),
-      supabase.from("organizations").select("name, plan").eq("id", orgId).maybeSingle(),
+      supabase.from("organizations").select("name, plan, is_synthetic").eq("id", orgId).maybeSingle(),
       // Onboarding needs "has this workspace ever ingested anything", which is a
       // different question from "is there traffic in the selected window".
       supabase
@@ -216,6 +216,16 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         .from("objectives")
         .select("model_key, host, task_hint, objective, quality_floor_score, max_latency_ms")
         .eq("org_id", orgId),
+      // The plan column records what was bought; this row is what is actually
+      // being paid for right now.
+      supabase
+        .from("subscriptions")
+        .select("plan, status, current_period_end, cancel_at_period_end")
+        .eq("org_id", orgId)
+        .eq("environment", paymentsEnvironment())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   const firstError =
@@ -230,8 +240,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     // a member of it. Both are "not yours" as far as the dashboard is concerned.
     throw new Error("Workspace not found");
   }
-  const plan = org.data.plan as PlanTier;
+
+  // What the workspace may actually use. The recorded plan is never trusted on
+  // its own — a paid rung has to be backed by a live subscription, or the
+  // dashboard locks it exactly as it would for a workspace that never paid.
+  // The demo workspace is the one exception: it sells nothing and bills nobody,
+  // so it shows every rung by design.
+  const recordedPlan = org.data.plan as PlanTier;
+  const plan = org.data.is_synthetic
+    ? recordedPlan
+    : effectivePlan(recordedPlan, toSubscriptionState(subscription.data));
   const objective = effectiveSelection(plan, requestedObjective);
+
   const objectiveRows = mergeObjectives((storedObjectives.data ?? []) as ObjectiveRow[], objective);
 
 
