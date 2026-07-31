@@ -1,0 +1,139 @@
+import { Clock, Lock, PlugZap, ShieldCheck, Sparkles } from "lucide-react";
+
+import { emptyCopy, type DataState } from "@/lib/dashboard/onboarding";
+import { OBJECTIVE_OPTIONS } from "@/lib/dashboard/objective";
+import { usd } from "@/lib/dashboard-data";
+import type { ObjectiveKind, PlanTier, RecKind } from "@/lib/engine/types";
+import { PLAN_META } from "@/lib/engine/types";
+
+/**
+ * The three things a rung can show when it has no rows for you: a real result,
+ * a paywall, or a setup step. They are deliberately different objects — a
+ * workspace with no traffic must never be told its check came back clean.
+ */
+export function RungEmpty({ state, kind }: { state: DataState; kind: RecKind }) {
+  const copy = emptyCopy(state, kind);
+  const waiting = copy.tone === "waiting";
+  const Icon = state === "awaiting_first_event" ? PlugZap : waiting ? Clock : ShieldCheck;
+  return (
+    <div
+      className={`flex items-start gap-4 rounded-2xl border p-5 ${
+        waiting
+          ? "border-dashed border-primary/30 bg-primary-soft/40"
+          : "border-saving/20 bg-saving-soft"
+      }`}
+    >
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+          waiting ? "bg-primary/10 text-primary" : "bg-saving/10 text-saving"
+        }`}
+      >
+        <Icon className="size-5" />
+      </span>
+      <div>
+        <p className={`text-sm font-semibold ${waiting ? "text-primary" : "text-saving"}`}>
+          {copy.title}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.body}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A locked rung. The count and the money are the engine's real output over the
+ * workspace's real traffic — only the row detail is withheld.
+ */
+export function RungLocked({
+  requiredPlan,
+  count,
+  monthly,
+  what,
+}: {
+  requiredPlan: PlanTier;
+  count: number;
+  monthly: number;
+  what: string;
+}) {
+  const meta = PLAN_META[requiredPlan];
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-6">
+      <div
+        className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full opacity-30 blur-3xl"
+        style={{ background: "var(--gradient-spend)" }}
+      />
+      <div className="relative flex flex-wrap items-center gap-6">
+        <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+          <Lock className="size-5" />
+        </span>
+        <div className="min-w-52 flex-1">
+          <p className="text-sm font-semibold">
+            {count === 0
+              ? `This check found nothing to ${what} in this window`
+              : `${count} ${what} finding${count === 1 ? "" : "s"} on your traffic`}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {meta.label} unlocks the detail. {meta.blurb} We ran the check anyway — the number
+            beside it is measured, not an estimate.
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="num text-3xl text-primary blur-[0.5px] select-none">{usd(monthly, 0)}</div>
+          <p className="text-[11px] text-muted-foreground">per month behind this rung</p>
+        </div>
+        <button className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95">
+          <Sparkles className="size-4" />
+          Unlock {meta.label}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Clause 07 selector. Only meaningful where the quality check itself exists. */
+export function ObjectiveSelect({
+  value,
+  onChange,
+  locked,
+  requiredPlan,
+}: {
+  value: ObjectiveKind;
+  onChange: (v: ObjectiveKind) => void;
+  locked: boolean;
+  requiredPlan: PlanTier;
+}) {
+  const active = OBJECTIVE_OPTIONS.find((o) => o.key === value) ?? OBJECTIVE_OPTIONS[0];
+  return (
+    <div className="flex flex-col items-start gap-1.5 sm:items-end">
+      <div className="flex items-center gap-2">
+        <span className="eyebrow">Optimising for</span>
+        {locked && <Lock className="size-3 text-muted-foreground" />}
+      </div>
+      <div className="flex gap-1 rounded-full bg-muted p-1 text-xs font-medium">
+        {OBJECTIVE_OPTIONS.map((o) => {
+          const on = o.key === value && !locked;
+          return (
+            <button
+              key={o.key}
+              disabled={locked}
+              onClick={() => onChange(o.key)}
+              aria-pressed={on}
+              className={`rounded-full px-3 py-1.5 transition-colors ${
+                on
+                  ? "bg-card text-primary shadow-[var(--shadow-card)]"
+                  : locked
+                    ? "cursor-not-allowed text-muted-foreground/50"
+                    : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="max-w-xs text-[11px] text-muted-foreground sm:text-right">
+        {locked ? `Objective selection starts on ${PLAN_META[requiredPlan].label}.` : active.hint}
+      </p>
+    </div>
+  );
+}

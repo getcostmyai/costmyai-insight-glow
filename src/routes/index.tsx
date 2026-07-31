@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  PlugZap,
   ArrowUpRight,
   BadgeCheck,
   Gauge,
@@ -19,7 +20,9 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { SpendChart, type ChartMetric } from "@/components/dashboard/SpendChart";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
+import { ObjectiveSelect, RungEmpty, RungLocked } from "@/components/dashboard/RungState";
 import { dashboardQuery, ranges, rangeFor, type RangeKey } from "@/lib/dashboard-queries";
+import type { ObjectiveKind } from "@/lib/engine/types";
 import type { SwitchOpportunity } from "@/lib/dashboard.server";
 import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
@@ -86,12 +89,14 @@ const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): SwitchRow =
 function Dashboard() {
   const [range, setRange] = useState<RangeKey>("30d");
   const [metric, setMetric] = useState<ChartMetric>("spend");
-  const { data } = useSuspenseQuery(dashboardQuery(range));
+  const [objective, setObjective] = useState<ObjectiveKind>("cost");
+  const { data } = useSuspenseQuery(dashboardQuery(range, objective));
 
   const { series, live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const activeRange = rangeFor(range);
 
-  const { savings, stats, coverage, activeSwitches, reconciliation } = data;
+  const { savings, stats, coverage, activeSwitches, reconciliation, rungs, dataState, plan } = data;
+  const waiting = dataState !== "ready";
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
@@ -204,6 +209,25 @@ function Dashboard() {
         </aside>
 
         <main className="min-w-0 flex-1 space-y-8">
+          {dataState === "awaiting_first_event" && (
+            <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-dashed border-primary/35 bg-primary-soft/50 p-6">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <PlugZap className="size-5" />
+              </span>
+              <div className="min-w-60 flex-1">
+                <p className="text-sm font-semibold text-primary">Waiting for your first event</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Nothing has been ingested for this workspace yet, so no check has run. Point your
+                  gateway at CostMyAI — we backfill the previous 30 days on connect, so the first
+                  view is a full month of history, not an empty chart.
+                </p>
+              </div>
+              <button className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
+                Connect your gateway
+              </button>
+            </section>
+          )}
+
           {/* 1 — The headline answer */}
           <section
             className="animate-rise relative overflow-hidden rounded-3xl p-6 text-white sm:p-10"
@@ -231,8 +255,16 @@ function Dashboard() {
                   <span className="text-white/80">a month — today.</span>
                 </h1>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  {savings.certifiedCount} certified switches are waiting. Every one of them is
-                  quality-checked against your own traffic — same output, lower bill.
+                  {savings.certifiedCount} certified switches are waiting on your {plan} plan. Every
+                  one is quality-checked against your own traffic — same output, lower bill.
+                  {savings.lockedMonthly > 0 && (
+                    <>
+                      {" "}
+                      A further{" "}
+                      <span className="num text-white">{usd(savings.lockedMonthly, 0)}/mo</span> was
+                      found by checks your plan does not include yet.
+                    </>
+                  )}
                 </p>
 
                 <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
@@ -388,8 +420,15 @@ function Dashboard() {
               badge={`${data.hostArbitrage.length} certified`}
               badgeTone="saving"
             />
-            {data.hostArbitrage.length === 0 ? (
-              <EmptyState text="No host arbitrage left in this window — every workload is already on its cheapest verified provider." />
+            {!rungs.host_arbitrage.unlocked ? (
+              <RungLocked
+                requiredPlan={rungs.host_arbitrage.requiredPlan}
+                count={rungs.host_arbitrage.lockedCount}
+                monthly={rungs.host_arbitrage.lockedMonthly}
+                what="cheaper-host"
+              />
+            ) : data.hostArbitrage.length === 0 ? (
+              <RungEmpty state={dataState} kind="host_arbitrage" />
             ) : (
               <div className="space-y-3">
                 {data.hostArbitrage.map((row, i) => (
@@ -410,9 +449,24 @@ function Dashboard() {
               hint={`Benchmarked against ${coverage.evaluations} measured evaluation bands before we recommend the swap.`}
               badge={`${data.qualityMatched.length} certified`}
               badgeTone="saving"
+              aside={
+                <ObjectiveSelect
+                  value={objective}
+                  onChange={setObjective}
+                  locked={!rungs.quality_match.unlocked}
+                  requiredPlan={rungs.quality_match.requiredPlan}
+                />
+              }
             />
-            {data.qualityMatched.length === 0 ? (
-              <EmptyState text={`No cheaper model cleared the measured quality bar — ${data.refusals} candidate swaps were refused rather than guessed.`} />
+            {!rungs.quality_match.unlocked ? (
+              <RungLocked
+                requiredPlan={rungs.quality_match.requiredPlan}
+                count={rungs.quality_match.lockedCount}
+                monthly={rungs.quality_match.lockedMonthly}
+                what="quality-matched"
+              />
+            ) : data.qualityMatched.length === 0 ? (
+              <RungEmpty state={dataState} kind="quality_match" />
             ) : (
               <div className="space-y-3">
                 {data.qualityMatched.map((row, i) => (
@@ -435,8 +489,15 @@ function Dashboard() {
               badge={`${data.oversized.length} workloads`}
               badgeTone="opportunity"
             />
-            {data.oversized.length === 0 ? (
-              <EmptyState text="No oversized workloads detected in this window." />
+            {!rungs.rightsize.unlocked ? (
+              <RungLocked
+                requiredPlan={rungs.rightsize.requiredPlan}
+                count={rungs.rightsize.lockedCount}
+                monthly={rungs.rightsize.lockedMonthly}
+                what="oversized-workload"
+              />
+            ) : data.oversized.length === 0 ? (
+              <RungEmpty state={dataState} kind="rightsize" />
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {data.oversized.map((o) => (
@@ -472,14 +533,28 @@ function Dashboard() {
             <SectionTitle
               eyebrow="Working for you right now"
               title="Active switches"
-              hint="Rerouting live traffic, ranked by amount saved."
-              badge={`${activeSwitches.length} live`}
+              hint={`Activated in the ${activeRange.long}, ranked by amount saved.${
+                data.switchesOutsideWindow > 0
+                  ? ` ${data.switchesOutsideWindow} more started before this window.`
+                  : ""
+              }`}
+              badge={`${activeSwitches.length} in window`}
               badgeTone="spend"
             />
             <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
               <div className="space-y-3">
                 {activeSwitches.length === 0 ? (
-                  <EmptyState text="Nothing rerouted yet. Activating a certified switch starts the meter here." />
+                  <EmptyState
+                    text={
+                      waiting
+                        ? dataState === "awaiting_first_event"
+                          ? "No switch can run until your first event lands. Connect your gateway and the meter starts here."
+                          : "No switch was activated inside this window. Widen the range to see earlier activations."
+                        : data.switchesOutsideWindow > 0
+                          ? `No switch was activated in the ${activeRange.long}. ${data.switchesOutsideWindow} started earlier and are still rerouting traffic.`
+                          : "Nothing rerouted yet. Activating a certified switch starts the meter here."
+                    }
+                  />
                 ) : (
                   activeSwitches.map((s) => (
                     <div key={`${s.fromModel}-${s.toHost}`} className="card-surface p-5">
@@ -554,6 +629,14 @@ function Dashboard() {
           </section>
 
           {/* 7 — Trust: estimate vs the real invoice */}
+          {reconciliation.length === 0 && data.reconciliationOutsideWindow > 0 && (
+            <p className="text-center text-xs text-muted-foreground">
+              No provider billing period closed entirely inside the {activeRange.long} ·{" "}
+              {data.reconciliationOutsideWindow} reconciled period
+              {data.reconciliationOutsideWindow === 1 ? "" : "s"} sit outside this window.
+            </p>
+          )}
+
           {reconciliation.length > 0 && (
             <section>
               <SectionTitle
@@ -725,12 +808,14 @@ function SectionTitle({
   hint,
   badge,
   badgeTone,
+  aside,
 }: {
   eyebrow: string;
   title: string;
   hint: string;
   badge?: string;
   badgeTone?: "saving" | "opportunity" | "spend";
+  aside?: React.ReactNode;
 }) {
   const toneClass =
     badgeTone === "opportunity"
@@ -745,13 +830,16 @@ function SectionTitle({
         <h2 className="mt-1 text-xl font-semibold">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
       </div>
-      {badge && (
-        <span
-          className={`rounded-full px-3 py-1 text-[11px] font-semibold tracking-wide uppercase ${toneClass}`}
-        >
-          {badge}
-        </span>
-      )}
+      <div className="flex flex-wrap items-end gap-4">
+        {aside}
+        {badge && (
+          <span
+            className={`rounded-full px-3 py-1 text-[11px] font-semibold tracking-wide uppercase ${toneClass}`}
+          >
+            {badge}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
