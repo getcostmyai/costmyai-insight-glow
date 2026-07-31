@@ -115,28 +115,8 @@ function Hero({ stats }: { stats: MarketingStats }) {
   );
 }
 
-/* ------------------------------ live stats ------------------------------ */
 
-function LiveStats({ stats }: { stats: MarketingStats }) {
-  if (!stats.live) return null;
-  const items = [
-    { value: stats.modelCount.toLocaleString(), label: "Models" },
-    { value: stats.providerCount.toLocaleString(), label: "Providers" },
-    { value: stats.priceChangesThisMonth.toLocaleString(), label: "Price changes this month" },
-  ];
-  return (
-    <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-      <div className="grid gap-6 sm:grid-cols-3">
-        {items.map((it) => (
-          <div key={it.label} className="card-surface p-6">
-            <p className="num text-4xl text-gradient-brand">{it.value}</p>
-            <p className="mt-1.5 text-sm text-muted-foreground">{it.label}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
+
 
 /* ------------------------------- 04 · video ------------------------------ */
 
