@@ -209,6 +209,8 @@ export type Database = {
           invoiced_usd: number
           note: string | null
           org_id: string
+          superseded_at: string | null
+          supersedes_id: string | null
           verdict: string
         }
         Insert: {
@@ -222,6 +224,8 @@ export type Database = {
           invoiced_usd: number
           note?: string | null
           org_id: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
           verdict?: string
         }
         Update: {
@@ -235,6 +239,8 @@ export type Database = {
           invoiced_usd?: number
           note?: string | null
           org_id?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
           verdict?: string
         }
         Relationships: [
@@ -250,6 +256,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_reconciliations_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "billing_reconciliations"
             referencedColumns: ["id"]
           },
         ]
