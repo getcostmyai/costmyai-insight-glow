@@ -24,7 +24,7 @@ console.log("org:", org);
 
 const prices = await stripe.prices.list({ lookup_keys: ["certify_monthly"] });
 const price = prices.data[0]!;
-const customer = await stripe.customers.create({ email: "e2e-test@costmyai.dev", metadata: { userId: "e2e-user" } });
+const customer = await stripe.customers.create({ email: "e2e-test@costmyai.dev", metadata: { userId: "f7ee292a-a564-48d3-b131-512dbe3d88c4" } });
 
 const session = await stripe.checkout.sessions.create({
   line_items: [{ price: price.id, quantity: 1 }],
@@ -33,8 +33,8 @@ const session = await stripe.checkout.sessions.create({
   success_url: "https://example.com/done?s={CHECKOUT_SESSION_ID}",
   customer: customer.id,
   managed_payments: { enabled: true },
-  metadata: { userId: "e2e-user", orgId: org.id, plan: "certify", managed_payments: "true" },
-  subscription_data: { metadata: { userId: "e2e-user", orgId: org.id, plan: "certify" } },
+  metadata: { userId: "f7ee292a-a564-48d3-b131-512dbe3d88c4", orgId: org.id, plan: "certify", managed_payments: "true" },
+  subscription_data: { metadata: { userId: "f7ee292a-a564-48d3-b131-512dbe3d88c4", orgId: org.id, plan: "certify" } },
 } as any);
 console.log("ORG_ID=" + org.id);
 console.log("URL=" + session.url);
