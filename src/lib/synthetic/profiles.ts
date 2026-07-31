@@ -1,5 +1,5 @@
 import { costOf, DAYS_IN_MONTH, round2 } from "@/lib/engine/cost";
-import { requiredTierFor, shapeOf, TIER_RANK } from "@/lib/engine/rightsize";
+import { MIN_RIGHTSIZE_SAMPLE, requiredTierFor, shapeOf, TIER_RANK } from "@/lib/engine/rightsize";
 import type { ModelRow, ModelTier, PriceRow, UsageAggregate } from "@/lib/engine/types";
 
 import type { RollupRow } from "./generator";
@@ -58,6 +58,8 @@ export interface WorkloadProfileRow {
   requiredTier: ModelTier;
   observedTier: ModelTier;
   monthlyCostUsd: number;
+  /** Observed request count — the evidence the rightsize verdict rests on. */
+  requests: number;
 }
 
 /**
@@ -98,6 +100,7 @@ export function buildProfiles(
         requiredTier: requiredTierFor(u),
         observedTier,
         monthlyCostUsd: round2(monthly),
+        requests: u.requests,
       };
     })
     .sort((a, b) => b.monthlyCostUsd - a.monthlyCostUsd);
@@ -105,7 +108,9 @@ export function buildProfiles(
 
 /** Workloads running on a tier above what their shape needs. */
 export function oversizedProfiles(profiles: WorkloadProfileRow[]): WorkloadProfileRow[] {
-  return profiles.filter((p) => TIER_RANK[p.observedTier] > TIER_RANK[p.requiredTier]);
+  return profiles.filter(
+    (p) => p.requests >= MIN_RIGHTSIZE_SAMPLE && TIER_RANK[p.observedTier] > TIER_RANK[p.requiredTier],
+  );
 }
 
 export interface BillingPair {

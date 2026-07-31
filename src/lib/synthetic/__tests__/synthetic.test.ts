@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { costOf } from "@/lib/engine/cost";
+import { MIN_RIGHTSIZE_SAMPLE } from "@/lib/engine/rightsize";
 import type { ModelRow, PriceRow } from "@/lib/engine/types";
 import {
   bucketStart,
@@ -13,7 +14,8 @@ import {
   rollupEvents,
 } from "@/lib/synthetic/generator";
 import { aggregateRollups, buildBilling, buildProfiles, oversizedProfiles } from "@/lib/synthetic/profiles";
-import { SYNTHETIC_WORKLOADS } from "@/lib/synthetic/workloads";
+import { activeFraction, sizeWorkloads, TARGET_MONTHLY_SPEND_USD } from "@/lib/synthetic/sizing";
+import { lifecycleFactor, SYNTHETIC_BILLING_PROVIDERS, SYNTHETIC_WORKLOADS } from "@/lib/synthetic/workloads";
 
 const price = (model: string, host: string, i: number, o: number): PriceRow => ({
   model_key: model,
@@ -35,6 +37,8 @@ const PRICES: PriceRow[] = [
   price("gpt-oss-120b", "api.deepinfra.com", 0.15, 0.6),
   price("deepseek-v4-flash", "api.venice.ai", 0.28, 1.12),
   price("qwen3-32b", "api.groq.com", 0.29, 0.59),
+  price("gpt-5-6-terra", "openai", 1, 4),
+  price("gpt-5-6-luna", "openai", 0.2, 0.8),
 ];
 const priceFor = (m: string, h: string) => PRICES.find((p) => p.model_key === m && p.host === h);
 
@@ -50,13 +54,24 @@ const MODELS: ModelRow[] = [
   { model_key: "gpt-oss-120b", display_name: "gpt-oss-120b", vendor: "openai", tier: "standard" },
   { model_key: "deepseek-v4-flash", display_name: "DeepSeek V4 Flash", vendor: "deepseek", tier: "economy" },
   { model_key: "qwen3-32b", display_name: "Qwen3 32B", vendor: "alibaba", tier: "economy" },
+  { model_key: "gpt-5-6-terra", display_name: "GPT-5.6 Terra", vendor: "openai", tier: "standard" },
+  { model_key: "gpt-5-6-luna", display_name: "GPT-5.6 Luna", vendor: "openai", tier: "economy" },
 ];
 
+const WINDOW_DAYS = 30;
 const TO = new Date("2026-07-31T00:00:00.000Z");
-const FROM = new Date(TO.getTime() - 7 * DAY_MS);
+const FROM = new Date(TO.getTime() - WINDOW_DAYS * DAY_MS);
+
+// Sized against a smaller target than production so the suite stays fast; the
+// distribution logic under test is identical at any target.
+const TEST_TARGET_USD = 1000;
+const SIZED = sizeWorkloads(SYNTHETIC_WORKLOADS, priceFor, {
+  windowDays: WINDOW_DAYS,
+  targetMonthlyUsd: TEST_TARGET_USD,
+});
 
 function eventsFor(workloadIndex = 0, seed = "test") {
-  return generateEvents({ workload: SYNTHETIC_WORKLOADS[workloadIndex], from: FROM, to: TO, seed });
+  return generateEvents({ workload: SIZED[workloadIndex], from: FROM, to: TO, seed });
 }
 
 describe("deterministic generation", () => {
@@ -103,9 +118,9 @@ describe("event shape", () => {
     expect(failed.every((e) => e.inputTokens > 0 && e.outputTokens === 0)).toBe(true);
   });
 
-  it("lands within 12% of the configured daily cadence", () => {
-    const perDay = events.length / 7;
-    const target = SYNTHETIC_WORKLOADS[1].requestsPerDay;
+  it("lands within 12% of the solved daily cadence", () => {
+    const perDay = events.length / WINDOW_DAYS;
+    const target = SIZED[1].requestsPerDay;
     expect(Math.abs(perDay - target) / target).toBeLessThan(0.12);
   });
 
@@ -123,7 +138,7 @@ describe("event shape", () => {
       .map((e) => e.outputTokens)
       .sort((a, b) => a - b);
     const p50 = percentile(outputs, 50);
-    expect(Math.abs(p50 - SYNTHETIC_WORKLOADS[1].outputP50) / SYNTHETIC_WORKLOADS[1].outputP50).toBeLessThan(0.1);
+    expect(Math.abs(p50 - SIZED[1].outputP50) / SIZED[1].outputP50).toBeLessThan(0.1);
   });
 
   it("draws log-normally around the median", () => {
@@ -135,7 +150,7 @@ describe("event shape", () => {
 });
 
 describe("rollups are derived, never asserted", () => {
-  const events = SYNTHETIC_WORKLOADS.flatMap((_, i) => eventsFor(i));
+  const events = SIZED.flatMap((_, i) => eventsFor(i));
   const hourly = rollupEvents(events, "hour", priceFor);
   const daily = rollupEvents(events, "day", priceFor);
 
@@ -179,11 +194,11 @@ describe("rollups are derived, never asserted", () => {
 
 describe("workload profiles", () => {
   const daily = rollupEvents(
-    SYNTHETIC_WORKLOADS.flatMap((_, i) => eventsFor(i)),
+    SIZED.flatMap((_, i) => eventsFor(i)),
     "day",
     priceFor,
   );
-  const usage = aggregateRollups(daily, 7);
+  const usage = aggregateRollups(daily, WINDOW_DAYS);
   const profiles = buildProfiles(usage, MODELS, priceFor);
 
   it("profiles every workload", () => {
@@ -197,6 +212,14 @@ describe("workload profiles", () => {
     expect(research.complexityScore).toBeGreaterThan(classifier.complexityScore);
   });
 
+  it("refuses to call a thinly-observed workload oversized", () => {
+    const o1 = profiles.find((p) => p.modelKey === "o1-pro")!;
+    // Winding down: ~50 requests left in the window. Too few for dispersion to
+    // mean anything, so the check declines rather than guessing.
+    expect(o1.requests).toBeLessThan(MIN_RIGHTSIZE_SAMPLE);
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("o1-pro");
+  });
+
   it("flags the templated and short frontier workloads as oversized, and nothing else", () => {
     expect(oversizedProfiles(profiles).map((p) => p.modelKey).sort()).toEqual([
       "claude-opus-4-7-fast",
@@ -206,20 +229,21 @@ describe("workload profiles", () => {
   });
 
   it("never marks a workload oversized when the shape genuinely needs the tier", () => {
-    const research = profiles.find((p) => p.modelKey === "o1-pro")!;
-    expect(research.requiredTier).toBe("frontier");
+    const composer = profiles.find((p) => p.modelKey === "gpt-5.5")!;
+    expect(composer.requiredTier).toBe("frontier");
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("gpt-5.5");
   });
 
   it("normalises cost to a 30-day month", () => {
     const p = profiles.find((x) => x.modelKey === "qwen3-32b")!;
     const u = usage.find((x) => x.model_key === "qwen3-32b")!;
-    expect(p.monthlyCostUsd).toBeCloseTo((u.cost_usd / 7) * 30, 1);
+    expect(p.monthlyCostUsd).toBeCloseTo((u.cost_usd / WINDOW_DAYS) * 30, 1);
   });
 });
 
 describe("billing reconciliation", () => {
   const daily = rollupEvents(
-    SYNTHETIC_WORKLOADS.flatMap((_, i) => eventsFor(i)),
+    SIZED.flatMap((_, i) => eventsFor(i)),
     "day",
     priceFor,
   );
@@ -237,7 +261,7 @@ describe("billing reconciliation", () => {
   it("derives the estimate from the same priced rollups the dashboard shows", () => {
     const pairs = buildBilling(daily, FROM, TO, {});
     const openaiSpend = daily
-      .filter((r) => r.host === "api.openai.com")
+      .filter((r) => SYNTHETIC_BILLING_PROVIDERS.openai.includes(r.host))
       .reduce((s, r) => s + r.costUsd, 0);
     expect(pairs.find((p) => p.provider === "openai")!.estimatedUsd).toBeCloseTo(openaiSpend, 1);
   });
@@ -247,5 +271,134 @@ describe("billing reconciliation", () => {
     const b = buildBilling(daily, FROM, TO, {});
     expect(a.map((p) => p.idempotencyKey)).toEqual(b.map((p) => p.idempotencyKey));
     expect(new Set(a.map((p) => p.idempotencyKey)).size).toBe(a.length);
+  });
+});
+
+describe("volume is solved against live pricing, not scaled flat", () => {
+  it("hits the target monthly spend from the generated events themselves", () => {
+    const daily = rollupEvents(
+      SIZED.flatMap((_, i) => eventsFor(i)),
+      "day",
+      priceFor,
+    );
+    const spend = daily.reduce((s, r) => s + r.costUsd, 0);
+    expect(Math.abs(spend - TEST_TARGET_USD) / TEST_TARGET_USD).toBeLessThan(0.1);
+  });
+
+  it("gives an expensive model orders of magnitude fewer requests than a cheap one", () => {
+    const o1 = SIZED.find((w) => w.modelKey === "o1-pro")!;
+    const qwen = SIZED.find((w) => w.modelKey === "qwen3-32b")!;
+    // o1-pro carries 6.7x the spend share on a fraction of the request count.
+    expect(o1.spendShare / qwen.spendShare).toBeGreaterThan(5);
+    expect(qwen.requestsPerDay / o1.requestsPerDay).toBeGreaterThan(100);
+  });
+
+  it("prices a request through the engine cost function, expected tokens not median", () => {
+    const w = SIZED.find((x) => x.modelKey === "gpt-5.5")!;
+    const p = priceFor(w.modelKey, w.host)!;
+    // Right-skewed token draws bill above the median, so the per-request cost
+    // must exceed the naive median-based figure or the target is undershot.
+    const naive = costOf(p, w.inputP50, w.outputP50);
+    expect(w.costPerRequestUsd).toBeGreaterThan(naive);
+  });
+
+  it("refuses to size a workload with no synced price", () => {
+    expect(() => sizeWorkloads(SYNTHETIC_WORKLOADS, () => undefined)).toThrow(/No live price/);
+  });
+
+  it("keeps the spend distribution concentrated, not uniform", () => {
+    const shares = [...SYNTHETIC_WORKLOADS].sort((a, b) => b.spendShare - a.spendShare);
+    const top3 = shares.slice(0, 3).reduce((s, w) => s + w.spendShare, 0);
+    expect(top3).toBeGreaterThan(0.4);
+    expect(shares.at(-1)!.spendShare).toBeLessThan(0.02);
+  });
+
+  it("sizes the production ecosystem inside the specified $15k-$20k band", () => {
+    const sized = sizeWorkloads(SYNTHETIC_WORKLOADS, priceFor);
+    const monthly = sized.reduce(
+      (s, w) => s + w.requestsPerDay * 30 * w.costPerRequestUsd * activeFraction(w, 30),
+      0,
+    );
+    expect(monthly).toBeGreaterThan(15_000);
+    expect(monthly).toBeLessThan(20_000);
+    expect(TARGET_MONTHLY_SPEND_USD).toBe(17_500);
+  });
+});
+
+describe("workload-set evolution", () => {
+  const arriving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "gpt-5-6-terra")!;
+  const leaving = SYNTHETIC_WORKLOADS.find((w) => w.modelKey === "o1-pro")!;
+
+  it("has both new arrivals and phase-outs in the set", () => {
+    expect(SYNTHETIC_WORKLOADS.filter((w) => w.lifecycle?.introducedDaysAgo).length).toBeGreaterThan(1);
+    expect(SYNTHETIC_WORKLOADS.filter((w) => w.lifecycle?.retiringSinceDaysAgo).length).toBeGreaterThan(1);
+  });
+
+  it("ramps a new model up from nothing to steady state over about a week", () => {
+    expect(lifecycleFactor(12, arriving)).toBe(0);
+    expect(lifecycleFactor(11, arriving)).toBeCloseTo(0, 5);
+    expect(lifecycleFactor(7.5, arriving)).toBeCloseTo(0.5, 1);
+    expect(lifecycleFactor(4, arriving)).toBe(1);
+    expect(lifecycleFactor(0, arriving)).toBe(1);
+  });
+
+  it("ramps a retiring workload down on the same shape", () => {
+    expect(lifecycleFactor(10, leaving)).toBe(1);
+    expect(lifecycleFactor(5.5, leaving)).toBeCloseTo(0.5, 1);
+    expect(lifecycleFactor(1, leaving)).toBe(0);
+  });
+
+  it("only uses models that carry a live synced price", () => {
+    for (const w of SYNTHETIC_WORKLOADS) expect(priceFor(w.modelKey, w.host)).toBeDefined();
+  });
+
+  it("shows an arrival growing and a retirement draining in the generated traffic", () => {
+    const idx = SIZED.findIndex((w) => w.modelKey === "gpt-5-6-terra");
+    const events = eventsFor(idx);
+    const half = new Date(TO.getTime() - 5 * DAY_MS);
+    const before = events.filter((e) => e.occurredAt < half).length / 25;
+    const after = events.filter((e) => e.occurredAt >= half).length / 5;
+    expect(after).toBeGreaterThan(before * 2);
+
+    const outIdx = SIZED.findIndex((w) => w.modelKey === "o1-pro");
+    const out = eventsFor(outIdx);
+    const lastTwoDays = out.filter((e) => e.occurredAt >= new Date(TO.getTime() - 2 * DAY_MS)).length;
+    expect(lastTwoDays).toBe(0);
+  });
+
+  it("keeps sizing honest across a ramp: a part-time workload still hits its share", () => {
+    const w = SIZED.find((x) => x.modelKey === "gpt-5-6-luna")!;
+    const events = generateEvents({ workload: w, from: FROM, to: TO, seed: "test" });
+    const spend = rollupEvents(events, "day", priceFor).reduce((s, r) => s + r.costUsd, 0);
+    expect(Math.abs(spend - w.targetMonthlyUsd) / w.targetMonthlyUsd).toBeLessThan(0.15);
+  });
+});
+
+describe("live traffic is a continuation of the same curve", () => {
+  const workload = SIZED.find((w) => w.modelKey === "gpt-oss-120b")!;
+  const hourStart = new Date(TO.getTime() - HOUR_MS);
+
+  const slice = (from: Date, to: Date) =>
+    generateEvents({ workload, from, to, windowStart: FROM, windowEnd: TO, seed: "test" });
+
+  it("splits an hour into minute slices with no gaps or duplicates", () => {
+    const whole = slice(hourStart, TO);
+    const pieces = [];
+    for (let t = hourStart.getTime(); t < TO.getTime(); t += 60_000) {
+      pieces.push(...slice(new Date(t), new Date(t + 60_000)));
+    }
+    expect(pieces).toEqual(whole);
+  });
+
+  it("emits only events inside the requested slice", () => {
+    const from = new Date(hourStart.getTime() + 17 * 60_000);
+    const to = new Date(from.getTime() + 90_000);
+    expect(slice(from, to).every((e) => e.occurredAt >= from && e.occurredAt < to)).toBe(true);
+  });
+
+  it("is deterministic per slice, so a retried tick cannot double-count", () => {
+    const from = new Date(hourStart.getTime() + 5 * 60_000);
+    const to = new Date(from.getTime() + 60_000);
+    expect(slice(from, to)).toEqual(slice(from, to));
   });
 });
