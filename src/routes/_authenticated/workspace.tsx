@@ -1,10 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowRight, Loader2, LogOut, PlugZap } from "lucide-react";
+import { ArrowRight, Loader2, LogOut, PlugZap, Users } from "lucide-react";
 
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { supabase } from "@/integrations/supabase/client";
+import { acceptInvite, listMyInvites } from "@/lib/invites.functions";
 import { createWorkspace, listMyWorkspaces } from "@/lib/workspace.functions";
 import { suggestWorkspaceName, validateWorkspaceName } from "@/lib/workspace/naming";
 
@@ -49,7 +50,16 @@ function WorkspacePage() {
 
   return (
     <div className="relative">
-      <SignOutButton />
+      <div className="absolute right-6 top-6 z-50 flex items-center gap-2">
+        <Link
+          to="/team"
+          className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
+        >
+          <Users className="h-3.5 w-3.5" />
+          Team
+        </Link>
+        <SignOutButton inline />
+      </div>
       <DashboardView scope="mine" />
     </div>
   );
@@ -89,6 +99,7 @@ function FirstWorkspace({ email }: { email: string | null }) {
       <div className="w-full max-w-md">
         <SignOutButton inline />
         <div className="rounded-2xl border border-border bg-card p-8">
+          <PendingInvites />
           <PlugZap className="h-6 w-6 text-primary" />
           <h1 className="mt-4 text-lg font-semibold tracking-tight">Name your workspace</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -120,6 +131,52 @@ function FirstWorkspace({ email }: { email: string | null }) {
         </div>
       </div>
     </main>
+  );
+}
+
+/**
+ * An invited teammate arrives with no workspace of their own. Accepting is the
+ * whole onboarding for them — they should never be pushed to create a second,
+ * empty workspace beside the one they were asked to join.
+ */
+function PendingInvites() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const invites = useQuery({ queryKey: ["my-invites"], queryFn: () => listMyInvites() });
+  const [error, setError] = useState<string | null>(null);
+
+  const accept = useMutation({
+    mutationFn: (inviteId: string) => acceptInvite({ data: { inviteId } }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["my-workspaces"] });
+      await queryClient.invalidateQueries({ queryKey: ["my-invites"] });
+      navigate({ to: "/workspace" });
+    },
+    onError: (e: unknown) =>
+      setError(e instanceof Error ? e.message : "That invitation could not be accepted."),
+  });
+
+  if (!invites.data?.length) return null;
+
+  return (
+    <div className="mb-6 space-y-3">
+      {invites.data.map((i) => (
+        <div key={i.id} className="rounded-xl border border-primary/40 bg-primary/5 p-4">
+          <p className="text-sm">
+            You've been invited to <span className="font-semibold">{i.orgName}</span> as {i.role}.
+          </p>
+          <button
+            onClick={() => accept.mutate(i.id)}
+            disabled={accept.isPending}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {accept.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            Join {i.orgName}
+          </button>
+        </div>
+      ))}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+    </div>
   );
 }
 
