@@ -56,9 +56,11 @@ const sized = sizeWorkloads(SYNTHETIC_WORKLOADS, priceFor);
 
 const allEvents: SyntheticEvent[] = [];
 for (const workload of sized) {
-  allEvents.push(
-    ...generateEvents({ workload, from, to, windowStart: from, windowEnd: to, seed: SEED }),
-  );
+  // Pushed one by one: at production volume the event array is large enough
+  // that spreading it into push() blows the call stack.
+  for (const e of generateEvents({ workload, from, to, windowStart: from, windowEnd: to, seed: SEED })) {
+    allEvents.push(e);
+  }
 }
 allEvents.sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
 
