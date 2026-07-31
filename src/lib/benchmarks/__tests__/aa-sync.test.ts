@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   chooseEval,
+  latencyRowFor,
   marginFor,
   suiteFor,
   transformAaPayload,
