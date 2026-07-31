@@ -602,7 +602,7 @@ function Dashboard() {
 
           <p className="pb-6 text-center text-xs text-muted-foreground">
             Savings computed from your tracked traffic and current provider pricing · last read{" "}
-            {new Date(data.generatedAt).toLocaleTimeString("en-US")}.
+            <LocalTime iso={data.generatedAt} />.
           </p>
         </main>
       </div>
