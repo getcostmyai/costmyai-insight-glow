@@ -187,11 +187,12 @@ function ModelCard({ row }: { row: CatalogRow }) {
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Metric
-          label="Intelligence"
+          label="Intelligence Index"
           value={row.intelligence === null ? null : row.intelligence.toFixed(1)}
           tone="text-primary"
-          hint="Mean of the benchmark scores we hold for this model — no imputed values"
+          hint="Artificial Analysis' own published Intelligence Index — read verbatim from the feed, not derived from the columns beside it. Display only: we never certify a switch against a blended index."
         />
+
         <Metric
           label="IFBench"
           value={row.ifbench === null ? null : row.ifbench.toFixed(1)}
