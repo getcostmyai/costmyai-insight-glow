@@ -67,18 +67,22 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
   const periodStart = isoFrom(item?.current_period_start ?? subscription.current_period_start);
   const periodEnd = isoFrom(item?.current_period_end ?? subscription.current_period_end);
   const status = subscription.status as string;
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : (subscription.customer?.id ?? null);
 
-  await getSupabase()
+  const subscriptionWrite = await getSupabase()
     .from("subscriptions")
     .upsert(
       {
         org_id: orgId,
-        user_id: userId,
+        // The plan gate reads this row, so a malformed actor id must not be
+        // allowed to sink the whole write — the workspace, not the person, is
+        // what the subscription belongs to.
+        user_id: UUID.test(userId ?? "") ? userId : null,
         stripe_subscription_id: subscription.id,
-        stripe_customer_id:
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : subscription.customer?.id,
+        stripe_customer_id: customerId,
         product_id: productId,
         price_id: priceId,
         plan: plan as Database["public"]["Enums"]["plan_tier"],
@@ -91,6 +95,13 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
       },
       { onConflict: "stripe_subscription_id" },
     );
+
+  // Fail loudly. A silently dropped subscription row leaves a workspace that
+  // paid without the record the plan gate reads, so let the provider retry.
+  if (subscriptionWrite.error) {
+    throw new Error(`subscriptions write failed: ${subscriptionWrite.error.message}`);
+  }
+
 
   // The workspace record follows the subscription, in both directions. When
   // the paid period is genuinely over the workspace goes back to Compare —
