@@ -1,5 +1,6 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
+import type { ObjectiveKind } from "./engine/types";
 import { getDashboardSnapshot } from "./dashboard.functions";
 
 export type RangeKey = "24h" | "7d" | "30d";
@@ -12,10 +13,10 @@ export const ranges: { key: RangeKey; label: string; long: string; days: 1 | 7 |
 
 export const rangeFor = (key: RangeKey) => ranges.find((r) => r.key === key)!;
 
-export const dashboardQuery = (range: RangeKey) =>
+export const dashboardQuery = (range: RangeKey, objective: ObjectiveKind = "cost") =>
   queryOptions({
-    queryKey: ["dashboard", range],
-    queryFn: () => getDashboardSnapshot({ data: { days: rangeFor(range).days } }),
+    queryKey: ["dashboard", range, objective],
+    queryFn: () => getDashboardSnapshot({ data: { days: rangeFor(range).days, objective } }),
     staleTime: 60_000,
     // Switching range keeps the last window on screen instead of blanking it.
     placeholderData: keepPreviousData,
