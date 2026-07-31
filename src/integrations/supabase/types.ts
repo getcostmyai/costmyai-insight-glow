@@ -58,32 +58,77 @@ export type Database = {
           },
         ]
       }
+      benchmark_margins: {
+        Row: {
+          created_at: string
+          id: string
+          margin: number
+          method: string
+          source_run_id: string | null
+          suite: string
+          synced_at: string
+          task_class: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          margin: number
+          method?: string
+          source_run_id?: string | null
+          suite: string
+          synced_at?: string
+          task_class: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          margin?: number
+          method?: string
+          source_run_id?: string | null
+          suite?: string
+          synced_at?: string
+          task_class?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       benchmarks: {
         Row: {
           id: string
           measured_at: string
           model_key: string
+          sample_size: number | null
           score: number
           source: string | null
+          source_run_id: string | null
           suite: string
+          synced_at: string
           task_class: string
         }
         Insert: {
           id?: string
           measured_at?: string
           model_key: string
+          sample_size?: number | null
           score: number
           source?: string | null
+          source_run_id?: string | null
           suite: string
+          synced_at?: string
           task_class: string
         }
         Update: {
           id?: string
           measured_at?: string
           model_key?: string
+          sample_size?: number | null
           score?: number
           source?: string | null
+          source_run_id?: string | null
           suite?: string
+          synced_at?: string
           task_class?: string
         }
         Relationships: [
@@ -93,6 +138,113 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "model_catalog"
             referencedColumns: ["model_key"]
+          },
+        ]
+      }
+      billing_captures: {
+        Row: {
+          captured_at: string
+          created_at: string
+          currency: string
+          id: string
+          idempotency_key: string | null
+          invoiced_usd: number
+          is_synthetic: boolean
+          org_id: string
+          period_end: string
+          period_start: string
+          provider: string
+        }
+        Insert: {
+          captured_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          invoiced_usd: number
+          is_synthetic?: boolean
+          org_id: string
+          period_end: string
+          period_start: string
+          provider: string
+        }
+        Update: {
+          captured_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          invoiced_usd?: number
+          is_synthetic?: boolean
+          org_id?: string
+          period_end?: string
+          period_start?: string
+          provider?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_captures_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_reconciliations: {
+        Row: {
+          capture_id: string
+          computed_at: string
+          created_at: string
+          delta_pct: number
+          delta_usd: number
+          estimated_usd: number
+          id: string
+          invoiced_usd: number
+          note: string | null
+          org_id: string
+          verdict: string
+        }
+        Insert: {
+          capture_id: string
+          computed_at?: string
+          created_at?: string
+          delta_pct: number
+          delta_usd: number
+          estimated_usd: number
+          id?: string
+          invoiced_usd: number
+          note?: string | null
+          org_id: string
+          verdict?: string
+        }
+        Update: {
+          capture_id?: string
+          computed_at?: string
+          created_at?: string
+          delta_pct?: number
+          delta_usd?: number
+          estimated_usd?: number
+          id?: string
+          invoiced_usd?: number
+          note?: string | null
+          org_id?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_reconciliations_capture_id_fkey"
+            columns: ["capture_id"]
+            isOneToOne: false
+            referencedRelation: "billing_captures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_reconciliations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -196,12 +348,66 @@ export type Database = {
         }
         Relationships: []
       }
+      objectives: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          host: string | null
+          id: string
+          is_synthetic: boolean
+          max_latency_ms: number | null
+          model_key: string | null
+          objective: Database["public"]["Enums"]["objective_kind"]
+          org_id: string
+          quality_floor_score: number | null
+          task_hint: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          host?: string | null
+          id?: string
+          is_synthetic?: boolean
+          max_latency_ms?: number | null
+          model_key?: string | null
+          objective?: Database["public"]["Enums"]["objective_kind"]
+          org_id: string
+          quality_floor_score?: number | null
+          task_hint?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          host?: string | null
+          id?: string
+          is_synthetic?: boolean
+          max_latency_ms?: number | null
+          model_key?: string | null
+          objective?: Database["public"]["Enums"]["objective_kind"]
+          org_id?: string
+          quality_floor_score?: number | null
+          task_hint?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objectives_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           billing_interval: string
           created_at: string
           created_by: string | null
           id: string
+          is_synthetic: boolean
           name: string
           plan: Database["public"]["Enums"]["plan_tier"]
           plan_valid_until: string | null
@@ -215,6 +421,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_synthetic?: boolean
           name: string
           plan?: Database["public"]["Enums"]["plan_tier"]
           plan_valid_until?: string | null
@@ -228,6 +435,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_synthetic?: boolean
           name?: string
           plan?: Database["public"]["Enums"]["plan_tier"]
           plan_valid_until?: string | null
@@ -235,6 +443,81 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      plan_entitlements: {
+        Row: {
+          autonomous_switching: boolean
+          billing_reconciliation: boolean
+          created_at: string
+          host_arbitrage: boolean
+          manual_switching: boolean
+          max_seats: number | null
+          objective_selection: boolean
+          plan: Database["public"]["Enums"]["plan_tier"]
+          quality_match: boolean
+          rightsize: boolean
+          updated_at: string
+        }
+        Insert: {
+          autonomous_switching?: boolean
+          billing_reconciliation?: boolean
+          created_at?: string
+          host_arbitrage?: boolean
+          manual_switching?: boolean
+          max_seats?: number | null
+          objective_selection?: boolean
+          plan: Database["public"]["Enums"]["plan_tier"]
+          quality_match?: boolean
+          rightsize?: boolean
+          updated_at?: string
+        }
+        Update: {
+          autonomous_switching?: boolean
+          billing_reconciliation?: boolean
+          created_at?: string
+          host_arbitrage?: boolean
+          manual_switching?: boolean
+          max_seats?: number | null
+          objective_selection?: boolean
+          plan?: Database["public"]["Enums"]["plan_tier"]
+          quality_match?: boolean
+          rightsize?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_snapshots: {
+        Row: {
+          created_at: string
+          error_detail: string | null
+          feed: string
+          id: string
+          is_fixture: boolean
+          rows_upserted: number
+          status: string
+          synced_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_detail?: string | null
+          feed: string
+          id?: string
+          is_fixture?: boolean
+          rows_upserted?: number
+          status?: string
+          synced_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_detail?: string | null
+          feed?: string
+          id?: string
+          is_fixture?: boolean
+          rows_upserted?: number
+          status?: string
+          synced_at?: string
         }
         Relationships: []
       }
@@ -269,6 +552,7 @@ export type Database = {
           from_host: string
           from_model: string
           id: string
+          is_synthetic: boolean
           kind: Database["public"]["Enums"]["rec_kind"]
           min_plan: Database["public"]["Enums"]["plan_tier"]
           monthly_saving_usd: number
@@ -287,6 +571,7 @@ export type Database = {
           from_host: string
           from_model: string
           id?: string
+          is_synthetic?: boolean
           kind: Database["public"]["Enums"]["rec_kind"]
           min_plan?: Database["public"]["Enums"]["plan_tier"]
           monthly_saving_usd?: number
@@ -305,6 +590,7 @@ export type Database = {
           from_host?: string
           from_model?: string
           id?: string
+          is_synthetic?: boolean
           kind?: Database["public"]["Enums"]["rec_kind"]
           min_plan?: Database["public"]["Enums"]["plan_tier"]
           monthly_saving_usd?: number
@@ -327,6 +613,81 @@ export type Database = {
           },
         ]
       }
+      routing_rules: {
+        Row: {
+          basis: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          from_host: string
+          from_model: string
+          id: string
+          is_synthetic: boolean
+          org_id: string
+          source: Database["public"]["Enums"]["routing_source"]
+          state: Database["public"]["Enums"]["routing_state"]
+          switch_id: string | null
+          task_hint: string | null
+          to_host: string
+          to_model: string
+          updated_at: string
+        }
+        Insert: {
+          basis?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          from_host: string
+          from_model: string
+          id?: string
+          is_synthetic?: boolean
+          org_id: string
+          source?: Database["public"]["Enums"]["routing_source"]
+          state?: Database["public"]["Enums"]["routing_state"]
+          switch_id?: string | null
+          task_hint?: string | null
+          to_host: string
+          to_model: string
+          updated_at?: string
+        }
+        Update: {
+          basis?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          from_host?: string
+          from_model?: string
+          id?: string
+          is_synthetic?: boolean
+          org_id?: string
+          source?: Database["public"]["Enums"]["routing_source"]
+          state?: Database["public"]["Enums"]["routing_state"]
+          switch_id?: string | null
+          task_hint?: string | null
+          to_host?: string
+          to_model?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routing_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routing_rules_switch_id_fkey"
+            columns: ["switch_id"]
+            isOneToOne: false
+            referencedRelation: "switches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       switch_events: {
         Row: {
           actor: string | null
@@ -334,6 +695,7 @@ export type Database = {
           detail: string | null
           event: string
           id: string
+          is_synthetic: boolean
           org_id: string
           switch_id: string
         }
@@ -343,6 +705,7 @@ export type Database = {
           detail?: string | null
           event: string
           id?: string
+          is_synthetic?: boolean
           org_id: string
           switch_id: string
         }
@@ -352,6 +715,7 @@ export type Database = {
           detail?: string | null
           event?: string
           id?: string
+          is_synthetic?: boolean
           org_id?: string
           switch_id?: string
         }
@@ -382,6 +746,7 @@ export type Database = {
           from_host: string
           from_model: string
           id: string
+          is_synthetic: boolean
           org_id: string
           recommendation_id: string | null
           saved_usd: number
@@ -399,6 +764,7 @@ export type Database = {
           from_host: string
           from_model: string
           id?: string
+          is_synthetic?: boolean
           org_id: string
           recommendation_id?: string | null
           saved_usd?: number
@@ -416,6 +782,7 @@ export type Database = {
           from_host?: string
           from_model?: string
           id?: string
+          is_synthetic?: boolean
           org_id?: string
           recommendation_id?: string | null
           saved_usd?: number
@@ -448,6 +815,7 @@ export type Database = {
           id: number
           idempotency_key: string | null
           input_tokens: number
+          is_synthetic: boolean
           latency_ms: number | null
           model_key: string
           occurred_at: string
@@ -462,6 +830,7 @@ export type Database = {
           id?: number
           idempotency_key?: string | null
           input_tokens?: number
+          is_synthetic?: boolean
           latency_ms?: number | null
           model_key: string
           occurred_at?: string
@@ -476,6 +845,7 @@ export type Database = {
           id?: number
           idempotency_key?: string | null
           input_tokens?: number
+          is_synthetic?: boolean
           latency_ms?: number | null
           model_key?: string
           occurred_at?: string
@@ -502,6 +872,7 @@ export type Database = {
           host: string
           id: string
           input_tokens: number
+          is_synthetic: boolean
           model_key: string
           org_id: string
           output_tokens: number
@@ -515,6 +886,7 @@ export type Database = {
           host: string
           id?: string
           input_tokens?: number
+          is_synthetic?: boolean
           model_key: string
           org_id: string
           output_tokens?: number
@@ -528,6 +900,7 @@ export type Database = {
           host?: string
           id?: string
           input_tokens?: number
+          is_synthetic?: boolean
           model_key?: string
           org_id?: string
           output_tokens?: number
@@ -584,6 +957,7 @@ export type Database = {
           computed_at: string
           host: string
           id: string
+          is_synthetic: boolean
           model_key: string
           monthly_cost_usd: number
           observed_tier: string
@@ -598,6 +972,7 @@ export type Database = {
           computed_at?: string
           host: string
           id?: string
+          is_synthetic?: boolean
           model_key: string
           monthly_cost_usd?: number
           observed_tier?: string
@@ -612,6 +987,7 @@ export type Database = {
           computed_at?: string
           host?: string
           id?: string
+          is_synthetic?: boolean
           model_key?: string
           monthly_cost_usd?: number
           observed_tier?: string
@@ -650,9 +1026,12 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "member"
+      objective_kind: "cost" | "latency" | "quality_floor"
       plan_tier: "compare" | "certify" | "rightsize" | "govern"
       rec_kind: "host_arbitrage" | "quality_match" | "rightsize"
       rec_status: "open" | "dismissed" | "activated" | "refused"
+      routing_source: "manual" | "autonomous"
+      routing_state: "active" | "paused" | "rolled_back"
       switch_status: "active" | "paused" | "rolled_back"
     }
     CompositeTypes: {
@@ -782,9 +1161,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "member"],
+      objective_kind: ["cost", "latency", "quality_floor"],
       plan_tier: ["compare", "certify", "rightsize", "govern"],
       rec_kind: ["host_arbitrage", "quality_match", "rightsize"],
       rec_status: ["open", "dismissed", "activated", "refused"],
+      routing_source: ["manual", "autonomous"],
+      routing_state: ["active", "paused", "rolled_back"],
       switch_status: ["active", "paused", "rolled_back"],
     },
   },
