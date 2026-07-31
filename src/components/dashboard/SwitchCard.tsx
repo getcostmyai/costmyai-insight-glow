@@ -81,12 +81,14 @@ export function SwitchCard({
             {pending ? "Switching…" : actionLabel}
           </button>
         ) : (
-          <span
+          <Link
+            to={ctaHref ?? "/auth"}
             title={disabledHint ?? "Sign in to your own workspace to activate switches"}
-            className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground"
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary-soft"
           >
-            {actionLabel}
-          </span>
+            {ctaLabel ?? "Sign in to activate"}
+            <ArrowUpRight className="size-3.5" />
+          </Link>
         )}
       </div>
     </div>
