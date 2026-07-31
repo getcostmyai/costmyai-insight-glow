@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicIngestRouteImport } from './routes/api/public/ingest'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicIngestRoute = ApiPublicIngestRouteImport.update({
+  id: '/api/public/ingest',
+  path: '/api/public/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
   id: '/api/public/sync/benchmarks',
   path: '/api/public/sync/benchmarks',
@@ -32,30 +38,47 @@ const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/ingest': typeof ApiPublicIngestRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sitemap.xml' | '/api/public/sync/benchmarks'
+  fullPaths:
+    | '/'
+    | '/sitemap.xml'
+    | '/api/public/ingest'
+    | '/api/public/sync/benchmarks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml' | '/api/public/sync/benchmarks'
-  id: '__root__' | '/' | '/sitemap.xml' | '/api/public/sync/benchmarks'
+  to:
+    | '/'
+    | '/sitemap.xml'
+    | '/api/public/ingest'
+    | '/api/public/sync/benchmarks'
+  id:
+    | '__root__'
+    | '/'
+    | '/sitemap.xml'
+    | '/api/public/ingest'
+    | '/api/public/sync/benchmarks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicIngestRoute: typeof ApiPublicIngestRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
 }
 
@@ -75,6 +98,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ingest': {
+      id: '/api/public/ingest'
+      path: '/api/public/ingest'
+      fullPath: '/api/public/ingest'
+      preLoaderRoute: typeof ApiPublicIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/benchmarks': {
       id: '/api/public/sync/benchmarks'
       path: '/api/public/sync/benchmarks'
@@ -88,6 +118,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicIngestRoute: ApiPublicIngestRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
 }
 export const routeTree = rootRouteImport
