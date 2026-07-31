@@ -77,7 +77,11 @@ function AuthPage() {
   async function google() {
     setError(null);
     try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      // Land back on /auth (public, session-aware) — it forwards to /workspace as
+      // soon as the session hydrates, so Google matches the email/password path.
+      await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/auth`,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     }
