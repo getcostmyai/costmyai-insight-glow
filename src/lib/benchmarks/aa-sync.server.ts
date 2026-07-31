@@ -12,7 +12,8 @@ export interface SyncReport {
   matchedModels: string[];
   unmatchedModels: string[];
   scoresWritten: number;
-  marginsWritten: { task_class: string; margin: number }[];
+  marginsWritten: { task_class: string; suite: string; margin: number }[];
+  chosenEvals: { task_class: string; label: string; covered: number; sampleSize: number }[];
   skipped: { model_key: string; task_class: string; reason: string }[];
   fixturesRetired: number;
 }
@@ -82,7 +83,7 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
   const { data: retired, error: retireError } = await supabase
     .from("benchmarks")
     .update({ is_fixture: true })
-    .neq("suite", AA_SUITE)
+    .not("suite", "like", `${AA_SUITE}:%`)
     .eq("is_fixture", false)
     .select("id");
   if (retireError) throw retireError;
@@ -93,7 +94,8 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
     matchedModels: result.matchedModels,
     unmatchedModels: result.unmatchedModels,
     scoresWritten: result.scores.length,
-    marginsWritten: result.margins.map((m) => ({ task_class: m.task_class, margin: m.margin })),
+    marginsWritten: result.margins.map((m) => ({ task_class: m.task_class, suite: m.suite, margin: m.margin })),
+    chosenEvals: result.chosenEvals.map(({ task_class, label, covered, sampleSize }) => ({ task_class, label, covered, sampleSize })),
     skipped: result.skipped,
     fixturesRetired: retired?.length ?? 0,
   };
