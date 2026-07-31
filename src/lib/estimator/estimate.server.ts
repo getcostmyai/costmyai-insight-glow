@@ -66,7 +66,7 @@ export async function estimateSaving(input: EstimatorInput): Promise<EstimatorRe
     }
     baselinePrices = prices.filter((p) => p.model_key === input.modelKey);
     if (input.provider) {
-      const onProvider = baselinePrices.filter((p) => p.host === input.provider);
+      const onProvider = baselinePrices.filter((p) => p.host_label === input.provider);
       if (onProvider.length > 0) baselinePrices = onProvider;
     }
     if (baselinePrices.length === 0) {
@@ -78,7 +78,7 @@ export async function estimateSaving(input: EstimatorInput): Promise<EstimatorRe
     }
   } else if (input.provider) {
     const onProvider = prices.filter(
-      (p) => p.host === input.provider && lookup.score(p.model_key, shape.taskClass) != null,
+      (p) => p.host_label === input.provider && lookup.score(p.model_key, shape.taskClass) != null,
     );
     if (onProvider.length === 0) {
       return refuse(

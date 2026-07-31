@@ -80,9 +80,9 @@ export function Estimator() {
                 </Chip>
                 {(options?.providers ?? []).map((p) => (
                   <Chip
-                    key={p.host}
-                    active={provider === p.host}
-                    onClick={() => setProvider(p.host)}
+                    key={p.label}
+                    active={provider === p.label}
+                    onClick={() => setProvider(p.label)}
                   >
                     {p.label}
                   </Chip>

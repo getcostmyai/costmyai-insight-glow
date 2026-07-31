@@ -29,7 +29,7 @@ export const estimatorOptionsQuery = () =>
   });
 
 export interface EstimatorOptions {
-  providers: { host: string; label: string; models: number }[];
+  providers: { label: string; models: number }[];
   models: { model_key: string; display_name: string }[];
 }
 
