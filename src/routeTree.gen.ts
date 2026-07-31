@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -40,6 +41,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModelsRoute = ModelsRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
+  '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
+  '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
+  '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/intelligence'
     | '/models'
+    | '/partners'
     | '/pricing'
     | '/sitemap.xml'
     | '/billing'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/intelligence'
     | '/models'
+    | '/partners'
     | '/pricing'
     | '/sitemap.xml'
     | '/billing'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/intelligence'
     | '/models'
+    | '/partners'
     | '/pricing'
     | '/sitemap.xml'
     | '/_authenticated/billing'
@@ -294,6 +306,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   IntelligenceRoute: typeof IntelligenceRoute
   ModelsRoute: typeof ModelsRoute
+  PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/models': {
@@ -492,6 +512,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   IntelligenceRoute: IntelligenceRoute,
   ModelsRoute: ModelsRoute,
+  PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
@@ -507,13 +528,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

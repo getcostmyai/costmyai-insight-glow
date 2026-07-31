@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Menu, X } from "lucide-react";
+import { CircleUserRound, LogIn, Menu, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -14,10 +14,13 @@ import { Wordmark } from "./Wordmark";
  */
 
 const NAV = [
-  { to: "/models", label: "Models" },
   { to: "/", label: "How it works", hash: "how" },
+  { to: "/models", label: "Models" },
+  { to: "/intelligence", label: "Intelligence" },
+  { to: "/partners", label: "Become a partner" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
+
 
 function useSignedIn() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
