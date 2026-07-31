@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as ModelsRouteImport } from './routes/models'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
+import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -36,6 +38,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelsRoute = ModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -65,6 +72,11 @@ const LegalTermsRoute = LegalTermsRouteImport.update({
 const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
   id: '/legal/privacy',
   path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
+  id: '/legal/methodology',
+  path: '/legal/methodology',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
@@ -123,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/models': typeof ModelsRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -130,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -142,6 +156,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/models': typeof ModelsRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -149,6 +164,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -163,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/models': typeof ModelsRoute
   '/pricing': typeof PricingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
@@ -170,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
+  '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -184,6 +202,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/models'
     | '/pricing'
     | '/sitemap.xml'
     | '/billing'
@@ -191,6 +210,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/workspace'
+    | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/api/public/payments/webhook'
@@ -203,6 +223,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/models'
     | '/pricing'
     | '/sitemap.xml'
     | '/billing'
@@ -210,6 +231,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/workspace'
+    | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/api/public/payments/webhook'
@@ -223,6 +245,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/demo'
+    | '/models'
     | '/pricing'
     | '/sitemap.xml'
     | '/_authenticated/billing'
@@ -230,6 +253,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/workspace'
+    | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/api/public/payments/webhook'
@@ -244,8 +268,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
+  ModelsRoute: typeof ModelsRoute
   PricingRoute: typeof PricingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  LegalMethodologyRoute: typeof LegalMethodologyRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -269,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/models': {
+      id: '/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof ModelsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -311,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/legal/privacy'
       fullPath: '/legal/privacy'
       preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/methodology': {
+      id: '/legal/methodology'
+      path: '/legal/methodology'
+      fullPath: '/legal/methodology'
+      preLoaderRoute: typeof LegalMethodologyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/workspace': {
@@ -410,8 +450,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
+  ModelsRoute: ModelsRoute,
   PricingRoute: PricingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  LegalMethodologyRoute: LegalMethodologyRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
@@ -423,13 +465,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
