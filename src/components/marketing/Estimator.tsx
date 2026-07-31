@@ -101,9 +101,23 @@ export function Estimator() {
     return { low: modelled * CONSERVATIVE_LOW, high: modelled * CONSERVATIVE_HIGH };
   }, [options, workload, provider, modelKey, distribution, spend]);
 
+  /**
+   * What the indicative figure actually rests on. Shown next to the number so
+   * it can never read as if spend alone produced it — including when the user
+   * steps back to Spend after choosing a workload and a provider.
+   */
+  const basisLabel = useMemo(() => {
+    const w = WORKLOADS.find((x) => x.id === workload)?.label ?? workload;
+    const where = modelKey
+      ? (options?.models.find((m) => m.model_key === modelKey)?.display_name ?? modelKey)
+      : (provider ?? null);
+    return where ? `${w} · ${where}` : w;
+  }, [workload, provider, modelKey, options]);
+
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
+
 
   const goto = (next: number) => {
     setDir(next > step ? 1 : -1);
@@ -167,7 +181,11 @@ export function Estimator() {
 
             <div className="text-right">
               <p className="eyebrow">
-                {showResult ? "Result" : indicative ? "Indicative" : "Indicative"}
+                {showResult
+                  ? "Result"
+                  : indicative
+                    ? `Indicative · ${basisLabel}`
+                    : "Indicative"}
               </p>
               <p
                 className={`num text-2xl leading-tight tabular-nums transition-colors duration-300 ${
@@ -179,7 +197,13 @@ export function Estimator() {
                   <span className="ml-1 text-xs font-medium text-muted-foreground">/ mo</span>
                 ) : null}
               </p>
+              {!showResult && !indicative ? (
+                <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                  Pick a workload and a provider — spend alone is not a measurement
+                </p>
+              ) : null}
             </div>
+
           </div>
 
           {/* ---------------- body ---------------- */}
