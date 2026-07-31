@@ -5,6 +5,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { AA_SUITE, transformAaPayload, type AaModel } from "./aa-catalog";
 
 const AA_ENDPOINT = "https://artificialanalysis.ai/api/v2/data/llms/models";
+const AA_FEED = "artificial_analysis";
+
 
 export interface SyncReport {
   runId: string;
