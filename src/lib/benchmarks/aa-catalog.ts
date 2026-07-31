@@ -158,9 +158,11 @@ export interface ScoreRow {
   suite: string;
   task_class: string;
   score: number;
-  sample_size: number;
+  /** null for a published composite: AA gives no item count, so no margin exists. */
+  sample_size: number | null;
   source: string;
 }
+
 
 /** AA reports accuracies as 0-1 fractions; we store 0-100 points throughout. */
 export function toPoints(fraction: number): number {
