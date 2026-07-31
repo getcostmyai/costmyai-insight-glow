@@ -154,7 +154,14 @@ describe("equivalence (Certify)", () => {
  * classification and misses it for a long generation.
  */
 describe("latency (measured, not assumed)", () => {
-  const benchmarks = [bench("big-model", 90), bench("mid-model", 89.5), bench("cheap-model", 89.2)];
+  // weak-model widens the spread so the Goodhart guard does not fire first; it
+  // has no price row, so it is never a candidate.
+  const benchmarks = [
+    bench("big-model", 90),
+    bench("mid-model", 89.5),
+    bench("cheap-model", 89.2),
+    bench("weak-model", 70),
+  ];
   const measured = (
     model_key: string,
     inp: number,
