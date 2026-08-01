@@ -115,8 +115,7 @@ function Hero({ range, topRate }: { range: string | null; topRate: number }) {
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
           If you advise teams on their AI stack, CostMyAI is an easy first recommendation: the free
-          level already cuts their bill — and every invoice they ever pay writes a line in your
-          ledger.
+          level already cuts their bill — and every invoice they ever pay keeps paying you back.
         </Reveal>
 
         <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
