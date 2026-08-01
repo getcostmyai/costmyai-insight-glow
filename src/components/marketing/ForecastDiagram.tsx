@@ -25,10 +25,16 @@ const ACTUAL_CUMULATIVE = ACTUAL_DAILY.reduce<number[]>(
   [],
 );
 const LAST_KNOWN_CUMULATIVE = ACTUAL_CUMULATIVE.at(-1) ?? 0;
-const PROJECTED_CUMULATIVE = PROJECTED_DAILY.reduce<number[]>(
-  (acc, v, i) => [...acc, (i === 0 ? LAST_KNOWN_CUMULATIVE : acc.at(-1) ?? 0) + v],
-  [],
-);
+
+// Projected cumulative starts from the last known point and walks through remaining days.
+const PROJECTED_CUMULATIVE = [
+  LAST_KNOWN_CUMULATIVE,
+  ...PROJECTED_DAILY.reduce<number[]>(
+    (acc, v) => [...acc, (acc.at(-1) ?? LAST_KNOWN_CUMULATIVE) + v],
+    [],
+  ),
+];
+
 const FORECAST_POINT = PROJECTED_CUMULATIVE.at(-1) ?? 0;
 const FORECAST_RANGE = [FORECAST_POINT * 0.955, FORECAST_POINT * 1.045];
 
