@@ -120,7 +120,11 @@ export function HeroStatRow({ title, children }: { title?: string; children: Rea
           {title}
         </p>
       ) : null}
-      <div className="grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">{children}</div>
+      {/* Three explicit row tracks so each stat's subgrid shares one baseline. */}
+      <div className="grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">
+        {children}
+      </div>
+
     </div>
   );
 }
