@@ -1,4 +1,5 @@
 import { ProviderLogo } from "@/components/marketing/ProviderLogo";
+import { CountUp } from "@/components/marketing/Reveal";
 import type { MarketingStats } from "@/lib/marketing.functions";
 
 /**
