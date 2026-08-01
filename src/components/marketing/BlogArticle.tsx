@@ -3,7 +3,12 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
-import { formatPublished, type BlogPost, type Block } from "@/lib/blog/posts";
+import {
+  formatPublished,
+  type BlogPost,
+  type Block,
+  type InternalPath,
+} from "@/lib/blog/posts";
 
 /**
  * Article renderer in the Intelligence page design language: oversized display
@@ -18,7 +23,7 @@ function CtaBanner({
 }: {
   headline: string;
   label: string;
-  to: Block extends { t: "cta"; to: infer T } ? T : never;
+  to: InternalPath;
 }) {
   return (
     <Reveal className="my-14">
