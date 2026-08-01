@@ -149,6 +149,102 @@ function Hero({ stats }: { stats: MarketingStats }) {
   );
 }
 
+/* ----------------------------- 02 · forecast ----------------------------- */
+
+const FORECAST_PRINCIPLES = [
+  {
+    n: "01",
+    title: "What you already spent is never guessed",
+    body: "Month-to-date is a fixed, known baseline read from real usage. Only the days still ahead of you get projected, so the part of the month that already happened can never move.",
+  },
+  {
+    n: "02",
+    title: "Your week has a shape",
+    body: "Weekday and weekend traffic are not the same workload. We detect the weekly rhythm in your own usage and apply it only when the pattern is genuinely there, never as a blanket assumption.",
+  },
+  {
+    n: "03",
+    title: "A spike is not a trend",
+    body: "Growth is carried forward, but damped and capped, so one loud Tuesday cannot compound into a frightening month-end number that was never going to happen.",
+  },
+  {
+    n: "04",
+    title: "A range when a number would be dishonest",
+    body: "When your usage is too dispersed to support a single figure, you get a range instead of false precision. A forecast that admits its own uncertainty is the one you can take to a board.",
+  },
+  {
+    n: "05",
+    title: "Retired and brand-new workloads are handled",
+    body: "A workload that went silent stops inflating the rest of the month. One that appeared days ago is flagged rather than extrapolated as if it had always been there.",
+  },
+];
+
+function Forecast() {
+  return (
+    <section id="forecast" className="scroll-mt-24 border-y border-border bg-card">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
+        <SectionHead
+          eyebrow="Spend Forecast"
+          title="Your month-end AI bill, before the invoice arrives."
+          lead="Most teams find out what AI cost them after the money is gone. We project the close of the month from your real usage, and we tell you what the projection is based on."
+        />
+
+        <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-3">
+          {[
+            { k: "Month to date", v: "Actual", s: "Known, never re-estimated" },
+            { k: "Rest of month", v: "Projected", s: "From your trailing usage level" },
+            { k: "Month-end", v: "Point or range", s: "Range when the data demands it" },
+          ].map((c, i) => (
+            <Reveal key={c.k} delay={i * 90} className="border-t border-border pt-4">
+              <p className="text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {c.k}
+              </p>
+              <p className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{c.v}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.s}</p>
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="mx-auto mt-20 max-w-4xl">
+          {FORECAST_PRINCIPLES.map((p, i) => (
+            <Reveal
+              key={p.n}
+              delay={i * 80}
+              className="group grid gap-4 border-t border-border py-9 sm:grid-cols-[7rem_1fr] sm:gap-10"
+            >
+              <span
+                aria-hidden
+                className="num pointer-events-none select-none text-[2.75rem] leading-none text-gradient-brand opacity-30 transition-opacity duration-500 group-hover:opacity-100 sm:text-[3.5rem]"
+              >
+                {p.n}
+              </span>
+              <div className="sm:pt-1">
+                <h3 className="text-xl font-semibold tracking-[-0.03em] sm:text-2xl">{p.title}</h3>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                  {p.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
+
+        <Reveal delay={120} className="mx-auto mt-12 max-w-4xl">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            The exact weighting behind these rules is ours. What is public is the principle: every
+            forecast states its own basis, so you always know whether you are looking at a
+            measurement or an estimate.{" "}
+            <Link to="/blog/$slug" params={{ slug: "ai-spend-forecasting" }} className="font-semibold text-primary">
+              Read how we forecast
+            </Link>
+            .
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 
 
 
