@@ -113,8 +113,9 @@ function Hero({ data }: { data: CatalogPayload }) {
 
         <div className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
           <HeroStat delay={0} value={stats.models} label="Models priced" />
-          <HeroStat delay={80} value={stats.vendors} label="Vendors tracked" />
-          <HeroStat delay={160} value={stats.pricePoints} label="Verified host rates" />
+          <HeroStat delay={80} value={stats.vendors} label="Model makers" />
+          <HeroStat delay={160} value={stats.providers} label="Serving providers" />
+
           <HeroStat
             delay={240}
             value={Math.round(stats.topSpread)}
