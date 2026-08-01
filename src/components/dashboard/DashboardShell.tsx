@@ -138,10 +138,18 @@ export function DashboardShell({
           <div className="sticky top-24 space-y-6">
             <div>
               <p className="text-sm font-semibold">{data.workspace.name}</p>
-              <span className="mt-2 inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase">
-                {data.workspace.plan}
-              </span>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {/* Route-aware: this names the level you are looking at. */}
+                <span className="inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase">
+                  {LEVELS.find((l) => l.key === level)?.label ?? level}
+                </span>
+                {/* What the workspace is actually paying for. */}
+                <span className="inline-flex rounded-full border border-border px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                  {data.workspace.plan} plan
+                </span>
+              </div>
             </div>
+
             <nav className="space-y-1">
               {LEVELS.map((meta) => {
                 const Icon = ICONS[meta.key];
