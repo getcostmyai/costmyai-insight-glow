@@ -1,9 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 
-import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
+import { ShareCardButton } from "@/components/marketing/ShareCardButton";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import {
   BandDiagram,
@@ -11,42 +10,31 @@ import {
   PriceMovesDonut,
   SaturationGauge,
 } from "@/components/marketing/IntelligenceCharts";
-import {
-  intelligenceQuery,
-  type IntelligencePayload,
-} from "@/lib/intelligence.functions";
+import type { IntelligencePayload } from "@/lib/intelligence.functions";
 import type { PriceMove } from "@/lib/intelligence/intelligence.server";
+import { bandCardId, moveCardId, repricerCardId, spreadCardId } from "@/lib/intelligence/share-cards";
 
-export const Route = createFileRoute("/intelligence")({
-  head: () => ({
-    meta: [
-      { title: "Intelligence — live AI price and quality market data | CostMyAI" },
-      {
-        name: "description",
-        content:
-          "Live market intelligence on the AI model economy: models and providers tracked, price moves this month, multi-provider price spreads and the cheapest model clearing each measured quality band.",
-      },
-      { property: "og:title", content: "Intelligence — the live AI price and quality market" },
-      {
-        property: "og:description",
-        content:
-          "Price moves this month, provider-to-provider spreads on identical weights, and quality-per-dollar winners inside measured benchmark margins.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "/intelligence" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: "/intelligence" }],
-  }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(intelligenceQuery()),
-  component: IntelligencePage,
-});
+/**
+ * The Intelligence report body.
+ *
+ * One renderer serves two routes: the live open month at /intelligence and any
+ * closed month at /intelligence/YYYY-MM. The markup and the anchors are
+ * identical on both, which is what makes a shared per-card anchor resolve to
+ * the same card on the frozen page that the reader clicked on the live one.
+ */
 
-const usd = (n: number) =>
-  n >= 1 ? `$${n.toFixed(2)}` : `$${n.toFixed(n < 0.01 ? 4 : 3)}`;
-const signedPct = (n: number | null) =>
-  n == null ? "—" : `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
-const dateLabel = (iso: string | null) =>
+export interface ReportContext {
+  /** Frozen month key when this is an archive page, else null (live page). */
+  frozenMonth: string | null;
+  /** Month a share link should cite: this frozen month, or the newest archive. */
+  citableMonth: string | null;
+  archive: { month: string; frozenAt: string }[];
+}
+
+const usd = (n: number) => (n >= 1 ? `$${n.toFixed(2)}` : `$${n.toFixed(n < 0.01 ? 4 : 3)}`);
+const signedPct = (n: number | null) => (n == null ? "—" : `${n > 0 ? "+" : ""}${n.toFixed(1)}%`);
+
+export const dateLabel = (iso: string | null) =>
   iso
     ? new Date(iso).toLocaleDateString("en-GB", {
         day: "numeric",
@@ -68,6 +56,8 @@ function Figure({
   format,
   tone = "default",
   size = "lg",
+  cardId,
+  ctx,
 }: {
   value: number;
   label: string;
@@ -75,6 +65,8 @@ function Figure({
   format?: (n: number) => string;
   tone?: "default" | "up" | "down" | "brand";
   size?: "lg" | "xl";
+  cardId?: string;
+  ctx?: ReportContext;
 }) {
   const toneClass =
     tone === "up"
@@ -85,7 +77,7 @@ function Figure({
           ? "text-primary"
           : "text-foreground";
   return (
-    <div>
+    <div id={cardId} className="group scroll-mt-28">
       <CountUp
         value={value}
         format={format}
@@ -93,9 +85,16 @@ function Figure({
           size === "xl" ? "text-6xl sm:text-7xl" : "text-5xl sm:text-6xl"
         }`}
       />
-      <p className="mt-3 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
-      </p>
+      <div className="mt-3 flex items-center gap-1.5">
+        <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          {label}
+        </p>
+        {cardId && ctx ? (
+          <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+            <ShareCardButton cardId={cardId} month={ctx.citableMonth} title={label} />
+          </span>
+        ) : null}
+      </div>
       {sub ? (
         <p className="mt-2 max-w-[26ch] text-xs leading-relaxed text-muted-foreground/80">{sub}</p>
       ) : null}
@@ -125,7 +124,15 @@ function SectionHead({
   );
 }
 
-function MoveList({ rows, direction }: { rows: PriceMove[]; direction: "up" | "down" }) {
+function MoveList({
+  rows,
+  direction,
+  ctx,
+}: {
+  rows: PriceMove[];
+  direction: "up" | "down";
+  ctx: ReportContext;
+}) {
   if (rows.length === 0) {
     return (
       <p className="py-6 text-sm text-muted-foreground">
@@ -136,27 +143,42 @@ function MoveList({ rows, direction }: { rows: PriceMove[]; direction: "up" | "d
   const accent = direction === "up" ? "text-destructive" : "text-saving";
   return (
     <ul className="mt-6 divide-y divide-border/60 border-t border-border/60">
-      {rows.map((r, i) => (
-        <Reveal as="li" key={`${r.modelKey}-${r.host}-${r.observedAt}`} delay={i * 70}>
-          <div className="flex items-baseline justify-between gap-6 py-5">
-            <div className="min-w-0">
-              <p className="truncate font-mono text-xs text-foreground">{r.modelKey}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{r.hostLabel}</p>
+      {rows.map((r, i) => {
+        const id = moveCardId(direction === "up" ? "increase" : "decrease", r.modelKey, r.host);
+        return (
+          <Reveal as="li" key={`${r.modelKey}-${r.host}-${r.observedAt}`} delay={i * 70}>
+            <div
+              id={id}
+              className="group flex items-baseline justify-between gap-6 py-5 scroll-mt-28"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-mono text-xs text-foreground">{r.modelKey}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{r.hostLabel}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="text-right">
+                  <p className={`num text-2xl font-semibold tabular-nums tracking-tight ${accent}`}>
+                    {signedPct(r.pct)}
+                  </p>
+                  <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                    {r.inputPrev != null ? usd(r.inputPrev) : "—"} →{" "}
+                    {r.inputNow != null ? usd(r.inputNow) : "—"} in ·{" "}
+                    {r.outputPrev != null ? usd(r.outputPrev) : "—"} →{" "}
+                    {r.outputNow != null ? usd(r.outputNow) : "—"} out
+                  </p>
+                </div>
+                <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                  <ShareCardButton
+                    cardId={id}
+                    month={ctx.citableMonth}
+                    title={`${r.modelKey} at ${r.hostLabel}: ${signedPct(r.pct)}`}
+                  />
+                </span>
+              </div>
             </div>
-            <div className="shrink-0 text-right">
-              <p className={`num text-2xl font-semibold tabular-nums tracking-tight ${accent}`}>
-                {signedPct(r.pct)}
-              </p>
-              <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                {r.inputPrev != null ? usd(r.inputPrev) : "—"} →{" "}
-                {r.inputNow != null ? usd(r.inputNow) : "—"} in ·{" "}
-                {r.outputPrev != null ? usd(r.outputPrev) : "—"} →{" "}
-                {r.outputNow != null ? usd(r.outputNow) : "—"} out
-              </p>
-            </div>
-          </div>
-        </Reveal>
-      ))}
+          </Reveal>
+        );
+      })}
     </ul>
   );
 }
@@ -188,84 +210,78 @@ const PILLARS = [
   },
 ] as const;
 
-function IntelligencePage() {
-  const { data } = useSuspenseQuery(intelligenceQuery());
+export function IntelligenceReport({
+  data,
+  ctx,
+  hero,
+}: {
+  data: IntelligencePayload;
+  ctx: ReportContext;
+  hero: React.ReactNode;
+}) {
   return (
-    <MarketingShell>
-      <Hero data={data} />
-      <PriceMoves data={data} />
-      <MarketStructure data={data} />
-      <QualityPerDollar data={data} />
+    <>
+      {hero}
+      <PriceMoves data={data} ctx={ctx} />
+      <MarketStructure data={data} ctx={ctx} />
+      <QualityPerDollar data={data} ctx={ctx} />
+      <Archive ctx={ctx} />
       <Method />
-    </MarketingShell>
+    </>
   );
 }
 
-function Hero({ data }: { data: IntelligencePayload }) {
+export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   return (
-    <section className="wash-hero px-5 pb-20 pt-24 sm:px-8 sm:pb-24 sm:pt-36">
-      <div className="mx-auto max-w-6xl">
-        <Reveal className="max-w-4xl">
-          <p className="eyebrow">Intelligence</p>
-          <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-7xl">
-            The market moves.
-            <br />
-            We <span className="text-gradient-brand">prove</span> by how much.
-          </h1>
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-            Every number on this page is computed from the same live catalog and the same measured
-            benchmark instruments the switching engine runs on. Nothing here is estimated.
-          </p>
-        </Reveal>
-
-        <Reveal delay={120} className="mt-20 grid gap-14 sm:grid-cols-3 sm:gap-8">
-          <Figure
-            size="xl"
-            value={data.liveModels}
-            label="Models tracked"
-            sub="Active entries in the live catalog."
-          />
-          <Figure
-            size="xl"
-            value={data.liveHosts}
-            label="Providers tracked"
-            sub="Distinct hosts with at least one live price."
-          />
-          <Figure
-            size="xl"
-            value={data.changesTotal}
-            label={`Price moves in ${data.monthLabel}`}
-            sub={`${data.increases} up · ${data.decreases} down. ${data.newListings} new listings are counted separately.`}
-          />
-        </Reveal>
-
-        <Reveal delay={200}>
-          <p className="mt-14 max-w-2xl text-xs leading-relaxed text-muted-foreground/80">
-            Tracking prices since {dateLabel(data.trackingSince)}. Month-to-date figures cover{" "}
-            {data.monthLabel} (UTC).
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center gap-5">
-            <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
-              Start free
-            </Link>
-            <a
-              href={BOOK_DEMO_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-70"
-            >
-              Book a Demo
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-        </Reveal>
-      </div>
-    </section>
+    <Reveal delay={120} className="mt-20 grid gap-14 sm:grid-cols-3 sm:gap-8">
+      <Figure
+        size="xl"
+        value={data.liveModels}
+        label="Models tracked"
+        sub="Active entries in the live catalog."
+        cardId="kpi-models"
+        ctx={ctx}
+      />
+      <Figure
+        size="xl"
+        value={data.liveHosts}
+        label="Providers tracked"
+        sub="Distinct hosts with at least one live price."
+        cardId="kpi-providers"
+        ctx={ctx}
+      />
+      <Figure
+        size="xl"
+        value={data.changesTotal}
+        label={`Price moves in ${data.monthLabel}`}
+        sub={`${data.increases} up · ${data.decreases} down. ${data.newListings} new listings are counted separately.`}
+        cardId="kpi-moves"
+        ctx={ctx}
+      />
+    </Reveal>
   );
 }
 
-function PriceMoves({ data }: { data: IntelligencePayload }) {
+export function HeroCta() {
+  return (
+    <div className="mt-8 flex flex-wrap items-center gap-5">
+      <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
+        Start free
+      </Link>
+      <a
+        href={BOOK_DEMO_URL}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-70"
+      >
+        Book a Demo
+        <ArrowRight className="h-4 w-4" />
+      </a>
+    </div>
+  );
+}
+
+function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const maxChanges = Math.max(1, ...data.repricers.map((r) => r.changes));
   return (
     <section className="px-5 py-24 sm:px-8 sm:py-28">
@@ -289,13 +305,29 @@ function PriceMoves({ data }: { data: IntelligencePayload }) {
             value={data.changesTotal}
             label="Total moves"
             sub="Increases plus decreases. New listings are not folded in."
+            cardId="kpi-moves-total"
+            ctx={ctx}
           />
-          <Figure value={data.increases} label="Increases" tone="up" />
-          <Figure value={data.decreases} label="Decreases" tone="down" />
+          <Figure
+            value={data.increases}
+            label="Increases"
+            tone="up"
+            cardId="kpi-increases"
+            ctx={ctx}
+          />
+          <Figure
+            value={data.decreases}
+            label="Decreases"
+            tone="down"
+            cardId="kpi-decreases"
+            ctx={ctx}
+          />
           <Figure
             value={data.newModels}
             label="New models"
             sub={`First seen in ${data.monthLabel}.`}
+            cardId="kpi-new-models"
+            ctx={ctx}
           />
         </Reveal>
 
@@ -307,7 +339,7 @@ function PriceMoves({ data }: { data: IntelligencePayload }) {
                 Top 5 increases
               </h3>
             </Reveal>
-            <MoveList rows={data.topIncreases} direction="up" />
+            <MoveList rows={data.topIncreases} direction="up" ctx={ctx} />
           </div>
           <div>
             <Reveal>
@@ -316,7 +348,7 @@ function PriceMoves({ data }: { data: IntelligencePayload }) {
                 Top 5 decreases
               </h3>
             </Reveal>
-            <MoveList rows={data.topDecreases} direction="down" />
+            <MoveList rows={data.topDecreases} direction="down" ctx={ctx} />
           </div>
         </div>
 
@@ -334,7 +366,10 @@ function PriceMoves({ data }: { data: IntelligencePayload }) {
             <ul className="mt-8 divide-y divide-border/60 border-t border-border/60">
               {data.repricers.map((r, i) => (
                 <Reveal as="li" key={r.host} delay={i * 60}>
-                  <div className="flex items-center gap-6 py-5">
+                  <div
+                    id={repricerCardId(r.host)}
+                    className="group flex items-center gap-6 py-5 scroll-mt-28"
+                  >
                     <span className="num w-6 shrink-0 text-xs tabular-nums text-muted-foreground/70">
                       {i + 1}
                     </span>
@@ -353,6 +388,13 @@ function PriceMoves({ data }: { data: IntelligencePayload }) {
                         moves · {r.models} model{r.models === 1 ? "" : "s"}
                       </span>
                     </span>
+                    <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                      <ShareCardButton
+                        cardId={repricerCardId(r.host)}
+                        month={ctx.citableMonth}
+                        title={`${r.hostLabel}: ${r.changes} price moves`}
+                      />
+                    </span>
                   </div>
                 </Reveal>
               ))}
@@ -364,7 +406,7 @@ function PriceMoves({ data }: { data: IntelligencePayload }) {
   );
 }
 
-function MarketStructure({ data }: { data: IntelligencePayload }) {
+function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const maxSpread = Math.max(1, ...data.spreads.map((s) => s.spreadPct));
   return (
     <section className="border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
@@ -375,7 +417,12 @@ function MarketStructure({ data }: { data: IntelligencePayload }) {
         </SectionHead>
 
         <Reveal delay={100} className="mt-16 grid gap-12 sm:grid-cols-3 sm:gap-8">
-          <Figure value={data.multiHostModels} label="Models on 2+ providers" />
+          <Figure
+            value={data.multiHostModels}
+            label="Models on 2+ providers"
+            cardId="kpi-multi-host"
+            ctx={ctx}
+          />
           <Figure value={data.medianHostsPerModel} label="Median providers per model" />
           <Figure value={data.maxHostsPerModel} label="Most providers on one model" />
         </Reveal>
@@ -390,7 +437,10 @@ function MarketStructure({ data }: { data: IntelligencePayload }) {
           <ul className="mt-20 divide-y divide-border/60 border-t border-border/60">
             {data.spreads.map((s, i) => (
               <Reveal as="li" key={s.modelKey} delay={i * 60}>
-                <div className="grid gap-4 py-7 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-10">
+                <div
+                  id={spreadCardId(s.modelKey)}
+                  className="group grid gap-4 py-7 scroll-mt-28 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-10"
+                >
                   <div className="min-w-0">
                     <p className="truncate text-base font-medium tracking-tight">{s.displayName}</p>
                     <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
@@ -415,13 +465,22 @@ function MarketStructure({ data }: { data: IntelligencePayload }) {
                       {s.hosts === 1 ? "" : "s"}
                     </p>
                   </div>
-                  <div className="text-left sm:text-right">
-                    <span className="num text-4xl font-semibold tabular-nums tracking-[-0.04em] sm:text-5xl">
-                      +{Math.round(s.spreadPct)}%
+                  <div className="flex items-center gap-3 sm:justify-end">
+                    <div className="text-left sm:text-right">
+                      <span className="num text-4xl font-semibold tabular-nums tracking-[-0.04em] sm:text-5xl">
+                        +{Math.round(s.spreadPct)}%
+                      </span>
+                      <p className="mt-1 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                        spread
+                      </p>
+                    </div>
+                    <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                      <ShareCardButton
+                        cardId={spreadCardId(s.modelKey)}
+                        month={ctx.citableMonth}
+                        title={`${s.displayName}: +${Math.round(s.spreadPct)}% provider spread`}
+                      />
                     </span>
-                    <p className="mt-1 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                      spread
-                    </p>
                   </div>
                 </div>
               </Reveal>
@@ -443,7 +502,7 @@ function MarketStructure({ data }: { data: IntelligencePayload }) {
   );
 }
 
-function QualityPerDollar({ data }: { data: IntelligencePayload }) {
+function QualityPerDollar({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   if (data.bandWinners.length === 0) return null;
   return (
     <section className="border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
@@ -460,7 +519,10 @@ function QualityPerDollar({ data }: { data: IntelligencePayload }) {
         <ul className="mt-16 divide-y divide-border/60 border-t border-border/60">
           {data.bandWinners.map((w, i) => (
             <Reveal as="li" key={w.taskClass} delay={i * 80}>
-              <div className="grid gap-6 py-9 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-12">
+              <div
+                id={bandCardId(w.taskClass)}
+                className="group grid gap-6 py-9 scroll-mt-28 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-12"
+              >
                 <div className="min-w-0">
                   <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                     {w.taskClass}
@@ -474,13 +536,22 @@ function QualityPerDollar({ data }: { data: IntelligencePayload }) {
                   </p>
                   <BandDiagram winner={w} />
                 </div>
-                <div className="sm:text-right">
-                  <span className="num text-5xl font-semibold tabular-nums tracking-[-0.045em] text-saving sm:text-6xl">
-                    {usd(w.pricePerMtok)}
+                <div className="flex items-center gap-3 sm:justify-end">
+                  <div className="sm:text-right">
+                    <span className="num text-5xl font-semibold tabular-nums tracking-[-0.045em] text-saving sm:text-6xl">
+                      {usd(w.pricePerMtok)}
+                    </span>
+                    <p className="mt-2 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                      per MTok in
+                    </p>
+                  </div>
+                  <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                    <ShareCardButton
+                      cardId={bandCardId(w.taskClass)}
+                      month={ctx.citableMonth}
+                      title={`${w.taskClass}: ${w.displayName} clears the band at ${usd(w.pricePerMtok)}/MTok`}
+                    />
                   </span>
-                  <p className="mt-2 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                    per MTok in
-                  </p>
                 </div>
               </div>
             </Reveal>
@@ -516,6 +587,55 @@ function QualityPerDollar({ data }: { data: IntelligencePayload }) {
               ))}
             </ul>
           </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function Archive({ ctx }: { ctx: ReportContext }) {
+  return (
+    <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-28">
+      <div className="mx-auto max-w-6xl">
+        <SectionHead eyebrow="Archive" title="Every closed month, frozen and permanently linkable">
+          At 00:00 UTC on the first of each month we write that month&apos;s final figures once and
+          never touch them again. A correction is filed as a new restatement row that points back at
+          the original — the number you cited stays exactly as you cited it.
+        </SectionHead>
+        {ctx.archive.length === 0 ? (
+          <p className="mt-10 text-sm text-muted-foreground">
+            No month has closed since we began recording. The first archive page appears at the next
+            month boundary.
+          </p>
+        ) : (
+          <ul className="mt-10 flex flex-wrap gap-3">
+            {ctx.archive.map((a) => (
+              <li key={a.month}>
+                <Link
+                  to="/intelligence/$month"
+                  params={{ month: a.month }}
+                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm transition-colors ${
+                    ctx.frozenMonth === a.month
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border/70 hover:border-foreground/40"
+                  }`}
+                >
+                  {a.month}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        {ctx.frozenMonth ? (
+          <Reveal>
+            <Link
+              to="/intelligence"
+              className="mt-10 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-opacity hover:opacity-70"
+            >
+              See the live, still-moving month
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Reveal>
         ) : null}
       </div>
     </section>
