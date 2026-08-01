@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Gauge, Layers, LineChart, Lock, PlugZap, Settings, ShieldCheck } from "lucide-react";
+import { BadgeCheck, CreditCard, Gauge, Layers, LineChart, Lock, PlugZap, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { RangeToggle, LocalTime, Metric } from "@/components/dashboard/primitives";
 import { SpendChart } from "@/components/dashboard/SpendChart";
