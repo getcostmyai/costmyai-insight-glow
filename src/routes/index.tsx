@@ -568,33 +568,46 @@ function Faq({ stats }: { stats: MarketingStats }) {
     <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
-        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <div className="mx-auto mt-20 max-w-3xl">
           {items.map((item, i) => {
             const isOpen = open === i;
             return (
-              <div key={item.q}>
+              <Reveal key={item.q} delay={i * 70} className="border-t border-border">
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? -1 : i)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center gap-4 px-6 py-5 text-left"
+                  className="group flex w-full items-start gap-6 py-7 text-left"
                 >
-                  <span className="flex-1 font-semibold tracking-tight">{item.q}</span>
+                  <span className="num shrink-0 pt-1.5 text-[11px] tracking-[0.18em] text-primary">
+                    {`0${i + 1}`}
+                  </span>
+                  <span className="flex-1 text-lg font-semibold tracking-[-0.03em] transition-colors group-hover:text-primary sm:text-xl">
+                    {item.q}
+                  </span>
                   <ChevronDown
-                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`mt-1.5 h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180 text-primary" : ""}`}
                   />
                 </button>
-                {isOpen ? (
-                  <p className="px-6 pb-6 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
-                ) : null}
-              </div>
+                <div
+                  className={`grid transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <p className="overflow-hidden pb-7 pl-[3.1rem] pr-10 text-base leading-relaxed text-muted-foreground">
+                    {item.a}
+                  </p>
+                </div>
+              </Reveal>
             );
           })}
-        </Reveal>
+          <div className="border-t border-border" />
+        </div>
       </div>
     </section>
   );
 }
+
 
 /* ----------------------------- 11 · closing ------------------------------ */
 
