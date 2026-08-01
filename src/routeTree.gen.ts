@@ -33,6 +33,11 @@ import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
+import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
+import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
+import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_authenticated/workspace.certify'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
@@ -160,6 +165,36 @@ const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWorkspaceIndexRoute =
+  AuthenticatedWorkspaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceRightsizeRoute =
+  AuthenticatedWorkspaceRightsizeRouteImport.update({
+    id: '/rightsize',
+    path: '/rightsize',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceGovernRoute =
+  AuthenticatedWorkspaceGovernRouteImport.update({
+    id: '/govern',
+    path: '/govern',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceCompareRoute =
+  AuthenticatedWorkspaceCompareRouteImport.update({
+    id: '/compare',
+    path: '/compare',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedWorkspaceCertifyRoute =
+  AuthenticatedWorkspaceCertifyRouteImport.update({
+    id: '/certify',
+    path: '/certify',
+    getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
 const AuthenticatedAdminPartnerApplicationsRoute =
   AuthenticatedAdminPartnerApplicationsRouteImport.update({
     id: '/admin/partner-applications',
@@ -211,7 +246,7 @@ export interface FileRoutesByFullPath {
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
-  '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
@@ -223,6 +258,11 @@ export interface FileRoutesByFullPath {
   '/partners/apply': typeof PartnersApplyRoute
   '/demo/': typeof DemoIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
+  '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
+  '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
+  '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
+  '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -242,7 +282,6 @@ export interface FileRoutesByTo {
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
-  '/workspace': typeof AuthenticatedWorkspaceRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
@@ -254,6 +293,11 @@ export interface FileRoutesByTo {
   '/partners/apply': typeof PartnersApplyRoute
   '/demo': typeof DemoIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
+  '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
+  '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
+  '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
+  '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -276,7 +320,7 @@ export interface FileRoutesById {
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
-  '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
+  '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
@@ -288,6 +332,11 @@ export interface FileRoutesById {
   '/partners_/apply': typeof PartnersApplyRoute
   '/demo/': typeof DemoIndexRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
+  '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
+  '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
+  '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
+  '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -322,6 +371,11 @@ export interface FileRouteTypes {
     | '/partners/apply'
     | '/demo/'
     | '/admin/partner-applications'
+    | '/workspace/certify'
+    | '/workspace/compare'
+    | '/workspace/govern'
+    | '/workspace/rightsize'
+    | '/workspace/'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -341,7 +395,6 @@ export interface FileRouteTypes {
     | '/partner'
     | '/settings'
     | '/team'
-    | '/workspace'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
@@ -353,6 +406,11 @@ export interface FileRouteTypes {
     | '/partners/apply'
     | '/demo'
     | '/admin/partner-applications'
+    | '/workspace/certify'
+    | '/workspace/compare'
+    | '/workspace/govern'
+    | '/workspace/rightsize'
+    | '/workspace'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -386,6 +444,11 @@ export interface FileRouteTypes {
     | '/partners_/apply'
     | '/demo/'
     | '/_authenticated/admin/partner-applications'
+    | '/_authenticated/workspace/certify'
+    | '/_authenticated/workspace/compare'
+    | '/_authenticated/workspace/govern'
+    | '/_authenticated/workspace/rightsize'
+    | '/_authenticated/workspace/'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/prices'
@@ -586,6 +649,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/workspace/': {
+      id: '/_authenticated/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/rightsize': {
+      id: '/_authenticated/workspace/rightsize'
+      path: '/rightsize'
+      fullPath: '/workspace/rightsize'
+      preLoaderRoute: typeof AuthenticatedWorkspaceRightsizeRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/govern': {
+      id: '/_authenticated/workspace/govern'
+      path: '/govern'
+      fullPath: '/workspace/govern'
+      preLoaderRoute: typeof AuthenticatedWorkspaceGovernRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/compare': {
+      id: '/_authenticated/workspace/compare'
+      path: '/compare'
+      fullPath: '/workspace/compare'
+      preLoaderRoute: typeof AuthenticatedWorkspaceCompareRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/workspace/certify': {
+      id: '/_authenticated/workspace/certify'
+      path: '/certify'
+      fullPath: '/workspace/certify'
+      preLoaderRoute: typeof AuthenticatedWorkspaceCertifyRouteImport
+      parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
     '/_authenticated/admin/partner-applications': {
       id: '/_authenticated/admin/partner-applications'
       path: '/admin/partner-applications'
@@ -638,12 +736,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedWorkspaceRouteChildren {
+  AuthenticatedWorkspaceCertifyRoute: typeof AuthenticatedWorkspaceCertifyRoute
+  AuthenticatedWorkspaceCompareRoute: typeof AuthenticatedWorkspaceCompareRoute
+  AuthenticatedWorkspaceGovernRoute: typeof AuthenticatedWorkspaceGovernRoute
+  AuthenticatedWorkspaceRightsizeRoute: typeof AuthenticatedWorkspaceRightsizeRoute
+  AuthenticatedWorkspaceIndexRoute: typeof AuthenticatedWorkspaceIndexRoute
+}
+
+const AuthenticatedWorkspaceRouteChildren: AuthenticatedWorkspaceRouteChildren =
+  {
+    AuthenticatedWorkspaceCertifyRoute: AuthenticatedWorkspaceCertifyRoute,
+    AuthenticatedWorkspaceCompareRoute: AuthenticatedWorkspaceCompareRoute,
+    AuthenticatedWorkspaceGovernRoute: AuthenticatedWorkspaceGovernRoute,
+    AuthenticatedWorkspaceRightsizeRoute: AuthenticatedWorkspaceRightsizeRoute,
+    AuthenticatedWorkspaceIndexRoute: AuthenticatedWorkspaceIndexRoute,
+  }
+
+const AuthenticatedWorkspaceRouteWithChildren =
+  AuthenticatedWorkspaceRoute._addFileChildren(
+    AuthenticatedWorkspaceRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
-  AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
+  AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
 }
 
@@ -652,7 +772,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
-  AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
+  AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRouteWithChildren,
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
 }
