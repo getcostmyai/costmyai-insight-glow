@@ -1,0 +1,3 @@
+update public.organizations set plan = 'rightsize' where id = '5e7ad1de-a195-4bcb-a579-d60de6c2c0ed';
+insert into public.subscriptions (org_id, plan, price_id, status, stripe_customer_id, stripe_subscription_id, environment, current_period_end)
+values ('5e7ad1de-a195-4bcb-a579-d60de6c2c0ed', 'rightsize', 'price_audit_tmp', 'active', 'cus_audit_tmp', 'sub_audit_tmp', 'sandbox', now() + interval '30 days');
