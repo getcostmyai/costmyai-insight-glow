@@ -27,7 +27,7 @@ const price = (model: string, host: string, i: number, o: number): PriceRow => (
 
 const PRICES: PriceRow[] = [
   price("openai/o1-pro", "openai", 150, 600),
-  price("openai/gpt-5.5", "azure", 2.5, 10),
+  price("openai/gpt-5.1", "azure", 2.5, 10),
   price("openai/gpt-5.4", "azure", 2, 8),
   price("openai/gpt-4", "azure", 30, 60),
   price("anthropic/claude-opus-4.5", "anthropic", 15, 75),
@@ -44,7 +44,7 @@ const priceFor = (m: string, h: string) => PRICES.find((p) => p.model_key === m 
 
 const MODELS: ModelRow[] = [
   { model_key: "openai/o1-pro", display_name: "openai/o1-pro", vendor: "openai", tier: "frontier" },
-  { model_key: "openai/gpt-5.5", display_name: "GPT-5.5", vendor: "openai", tier: "frontier" },
+  { model_key: "openai/gpt-5.1", display_name: "GPT-5.1", vendor: "openai", tier: "frontier" },
   { model_key: "openai/gpt-5.4", display_name: "GPT-5.4", vendor: "openai", tier: "frontier" },
   { model_key: "openai/gpt-4", display_name: "GPT-4", vendor: "openai", tier: "frontier" },
   { model_key: "anthropic/claude-opus-4.5", display_name: "Opus 4.5", vendor: "anthropic", tier: "frontier" },
@@ -229,9 +229,9 @@ describe("workload profiles", () => {
   });
 
   it("never marks a workload oversized when the shape genuinely needs the tier", () => {
-    const composer = profiles.find((p) => p.modelKey === "openai/gpt-5.5")!;
+    const composer = profiles.find((p) => p.modelKey === "openai/gpt-5.1")!;
     expect(composer.requiredTier).toBe("frontier");
-    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("openai/gpt-5.5");
+    expect(oversizedProfiles(profiles).map((p) => p.modelKey)).not.toContain("openai/gpt-5.1");
   });
 
   it("normalises cost to a 30-day month", () => {
@@ -294,7 +294,7 @@ describe("volume is solved against live pricing, not scaled flat", () => {
   });
 
   it("prices a request through the engine cost function, expected tokens not median", () => {
-    const w = SIZED.find((x) => x.modelKey === "openai/gpt-5.5")!;
+    const w = SIZED.find((x) => x.modelKey === "openai/gpt-5.1")!;
     const p = priceFor(w.modelKey, w.host)!;
     // Right-skewed token draws bill above the median, so the per-request cost
     // must exceed the naive median-based figure or the target is undershot.
