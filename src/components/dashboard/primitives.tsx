@@ -162,8 +162,11 @@ export function LevelHero({
           <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">{headline}</h1>
           {sub ? <p className="mt-3 max-w-xl text-sm text-white/70">{sub}</p> : null}
           {stats ? (
-            <div className="mt-8 grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">{stats}</div>
+            <div className="mt-8 grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">
+              {stats}
+            </div>
           ) : null}
+
           {children}
         </div>
         {aside ? <div className="lg:pl-6">{aside}</div> : null}
