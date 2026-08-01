@@ -277,3 +277,19 @@ describe("connection state", () => {
     expect(planBillingPoll(next, NOW).isFirstPoll).toBe(false);
   });
 });
+
+describe("billing poll cadence", () => {
+  it("polls once per hour, globally, and fails CI if that drifts", async () => {
+    const { BILLING_POLL_INTERVAL_MS } = await import("@/lib/ingest/contract");
+    expect(BILLING_POLL_INTERVAL_MS).toBe(60 * 60 * 1000);
+    expect(BILLING_POLL_INTERVAL_MS).toBe(3_600_000);
+  });
+
+  it("keeps the cadence global — no per-provider override exists", async () => {
+    const contract = await import("@/lib/ingest/contract");
+    const perProvider = Object.keys(contract).filter(
+      (k) => /POLL/i.test(k) && k !== "BILLING_POLL_INTERVAL_MS",
+    );
+    expect(perProvider).toEqual([]);
+  });
+});
