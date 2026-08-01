@@ -12,9 +12,13 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import {
   ActiveSwitchesSection,
+  MechanismStats,
+  mechanismSavings,
+  mechanismSentence,
   OversizedSection,
   TopSwitchControl,
 } from "@/components/dashboard/levels/RightsizeLevel";
+
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
