@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Image as ImageIcon, Link2, Share2, Twitter } from "lucide-react";
+import { Check, Image as ImageIcon, Link2, Linkedin, Share2, Twitter } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -16,7 +16,11 @@ import {
  * A share never points at the live page. It points at the frozen month page and
  * the card's anchor there, because a citation has to keep reading the same in a
  * year. When no month has been frozen yet there is nothing honest to share, so
- * the control says so instead of linking to a number that will move.
+ * the control is disabled instead of linking to a number that will move.
+ *
+ * Each platform gets its real share-intent URL, carrying the frozen anchor. The
+ * crawlers then pull the OG image the same frozen month renders, so the preview
+ * and the page can never disagree.
  */
 export function ShareCardButton({
   cardId,
@@ -35,6 +39,7 @@ export function ShareCardButton({
   if (!month) {
     return (
       <span
+        aria-disabled="true"
         className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/30 ${className}`}
         title="Shareable once this month closes and its figures are frozen"
       >
@@ -46,7 +51,9 @@ export function ShareCardButton({
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const url = `${origin}/intelligence/${month}#${cardId}`;
   const image = `${origin}/api/public/og/intelligence/${month}?card=${encodeURIComponent(cardId)}`;
-  const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+  const enc = encodeURIComponent(url);
+  const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`;
+  const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${enc}`;
 
   return (
     <DropdownMenu>
@@ -61,6 +68,18 @@ export function ShareCardButton({
           Links to the frozen {month} figure — this number can never move.
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <a href={linkedin} target="_blank" rel="noreferrer noopener">
+            <Linkedin className="mr-2 h-4 w-4" />
+            Share on LinkedIn
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={tweet} target="_blank" rel="noreferrer noopener">
+            <Twitter className="mr-2 h-4 w-4" />
+            Share on X
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();
@@ -73,12 +92,7 @@ export function ShareCardButton({
           <Link2 className="mr-2 h-4 w-4" />
           {copied ? "Link copied" : "Copy permanent link"}
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <a href={tweet} target="_blank" rel="noreferrer noopener">
-            <Twitter className="mr-2 h-4 w-4" />
-            Share on X
-          </a>
-        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <a href={image} target="_blank" rel="noreferrer noopener">
             <ImageIcon className="mr-2 h-4 w-4" />
