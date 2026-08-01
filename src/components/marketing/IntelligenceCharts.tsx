@@ -104,12 +104,13 @@ export function PriceMovesDonut({
                 style={{
                   background:
                     a.key === "decreases"
-                      ? "oklch(0.66 0.15 160)"
+                      ? "var(--saving)"
                       : a.key === "increases"
-                        ? "oklch(0.62 0.19 24)"
-                        : "oklch(0.64 0.16 293)",
+                        ? "var(--destructive)"
+                        : "var(--primary)",
                 }}
               />
+
               {a.label}
             </span>
             <span className="num text-2xl font-semibold tabular-nums tracking-tight">{a.value}</span>
