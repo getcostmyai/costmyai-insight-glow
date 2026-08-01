@@ -15,6 +15,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -74,6 +75,11 @@ const IntelligenceRoute = IntelligenceRouteImport.update({
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -236,6 +242,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRoute
   '/demo': typeof DemoRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRoute
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
@@ -310,6 +318,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRoute
   '/demo': typeof DemoRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
@@ -349,6 +358,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/blog'
     | '/demo'
     | '/intelligence'
     | '/models'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/blog'
     | '/intelligence'
     | '/models'
     | '/partners'
@@ -422,6 +433,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/blog'
     | '/demo'
     | '/intelligence'
     | '/models'
@@ -461,6 +473,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRoute
   DemoRoute: typeof DemoRouteWithChildren
   IntelligenceRoute: typeof IntelligenceRoute
   ModelsRoute: typeof ModelsRoute
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -804,6 +824,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRoute,
   DemoRoute: DemoRouteWithChildren,
   IntelligenceRoute: IntelligenceRoute,
   ModelsRoute: ModelsRoute,
