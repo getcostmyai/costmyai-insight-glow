@@ -307,6 +307,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const byWorkload = new Map<string, UsageAggregate>();
 
   const split = partitionRollups(rollups.data ?? [], w);
+
   for (const r of split.previous) addTo(previous, r);
 
   for (const r of split.current) {
