@@ -55,6 +55,7 @@ function HomePage() {
       <ProviderMarquee stats={stats} />
 
       <Estimator />
+      <Forecast />
       <HowItWorks />
       <Architecture />
       <BuiltFor />
