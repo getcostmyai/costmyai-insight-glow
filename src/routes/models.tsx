@@ -124,6 +124,17 @@ function Hero({ data }: { data: CatalogPayload }) {
             accent
           />
         </div>
+
+        <Reveal
+          delay={320}
+          as="p"
+          className="mx-auto mt-10 max-w-2xl text-xs leading-relaxed text-muted-foreground"
+        >
+          A <span className="text-foreground">model maker</span> trains the weights. A{" "}
+          <span className="text-foreground">serving provider</span> sells access to them. One model
+          can be sold by many providers at different prices — that gap is the arbitrage.
+        </Reveal>
+
       </div>
     </section>
   );
