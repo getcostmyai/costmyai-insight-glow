@@ -193,10 +193,21 @@ export function summarizeMoves(
   };
 }
 
-export async function readIntelligence(): Promise<IntelligencePayload> {
+/**
+ * Compute the read model.
+ *
+ * `monthStartOverride` freezes the reporting window to one specific month —
+ * that is how a closed month is snapshotted at month-end and how a restatement
+ * recomputes the same window later. Without it the window is the open month.
+ */
+export async function readIntelligence(monthStartOverride?: Date): Promise<IntelligencePayload> {
   const supabase = createPublicServerClient();
   const now = new Date();
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const monthStart =
+    monthStartOverride ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const monthEnd = new Date(
+    Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1),
+  );
 
   const [modelsRes, pricesRes, historyRes, oldestRes, benchRes, marginRes] = await Promise.all([
     supabase
@@ -214,7 +225,9 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
         "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, observed_at",
       )
       .gte("observed_at", monthStart.toISOString())
+      .lt("observed_at", monthEnd.toISOString())
       .limit(MAX_CATALOG_ROWS),
+
     supabase
       .from("price_history")
       .select("observed_at")
@@ -371,7 +384,11 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
     decreases: decreases.length,
     newListings,
     // Genuinely new models only — a backfilled catalogue reads 0 here until one lands.
-    newModels: models.filter((m) => new Date(m.first_seen_at) >= monthStart).length,
+    newModels: models.filter((m) => {
+      const t = new Date(m.first_seen_at);
+      return t >= monthStart && t < monthEnd;
+    }).length,
+
     topIncreases: [...increases].sort((a, b) => b.pct - a.pct).slice(0, 5),
     topDecreases: [...decreases].sort((a, b) => a.pct - b.pct).slice(0, 5),
     repricers,

@@ -13,17 +13,18 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
-import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
+import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
 import { Route as DemoRightsizeRouteImport } from './routes/demo.rightsize'
 import { Route as DemoOverviewRouteImport } from './routes/demo.overview'
 import { Route as DemoGovernRouteImport } from './routes/demo.govern'
@@ -44,8 +45,10 @@ import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/ev
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
+import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -65,11 +68,6 @@ const PartnersRoute = PartnersRouteImport.update({
 const ModelsRoute = ModelsRouteImport.update({
   id: '/models',
   path: '/models',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntelligenceRoute = IntelligenceRouteImport.update({
-  id: '/intelligence',
-  path: '/intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -96,6 +94,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntelligenceIndexRoute = IntelligenceIndexRouteImport.update({
+  id: '/intelligence/',
+  path: '/intelligence/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -119,6 +122,11 @@ const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
 const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
   id: '/legal/methodology',
   path: '/legal/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceMonthRoute = IntelligenceMonthRouteImport.update({
+  id: '/intelligence/$month',
+  path: '/intelligence/$month',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRightsizeRoute = DemoRightsizeRouteImport.update({
@@ -227,6 +235,11 @@ const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   path: '/api/public/sync/prices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncFreezeRoute = ApiPublicSyncFreezeRouteImport.update({
+  id: '/api/public/sync/freeze',
+  path: '/api/public/sync/freeze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
   id: '/api/public/sync/benchmarks',
   path: '/api/public/sync/benchmarks',
@@ -238,13 +251,18 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOgIntelligenceMonthRoute =
+  ApiPublicOgIntelligenceMonthRouteImport.update({
+    id: '/api/public/og/intelligence/$month',
+    path: '/api/public/og/intelligence/$month',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
   '/demo': typeof DemoRouteWithChildren
-  '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -259,11 +277,13 @@ export interface FileRoutesByFullPath {
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
+  '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/demo/': typeof DemoIndexRoute
+  '/intelligence/': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
@@ -272,16 +292,17 @@ export interface FileRoutesByFullPath {
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
+  '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
-  '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -295,11 +316,13 @@ export interface FileRoutesByTo {
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
+  '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/demo': typeof DemoIndexRoute
+  '/intelligence': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
@@ -308,10 +331,12 @@ export interface FileRoutesByTo {
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
+  '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -320,7 +345,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
   '/demo': typeof DemoRouteWithChildren
-  '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -335,11 +359,13 @@ export interface FileRoutesById {
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
+  '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners_/apply': typeof PartnersApplyRoute
   '/demo/': typeof DemoIndexRoute
+  '/intelligence/': typeof IntelligenceIndexRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
@@ -348,10 +374,12 @@ export interface FileRoutesById {
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
+  '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
+  '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -360,7 +388,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/demo'
-    | '/intelligence'
     | '/models'
     | '/partners'
     | '/pricing'
@@ -375,11 +402,13 @@ export interface FileRouteTypes {
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
+    | '/intelligence/$month'
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners/apply'
     | '/demo/'
+    | '/intelligence/'
     | '/admin/partner-applications'
     | '/workspace/certify'
     | '/workspace/compare'
@@ -388,16 +417,17 @@ export interface FileRouteTypes {
     | '/workspace/'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
+    | '/api/public/sync/freeze'
     | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
+    | '/api/public/og/intelligence/$month'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/blog'
-    | '/intelligence'
     | '/models'
     | '/partners'
     | '/pricing'
@@ -411,11 +441,13 @@ export interface FileRouteTypes {
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
+    | '/intelligence/$month'
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners/apply'
     | '/demo'
+    | '/intelligence'
     | '/admin/partner-applications'
     | '/workspace/certify'
     | '/workspace/compare'
@@ -424,10 +456,12 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
+    | '/api/public/sync/freeze'
     | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
+    | '/api/public/og/intelligence/$month'
   id:
     | '__root__'
     | '/'
@@ -435,7 +469,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/demo'
-    | '/intelligence'
     | '/models'
     | '/partners'
     | '/pricing'
@@ -450,11 +483,13 @@ export interface FileRouteTypes {
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
+    | '/intelligence/$month'
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners_/apply'
     | '/demo/'
+    | '/intelligence/'
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/workspace/certify'
     | '/_authenticated/workspace/compare'
@@ -463,10 +498,12 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
+    | '/api/public/sync/freeze'
     | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
+    | '/api/public/og/intelligence/$month'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -475,21 +512,24 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRoute
   DemoRoute: typeof DemoRouteWithChildren
-  IntelligenceRoute: typeof IntelligenceRoute
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
+  IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
+  ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
+  ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -520,13 +560,6 @@ declare module '@tanstack/react-router' {
       path: '/models'
       fullPath: '/models'
       preLoaderRoute: typeof ModelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/intelligence': {
-      id: '/intelligence'
-      path: '/intelligence'
-      fullPath: '/intelligence'
-      preLoaderRoute: typeof IntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -564,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/intelligence/': {
+      id: '/intelligence/'
+      path: '/intelligence'
+      fullPath: '/intelligence/'
+      preLoaderRoute: typeof IntelligenceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/': {
       id: '/demo/'
       path: '/'
@@ -597,6 +637,13 @@ declare module '@tanstack/react-router' {
       path: '/legal/methodology'
       fullPath: '/legal/methodology'
       preLoaderRoute: typeof LegalMethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence/$month': {
+      id: '/intelligence/$month'
+      path: '/intelligence/$month'
+      fullPath: '/intelligence/$month'
+      preLoaderRoute: typeof IntelligenceMonthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/rightsize': {
@@ -739,6 +786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/freeze': {
+      id: '/api/public/sync/freeze'
+      path: '/api/public/sync/freeze'
+      fullPath: '/api/public/sync/freeze'
+      preLoaderRoute: typeof ApiPublicSyncFreezeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/benchmarks': {
       id: '/api/public/sync/benchmarks'
       path: '/api/public/sync/benchmarks'
@@ -751,6 +805,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/payments/webhook'
       fullPath: '/api/public/payments/webhook'
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/og/intelligence/$month': {
+      id: '/api/public/og/intelligence/$month'
+      path: '/api/public/og/intelligence/$month'
+      fullPath: '/api/public/og/intelligence/$month'
+      preLoaderRoute: typeof ApiPublicOgIntelligenceMonthRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -826,21 +887,24 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BlogRoute: BlogRoute,
   DemoRoute: DemoRouteWithChildren,
-  IntelligenceRoute: IntelligenceRoute,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   PartnersApplyRoute: PartnersApplyRoute,
+  IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
+  ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
+  ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

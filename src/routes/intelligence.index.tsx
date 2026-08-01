@@ -1,0 +1,81 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+
+import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { Reveal } from "@/components/marketing/Reveal";
+import {
+  HeroCta,
+  HeroFigures,
+  IntelligenceReport,
+  type ReportContext,
+} from "@/components/marketing/IntelligenceReport";
+import { intelligenceQuery } from "@/lib/intelligence.functions";
+
+/**
+ * The live page. It recomputes on every request for the still-open month —
+ * Phase 3 did not change that. What it adds is a citation target: every share
+ * control points at the newest frozen month, never at these moving numbers.
+ */
+export const Route = createFileRoute("/intelligence/")({
+  head: () => ({
+    meta: [
+      { title: "Intelligence — live AI price and quality market data | CostMyAI" },
+      {
+        name: "description",
+        content:
+          "Live market intelligence on the AI model economy: models and providers tracked, price moves this month, multi-provider price spreads and the cheapest model clearing each measured quality band.",
+      },
+      { property: "og:title", content: "Intelligence — the live AI price and quality market" },
+      {
+        property: "og:description",
+        content:
+          "Price moves this month, provider-to-provider spreads on identical weights, and quality-per-dollar winners inside measured benchmark margins.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "/intelligence" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "/intelligence" }],
+  }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(intelligenceQuery()),
+  component: IntelligencePage,
+});
+
+function IntelligencePage() {
+  const { data: live } = useSuspenseQuery(intelligenceQuery());
+  const ctx: ReportContext = {
+    frozenMonth: null,
+    citableMonth: live.citableMonth,
+    archive: live.archive,
+  };
+
+  return (
+    <MarketingShell>
+      <IntelligenceReport
+        data={live.data}
+        ctx={ctx}
+        hero={
+          <section className="wash-hero px-5 pb-20 pt-24 sm:px-8 sm:pb-24 sm:pt-36">
+            <div className="mx-auto max-w-6xl">
+              <Reveal className="max-w-4xl">
+                <p className="eyebrow">Intelligence</p>
+                <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-7xl">
+                  The market moves.
+                  <br />
+                  We <span className="text-gradient-brand">prove</span> by how much.
+                </h1>
+                <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+                  Every number on this page is computed from the same live catalog and the same
+                  measured benchmark instruments the switching engine runs on. Nothing here is
+                  estimated.
+                </p>
+                <HeroCta />
+              </Reveal>
+              <HeroFigures data={live.data} ctx={ctx} />
+            </div>
+          </section>
+        }
+      />
+    </MarketingShell>
+  );
+}

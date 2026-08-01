@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const SHELL = readFileSync("src/components/marketing/MarketingShell.tsx", "utf8");
-const INTELLIGENCE = readFileSync("src/routes/intelligence.tsx", "utf8");
+const INTELLIGENCE = readFileSync("src/routes/intelligence.index.tsx", "utf8");
 const PARTNERS = readFileSync("src/routes/partners.tsx", "utf8");
 
 describe("marketing nav", () => {

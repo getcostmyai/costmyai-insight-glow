@@ -555,6 +555,44 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_kpi_snapshot: {
+        Row: {
+          frozen_at: string
+          id: string
+          month: string
+          note: string | null
+          payload: Json
+          superseded_at: string | null
+          supersedes_id: string | null
+        }
+        Insert: {
+          frozen_at?: string
+          id?: string
+          month: string
+          note?: string | null
+          payload: Json
+          superseded_at?: string | null
+          supersedes_id?: string | null
+        }
+        Update: {
+          frozen_at?: string
+          id?: string
+          month?: string
+          note?: string | null
+          payload?: Json
+          superseded_at?: string | null
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_kpi_snapshot_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_kpi_snapshot"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       objectives: {
         Row: {
           created_at: string
