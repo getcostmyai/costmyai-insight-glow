@@ -116,7 +116,7 @@ export const SYNTHETIC_WORKLOADS: SyntheticWorkload[] = [
     label: "Long-document analysis",
   },
   {
-    modelKey: "openai/gpt-5.5",
+    modelKey: "openai/gpt-5.1",
     host: "azure",
     taskHint: "generation",
     spendShare: 0.14,
