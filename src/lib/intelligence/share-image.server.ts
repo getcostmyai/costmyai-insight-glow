@@ -19,11 +19,16 @@ import { monthLabelOf } from "./snapshot.server";
  * pipeline to one wasm module (the rasteriser) instead of two.
  */
 
+/**
+ * Locked brand identity: indigo accent on warm white, exactly as the live page.
+ * Directional tones stay in the same light-background family — a rise is rose,
+ * a cut is green — so the poster never invents a palette of its own.
+ */
 const TONE: Record<ShareCard["tone"], string> = {
-  brand: "#A78BFA",
-  up: "#FB7185",
-  down: "#34D399",
-  neutral: "#E5E7EB",
+  brand: "#4338CA",
+  up: "#BE123C",
+  down: "#047857",
+  neutral: "#292524",
 };
 
 const esc = (s: string) =>
