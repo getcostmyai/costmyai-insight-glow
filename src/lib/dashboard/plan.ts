@@ -19,10 +19,10 @@ export interface Gated<T> {
   items: T[];
   /** Real count of findings behind the lock. Zero when unlocked. */
   lockedCount: number;
-  /** Real monthly money behind the lock. Zero when unlocked. */
-  lockedMonthly: number;
-  /** Monthly money the current plan can actually act on. */
-  unlockedMonthly: number;
+  /** Real money behind the lock, over the selected window. Zero when unlocked. */
+  lockedSaving: number;
+  /** Money the current plan can act on, over the selected window. */
+  unlockedSaving: number;
 }
 
 export function gateLevel<T>(
@@ -40,8 +40,8 @@ export function gateLevel<T>(
     unlocked,
     items: unlocked ? items : [],
     lockedCount: unlocked ? 0 : items.length,
-    lockedMonthly: unlocked ? 0 : total,
-    unlockedMonthly: unlocked ? total : 0,
+    lockedSaving: unlocked ? 0 : total,
+    unlockedSaving: unlocked ? total : 0,
   };
 }
 
