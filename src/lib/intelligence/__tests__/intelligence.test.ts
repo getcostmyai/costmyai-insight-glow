@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  bucketHostCounts,
   summarizeMoves,
   type PriceHistoryRow,
 } from "@/lib/intelligence/intelligence.server";
