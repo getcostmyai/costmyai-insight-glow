@@ -50,6 +50,7 @@ import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/syn
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -264,6 +265,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicEmbedIntelligenceWidgetRoute =
+  ApiPublicEmbedIntelligenceWidgetRouteImport.update({
+    id: '/api/public/embed/intelligence-widget',
+    path: '/api/public/embed/intelligence-widget',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOgIntelligenceMonthRoute =
   ApiPublicOgIntelligenceMonthRouteImport.update({
     id: '/api/public/og/intelligence/$month',
@@ -304,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
@@ -345,6 +353,7 @@ export interface FileRoutesByTo {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
@@ -390,6 +399,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/workspace/'
+    | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/workspace'
+    | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
@@ -520,6 +532,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
     | '/_authenticated/workspace/'
+    | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
@@ -548,6 +561,7 @@ export interface RootRouteChildren {
   LegalTermsRoute: typeof LegalTermsRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
+  ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
@@ -848,6 +862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/embed/intelligence-widget': {
+      id: '/api/public/embed/intelligence-widget'
+      path: '/api/public/embed/intelligence-widget'
+      fullPath: '/api/public/embed/intelligence-widget'
+      preLoaderRoute: typeof ApiPublicEmbedIntelligenceWidgetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/og/intelligence/$month': {
       id: '/api/public/og/intelligence/$month'
       path: '/api/public/og/intelligence/$month'
@@ -939,6 +960,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalTermsRoute: LegalTermsRoute,
   PartnersApplyRoute: PartnersApplyRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
+  ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
