@@ -1,0 +1,286 @@
+/**
+ * Month-end spend forecasting.
+ *
+ * A wrong forecast is worse than a modest one. A flat 30-day-rate extrapolation
+ * is confidently wrong on every workload shape that isn't constant: it ignores
+ * what has already actually been spent this month, it smears a retired workload
+ * across the rest of the month, and it reports a single hard number when the
+ * data does not support one.
+ *
+ * The methodology here is deliberately standard, not invented:
+ *
+ *   1. Month-to-date actual is a fixed, known baseline — never re-estimated.
+ *   2. Only the remaining days are projected, from a trailing 7-day level.
+ *   3. Day-of-week factors from the trailing 28 days, applied only when the
+ *      weekly pattern is real (max/min factor >= 1.25).
+ *   4. A least-squares trend on the deseasonalised window, damped (phi = 0.5)
+ *      and capped at +/-25%/day, so a short spike cannot compound into a month.
+ *   5. A range instead of a point estimate when dispersion is high (cv > 0.15),
+ *      width max(2 sigma, 6% of the point estimate).
+ *   6. Structural breaks: a material workload that has gone silent is dropped
+ *      from the level, and a workload that only appeared inside the trailing
+ *      window forces a range. Either way the answer stays honest rather than
+ *      confidently wrong.
+ *
+ * Everything below is pure. It takes daily per-workload spend and returns the
+ * forecast plus the reasons behind it, so the UI can state its own basis.
+ */
+
+export interface ForecastInputRow {
+  /** UTC calendar day, YYYY-MM-DD. */
+  date: string;
+  /** Workload identity — model|host|task. Structural breaks are per workload. */
+  key: string;
+  spend: number;
+}
+
+export interface MonthEndForecast {
+  /** Month-to-date actual, complete days only. Known, not estimated. */
+  mtdUsd: number;
+  /** Point estimate for the full calendar month. */
+  pointUsd: number;
+  /** Present only when the data does not support a single number. */
+  lowUsd: number | null;
+  highUsd: number | null;
+  isRange: boolean;
+  /** Days still to project, including today. */
+  remainingDays: number;
+  /** Trailing daily level used for the remaining days, deseasonalised. */
+  dailyLevelUsd: number;
+  /** Damped per-day trend actually applied. */
+  trendPerDayUsd: number;
+  seasonalityApplied: boolean;
+  /** Coefficient of variation of the deseasonalised trailing window. */
+  cv: number;
+  /** Workloads dropped as retired, and workloads new inside the window. */
+  retiredKeys: string[];
+  newKeys: string[];
+  /** Plain-language reasons, for the UI to show its own basis. */
+  reasons: string[];
+}
+
+export const FORECAST_RULES = {
+  /** Trailing window used as the level estimate. */
+  levelDays: 7,
+  /** Window used to learn day-of-week factors. */
+  seasonalityDays: 28,
+  /** Apply weekly factors only when the pattern is this pronounced. */
+  seasonalityMinSpread: 1.25,
+  /** Trend damping — a 7-day slope does not run unchecked for three weeks. */
+  trendDamping: 0.5,
+  /** Hard cap on the damped slope, as a share of the daily level. */
+  trendCapPerDay: 0.25,
+  /** Above this dispersion, show a range instead of a point. */
+  cvRangeThreshold: 0.15,
+  /** Range half-width multiplier on the combined sigma. */
+  rangeZ: 2.0,
+  /** A range is never narrower than this share of the point estimate. */
+  rangeFloorPct: 0.06,
+  /** A workload below this share of trailing spend cannot trigger a break. */
+  breakMinShare: 0.05,
+  /** Consecutive silent days that mark a material workload as retired. */
+  breakSilentDays: 2,
+} as const;
+
+const DAY_MS = 86_400_000;
+
+function dayKey(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+function utcDayStart(iso: string): number {
+  return Date.parse(`${iso.slice(0, 10)}T00:00:00.000Z`);
+}
+
+function dow(iso: string): number {
+  return new Date(`${iso}T00:00:00.000Z`).getUTCDay();
+}
+
+function mean(xs: number[]): number {
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
+}
+
+function stdev(xs: number[]): number {
+  if (xs.length < 2) return 0;
+  const m = mean(xs);
+  return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1));
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/**
+ * Forecast the current calendar month's total spend.
+ *
+ * `now` anchors the month and "today". Today is treated as incomplete: it is
+ * excluded from the month-to-date actual and included in the projected days,
+ * so a forecast read at 01:00 is not quietly short a day of spend.
+ */
+export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndForecast {
+  const todayMs = utcDayStart(dayKey(now.getTime()));
+  const year = new Date(todayMs).getUTCFullYear();
+  const month = new Date(todayMs).getUTCMonth();
+  const monthStartMs = Date.UTC(year, month, 1);
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const todayOfMonth = new Date(todayMs).getUTCDate();
+  const remainingDays = daysInMonth - todayOfMonth + 1;
+  const reasons: string[] = [];
+
+  // ---- Daily totals, and per-workload dailies for structural breaks ---------
+  const daily = new Map<string, number>();
+  const perKey = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    const d = r.date.slice(0, 10);
+    daily.set(d, (daily.get(d) ?? 0) + r.spend);
+    let k = perKey.get(r.key);
+    if (!k) perKey.set(r.key, (k = new Map()));
+    k.set(d, (k.get(d) ?? 0) + r.spend);
+  }
+
+  // ---- 1. Month-to-date actual: complete days only, never re-estimated ------
+  let mtdUsd = 0;
+  for (const [d, v] of daily) {
+    const ms = utcDayStart(d);
+    if (ms >= monthStartMs && ms < todayMs) mtdUsd += v;
+  }
+
+  const levelDates: string[] = [];
+  for (let i = FORECAST_RULES.levelDays; i >= 1; i--) levelDates.push(dayKey(todayMs - i * DAY_MS));
+  const seasonDates: string[] = [];
+  for (let i = FORECAST_RULES.seasonalityDays; i >= 1; i--) {
+    seasonDates.push(dayKey(todayMs - i * DAY_MS));
+  }
+
+  // ---- 6. Structural breaks -------------------------------------------------
+  const windowTotal = levelDates.reduce((s, d) => s + (daily.get(d) ?? 0), 0);
+  const retiredKeys: string[] = [];
+  const newKeys: string[] = [];
+  const silentDates = levelDates.slice(-FORECAST_RULES.breakSilentDays);
+  const priorDates = seasonDates.filter((d) => !levelDates.includes(d));
+
+  for (const [key, series] of perKey) {
+    const keyWindow = levelDates.reduce((s, d) => s + (series.get(d) ?? 0), 0);
+    const share = windowTotal > 0 ? keyWindow / windowTotal : 0;
+    const silent = silentDates.every((d) => (series.get(d) ?? 0) === 0);
+    if (share >= FORECAST_RULES.breakMinShare && silent && keyWindow > 0) {
+      retiredKeys.push(key);
+    }
+    const seenBefore = priorDates.some((d) => (series.get(d) ?? 0) > 0);
+    if (!seenBefore && keyWindow > 0 && share >= FORECAST_RULES.breakMinShare) {
+      newKeys.push(key);
+    }
+  }
+
+  const retired = new Set(retiredKeys);
+  /** Trailing dailies with retired workloads removed — they will not recur. */
+  const levelSeries = levelDates.map((d) => {
+    let v = daily.get(d) ?? 0;
+    for (const key of retired) v -= perKey.get(key)?.get(d) ?? 0;
+    return Math.max(0, v);
+  });
+
+  if (retiredKeys.length) {
+    reasons.push(
+      `${retiredKeys.length} workload${retiredKeys.length > 1 ? "s" : ""} stopped ${FORECAST_RULES.breakSilentDays}+ days ago and ${retiredKeys.length > 1 ? "are" : "is"} excluded from the remaining days`,
+    );
+  }
+  if (newKeys.length) {
+    reasons.push(
+      `${newKeys.length} workload${newKeys.length > 1 ? "s" : ""} started inside the last ${FORECAST_RULES.levelDays} days — too new to project precisely`,
+    );
+  }
+
+  // ---- 3. Weekly seasonality, only when the pattern is real ------------------
+  const seasonValues = seasonDates
+    .map((d) => ({ d, v: daily.get(d) ?? 0 }))
+    .filter((x) => x.v > 0);
+  const factors = new Map<number, number>();
+  let seasonalityApplied = false;
+  if (seasonValues.length >= 14) {
+    const overall = mean(seasonValues.map((x) => x.v));
+    const byDow = new Map<number, number[]>();
+    for (const x of seasonValues) {
+      const k = dow(x.d);
+      byDow.set(k, [...(byDow.get(k) ?? []), x.v]);
+    }
+    if (byDow.size === 7 && overall > 0) {
+      for (const [k, vs] of byDow) factors.set(k, mean(vs) / overall);
+      const fs = [...factors.values()];
+      const spread = Math.max(...fs) / Math.min(...fs);
+      if (spread >= FORECAST_RULES.seasonalityMinSpread) {
+        seasonalityApplied = true;
+        reasons.push(`weekly pattern detected (${spread.toFixed(2)}x weekday/weekend spread) and applied`);
+      }
+    }
+  }
+  const factorFor = (iso: string) => (seasonalityApplied ? (factors.get(dow(iso)) ?? 1) : 1);
+
+  // ---- 2 + 4. Deseasonalised level and damped, capped trend ------------------
+  const deseasonalised = levelDates.map((d, i) => levelSeries[i]! / (factorFor(d) || 1));
+  const level = mean(deseasonalised);
+
+  let slope = 0;
+  if (deseasonalised.length >= 3 && level > 0) {
+    const n = deseasonalised.length;
+    const xbar = (n - 1) / 2;
+    const ybar = level;
+    let num = 0;
+    let den = 0;
+    for (let i = 0; i < n; i++) {
+      num += (i - xbar) * (deseasonalised[i]! - ybar);
+      den += (i - xbar) ** 2;
+    }
+    slope = den > 0 ? num / den : 0;
+  }
+  const cap = level * FORECAST_RULES.trendCapPerDay;
+  const trendPerDay = Math.max(-cap, Math.min(cap, slope * FORECAST_RULES.trendDamping));
+
+  // ---- Project the remaining days -------------------------------------------
+  const lastIndex = deseasonalised.length - 1;
+  let projected = 0;
+  for (let k = 1; k <= remainingDays; k++) {
+    const iso = dayKey(todayMs + (k - 1) * DAY_MS);
+    const base = level + trendPerDay * (lastIndex + k - (deseasonalised.length - 1) / 2);
+    projected += Math.max(0, base) * factorFor(iso);
+  }
+  const pointUsd = mtdUsd + projected;
+
+  // ---- 5. Honest uncertainty -------------------------------------------------
+  const noise = stdev(deseasonalised);
+  const cv = level > 0 ? noise / level : 0;
+  const forcedRange = newKeys.length > 0 || retiredKeys.length > 0;
+  const isRange = cv > FORECAST_RULES.cvRangeThreshold || forcedRange;
+
+  let lowUsd: number | null = null;
+  let highUsd: number | null = null;
+  if (isRange) {
+    // Day-level noise over the remaining days, plus the uncertainty in the
+    // level itself, which does not average out across days.
+    const dayNoise = noise * Math.sqrt(remainingDays);
+    const levelNoise = (noise / Math.sqrt(Math.max(1, deseasonalised.length))) * remainingDays;
+    const sigma = dayNoise + levelNoise;
+    const half = Math.max(FORECAST_RULES.rangeZ * sigma, pointUsd * FORECAST_RULES.rangeFloorPct);
+    lowUsd = Math.max(mtdUsd, pointUsd - half);
+    highUsd = pointUsd + half;
+    if (cv > FORECAST_RULES.cvRangeThreshold) {
+      reasons.push(`daily spend varies too much (cv ${cv.toFixed(2)}) for a single number`);
+    }
+  }
+
+  return {
+    mtdUsd: round2(mtdUsd),
+    pointUsd: round2(pointUsd),
+    lowUsd: lowUsd === null ? null : round2(lowUsd),
+    highUsd: highUsd === null ? null : round2(highUsd),
+    isRange,
+    remainingDays,
+    dailyLevelUsd: round2(level),
+    trendPerDayUsd: round2(trendPerDay),
+    seasonalityApplied,
+    cv: Math.round(cv * 1000) / 1000,
+    retiredKeys,
+    newKeys,
+    reasons,
+  };
+}

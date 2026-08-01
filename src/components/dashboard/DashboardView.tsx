@@ -176,9 +176,11 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
     data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
-  // One projection basis on every tab — the 30-day run rate, not whatever
-  // window happens to be selected.
-  const runRateMonthly = data.projection.monthEndUsd;
+  // One forecast basis on every tab: month-to-date actual plus a trailing
+  // 7-day level for the days still to come — never the selected window.
+  const forecast = data.projection;
+  const runRateMonthly = forecast.monthEndUsd;
+
 
   const totalTokens = live.inputTokens + live.outputTokens;
   const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
@@ -392,10 +394,21 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                     accent="oklch(0.85 0.1 300)"
                   />
                   <HeroStat
-                    label={`Projected month-end · ${data.projection.basisDays}-day rate`}
-                    value={usd(runRateMonthly, 0)}
-                    sub={`${usd(Math.max(0, runRateMonthly - savings.availableMonthly), 0)} if all switches run`}
+                    label={
+                      forecast.isRange ? "Projected month-end · range" : "Projected month-end"
+                    }
+                    value={
+                      forecast.isRange && forecast.lowUsd !== null && forecast.highUsd !== null
+                        ? `${usd(forecast.lowUsd, 0)}–${usd(forecast.highUsd, 0)}`
+                        : usd(runRateMonthly, 0)
+                    }
+                    sub={
+                      forecast.reasons.length > 0
+                        ? forecast.reasons[0]
+                        : `${usd(forecast.mtdUsd, 0)} so far + ${forecast.remainingDays} day${forecast.remainingDays === 1 ? "" : "s"} at your 7-day rate`
+                    }
                     accent="oklch(0.9 0.03 285)"
+
                   />
 
                   <HeroStat
