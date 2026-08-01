@@ -153,7 +153,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
 
 function VideoSection() {
   return (
-    <section className="wash-section">
+    <section className="border-y border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="See It Working"
@@ -303,7 +303,7 @@ const PERSONAS = [
 
 function BuiltFor() {
   return (
-    <section className="border-y border-border bg-card">
+    <section className="wash-section">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Built For"
@@ -376,7 +376,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
   const [yearly, setYearly] = useState(true);
 
   return (
-    <section id="pricing" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="pricing" className="scroll-mt-24 wash-section">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Pricing"
