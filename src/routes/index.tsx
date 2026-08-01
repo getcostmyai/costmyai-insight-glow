@@ -388,13 +388,14 @@ function Pricing({ stats }: { stats: MarketingStats }) {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {LEVELS.map((plan) => {
+          {LEVELS.map((plan, i) => {
             const meta = PLAN_META[plan];
             const price = yearly ? meta.yearly : meta.monthly;
             const featured = plan === "rightsize";
             return (
-              <div
+              <Reveal
                 key={plan}
+                delay={i * 80}
                 className={`flex flex-col rounded-3xl border p-6 ${
                   featured
                     ? "border-primary/40 bg-primary-soft shadow-[var(--shadow-card)]"
@@ -428,7 +429,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
                 >
                   {plan === "compare" ? "Start free" : `Get ${meta.label}`}
                 </Link>
-              </div>
+              </Reveal>
             );
           })}
         </div>
@@ -482,15 +483,16 @@ function Neutrality() {
           </div>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CHARTER.map((c) => (
-              <div
+            {CHARTER.map((c, i) => (
+              <Reveal
                 key={c.title}
+                delay={i * 80}
                 className="rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-5 backdrop-blur-sm"
               >
                 <ShieldCheck className="h-5 w-5 opacity-90" />
                 <p className="mt-3 font-semibold tracking-tight">{c.title}</p>
                 <p className="mt-1.5 text-sm leading-relaxed opacity-85">{c.body}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
