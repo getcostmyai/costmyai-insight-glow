@@ -140,7 +140,13 @@ export function ForecastDiagram() {
             {[0, 7, 14, 21, 29].map((d) => (
               <g key={d}>
                 <line x1={xForDay(d)} y1={padY + plotH} x2={xForDay(d)} y2={padY + plotH + 5} stroke="var(--border)" />
-                <text x={xForDay(d)} y={padY + plotH + 22} textAnchor="middle" className="fill-muted-foreground text-[11px] font-medium uppercase tracking-[0.1em]">
+                <text
+                  x={xForDay(d)}
+                  y={padY + plotH + 22}
+                  textAnchor="middle"
+                  className="text-[11px] font-medium uppercase tracking-[0.1em]"
+                  style={{ fill: "var(--muted-foreground)" }}
+                >
                   Day {d + 1}
                 </text>
               </g>
