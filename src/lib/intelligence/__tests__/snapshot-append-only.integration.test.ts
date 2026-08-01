@@ -88,7 +88,15 @@ describeIf("frozen monthly snapshots are append-only", () => {
     expect(delErr).not.toBeNull();
     expect(delErr!.message).toMatch(/permanent/i);
 
-    // Leave the fixture rows in place — they are, by design, unremovable.
+    // Leave the fixture rows in place — they are, by design, unremovable — but
+    // stamp the restatement superseded so the fixture month is never "in force"
+    // and can never surface in the public archive list.
+    await db
+      .from("monthly_kpi_snapshot")
+      .update({ superseded_at: new Date().toISOString() })
+      .eq("id", restated!.id)
+      .is("superseded_at", null);
+
     expect(restated!.id).not.toBe(id);
   }, 30_000);
 });

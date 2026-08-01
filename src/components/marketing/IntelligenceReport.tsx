@@ -91,7 +91,12 @@ function Figure({
         </p>
         {cardId && ctx ? (
           <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-            <ShareCardButton cardId={cardId} month={ctx.citableMonth} title={label} />
+            <ShareCardButton
+              cardId={cardId}
+              month={ctx.citableMonth}
+              title={`${format ? format(value) : value} — ${label}`}
+            />
+
           </span>
         ) : null}
       </div>

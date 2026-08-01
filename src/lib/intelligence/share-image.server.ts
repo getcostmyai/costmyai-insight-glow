@@ -19,11 +19,16 @@ import { monthLabelOf } from "./snapshot.server";
  * pipeline to one wasm module (the rasteriser) instead of two.
  */
 
+/**
+ * Locked brand identity: indigo accent on warm white, exactly as the live page.
+ * Directional tones stay in the same light-background family — a rise is rose,
+ * a cut is green — so the poster never invents a palette of its own.
+ */
 const TONE: Record<ShareCard["tone"], string> = {
-  brand: "#A78BFA",
-  up: "#FB7185",
-  down: "#34D399",
-  neutral: "#E5E7EB",
+  brand: "#4338CA",
+  up: "#BE123C",
+  down: "#047857",
+  neutral: "#292524",
 };
 
 const esc = (s: string) =>
@@ -59,37 +64,32 @@ export function buildShareSvg(card: ShareCard, monthKey: string): string {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0B0A12"/>
-      <stop offset="60%" stop-color="#100D1E"/>
-      <stop offset="100%" stop-color="#1A1030"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.12" cy="0.1" r="0.75">
-      <stop offset="0%" stop-color="${accent}" stop-opacity="0.28"/>
+    <radialGradient id="glow" cx="0.1" cy="0.08" r="0.8">
+      <stop offset="0%" stop-color="${accent}" stop-opacity="0.13"/>
       <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="#FAFAF9"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
-  <rect x="0" y="0" width="1200" height="6" fill="${accent}"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#4338CA"/>
 
-  <text x="72" y="104" font-family="Inter" font-size="26" font-weight="600" fill="#FFFFFF">CostMyAI</text>
-  <text x="215" y="104" font-family="Inter" font-size="26" font-weight="400" fill="#8B8B9E">Intelligence</text>
+  <text x="72" y="104" font-family="Inter" font-size="26" font-weight="600" fill="#1C1917">Cost<tspan fill="#4338CA">My</tspan>AI</text>
+  <text x="215" y="104" font-family="Inter" font-size="26" font-weight="400" fill="#78716C">Intelligence</text>
 
   <text x="72" y="${330 - (valueSize - 208) / 2}" font-family="Inter" font-size="${valueSize}" font-weight="600" fill="${accent}" letter-spacing="-6">${esc(card.value)}</text>
 
-  <text x="72" y="404" font-family="Inter" font-size="36" font-weight="600" fill="#FFFFFF">${esc(card.label)}</text>
+  <text x="72" y="404" font-family="Inter" font-size="36" font-weight="600" fill="#1C1917">${esc(card.label)}</text>
   ${detail
     .map(
       (l, i) =>
-        `<text x="72" y="${454 + i * 36}" font-family="Inter" font-size="25" font-weight="400" fill="#9C9CB0">${esc(l)}</text>`,
+        `<text x="72" y="${454 + i * 36}" font-family="Inter" font-size="25" font-weight="400" fill="#57534E">${esc(l)}</text>`,
     )
     .join("\n  ")}
 
-  <rect x="72" y="536" width="1056" height="1" fill="#2A2740"/>
-  <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="#FFFFFF">${esc(monthLabel)}</text>
-  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="#8B8B9E">· final, frozen figures</text>
-  <text x="1128" y="580" text-anchor="end" font-family="Inter" font-size="22" font-weight="400" fill="#8B8B9E">costmyai.com/intelligence/${esc(monthKey)}</text>
+  <rect x="72" y="536" width="1056" height="1" fill="#E7E5E4"/>
+  <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="#1C1917">${esc(monthLabel)}</text>
+  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="#78716C">· final, frozen figures</text>
+  <text x="1128" y="580" text-anchor="end" font-family="Inter" font-size="22" font-weight="400" fill="#78716C">costmyai.com/intelligence/${esc(monthKey)}</text>
 </svg>`;
 }
 
