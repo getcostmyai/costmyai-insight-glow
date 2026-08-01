@@ -351,7 +351,7 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
     changesTotal: moves.length,
     increases: increases.length,
     decreases: decreases.length,
-    newListings: history.filter((h) => h.change_kind === "new").length,
+    newListings,
     // Genuinely new models only — a backfilled catalogue reads 0 here until one lands.
     newModels: models.filter((m) => new Date(m.first_seen_at) >= monthStart).length,
     topIncreases: [...increases].sort((a, b) => b.pct - a.pct).slice(0, 5),
