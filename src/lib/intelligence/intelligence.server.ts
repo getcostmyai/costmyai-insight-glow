@@ -23,15 +23,33 @@ export interface PriceMove {
   modelKey: string;
   host: string;
   hostLabel: string;
+  /** The ledger's own verdict for this row. Direction is never re-derived from one side. */
+  kind: "increase" | "decrease";
   inputNow: number | null;
   inputPrev: number | null;
   inputPct: number | null;
   outputNow: number | null;
   outputPrev: number | null;
   outputPct: number | null;
-  /** Signed % move on the input side, used for ranking. */
+  /**
+   * Signed % move used for ranking only: the input side when it moved, otherwise
+   * the output side. Some rows reprice output only — ranking must not silently
+   * drop them (that is what made 11 + 23 fail to equal 36).
+   */
   pct: number;
   observedAt: string;
+}
+
+/** Rows fed to {@link summarizeMoves} — the subset of `price_history` we read. */
+export interface PriceHistoryRow {
+  model_key: string;
+  host: string;
+  change_kind: string;
+  input_usd_per_mtok: number | string | null;
+  output_usd_per_mtok: number | string | null;
+  prev_input_usd_per_mtok: number | string | null;
+  prev_output_usd_per_mtok: number | string | null;
+  observed_at: string;
 }
 
 export interface RepricerRow {
