@@ -147,7 +147,7 @@ function VideoSection() {
           title="From live usage to a governed decision in under 60 seconds."
           lead="Watch the Verification Engine read real usage, benchmark every workload, and produce a defensible verdict."
         />
-        <div className="mx-auto mt-14 max-w-4xl">
+        <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
           <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[1.75rem] border border-border bg-background">
             <div className="absolute inset-0 opacity-[0.07] fill-gradient-brand" aria-hidden />
             <div className="relative text-center">
@@ -185,9 +185,9 @@ function Architecture() {
           title="Runs in your environment. Sees only metadata."
           lead="The Verification Engine is middleware. Your application routes every AI request through it. The engine forwards the request unchanged, reads only token counts and model names, then sends aggregate metadata to CostMyAI. It never reads prompt content."
         />
-        <div className="mt-12">
+        <Reveal delay={80} className="mt-14">
           <ArchitectureDiagram />
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -229,7 +229,7 @@ function HowItWorks() {
           lead="Four steps. No manual exports. A defensible, benchmark-backed verdict for every workload in your live spend."
         />
 
-        <div className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
           {STEPS.map((s, i) => {
             const isOpen = open === i;
             return (
@@ -562,7 +562,7 @@ function Faq({ stats }: { stats: MarketingStats }) {
     <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
-        <div className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
           {items.map((item, i) => {
             const isOpen = open === i;
             return (
