@@ -406,11 +406,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
 
   const series = [...buckets.values()].map((p) => ({ ...p, spend: round2(p.spend) }));
 
-  const usage = [...byWorkload.entries()].map(([key, u]) => ({
-    ...u,
-    output_p50: medianOf(shapes.get(key)?.p50 ?? []),
-    output_p95: medianOf(shapes.get(key)?.p95 ?? []),
-  }));
+  const usage = aggregateUsage(split.current as RollupRow[], days);
+
 
   // ---- The engine, over exactly the traffic shown above ---------------------
   const priceRows = (prices.data ?? []).map((p) => ({
