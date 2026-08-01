@@ -394,10 +394,21 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                     accent="oklch(0.85 0.1 300)"
                   />
                   <HeroStat
-                    label={`Projected month-end · ${data.projection.basisDays}-day rate`}
-                    value={usd(runRateMonthly, 0)}
-                    sub={`${usd(Math.max(0, runRateMonthly - savings.availableMonthly), 0)} if all switches run`}
+                    label={
+                      forecast.isRange ? "Projected month-end · range" : "Projected month-end"
+                    }
+                    value={
+                      forecast.isRange && forecast.lowUsd !== null && forecast.highUsd !== null
+                        ? `${usd(forecast.lowUsd, 0)}–${usd(forecast.highUsd, 0)}`
+                        : usd(runRateMonthly, 0)
+                    }
+                    sub={
+                      forecast.reasons.length > 0
+                        ? forecast.reasons[0]
+                        : `${usd(forecast.mtdUsd, 0)} so far + ${forecast.remainingDays} day${forecast.remainingDays === 1 ? "" : "s"} at your 7-day rate`
+                    }
                     accent="oklch(0.9 0.03 285)"
+
                   />
 
                   <HeroStat
