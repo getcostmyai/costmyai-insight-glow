@@ -749,7 +749,27 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     if (verdict.allowed) governEligible.push(base);
     else governRefusals.push({ ...base, reason: verdict.reason, detail: verdict.detail });
   }
-  governEligible.sort((a, b) => b.saving - a.saving);
+  /**
+   * One workload, one autonomous switch. A workload can clear the gate as
+   * arbitrage *and* as a quality match; only the better of the two can ever be
+   * applied, so summing both would promise money twice — the same double count
+   * `aggregateSavings` removes from the headline.
+   */
+  const dedupeByWorkload = <T extends { fromModel: string; fromHost: string; taskHint: string; saving: number }>(
+    rows: T[],
+  ) => {
+    const best = new Map<string, T>();
+    for (const r of rows) {
+      const key = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
+      const seen = best.get(key);
+      if (!seen || r.saving > seen.saving) best.set(key, r);
+    }
+    return [...best.values()];
+  };
+  const governEligibleUnique = dedupeByWorkload(governEligible);
+  governEligibleUnique.sort((a, b) => b.saving - a.saving);
+  governEligible.length = 0;
+  governEligible.push(...governEligibleUnique);
   governRefusals.sort((a, b) => b.saving - a.saving);
 
   /**
