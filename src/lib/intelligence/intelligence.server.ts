@@ -221,31 +221,10 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
   const labelByHost = new Map(prices.map((p) => [p.host, p.host_label]));
 
   // ---- Price moves this month -------------------------------------------------
-  const moves: PriceMove[] = history
-    .filter((h) => h.change_kind === "increase" || h.change_kind === "decrease")
-    .map((h) => {
-      const inputNow = num(h.input_usd_per_mtok);
-      const inputPrev = num(h.prev_input_usd_per_mtok);
-      const outputNow = num(h.output_usd_per_mtok);
-      const outputPrev = num(h.prev_output_usd_per_mtok);
-      const inputPct = pct(inputNow, inputPrev);
-      return {
-        modelKey: h.model_key,
-        host: h.host,
-        hostLabel: labelByHost.get(h.host) ?? h.host,
-        inputNow,
-        inputPrev,
-        inputPct,
-        outputNow,
-        outputPrev,
-        outputPct: pct(outputNow, outputPrev),
-        pct: inputPct ?? 0,
-        observedAt: h.observed_at,
-      };
-    });
-
-  const increases = moves.filter((m) => m.pct > 0);
-  const decreases = moves.filter((m) => m.pct < 0);
+  const { moves, increases, decreases, newListings } = summarizeMoves(
+    history as PriceHistoryRow[],
+    labelByHost,
+  );
 
   // ---- Repricing frequency (trailing window = everything we hold) --------------
   const byHost = new Map<string, { changes: number; models: Set<string> }>();
