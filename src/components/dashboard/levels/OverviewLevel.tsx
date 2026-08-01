@@ -107,9 +107,11 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         }
         sub={
           <>
-            {savings.certifiedCount} certified switches are waiting on your {plan} plan, measured
-            across your last {savings.basisDays} days of traffic — the same basis on every period
-            tab.
+            Across every check your workspace runs, {savings.certifiedCount} switch
+            {savings.certifiedCount === 1 ? " is" : "es are"} certified and ready to activate,
+            measured over your last {savings.basisDays} days of traffic — the same basis on every
+            period tab.
+
             {savings.lockedMonthly > 0 && (
               <>
                 {" "}
