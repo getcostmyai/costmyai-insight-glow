@@ -32,6 +32,7 @@ import { Route as DemoOverviewRouteImport } from './routes/demo.overview'
 import { Route as DemoGovernRouteImport } from './routes/demo.govern'
 import { Route as DemoCompareRouteImport } from './routes/demo.compare'
 import { Route as DemoCertifyRouteImport } from './routes/demo.certify'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -168,6 +169,11 @@ const DemoCertifyRoute = DemoCertifyRouteImport.update({
   path: '/certify',
   getParentRoute: () => DemoRoute,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
   id: '/workspace',
   path: '/workspace',
@@ -298,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
@@ -387,6 +395,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
@@ -434,6 +443,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/workspace'
+    | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/settings'
     | '/team'
+    | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/workspace'
+    | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
@@ -746,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoCertifyRouteImport
       parentRoute: typeof DemoRoute
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/_authenticated/workspace': {
       id: '/_authenticated/workspace'
       path: '/workspace'
@@ -941,10 +960,12 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
 }
 
@@ -1001,3 +1022,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
