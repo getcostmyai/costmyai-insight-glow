@@ -204,8 +204,9 @@ function Catalog({ data }: { data: CatalogPayload }) {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
               <FilterChip active={vendor === null} onClick={() => setVendor(null)}>
-                All vendors
+                All makers
               </FilterChip>
+
               {data.vendors.map((v) => (
                 <FilterChip key={v} active={vendor === v} onClick={() => setVendor(v)}>
                   {v}
