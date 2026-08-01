@@ -121,7 +121,13 @@ export function ForecastDiagram() {
             {[0, 2000, 4000, 6000].map((v) => (
               <g key={v}>
                 <line x1={padX - 5} y1={yForSpend(v)} x2={padX} y2={yForSpend(v)} stroke="var(--border)" />
-                <text x={padX - 10} y={yForSpend(v) + 4} textAnchor="end" className="fill-muted-foreground text-[10px] font-medium tracking-[0.05em]">
+                <text
+                  x={padX - 10}
+                  y={yForSpend(v) + 4}
+                  textAnchor="end"
+                  className="text-[10px] font-medium tracking-[0.05em]"
+                  style={{ fill: "var(--muted-foreground)" }}
+                >
                   ${(v / 1000).toFixed(0)}k
                 </text>
               </g>
