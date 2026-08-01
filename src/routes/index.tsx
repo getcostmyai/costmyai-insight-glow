@@ -168,7 +168,7 @@ function VideoSection() {
               </a>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -254,7 +254,7 @@ function HowItWorks() {
               </div>
             );
           })}
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -584,7 +584,7 @@ function Faq({ stats }: { stats: MarketingStats }) {
               </div>
             );
           })}
-        </div>
+        </Reveal>
       </div>
     </section>
   );
