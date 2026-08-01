@@ -135,6 +135,59 @@ function medianOf(values: number[]) {
   return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
 }
 
+interface RollupRow {
+  bucket_start: string;
+  model_key: string;
+  host: string;
+  task_hint: string;
+  requests: number | string;
+  input_tokens: number | string;
+  output_tokens: number | string;
+  cost_usd: number | string;
+  output_p50?: number | string | null;
+  output_p95?: number | string | null;
+}
+
+/**
+ * Collapse rollups into one aggregate per workload. Shared by the window read
+ * and the fixed 30-day baseline the headline claim is anchored to, so both
+ * shape their input identically.
+ */
+function aggregateUsage(rows: RollupRow[], days: number): UsageAggregate[] {
+  const byWorkload = new Map<string, UsageAggregate>();
+  const shapes = new Map<string, { p50: number[]; p95: number[] }>();
+  for (const r of rows) {
+    const key = `${r.model_key}|${r.host}|${r.task_hint}`;
+    const agg = byWorkload.get(key) ?? {
+      model_key: r.model_key,
+      host: r.host,
+      task_hint: r.task_hint,
+      requests: 0,
+      input_tokens: 0,
+      output_tokens: 0,
+      cost_usd: 0,
+      days,
+    };
+    agg.requests += Number(r.requests);
+    agg.input_tokens += Number(r.input_tokens);
+    agg.output_tokens += Number(r.output_tokens);
+    agg.cost_usd += Number(r.cost_usd);
+    byWorkload.set(key, agg);
+
+    const shape = shapes.get(key) ?? { p50: [], p95: [] };
+    if (r.output_p50) shape.p50.push(Number(r.output_p50));
+    if (r.output_p95) shape.p95.push(Number(r.output_p95));
+    shapes.set(key, shape);
+  }
+  return [...byWorkload.entries()].map(([key, u]) => ({
+    ...u,
+    output_p50: medianOf(shapes.get(key)?.p50 ?? []),
+    output_p95: medianOf(shapes.get(key)?.p95 ?? []),
+  }));
+}
+
+
+
 export interface SnapshotInput {
   days: RangeDays;
   objective?: ObjectiveSelection | null;
