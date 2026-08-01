@@ -53,12 +53,12 @@ export function ForecastDiagram() {
   const xForDay = (d: number) => padX + (d / (DAYS - 1)) * plotW;
   const yForSpend = (s: number) => padY + plotH - (s / MAX_SPEND) * plotH;
 
-  const actualPath = ACTUAL.map((v, i) => `${i === 0 ? "M" : "L"} ${xForDay(i)} ${yForSpend(v)}`).join(" ");
-  const projectedPath = PROJECTED.map((v, i) => `${i === 0 ? "M" : "L"} ${xForDay(TODAY + i)} ${yForSpend(v)}`).join(" ");
+  const actualPath = ACTUAL_CUMULATIVE.map((v, i) => `${i === 0 ? "M" : "L"} ${xForDay(i)} ${yForSpend(v)}`).join(" ");
+  const projectedPath = PROJECTED_CUMULATIVE.map((v, i) => `${i === 0 ? "M" : "L"} ${xForDay(TODAY - 1 + i)} ${yForSpend(v)}`).join(" ");
 
   const areaActual = `
     M ${xForDay(0)} ${yForSpend(0)}
-    ${ACTUAL.map((v, i) => `L ${xForDay(i)} ${yForSpend(v)}`).join(" ")}
+    ${ACTUAL_CUMULATIVE.map((v, i) => `L ${xForDay(i)} ${yForSpend(v)}`).join(" ")}
     L ${xForDay(TODAY - 1)} ${yForSpend(0)}
     Z
   `;
