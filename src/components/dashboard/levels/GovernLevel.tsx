@@ -70,7 +70,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             </span>
           </>
         }
-        sub={`${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate on your traffic. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
+        sub={`All three mechanisms run on your traffic: ${mechanismSentence(mech)} ${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
         stats={
           /* Two bands: everything Rightsize shows, then what autonomy adds.
              Govern is Rightsize plus autonomy, so it must never show less. */
