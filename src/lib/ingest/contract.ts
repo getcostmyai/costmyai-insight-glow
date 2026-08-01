@@ -26,6 +26,16 @@ export const BACKFILL_LOOKBACK_DAYS = 30;
 /**
  * How often the Verification Engine polls a connected provider's invoices.
  *
+ * One global cadence, deliberately: per-provider cadence and per-source
+ * freshness disclosure are deferred, not built.
+ *
+ * Tuned to 1 hour against real provider billing latency (Bible §21.5):
+ * Anthropic's Cost API refreshes in ~5 minutes and permits per-minute polling;
+ * OpenAI reports tens of minutes to hours; Google Cloud billing can lag a day
+ * or more no matter how often it is asked. 1h is the middle ground — much
+ * tighter than the arbitrary 6h for the fast providers, without meaningful
+ * extra volume against the slow ones.
+ *
  * Locked here rather than in the container, because the container is the thing
  * that has not shipped yet: the loop that reads this constant lands with the
  * published package, and this way the interval is already correct when it does
@@ -34,7 +44,8 @@ export const BACKFILL_LOOKBACK_DAYS = 30;
  * zero-credentials boundary, and our pg_cron schedules deliberately cannot
  * reach it.
  */
-export const BILLING_POLL_INTERVAL_MS = 6 * 60 * 60 * 1000;
+export const BILLING_POLL_INTERVAL_MS = 60 * 60 * 1000;
+
 
 /**
  * Every subsequent poll only re-reads this much, since invoices settle late.
