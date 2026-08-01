@@ -1,7 +1,21 @@
 import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck, Zap } from "lucide-react";
 
-import { HeroStat, LevelHero, LocalTime, RangeToggle, SectionTitle } from "@/components/dashboard/primitives";
-import { ActiveSwitchesSection, OversizedSection } from "@/components/dashboard/levels/RightsizeLevel";
+import {
+  HeroStat,
+  HeroStatRow,
+  LevelHero,
+  Legend,
+  LocalTime,
+  RangeToggle,
+  SectionTitle,
+} from "@/components/dashboard/primitives";
+import { SavingsRing } from "@/components/dashboard/SavingsRing";
+import {
+  ActiveSwitchesSection,
+  OversizedSection,
+  TopSwitchControl,
+} from "@/components/dashboard/levels/RightsizeLevel";
+import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
@@ -17,7 +31,11 @@ import { PLAN_META } from "@/lib/engine/types";
  * switch that cannot be proven unattended is never applied unattended.
  */
 export function GovernLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, canAct, autonomousMutation, errorFor } = ctl;
+  const { data, range, setRange, activeRange, live, canAct, autonomousMutation, errorFor } = ctl;
+  const { savings } = data;
+  const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
+  const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
+  const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
   const govern = data.govern;
   const meta = PLAN_META["govern"];
   const live = govern.unlocked && govern.enabled;
@@ -47,7 +65,49 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         }
         sub={`${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate on your traffic. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
         stats={
-          <>
+          /* Two bands: everything Rightsize shows, then what autonomy adds.
+             Govern is Rightsize plus autonomy, so it must never show less. */
+          <div className="col-span-full space-y-8">
+            <HeroStatRow title="Rightsize · what is saving and what is waiting">
+              <HeroStat
+                label={`Spend · ${activeRange.long}`}
+                value={usd(live.spend)}
+                sub="through the hosts you use today"
+                accent="oklch(0.85 0.1 300)"
+              />
+              <HeroStat
+                label="Active saving"
+                value={usd(savings.activeMonthly, 0)}
+                sub={`${data.activeSwitches.length + data.switchesOutsideWindow} switches rerouting traffic`}
+                accent="oklch(0.82 0.16 155)"
+              />
+              <HeroStat
+                label="Available to activate"
+                value={usd(savings.availableMonthly, 0)}
+                sub={`${savings.certifiedCount} certified switches`}
+                accent="oklch(0.83 0.11 195)"
+              />
+              <HeroStat
+                label="Oversized waste"
+                value={usd(oversizedWaste, 0)}
+                sub={`${data.oversized.length} workloads flagged`}
+                accent="oklch(0.83 0.13 55)"
+              />
+              <HeroStat
+                label="Savings captured"
+                value={`${Math.round(captureRate * 100)}%`}
+                sub={`of ${usd(totalOpportunity, 0)} identified`}
+                accent="oklch(0.86 0.09 265)"
+              />
+              <HeroStat
+                label="Frozen"
+                value={`${data.frozen}`}
+                sub={data.frozen === 0 ? "all healthy" : "review needed"}
+                accent="oklch(0.9 0.03 285)"
+              />
+            </HeroStatRow>
+
+            <HeroStatRow title="Govern · what runs without you">
             <HeroStat
               label="Running unattended"
               value={`${govern.running}`}
@@ -86,12 +146,21 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               }
               accent="oklch(0.9 0.03 285)"
             />
-          </>
+            </HeroStatRow>
+          </div>
         }
         aside={
           /* The mode control is the point of this level, so it sits in the hero.
              A locked workspace sees the real control, inert — not a description. */
-          <div className="w-full max-w-xs rounded-3xl bg-white/10 p-5 backdrop-blur">
+          <div className="w-full max-w-xs space-y-5">
+            <div>
+              <SavingsRing captured={savings.activeMonthly} available={savings.availableMonthly} />
+              <div className="mt-3 flex justify-center gap-5 text-xs text-white/70">
+                <Legend color="oklch(0.65 0.15 158)" label="Captured" />
+                <Legend color="oklch(0.72 0.11 195)" label="Available" />
+              </div>
+            </div>
+            <div className="rounded-3xl bg-white/10 p-5 backdrop-blur">
             <div className="flex items-center gap-3">
               <span
                 className={`flex size-10 items-center justify-center rounded-2xl ${
@@ -158,13 +227,17 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 <ArrowUpRight className="size-3.5" />
               </a>
             )}
+            </div>
           </div>
         }
-      />
+      >
+        <TopSwitchControl ctl={ctl} />
+      </LevelHero>
 
       <UsageSection ctl={ctl} />
 
       {/* Govern is Rightsize plus autonomy — the same evidence, same controls. */}
+      <TransparencyLists ctl={ctl} />
       <OversizedSection ctl={ctl} />
       <ActiveSwitchesSection ctl={ctl} />
 
