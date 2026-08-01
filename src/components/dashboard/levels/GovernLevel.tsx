@@ -40,7 +40,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   // Both sides are real sums over the same window — like for like on every tab.
   const totalOpportunity = savings.captured + savings.available;
   const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
-  const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
+  const mech = mechanismSavings(ctl);
   const govern = data.govern;
   const meta = PLAN_META["govern"];
   const autonomyOn = govern.unlocked && govern.enabled;
