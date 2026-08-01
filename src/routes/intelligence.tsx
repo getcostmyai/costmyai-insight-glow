@@ -6,6 +6,12 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import {
+  BandDiagram,
+  HostHistogram,
+  PriceMovesDonut,
+  SaturationGauge,
+} from "@/components/marketing/IntelligenceCharts";
+import {
   intelligenceQuery,
   type IntelligencePayload,
 } from "@/lib/intelligence.functions";
@@ -197,14 +203,14 @@ function IntelligencePage() {
 
 function Hero({ data }: { data: IntelligencePayload }) {
   return (
-    <section className="wash-hero px-5 pb-24 pt-24 sm:px-8 sm:pb-32 sm:pt-36">
+    <section className="wash-hero px-5 pb-20 pt-24 sm:px-8 sm:pb-24 sm:pt-36">
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-4xl">
           <p className="eyebrow">Intelligence</p>
           <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-7xl">
-            The AI model market,
+            The market moves.
             <br />
-            <span className="text-gradient-brand">measured</span>.
+            We <span className="text-gradient-brand">prove</span> by how much.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
             Every number on this page is computed from the same live catalog and the same measured
@@ -262,14 +268,23 @@ function Hero({ data }: { data: IntelligencePayload }) {
 function PriceMoves({ data }: { data: IntelligencePayload }) {
   const maxChanges = Math.max(1, ...data.repricers.map((r) => r.changes));
   return (
-    <section className="px-5 py-28 sm:px-8 sm:py-36">
+    <section className="px-5 py-24 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <SectionHead eyebrow="Price moves" title={`What changed in ${data.monthLabel}`}>
           Recorded from the append-only price ledger — every observed move, per model and per host,
           on both the input and output side.
         </SectionHead>
 
-        <Reveal delay={100} className="mt-16 grid gap-12 sm:grid-cols-4 sm:gap-8">
+        <Reveal delay={80} className="mt-16">
+          <PriceMovesDonut
+            increases={data.increases}
+            decreases={data.decreases}
+            newListings={data.newListings}
+            monthLabel={data.monthLabel}
+          />
+        </Reveal>
+
+        <Reveal delay={100} className="mt-20 grid gap-12 sm:grid-cols-4 sm:gap-8">
           <Figure
             value={data.changesTotal}
             label="Total moves"
@@ -365,6 +380,12 @@ function MarketStructure({ data }: { data: IntelligencePayload }) {
           <Figure value={data.maxHostsPerModel} label="Most providers on one model" />
         </Reveal>
 
+        {data.hostBuckets.length > 0 ? (
+          <Reveal delay={140} className="mt-20 max-w-3xl">
+            <HostHistogram buckets={data.hostBuckets} />
+          </Reveal>
+        ) : null}
+
         {data.spreads.length > 0 ? (
           <ul className="mt-20 divide-y divide-border/60 border-t border-border/60">
             {data.spreads.map((s, i) => (
@@ -451,6 +472,7 @@ function QualityPerDollar({ data }: { data: IntelligencePayload }) {
                     {w.topScore.toFixed(2)} − margin ±{w.margin.toFixed(2)}). {w.qualifying} model
                     {w.qualifying === 1 ? "" : "s"} clear it. Cheapest listing at {w.hostLabel}.
                   </p>
+                  <BandDiagram winner={w} />
                 </div>
                 <div className="sm:text-right">
                   <span className="num text-5xl font-semibold tabular-nums tracking-[-0.045em] text-saving sm:text-6xl">
@@ -478,7 +500,7 @@ function QualityPerDollar({ data }: { data: IntelligencePayload }) {
             <ul className="mt-8 divide-y divide-border/60 border-t border-border/60">
               {data.saturation.map((s, i) => (
                 <Reveal as="li" key={s.taskClass} delay={i * 60}>
-                  <div className="flex flex-wrap items-baseline justify-between gap-4 py-5">
+                  <div className="flex flex-wrap items-center justify-between gap-6 py-7">
                     <div>
                       <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                         {s.taskClass} · {s.suite}
@@ -488,13 +510,7 @@ function QualityPerDollar({ data }: { data: IntelligencePayload }) {
                         {s.models} scored models — {s.ratio <= 1 ? "saturated" : "discriminating"}.
                       </p>
                     </div>
-                    <span
-                      className={`num text-3xl font-semibold tabular-nums tracking-tight ${
-                        s.ratio <= 1 ? "text-destructive" : "text-saving"
-                      }`}
-                    >
-                      {s.ratio.toFixed(2)}×
-                    </span>
+                    <SaturationGauge row={s} />
                   </div>
                 </Reveal>
               ))}

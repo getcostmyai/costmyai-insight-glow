@@ -94,6 +94,23 @@ export interface SaturationRow {
   models: number;
 }
 
+/** Distribution of models by how many real providers serve them. */
+export interface HostBucket {
+  label: string;
+  models: number;
+}
+
+/** Buckets, in order, for the market-structure histogram. */
+export function bucketHostCounts(counts: number[]): HostBucket[] {
+  const defs: { label: string; test: (n: number) => boolean }[] = [
+    { label: "1", test: (n) => n === 1 },
+    { label: "2–3", test: (n) => n >= 2 && n <= 3 },
+    { label: "4–9", test: (n) => n >= 4 && n <= 9 },
+    { label: "10+", test: (n) => n >= 10 },
+  ];
+  return defs.map((d) => ({ label: d.label, models: counts.filter(d.test).length }));
+}
+
 export interface IntelligencePayload {
   generatedAt: string;
   monthLabel: string;
@@ -113,6 +130,7 @@ export interface IntelligencePayload {
   multiHostModels: number;
   medianHostsPerModel: number;
   maxHostsPerModel: number;
+  hostBuckets: HostBucket[];
   bandWinners: BandWinner[];
   saturation: SaturationRow[];
 }
@@ -361,6 +379,7 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
     multiHostModels: hostCounts.filter((c) => c > 1).length,
     medianHostsPerModel: hostCounts.length ? hostCounts[Math.floor(hostCounts.length / 2)] : 0,
     maxHostsPerModel: hostCounts.length ? hostCounts[hostCounts.length - 1] : 0,
+    hostBuckets: bucketHostCounts(hostCounts),
     bandWinners,
     saturation,
   };
