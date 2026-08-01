@@ -703,11 +703,23 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       activeMonthly,
       availableMonthly,
       lockedMonthly,
-      certifiedCount: hostArbitrage.length + qualityMatched.length,
-      savedToDate: round2(activeSwitches.reduce((s, a) => s + a.saved, 0)),
+      certifiedCount: baselineArbitrage.items.length + baselineQuality.items.length,
+      savedToDate: round2(runningSwitches.reduce((s, a) => s + a.saved, 0)),
+      /** Same figures scoped to the selected window — what the lists below add up to. */
+      windowAvailableMonthly,
+      windowLockedMonthly,
+      windowCertifiedCount: hostArbitrage.length + qualityMatched.length,
+      /** How the headline and projection are derived, so the UI can say so. */
+      basisDays: baselineDays,
+    },
+    /** One month-end projection, from the fixed 30-day run rate, on every tab. */
+    projection: {
+      monthEndUsd: round2(baselineSpend),
+      basisDays: baselineDays,
     },
     reconciliation,
     reconciliationOutsideWindow,
+
     coverage: {
       untrackedModels: untracked.size,
       pricesSyncedAgo: relativeAgo(lastPricingSync, now),
