@@ -119,7 +119,10 @@ async function loadFonts(): Promise<Uint8Array[]> {
   const urls = [...css.matchAll(/url\((https:\/\/[^)]+\.ttf)\)/g)].map((m) => m[1]).slice(0, 2);
   if (urls.length === 0) throw new Error("no TTF face returned for Inter");
   const buffers = await Promise.all(
-    urls.map(async (u) => new Uint8Array(await fetch(u).then((r) => r.arrayBuffer() as Promise<ArrayBuffer>))),
+    urls.map(async (u) => {
+      const buf = (await (await fetch(u)).arrayBuffer()) as ArrayBuffer;
+      return new Uint8Array(buf);
+    }),
   );
   fontCache = buffers;
   return buffers;
