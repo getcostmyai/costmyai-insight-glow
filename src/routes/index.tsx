@@ -55,14 +55,15 @@ function HomePage() {
       <ProviderMarquee stats={stats} />
 
       <Estimator />
-      <VideoSection />
-      <Architecture />
       <HowItWorks />
+      <Architecture />
       <BuiltFor />
+      <VideoSection />
       <Pricing stats={stats} />
       <Neutrality />
       <Faq stats={stats} />
       <ClosingCta />
+
     </MarketingShell>
   );
 }
