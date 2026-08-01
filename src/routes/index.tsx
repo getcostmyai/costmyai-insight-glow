@@ -76,7 +76,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
       <div className="relative mx-auto max-w-4xl px-5 pb-28 pt-28 text-center sm:px-8 sm:pb-36 sm:pt-40">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
-          Stop overpaying <span className="text-gradient-brand">for AI.</span>
+          Know your AI bill <span className="text-gradient-brand">before it lands.</span>
         </Reveal>
 
         <Reveal
@@ -84,16 +84,18 @@ function Hero({ stats }: { stats: MarketingStats }) {
           as="p"
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
-          CostMyAI reads your gateway metadata, proves cheaper options against real benchmarks, and
-          switches only what holds quality — manually, or automatically with Govern.
+          CostMyAI forecasts your month-end AI spend from real usage, then proves which switches cut
+          it without losing quality — manually, or automatically with Govern.
         </Reveal>
 
-        <Reveal delay={180} className="mx-auto mt-9 grid max-w-3xl gap-3 text-left sm:grid-cols-3">
+        <Reveal delay={180} className="mx-auto mt-9 grid max-w-4xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
           {[
+            { k: "Month-end forecast", v: "Your bill, before the invoice" },
             { k: "Cheaper host", v: "Same model, lower price" },
             { k: "Cheaper model", v: "Benchmarks the same" },
             { k: "Smaller model", v: "Same result, less compute" },
           ].map((m) => (
+
             <div key={m.k} className="border-t border-border pt-3">
               <p className="text-sm font-semibold tracking-[-0.01em]">{m.k}</p>
               <p className="mt-1 text-sm text-muted-foreground">{m.v}</p>
