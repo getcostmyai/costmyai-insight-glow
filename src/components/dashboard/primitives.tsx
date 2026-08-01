@@ -22,7 +22,7 @@ export const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): Swit
   toHostKey: o.toHost,
   taskHint: o.taskHint,
   kind,
-  monthlySaving: o.monthlySaving,
+  saving: o.saving,
   savingPct: o.savingPct,
   basis: o.basis,
   note: o.note,

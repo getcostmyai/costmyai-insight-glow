@@ -296,6 +296,8 @@ describe("autonomous gate (Govern)", () => {
     toHost: "beta",
     toHostLabel: "beta",
     taskHint: "generation",
+    savingUsd: 400,
+    windowDays: 30,
     monthlySavingUsd: 400,
     savingPct: 30,
     basis: "Quality-matched cheaper model",

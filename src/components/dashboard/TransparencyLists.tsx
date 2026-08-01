@@ -29,9 +29,10 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
 
 /** List A — same model, cheaper host. Every row carries its own activation. */
 export function ArbitrageList({ ctl }: { ctl: DashboardController }) {
-  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel } = ctl;
+  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
   const rows = data.hostArbitrage;
-  const total = rows.reduce((s, r) => s + r.monthlySaving, 0);
+  // Real dollars over the window on screen — the same sum the hero shows.
+  const total = rows.reduce((s, r) => s + r.saving, 0);
 
   return (
     <section>
@@ -39,7 +40,7 @@ export function ArbitrageList({ ctl }: { ctl: DashboardController }) {
         eyebrow="List A · arbitrage saves"
         title="Same model, cheaper host"
         hint="Identical model weights on a different provider. No benchmark is needed — the output is the same model's output."
-        badge={`${usd(total, 0)}/mo · ${rows.length}`}
+        badge={`${usd(total, 0)} · ${activeRange.long} · ${rows.length}`}
         badgeTone="saving"
       />
       {rows.length === 0 ? (
@@ -52,6 +53,7 @@ export function ArbitrageList({ ctl }: { ctl: DashboardController }) {
               <SwitchCard
                 key={key}
                 row={asSwitchRow(row, "host")}
+                period={activeRange.long}
                 rank={i + 1}
                 pending={busy(key)}
                 error={errorFor(key)}
@@ -82,10 +84,10 @@ export function ArbitrageList({ ctl }: { ctl: DashboardController }) {
 
 /** List B — different model, quality proven before it is offered. */
 export function BenchmarkList({ ctl }: { ctl: DashboardController }) {
-  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel } = ctl;
+  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
   const level = data.levels.quality_match;
   const rows = data.qualityMatched;
-  const total = rows.reduce((s, r) => s + r.monthlySaving, 0);
+  const total = rows.reduce((s, r) => s + r.saving, 0);
 
   return (
     <section>
@@ -93,14 +95,15 @@ export function BenchmarkList({ ctl }: { ctl: DashboardController }) {
         eyebrow="List B · benchmark saves"
         title="Cheaper model, same measured quality"
         hint={`Benchmarked against ${data.coverage.evaluations} measured evaluation bands before the swap is offered.`}
-        badge={`${usd(total, 0)}/mo · ${rows.length}`}
+        badge={`${usd(total, 0)} · ${activeRange.long} · ${rows.length}`}
         badgeTone="saving"
       />
       {!level.unlocked ? (
         <LevelLocked
           requiredPlan={level.requiredPlan}
           count={level.lockedCount}
-          monthly={level.lockedMonthly}
+          saving={level.lockedSaving}
+          period={activeRange.long}
           what="quality-matched"
         />
       ) : rows.length === 0 ? (
@@ -113,6 +116,7 @@ export function BenchmarkList({ ctl }: { ctl: DashboardController }) {
               <SwitchCard
                 key={key}
                 row={asSwitchRow(row, "quality")}
+                period={activeRange.long}
                 rank={i + 1}
                 pending={busy(key)}
                 error={errorFor(key)}

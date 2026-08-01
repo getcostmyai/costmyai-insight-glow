@@ -33,8 +33,9 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
   // Shared with the gateway usage widget below via the controller, so the two
   // spend figures on this page are literally the same number.
   const windowSpend = live.spend;
-  const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
-  const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
+  // Captured and available are both real sums over the selected window.
+  const totalOpportunity = savings.captured + savings.available;
+  const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
   const spendDelta =
     data.previous.spend > 0 ? ((windowSpend - data.previous.spend) / data.previous.spend) * 100 : 0;
   const totalTokens = data.totals.inputTokens + data.totals.outputTokens;
@@ -84,27 +85,27 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         meta,
         unlocked,
         count: data.hostArbitrage.length,
-        monthly: levelMonthly(data, "host_arbitrage"),
+        monthly: levelSaving(data, "host_arbitrage"),
       };
     if (meta.key === "certify")
       return {
         meta,
         unlocked,
         count: data.qualityMatched.length,
-        monthly: levelMonthly(data, "quality_match"),
+        monthly: levelSaving(data, "quality_match"),
       };
     if (meta.key === "rightsize")
       return {
         meta,
         unlocked,
         count: data.oversized.length,
-        monthly: levelMonthly(data, "rightsize"),
+        monthly: levelSaving(data, "rightsize"),
       };
     return {
       meta,
       unlocked,
       count: data.govern.eligible.length,
-      monthly: data.govern.eligibleMonthly,
+      monthly: data.govern.eligibleSaving,
     };
   });
 
@@ -123,22 +124,22 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         }
         headline={
           <>
-            You can stop paying{" "}
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(savings.availableMonthly)}</span>{" "}
-            <span className="text-white/80">a month — today.</span>
+            You left{" "}
+            <span className="num text-[oklch(0.83_0.11_195)]">{usd(savings.available)}</span>{" "}
+            <span className="text-white/80">on the table in the {activeRange.long}.</span>
           </>
         }
         sub={
           <>
             Across every check your workspace runs, {savings.certifiedCount} switch
             {savings.certifiedCount === 1 ? " is" : "es are"} certified and ready to activate,
-            measured over your last {savings.basisDays} days of traffic — the same basis on every
-            period tab.
-            {savings.lockedMonthly > 0 && (
+            measured as a real sum over the {activeRange.long} of your own traffic, each workload
+            counted once.
+            {savings.locked > 0 && (
               <>
                 {" "}
                 A further <span className="num text-white">
-                  {usd(savings.lockedMonthly, 0)}/mo
+                  {usd(savings.locked, 0)}
                 </span>{" "}
                 was found by checks your plan does not include yet.
               </>
@@ -180,7 +181,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Savings captured"
               value={`${Math.round(captureRate * 100)}%`}
-              sub={`${usd(savings.activeMonthly, 0)} of ${usd(totalOpportunity, 0)} identified`}
+              sub={`${usd(savings.captured, 0)} of ${usd(totalOpportunity, 0)} identified · ${activeRange.long}`}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
@@ -197,7 +198,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         }
         aside={
           <>
-            <SavingsRing captured={savings.activeMonthly} available={savings.availableMonthly} />
+            <SavingsRing captured={savings.captured} available={savings.available} period={activeRange.long} />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
               <Legend color="oklch(0.72 0.11 195)" label="Available" />
@@ -235,7 +236,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
                 {usd(monthly, 0)}
               </span>
               <p className="mt-1 text-xs text-muted-foreground">
-                {count} {count === 1 ? "opportunity" : "opportunities"} · per month
+                {count} {count === 1 ? "opportunity" : "opportunities"} · {activeRange.long}
               </p>
               <p className="mt-3 text-sm text-muted-foreground">{meta.tagline}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
@@ -368,13 +369,14 @@ const MINE_PATHS = {
 } as const;
 
 /** Unlocked levels report what they can act on; locked ones report what they found. */
-function levelMonthly(
+/** What one level found over the selected window — real dollars, never a rate. */
+function levelSaving(
   data: DashboardController["data"],
   key: "host_arbitrage" | "quality_match" | "rightsize",
 ) {
   const level = data.levels[key];
-  if (!level.unlocked) return level.lockedMonthly;
-  if (key === "host_arbitrage") return data.hostArbitrage.reduce((s, r) => s + r.monthlySaving, 0);
-  if (key === "quality_match") return data.qualityMatched.reduce((s, r) => s + r.monthlySaving, 0);
+  if (!level.unlocked) return level.lockedSaving;
+  if (key === "host_arbitrage") return data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
+  if (key === "quality_match") return data.qualityMatched.reduce((s, r) => s + r.saving, 0);
   return data.oversized.reduce((s, r) => s + r.wasted, 0);
 }

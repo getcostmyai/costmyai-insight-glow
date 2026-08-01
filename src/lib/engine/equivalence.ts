@@ -208,7 +208,8 @@ export function findQualityMatches(
 
     const winner = pickByObjective(clearing, objective);
     if (objective.objective === "latency") winningLatency = expectedLatency(winner.price, u);
-    const saving = toMonthly(baseline.cost - winner.cost, u.days);
+    const rawSaving = baseline.cost - winner.cost;
+    const saving = toMonthly(rawSaving, u.days);
     if (saving < MIN_MONTHLY_SAVING_USD) {
       refuse(u, "saving_below_floor", `Best equal-quality option saves under $1/month.`);
       continue;
@@ -224,6 +225,8 @@ export function findQualityMatches(
       toHost: winner.price.host,
       toHostLabel: winner.price.host_label,
       taskHint: u.task_hint,
+      savingUsd: round2(rawSaving),
+      windowDays: u.days,
       monthlySavingUsd: round2(saving),
       savingPct: round2(((baseline.cost - winner.cost) / baseline.cost) * 100),
       basis: "Quality-matched cheaper model",

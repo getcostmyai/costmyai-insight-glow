@@ -49,14 +49,15 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const rightsize = data.levels.rightsize;
   const rows = data.qualityMatched;
 
-  const benchmarkMonthly = rows.reduce((s, r) => s + r.monthlySaving, 0);
-  const arbitrageMonthly = data.hostArbitrage.reduce((s, r) => s + r.monthlySaving, 0);
+  // Real dollars over the window on screen, never a monthly projection.
+  const benchmarkSaving = rows.reduce((s, r) => s + r.saving, 0);
+  const arbitrageSaving = data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
   const refused = data.stats.qualityRefused;
   const evaluated = data.stats.qualityEvaluated;
   const certifyRate = evaluated > 0 ? (data.stats.qualityCertified / evaluated) * 100 : 0;
-  const rightsizeMonthly = rightsize.unlocked
+  const rightsizeSaving = rightsize.unlocked
     ? data.oversized.reduce((s, r) => s + r.wasted, 0)
-    : rightsize.lockedMonthly;
+    : rightsize.lockedSaving;
   const rightsizeCount = rightsize.unlocked ? data.oversized.length : rightsize.lockedCount;
 
   return (
@@ -72,8 +73,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         }
         headline={
           <>
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(benchmarkMonthly)}</span>{" "}
-            <span className="text-white/80">a month that only a benchmark can unlock.</span>
+            <span className="num text-[oklch(0.83_0.11_195)]">{usd(benchmarkSaving)}</span>{" "}
+            <span className="text-white/80">
+              in the {activeRange.long} that only a benchmark can unlock.
+            </span>
           </>
         }
         sub={`Measured against ${data.coverage.evaluations} evaluation bands. A switch we cannot prove against an independent third-party benchmark is refused — ${refused} ${refused === 1 ? "was" : "were"} refused on your traffic.`}
@@ -87,13 +90,13 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             />
             <HeroStat
               label="Arbitrage saving"
-              value={usd(arbitrageMonthly, 0)}
+              value={usd(arbitrageSaving, 0)}
               sub="Same model, cheaper host — no benchmark needed"
               accent="oklch(0.86 0.09 265)"
             />
             <HeroStat
               label="Benchmark saving"
-              value={usd(benchmarkMonthly, 0)}
+              value={usd(benchmarkSaving, 0)}
               sub="Different model, quality proven before it is shown"
               accent="oklch(0.83 0.11 195)"
             />
@@ -120,8 +123,9 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         aside={
           <>
             <SavingsRing
-              captured={data.savings.activeMonthly}
-              available={data.savings.availableMonthly}
+              captured={data.savings.captured}
+              available={data.savings.available}
+              period={activeRange.long}
             />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
@@ -135,7 +139,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         to={scope === "demo" ? "/demo/rightsize" : "/workspace/rightsize"}
         requiredPlan="rightsize"
         count={rightsizeCount}
-        monthly={rightsizeMonthly}
+        saving={rightsizeSaving}
+        period={activeRange.long}
         what="oversized workload"
         unlocked={rightsize.unlocked}
       />
@@ -171,7 +176,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           <LevelLocked
             requiredPlan={level.requiredPlan}
             count={level.lockedCount}
-            monthly={level.lockedMonthly}
+            saving={level.lockedSaving}
+            period={activeRange.long}
             what="quality-matched"
           />
         ) : rows.length === 0 ? (
@@ -184,6 +190,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
                 <SwitchCard
                   key={key}
                   row={asSwitchRow(row, "quality")}
+                  period={activeRange.long}
                   rank={i + 1}
                   pending={busy(key)}
                   error={errorFor(key)}
@@ -222,15 +229,6 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         </p>
       </section>
 
-      {/* The Rightsize check has already run here — this is its real finding. */}
-      <NextLevelUpsell
-        to={scope === "demo" ? "/demo/rightsize" : "/workspace/rightsize"}
-        requiredPlan="rightsize"
-        count={rightsizeCount}
-        monthly={rightsizeMonthly}
-        what="oversized workload"
-        unlocked={rightsize.unlocked}
-      />
     </>
   );
 }

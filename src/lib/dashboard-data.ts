@@ -11,7 +11,8 @@ export interface SwitchRow {
   toHostKey: string;
   taskHint: string;
   kind: SwitchKind;
-  monthlySaving: number;
+  /** Real dollars saved inside the window on screen. Never a run-rate. */
+  saving: number;
   savingPct: number;
   basis?: string;
   note?: string;

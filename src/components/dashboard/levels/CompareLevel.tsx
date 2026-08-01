@@ -50,14 +50,16 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   // the gateway usage widget below read the same object, so they cannot drift
   // apart by a cent the way two independent tickers did.
   const windowSpend = live.spend;
-  const availableMonthly = rows.reduce((s, r) => s + r.monthlySaving, 0);
+  // Real dollars over the window on screen. Both sides of every ratio below are
+  // the same window, so a shorter tab can never report more money than a longer one.
+  const available = rows.reduce((s, r) => s + r.saving, 0);
   const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
-  const onCheapestHost = Math.max(0, windowSpend - availableMonthly);
+  const onCheapestHost = Math.max(0, windowSpend - available);
   const coveragePct = windowSpend > 0 ? (onCheapestHost / windowSpend) * 100 : 100;
-  const certifyMonthly = certify.unlocked
-    ? data.qualityMatched.reduce((s, r) => s + r.monthlySaving, 0)
-    : certify.lockedMonthly;
+  const certifySaving = certify.unlocked
+    ? data.qualityMatched.reduce((s, r) => s + r.saving, 0)
+    : certify.lockedSaving;
   const certifyCount = certify.unlocked ? data.qualityMatched.length : certify.lockedCount;
 
   return (
@@ -74,11 +76,11 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         headline={
           <>
             The same model,{" "}
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(availableMonthly)}</span>{" "}
-            <span className="text-white/80">a month cheaper.</span>
+            <span className="num text-[oklch(0.83_0.11_195)]">{usd(available)}</span>{" "}
+            <span className="text-white/80">cheaper in the {activeRange.long}.</span>
           </>
         }
-        sub="Identical model weights on a different provider. No benchmark is needed to justify this switch — the output is the same model's output."
+        sub={`Identical model weights on a different provider. No benchmark is needed — the output is the same model's output. Every figure on this page is a real sum over the ${activeRange.long}, not a projection.`}
         stats={
           <>
             <HeroStat
@@ -94,9 +96,9 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat
-              label="Available monthly"
-              value={usd(availableMonthly, 0)}
-              sub="if you activate all of them"
+              label={`Available · ${activeRange.long}`}
+              value={usd(available, 0)}
+              sub="what these switches would have saved"
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
@@ -116,8 +118,9 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         aside={
           <>
             <SavingsRing
-              captured={data.savings.activeMonthly}
-              available={data.savings.availableMonthly}
+              captured={data.savings.captured}
+              available={data.savings.available}
+              period={activeRange.long}
             />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
@@ -131,7 +134,8 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         to={scope === "demo" ? "/demo/certify" : "/workspace/certify"}
         requiredPlan="certify"
         count={certifyCount}
-        monthly={certifyMonthly}
+        saving={certifySaving}
+        period={activeRange.long}
         what="workload"
         unlocked={certify.unlocked}
       />
@@ -140,7 +144,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
 
       <section>
         <SectionTitle
-          eyebrow="Ranked by monthly saving"
+          eyebrow={`Ranked by saving · ${activeRange.long}`}
           title="Same model, cheaper host"
           hint="Identical model weights, a cheaper provider. Zero quality risk."
           badge={`${rows.length} certified`}
@@ -150,7 +154,8 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           <LevelLocked
             requiredPlan={level.requiredPlan}
             count={level.lockedCount}
-            monthly={level.lockedMonthly}
+            saving={level.lockedSaving}
+            period={activeRange.long}
             what="cheaper-host"
           />
         ) : rows.length === 0 ? (
@@ -163,6 +168,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                 <SwitchCard
                   key={key}
                   row={asSwitchRow(row, "host")}
+                  period={activeRange.long}
                   rank={i + 1}
                   pending={busy(key)}
                   error={errorFor(key)}
@@ -189,16 +195,6 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         )}
       </section>
 
-      {/* The Certify check ran against this workspace whether or not Certify is
-          bought — only its detail is withheld, never the number. */}
-      <NextLevelUpsell
-        to={scope === "demo" ? "/demo/certify" : "/workspace/certify"}
-        requiredPlan="certify"
-        count={certifyCount}
-        monthly={certifyMonthly}
-        what="workload"
-        unlocked={certify.unlocked}
-      />
     </>
   );
 }

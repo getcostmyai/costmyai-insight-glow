@@ -47,12 +47,15 @@ export function LevelEmpty({ state, kind }: { state: DataState; kind: RecKind })
 export function LevelLocked({
   requiredPlan,
   count,
-  monthly,
+  saving,
+  period,
   what,
 }: {
   requiredPlan: PlanTier;
   count: number;
-  monthly: number;
+  /** Real money behind the lock over the window on screen. */
+  saving: number;
+  period: string;
   what: string;
 }) {
   const meta = PLAN_META[requiredPlan];
@@ -79,9 +82,11 @@ export function LevelLocked({
         </div>
         <div className="text-right">
           <div className="num text-3xl text-primary blur-[0.5px] select-none">
-            {usd(monthly, 0)}
+            {usd(saving, 0)}
           </div>
-          <p className="text-[11px] text-muted-foreground">per month behind this level</p>
+          <p className="text-[11px] text-muted-foreground">
+            behind this level · {period}
+          </p>
         </div>
         <button className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95">
           <Sparkles className="size-4" />
@@ -151,19 +156,21 @@ export function NextLevelUpsell({
   to,
   requiredPlan,
   count,
-  monthly,
+  saving,
+  period,
   what,
   unlocked,
 }: {
   to: string;
   requiredPlan: PlanTier;
   count: number;
-  monthly: number;
+  saving: number;
+  period: string;
   what: string;
   unlocked: boolean;
 }) {
   const meta = PLAN_META[requiredPlan];
-  if (count === 0 && monthly === 0) return null;
+  if (count === 0 && saving === 0) return null;
   return (
     <a
       href={to}
@@ -176,7 +183,7 @@ export function NextLevelUpsell({
         <p className="text-sm font-semibold">
           {count} {what}
           {count === 1 ? "" : "s"} could unlock a further{" "}
-          <span className="num text-saving">{usd(monthly, 0)}</span> a month
+          <span className="num text-saving">{usd(saving, 0)}</span> in the {period}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Found by the {meta.label} check, already run against your traffic.{" "}
@@ -202,19 +209,21 @@ export function HeroUpsell({
   to,
   requiredPlan,
   count,
-  monthly,
+  saving,
+  period,
   what,
   unlocked,
 }: {
   to: string;
   requiredPlan: PlanTier;
   count: number;
-  monthly: number;
+  saving: number;
+  period: string;
   what: string;
   unlocked: boolean;
 }) {
   const meta = PLAN_META[requiredPlan];
-  if (count === 0 && monthly === 0) return null;
+  if (count === 0 && saving === 0) return null;
   return (
     <a
       href={to}
@@ -230,8 +239,8 @@ export function HeroUpsell({
       <div className="relative min-w-60 flex-1">
         <p className="eyebrow text-primary">Already found on your traffic · {meta.label}</p>
         <p className="num mt-1 text-3xl text-saving sm:text-4xl">
-          {usd(monthly, 0)}
-          <span className="text-base text-muted-foreground">/mo</span>
+          {usd(saving, 0)}
+          <span className="text-base text-muted-foreground"> · {period}</span>
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           across {count} {what}

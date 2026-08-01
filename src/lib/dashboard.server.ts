@@ -18,6 +18,7 @@ import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import { forecastMonthEnd } from "./dashboard/forecast";
 import { buildComposition } from "./dashboard/composition";
+import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
 
 import {
   effectiveSelection,
@@ -71,6 +72,9 @@ export interface SwitchOpportunity {
   toHost: string;
   toHostLabel: string;
   taskHint: string;
+  /** Real dollars this switch would have saved inside the selected window. */
+  saving: number;
+  /** The same saving as a labelled 30-day run-rate. Never summed into a window. */
   monthlySaving: number;
   savingPct: number;
   basis: string;
@@ -86,6 +90,9 @@ export interface GovernCandidate {
   toModel: string;
   toHost: string;
   taskHint: string;
+  /** Real dollars over the selected window. */
+  saving: number;
+  /** Labelled 30-day run-rate, which the autonomous threshold is written in. */
   monthlySaving: number;
   basis: string;
 }
@@ -131,7 +138,10 @@ export interface OversizedWorkload {
   hostKey: string;
   task: string;
   toModel: string | null;
+  /** Real dollars this workload wasted inside the selected window. */
   wasted: number;
+  /** The same waste as a labelled 30-day run-rate, for the ledger and Govern. */
+  wastedMonthly: number;
   savingPct: number;
   note: string;
 }
@@ -473,6 +483,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     toHost: r.toHost ?? r.fromHost,
     toHostLabel: r.toHostLabel ?? r.fromHostLabel,
     taskHint: r.taskHint,
+    saving: round2(r.savingUsd),
     monthlySaving: round2(r.monthlySavingUsd),
     savingPct: Math.round(r.savingPct),
     basis: r.basis,
@@ -485,13 +496,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     "host_arbitrage",
     plan,
     result.hostArbitrage.map(toOpportunity),
-    (r) => r.monthlySaving,
+    (r) => r.saving,
   );
   const qualityLevel = gateLevel(
     "quality_match",
     plan,
     result.qualityMatched.map(toOpportunity),
-    (r) => r.monthlySaving,
+    (r) => r.saving,
   );
   const oversizedLevel = gateLevel(
     "rightsize",
@@ -503,7 +514,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         hostKey: r.fromHost,
         task: r.taskHint,
         toModel: r.toModel,
-        wasted: round2(r.monthlySavingUsd),
+        wasted: round2(r.savingUsd),
+        wastedMonthly: round2(r.monthlySavingUsd),
         savingPct: Math.round(r.savingPct),
         note: r.note,
       }),
@@ -516,31 +528,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const oversized = oversizedLevel.items;
 
   /**
-   * The headline claim and the month-end projection are NOT window-dependent.
+   * Every money figure below is a real sum over the selected window.
    *
-   * The 24h/7d/30d toggle governs what traffic and which lists you are looking
-   * at. It must not silently redefine "what you can stop paying" or "where this
-   * month lands" — those swung by thousands of dollars purely because a user
-   * clicked a different tab. Both are anchored to one fixed 30-day basis, the
-   * same basis on every tab.
+   * There is deliberately no second, fixed 30-day basis any more. Anchoring
+   * the headline to 30 days while the lists underneath moved with the toggle
+   * is what produced the impossible reading this module was rewritten for: a
+   * 7-day tab claiming more available saving than the 30-day tab, because the
+   * per-window numbers were daily rates multiplied back out to a month. A
+   * shorter window now always shows less money, because less money happened.
    */
-  const baselineDays = 30;
-  const baselineStart = new Date(now - baselineDays * DAY_MS).toISOString();
-  let baselineRows: RollupRow[];
-  if (days === baselineDays) {
-    baselineRows = split.current as RollupRow[];
-  } else {
-    const { data } = await supabase
-      .from("usage_rollups")
-      .select(
-        "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
-      )
-      .eq("org_id", orgId)
-      .eq("granularity", "day")
-      .gte("bucket_start", baselineStart)
-      .limit(100_000);
-    baselineRows = (data ?? []) as RollupRow[];
-  }
 
   /**
    * Month-end forecast history.
@@ -569,41 +565,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
 
 
 
-  const baselineSpend = baselineRows.reduce((s, r) => s + Number(r.cost_usd), 0);
-  const baselineResult =
-    days === baselineDays
-      ? result
-      : runPipeline({
-          usage: aggregateUsage(baselineRows, baselineDays),
-          prices: priceRows,
-          benchmarks: (benchmarks.data ?? []).map((b) => ({
-            ...b,
-            score: Number(b.score),
-          })) as BenchmarkRow[],
-          margins: (margins.data ?? []).map((m) => ({ ...m, margin: Number(m.margin) })) as MarginRow[],
-          models: (models.data ?? []) as ModelRow[],
-          objectives: objectiveRows,
-        });
-
-  const baselineArbitrage = gateLevel(
-    "host_arbitrage",
-    plan,
-    baselineResult.hostArbitrage.map(toOpportunity),
-    (r) => r.monthlySaving,
-  );
-  const baselineQuality = gateLevel(
-    "quality_match",
-    plan,
-    baselineResult.qualityMatched.map(toOpportunity),
-    (r) => r.monthlySaving,
-  );
-  const baselineOversized = gateLevel(
-    "rightsize",
-    plan,
-    baselineResult.oversized.map((r) => ({ wasted: round2(r.monthlySavingUsd) })),
-    (o) => o.wasted,
-  );
-
+  /** Trailing 30 days of spend, shown only next to the month-end projection. */
+  const spend30d = (forecastData ?? [])
+    .filter((r) => String(r.bucket_start) >= new Date(now - 30 * DAY_MS).toISOString())
+    .reduce((sum, r) => sum + Number(r.cost_usd), 0);
 
   // ---- What is already running, inside the selected window -------------------
   const toSwitchRow = (s: {
@@ -695,32 +660,55 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   );
   const lastPricingSync = pricingSnapshot.data?.synced_at ?? null;
 
-  /** Window-scoped opportunity — matches exactly the lists rendered below the hero. */
-  const windowAvailableMonthly = round2(
-    arbitrageLevel.unlockedMonthly + qualityLevel.unlockedMonthly + oversizedLevel.unlockedMonthly,
-  );
-  const windowLockedMonthly = round2(
-    arbitrageLevel.lockedMonthly + qualityLevel.lockedMonthly + oversizedLevel.lockedMonthly,
-  );
-
-  /** Headline claim — fixed 30-day basis, identical on every tab. */
-  const availableMonthly = round2(
-    baselineArbitrage.unlockedMonthly + baselineQuality.unlockedMonthly + baselineOversized.unlockedMonthly,
-  );
-  const lockedMonthly = round2(
-    baselineArbitrage.lockedMonthly + baselineQuality.lockedMonthly + baselineOversized.lockedMonthly,
-  );
+  /**
+   * ---- The money, added up once ------------------------------------------
+   *
+   * Real sums over the selected window, deduped to one best switch per
+   * workload: arbitrage, the quality check and the right-size check all run
+   * over the same traffic, so adding the three lists together counted the same
+   * workload's money up to three times.
+   */
+  const wl = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
+    `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
+  const savingsTotals = aggregateSavings([
+    ...result.hostArbitrage.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: arbitrageLevel.unlocked,
+    })),
+    ...result.qualityMatched.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: qualityLevel.unlocked,
+    })),
+    ...result.oversized.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: oversizedLevel.unlocked,
+    })),
+  ]);
 
   /**
-   * Everything running right now is saving money right now, whatever day it was
-   * switched on. Filtering the capture rate by activation date reported 0%
-   * captured on the 7d and 24h tabs while two switches were actively saving
-   * ~$1.3k/mo — the rate is a present-tense fact, not this window's news.
+   * Everything running right now is saving money, whatever day it was switched
+   * on — but only the part of that saving which falls inside the window counts
+   * here, so the captured figure shrinks with the window exactly like the
+   * available figure does.
    */
   const runningSwitches = (switches.data ?? [])
     .filter((s) => s.status === "active")
     .map(toSwitchRow);
-  const activeMonthly = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+  const captured = capturedInWindow(
+    runningSwitches.map((s) => ({
+      saved: s.saved,
+      activeDays: Math.max(
+        1,
+        Math.floor((now - new Date(s.activatedAt).getTime()) / DAY_MS),
+      ),
+    })),
+    days,
+  );
+  /** Present-tense run rate. Only ever rendered where "/mo" is written next to it. */
+  const activeMonthlyRate = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
 
   /**
    * ---- Govern: what would run unattended, and what refuses to -------------
@@ -754,14 +742,35 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       toModel: rec.toModel,
       toHost: rec.toHostLabel || rec.toHost,
       taskHint: rec.taskHint,
+      saving: round2(rec.savingUsd),
       monthlySaving: round2(rec.monthlySavingUsd),
       basis: rec.basis,
     };
     if (verdict.allowed) governEligible.push(base);
     else governRefusals.push({ ...base, reason: verdict.reason, detail: verdict.detail });
   }
-  governEligible.sort((a, b) => b.monthlySaving - a.monthlySaving);
-  governRefusals.sort((a, b) => b.monthlySaving - a.monthlySaving);
+  /**
+   * One workload, one autonomous switch. A workload can clear the gate as
+   * arbitrage *and* as a quality match; only the better of the two can ever be
+   * applied, so summing both would promise money twice — the same double count
+   * `aggregateSavings` removes from the headline.
+   */
+  const dedupeByWorkload = <T extends { fromModel: string; fromHost: string; taskHint: string; saving: number }>(
+    rows: T[],
+  ) => {
+    const best = new Map<string, T>();
+    for (const r of rows) {
+      const key = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
+      const seen = best.get(key);
+      if (!seen || r.saving > seen.saving) best.set(key, r);
+    }
+    return [...best.values()];
+  };
+  const governEligibleUnique = dedupeByWorkload(governEligible);
+  governEligibleUnique.sort((a, b) => b.saving - a.saving);
+  governEligible.length = 0;
+  governEligible.push(...governEligibleUnique);
+  governRefusals.sort((a, b) => b.saving - a.saving);
 
   /**
    * List C. Every workload the equivalence check evaluated and refused, with
@@ -847,19 +856,19 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         unlocked: arbitrageLevel.unlocked,
         requiredPlan: arbitrageLevel.requiredPlan,
         lockedCount: arbitrageLevel.lockedCount,
-        lockedMonthly: round2(arbitrageLevel.lockedMonthly),
+        lockedSaving: round2(arbitrageLevel.lockedSaving),
       },
       quality_match: {
         unlocked: qualityLevel.unlocked,
         requiredPlan: qualityLevel.requiredPlan,
         lockedCount: qualityLevel.lockedCount,
-        lockedMonthly: round2(qualityLevel.lockedMonthly),
+        lockedSaving: round2(qualityLevel.lockedSaving),
       },
       rightsize: {
         unlocked: oversizedLevel.unlocked,
         requiredPlan: oversizedLevel.requiredPlan,
         lockedCount: oversizedLevel.lockedCount,
-        lockedMonthly: round2(oversizedLevel.lockedMonthly),
+        lockedSaving: round2(oversizedLevel.lockedSaving),
       },
     },
     activeSwitches,
@@ -878,6 +887,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       lastAutonomousAt: lastAutonomousAt ? new Date(lastAutonomousAt).toISOString() : null,
       eligible: governEligible,
       refusals: governRefusals,
+      /** Real dollars over the window; the run-rate stays available separately. */
+      eligibleSaving: round2(governEligible.reduce((s, c) => s + c.saving, 0)),
       eligibleMonthly: round2(governEligible.reduce((s, c) => s + c.monthlySaving, 0)),
       policy: {
         minMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.minMonthlySavingUsd,
@@ -889,18 +900,23 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
 
 
 
+    /**
+     * Every figure here is a real sum over the selected window — no run-rates,
+     * no extrapolation — and every workload contributes at most once.
+     */
     savings: {
-      activeMonthly,
-      availableMonthly,
-      lockedMonthly,
-      certifiedCount: baselineArbitrage.items.length + baselineQuality.items.length,
+      windowDays: days,
+      captured,
+      available: savingsTotals.available,
+      locked: savingsTotals.locked,
+      certifiedCount: savingsTotals.certifiedCount,
+      /** Naive list sum and the double count it hides, stated rather than hidden. */
+      gross: savingsTotals.gross,
+      overlapUsd: savingsTotals.overlapUsd,
+      overlapCount: savingsTotals.overlapCount,
       savedToDate: round2(runningSwitches.reduce((s, a) => s + a.saved, 0)),
-      /** Same figures scoped to the selected window — what the lists below add up to. */
-      windowAvailableMonthly,
-      windowLockedMonthly,
-      windowCertifiedCount: hostArbitrage.length + qualityMatched.length,
-      /** How the headline and projection are derived, so the UI can say so. */
-      basisDays: baselineDays,
+      /** Labelled run-rate. Never mix this into a window total. */
+      activeMonthlyRate,
     },
     /**
      * One month-end forecast on every tab: month-to-date actual plus a
@@ -922,7 +938,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       /** Trailing window behind the projected days. */
       basisDays: 7,
       /** Kept for the 30-day run-rate comparison shown alongside. */
-      runRate30dUsd: round2(baselineSpend),
+      runRate30dUsd: round2(spend30d),
     },
 
     reconciliation,
