@@ -484,6 +484,33 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     baselineRows = (data ?? []) as RollupRow[];
   }
 
+  /**
+   * Month-end forecast history.
+   *
+   * The forecaster needs both the whole month-to-date and a 28-day trailing
+   * window for day-of-week factors, which reaches further back than the
+   * 30-day baseline on the last days of a long month. 40 days covers both.
+   */
+  const forecastStart = new Date(now - 40 * DAY_MS).toISOString();
+  const { data: forecastData } =
+    await supabase
+      .from("usage_rollups")
+      .select("bucket_start, model_key, host, task_hint, cost_usd")
+      .eq("org_id", orgId)
+      .eq("granularity", "day")
+      .gte("bucket_start", forecastStart)
+      .limit(100_000);
+  const forecast = forecastMonthEnd(
+    (forecastData ?? []).map((r) => ({
+      date: String(r.bucket_start).slice(0, 10),
+      key: `${r.model_key}|${r.host}|${r.task_hint}`,
+      spend: Number(r.cost_usd),
+    })),
+    new Date(now),
+  );
+
+
+
   const baselineSpend = baselineRows.reduce((s, r) => s + Number(r.cost_usd), 0);
   const baselineResult =
     days === baselineDays
