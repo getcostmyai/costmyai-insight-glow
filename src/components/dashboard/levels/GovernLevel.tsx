@@ -38,7 +38,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
   const govern = data.govern;
   const meta = PLAN_META["govern"];
-  const live = govern.unlocked && govern.enabled;
+  const autonomyOn = govern.unlocked && govern.enabled;
   const interactive = govern.unlocked && canAct;
 
   const setMode = (autonomous: boolean) => {
@@ -111,7 +111,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Running unattended"
               value={`${govern.running}`}
-              sub={live ? "autonomous mode is on" : "autonomous mode is off"}
+              sub={autonomyOn ? "autonomous mode is on" : "autonomous mode is off"}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
@@ -164,7 +164,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             <div className="flex items-center gap-3">
               <span
                 className={`flex size-10 items-center justify-center rounded-2xl ${
-                  live ? "bg-[oklch(0.82_0.16_155)]/20 text-[oklch(0.86_0.16_155)]" : "bg-white/10 text-white/70"
+                  autonomyOn ? "bg-[oklch(0.82_0.16_155)]/20 text-[oklch(0.86_0.16_155)]" : "bg-white/10 text-white/70"
                 }`}
               >
                 <ShieldCheck className="size-5" />
@@ -172,7 +172,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <div>
                 <p className="text-sm font-semibold text-white">Switching mode</p>
                 <p className="text-[11px] text-white/60">
-                  {live ? "Applying certified switches for you" : "You approve every switch"}
+                  {autonomyOn ? "Applying certified switches for you" : "You approve every switch"}
                 </p>
               </div>
             </div>
