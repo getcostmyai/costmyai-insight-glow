@@ -8,6 +8,8 @@ import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 
+type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
+
 export const Route = createFileRoute("/partners")({
   loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
   head: () => ({
@@ -178,7 +180,7 @@ function Ladder({
   tiers,
   topRate,
 }: {
-  tiers: { tier: string; name: string; ratePct: number; minLifetimeUsd: number }[];
+  tiers: PartnerLadder["tiers"];
   topRate: number;
 }) {
   return (
