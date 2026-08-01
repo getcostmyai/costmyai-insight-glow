@@ -260,15 +260,6 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
           strokeWidth={stroke}
           strokeLinecap="round"
         />
-        {/* saturation zone: everything at or below 1.0x */}
-        <path
-          d={arc(START, angleFor(1))}
-          fill="none"
-          stroke="oklch(0.62 0.19 24)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          opacity={0.55}
-        />
         <path
           d={arc(angleFor(0.02), angleFor(clamped))}
           fill="none"
@@ -276,6 +267,14 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
           strokeWidth={stroke}
           strokeLinecap="round"
           style={{ transition: "d 1s cubic-bezier(0.22,1,0.36,1)" }}
+        />
+        {/* saturation floor: the 0–1.0x zone stays visible on top of the value arc */}
+        <path
+          d={arc(START, angleFor(1))}
+          fill="none"
+          stroke="oklch(0.62 0.19 24)"
+          strokeWidth={3}
+          strokeLinecap="round"
         />
         <circle cx={nx} cy={ny} r={5} fill="var(--background)" stroke="currentColor" strokeWidth={2} />
       </svg>
