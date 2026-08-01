@@ -282,9 +282,9 @@ export function ForecastDiagram() {
 
             {/* Forecast side label */}
             <text
-              x={xForDay(DAYS - 1) + 52}
+              x={xForDay(DAYS - 1) - 52}
               y={rangeCenter - 6}
-              textAnchor="start"
+              textAnchor="end"
               className="text-[12px] font-semibold"
               style={{
                 fill: "var(--saving)",
@@ -295,9 +295,9 @@ export function ForecastDiagram() {
               Month-end forecast
             </text>
             <text
-              x={xForDay(DAYS - 1) + 52}
+              x={xForDay(DAYS - 1) - 52}
               y={rangeCenter + 12}
-              textAnchor="start"
+              textAnchor="end"
               className="text-[11px]"
               style={{
                 fill: "var(--muted-foreground)",
