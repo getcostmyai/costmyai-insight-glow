@@ -28,7 +28,93 @@ import { usd } from "@/lib/dashboard-data";
  * The two sections below the hero are exported, because Govern is Rightsize
  * plus autonomy — it renders the same content rather than a narrower copy of it.
  */
+/**
+ * The three saving mechanisms a Rightsize/Govern plan runs, each as its own
+ * real window sum — arbitrage (Compare's mechanism), benchmark (Certify's) and
+ * rightsize (this level's own). They are stated separately so the customer can
+ * see, card by card, what the upgrade actually bought them.
+ *
+ * The three are gross per mechanism: a workload found by two of them is in
+ * both sums. `available` already removes that double count via the Round 3
+ * dedup, and `overlapUsd` is the exact amount removed — so the reconciliation
+ * arbitrage + benchmark + rightsize − overlap = gross-deduped holds on screen.
+ */
+export interface MechanismSavings {
+  arbitrage: number;
+  benchmark: number;
+  rightsize: number;
+  arbitrageCount: number;
+  benchmarkCount: number;
+  rightsizeCount: number;
+  overlapUsd: number;
+  overlapCount: number;
+  sum: number;
+}
+
+export function mechanismSavings(ctl: DashboardController): MechanismSavings {
+  const { data } = ctl;
+  const arbitrage = data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
+  const benchmark = data.levels.quality_match.unlocked
+    ? data.qualityMatched.reduce((s, r) => s + r.saving, 0)
+    : data.levels.quality_match.lockedSaving;
+  const rightsize = data.levels.rightsize.unlocked
+    ? data.oversized.reduce((s, o) => s + o.wasted, 0)
+    : data.levels.rightsize.lockedSaving;
+  return {
+    arbitrage,
+    benchmark,
+    rightsize,
+    arbitrageCount: data.hostArbitrage.length,
+    benchmarkCount: data.levels.quality_match.unlocked
+      ? data.qualityMatched.length
+      : data.levels.quality_match.lockedCount,
+    rightsizeCount: data.levels.rightsize.unlocked
+      ? data.oversized.length
+      : data.levels.rightsize.lockedCount,
+    overlapUsd: data.savings.overlapUsd,
+    overlapCount: data.savings.overlapCount,
+    sum: arbitrage + benchmark + rightsize,
+  };
+}
+
+/** One sentence that reconciles the three cards with the headline total. */
+export function mechanismSentence(m: MechanismSavings): string {
+  return `${usd(m.arbitrage, 0)} arbitrage + ${usd(m.benchmark, 0)} benchmark + ${usd(
+    m.rightsize,
+    0,
+  )} rightsize, less ${usd(m.overlapUsd, 0)} counted twice across ${m.overlapCount} shared workload${
+    m.overlapCount === 1 ? "" : "s"
+  }.`;
+}
+
+/** The three mechanism cards, in the same visual pattern Certify uses. */
+export function MechanismStats({ mech }: { mech: MechanismSavings }) {
+  return (
+    <>
+      <HeroStat
+        label="Arbitrage saving"
+        value={usd(mech.arbitrage, 0)}
+        sub="Same model, cheaper host — no benchmark needed"
+        accent="oklch(0.86 0.09 265)"
+      />
+      <HeroStat
+        label="Benchmark saving"
+        value={usd(mech.benchmark, 0)}
+        sub="Different model, quality proven before it is shown"
+        accent="oklch(0.83 0.11 195)"
+      />
+      <HeroStat
+        label="Rightsize saving"
+        value={usd(mech.rightsize, 0)}
+        sub={`Oversized waste on ${mech.rightsizeCount} overpowered workload${mech.rightsizeCount === 1 ? "" : "s"}`}
+        accent="oklch(0.83 0.13 55)"
+      />
+    </>
+  );
+}
+
 export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
+
   const { data, range, setRange, activeRange, live } = ctl;
   const { savings } = data;
   // Captured and available are both real sums over the same window, so the
