@@ -134,7 +134,10 @@ export interface OversizedWorkload {
   hostKey: string;
   task: string;
   toModel: string | null;
+  /** Real dollars this workload wasted inside the selected window. */
   wasted: number;
+  /** The same waste as a labelled 30-day run-rate, for the ledger and Govern. */
+  wastedMonthly: number;
   savingPct: number;
   note: string;
 }
