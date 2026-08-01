@@ -1,10 +1,10 @@
-import { HeroStat, LevelHero, RangeToggle, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { HeroStat, LevelHero, Legend, RangeToggle, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
+import { LevelEmpty, LevelLocked, NextLevelUpsell } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
-import { useLiveTotals } from "@/lib/gateway-metrics";
 
 /**
  * Compare — same model, cheaper host. The free level.
@@ -12,23 +12,28 @@ import { useLiveTotals } from "@/lib/gateway-metrics";
  * The claim here carries no quality risk at all: identical weights, a
  * different provider. So the hero leads with coverage (how much of your spend
  * is already on its cheapest host) rather than with quality evidence, which
- * belongs to Certify.
+ * belongs to Certify. Nothing on this page describes a switch already running:
+ * activating is a paid action and belongs to Rightsize and Govern.
  */
 export function CompareLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, activeRange, canAct, activate, busy, errorFor, ctaHref, ctaLabel } =
+  const { data, range, setRange, activeRange, canAct, activate, busy, errorFor, ctaHref, ctaLabel, scope } =
     ctl;
-  const { live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const level = data.levels.host_arbitrage;
+  const certify = data.levels.quality_match;
   const rows = data.hostArbitrage;
 
+  // The exact snapshot figure, not the live ticker: this must read identically
+  // to the same window on every other level page.
+  const windowSpend = data.totals.spend;
   const availableMonthly = rows.reduce((s, r) => s + r.monthlySaving, 0);
-  const capturedMonthly = data.activeSwitches
-    .filter((s) => s.badge !== "Quality-matched")
-    .reduce((s, a) => s + a.monthlyRate, 0);
   const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
-  const onCheapestHost = Math.max(0, live.spend - availableMonthly);
-  const coveragePct = live.spend > 0 ? (onCheapestHost / live.spend) * 100 : 100;
+  const onCheapestHost = Math.max(0, windowSpend - availableMonthly);
+  const coveragePct = windowSpend > 0 ? (onCheapestHost / windowSpend) * 100 : 100;
+  const certifyMonthly = certify.unlocked
+    ? data.qualityMatched.reduce((s, r) => s + r.monthlySaving, 0)
+    : certify.lockedMonthly;
+  const certifyCount = certify.unlocked ? data.qualityMatched.length : certify.lockedCount;
 
   return (
     <>
@@ -53,7 +58,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <HeroStat
               label={`Spend · ${activeRange.long}`}
-              value={usd(live.spend)}
+              value={usd(windowSpend)}
               sub="through the hosts you use today"
               accent="oklch(0.85 0.1 300)"
             />
@@ -70,17 +75,26 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
-              label="Already captured"
-              value={usd(capturedMonthly, 0)}
-              sub="running through cheaper hosts now"
+              label="Best single saving"
+              value={bestPct > 0 ? `${bestPct.toFixed(0)}%` : "—"}
+              sub={bestPct > 0 ? "on one workload's host swap" : "nothing left to move"}
               accent="oklch(0.86 0.09 265)"
             />
             <HeroStat
               label="On cheapest host"
               value={`${Math.round(coveragePct)}%`}
-              sub={bestPct > 0 ? `best single saving ${bestPct.toFixed(0)}%` : "nothing left to move"}
+              sub="of your spend already optimal"
               accent="oklch(0.9 0.03 285)"
             />
+          </>
+        }
+        aside={
+          <>
+            <SavingsRing captured={data.savings.activeMonthly} available={data.savings.availableMonthly} />
+            <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
+              <Legend color="oklch(0.65 0.15 158)" label="Captured" />
+              <Legend color="oklch(0.72 0.11 195)" label="Available" />
+            </div>
           </>
         }
       />
@@ -137,6 +151,17 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           </div>
         )}
       </section>
+
+      {/* The Certify check ran against this workspace whether or not Certify is
+          bought — only its detail is withheld, never the number. */}
+      <NextLevelUpsell
+        to={scope === "demo" ? "/demo/certify" : "/workspace/certify"}
+        requiredPlan="certify"
+        count={certifyCount}
+        monthly={certifyMonthly}
+        what="workload"
+        unlocked={certify.unlocked}
+      />
     </>
   );
 }
