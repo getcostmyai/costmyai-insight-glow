@@ -300,8 +300,8 @@ function BuiltFor() {
           lead="From solo founders watching their first AI invoice to enterprise teams standardizing governance across every model deployment."
         />
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PERSONAS.map((p) => (
-            <div key={p.title} className="card-surface flex flex-col p-6">
+          {PERSONAS.map((p, i) => (
+            <Reveal key={p.title} delay={i * 80} className="card-surface flex flex-col p-6">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-soft">
                 <p.icon className="h-5 w-5 text-primary" />
               </div>
@@ -316,7 +316,7 @@ function BuiltFor() {
                 Book a Demo
                 <ArrowRight className="h-4 w-4" />
               </a>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
