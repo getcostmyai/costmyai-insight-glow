@@ -66,12 +66,13 @@ function Hero({ data }: { data: CatalogPayload }) {
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
     return {
       models: data.rows.length,
-      // Model makers (who trained the weights) — not the same as serving providers.
-      vendors: data.vendors.length,
+      // Models sold by more than one verified host — every one of these is a live price race.
+      contested: data.rows.filter((r) => r.hosts.length > 1).length,
       providers: data.providers.length,
       topSpread,
     };
   }, [data]);
+
 
 
   return (
@@ -113,7 +114,7 @@ function Hero({ data }: { data: CatalogPayload }) {
 
         <div className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
           <HeroStat delay={0} value={stats.models} label="Models priced" />
-          <HeroStat delay={80} value={stats.vendors} label="Model makers" />
+          <HeroStat delay={80} value={stats.contested} label="Models with 2+ hosts" />
           <HeroStat delay={160} value={stats.providers} label="Serving providers" />
 
           <HeroStat
@@ -130,10 +131,11 @@ function Hero({ data }: { data: CatalogPayload }) {
           as="p"
           className="mx-auto mt-10 max-w-2xl text-xs leading-relaxed text-muted-foreground"
         >
-          A <span className="text-foreground">model maker</span> trains the weights. A{" "}
-          <span className="text-foreground">serving provider</span> sells access to them. One model
-          can be sold by many providers at different prices — that gap is the arbitrage.
+          A <span className="text-foreground">serving provider</span> sells access to a model. When
+          the same model is sold by several providers at different rates, that gap is the arbitrage
+          — and it is the number we act on.
         </Reveal>
+
 
       </div>
     </section>
@@ -215,7 +217,7 @@ function Catalog({ data }: { data: CatalogPayload }) {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
               <FilterChip active={vendor === null} onClick={() => setVendor(null)}>
-                All makers
+                All
               </FilterChip>
 
               {data.vendors.map((v) => (
