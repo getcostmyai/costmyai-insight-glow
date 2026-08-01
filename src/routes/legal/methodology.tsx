@@ -58,35 +58,71 @@ const SECTIONS = [
 function MethodologyPage() {
   return (
     <MarketingShell>
-      <section className="wash-hero">
-        <div className="mx-auto max-w-3xl px-5 py-20 sm:px-8">
-          <p className="eyebrow">Methodology</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-[-0.03em] sm:text-5xl">
-            How a switch gets proven.
-          </h1>
-          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            A recommendation you cannot audit is a guess with a dollar sign in front of it. This is
-            the whole decision procedure, written down so it can be checked.
-          </p>
-
-          <div className="mt-12 space-y-4">
-            {SECTIONS.map((s) => (
-              <div key={s.title} className="card-surface p-6">
-                <h2 className="text-lg font-semibold tracking-tight">{s.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-              </div>
-            ))}
+      <div className="flex flex-col">
+        <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
+          <div className="mx-auto max-w-6xl">
+            <Reveal className="max-w-4xl">
+              <p className="eyebrow">Methodology</p>
+              <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
+                How a switch gets <span className="text-gradient-brand">proven</span>.
+              </h1>
+              <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+                A recommendation you cannot audit is a guess with a dollar sign in front of it. This
+                is the whole decision procedure, written down so it can be checked.
+              </p>
+            </Reveal>
           </div>
+        </section>
 
-          <p className="mt-10 text-sm text-muted-foreground">
-            See it applied to a live catalog on the{" "}
-            <Link to="/models" className="font-semibold text-primary">
-              models page
-            </Link>
-            .
-          </p>
-        </div>
-      </section>
+        <section className="px-5 pb-28 sm:px-8 sm:pb-36">
+          <div className="mx-auto max-w-6xl">
+            <ul className="divide-y divide-border/60 border-t border-border/60">
+              {SECTIONS.map((s, i) => (
+                <li key={s.title}>
+                  <Reveal delay={Math.min(i, 6) * 40}>
+                    <div className="grid gap-5 py-12 sm:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] sm:gap-14">
+                      <div className="flex items-baseline gap-5">
+                        <span className="select-none text-4xl font-semibold tabular-nums tracking-[-0.04em] text-muted-foreground/25">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+                          {s.title}
+                        </h2>
+                      </div>
+                      <p className="self-center text-[1.0625rem] leading-[1.75] text-muted-foreground">
+                        {s.body}
+                      </p>
+                    </div>
+                  </Reveal>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="mx-auto max-w-3xl text-center">
+            <Reveal>
+              <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                Every rule above runs on a live catalog.
+                <br />
+                <span className="text-gradient-brand">See it applied to real prices.</span>
+              </h2>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+                <Link to="/models" className="btn-gradient px-6 py-3 text-sm">
+                  Browse the models catalog
+                </Link>
+                <Link
+                  to="/intelligence"
+                  className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+                >
+                  This month in the market
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      </div>
     </MarketingShell>
   );
 }
