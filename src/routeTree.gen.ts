@@ -18,10 +18,16 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
+import { Route as DemoRightsizeRouteImport } from './routes/demo.rightsize'
+import { Route as DemoOverviewRouteImport } from './routes/demo.overview'
+import { Route as DemoGovernRouteImport } from './routes/demo.govern'
+import { Route as DemoCompareRouteImport } from './routes/demo.compare'
+import { Route as DemoCertifyRouteImport } from './routes/demo.certify'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -79,6 +85,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
   id: '/partners_/apply',
   path: '/partners/apply',
@@ -98,6 +109,31 @@ const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
   id: '/legal/methodology',
   path: '/legal/methodology',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRightsizeRoute = DemoRightsizeRouteImport.update({
+  id: '/rightsize',
+  path: '/rightsize',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoOverviewRoute = DemoOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoGovernRoute = DemoGovernRouteImport.update({
+  id: '/govern',
+  path: '/govern',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoCompareRoute = DemoCompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoCertifyRoute = DemoCertifyRouteImport.update({
+  id: '/certify',
+  path: '/certify',
+  getParentRoute: () => DemoRoute,
 } as any)
 const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
   id: '/workspace',
@@ -165,7 +201,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/demo': typeof DemoRoute
+  '/demo': typeof DemoRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
@@ -176,10 +212,16 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/demo/certify': typeof DemoCertifyRoute
+  '/demo/compare': typeof DemoCompareRoute
+  '/demo/govern': typeof DemoGovernRoute
+  '/demo/overview': typeof DemoOverviewRoute
+  '/demo/rightsize': typeof DemoRightsizeRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/demo/': typeof DemoIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
@@ -191,7 +233,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/demo': typeof DemoRoute
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
@@ -202,10 +243,16 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
+  '/demo/certify': typeof DemoCertifyRoute
+  '/demo/compare': typeof DemoCompareRoute
+  '/demo/govern': typeof DemoGovernRoute
+  '/demo/overview': typeof DemoOverviewRoute
+  '/demo/rightsize': typeof DemoRightsizeRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/demo': typeof DemoIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
@@ -219,7 +266,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/demo': typeof DemoRoute
+  '/demo': typeof DemoRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
@@ -230,10 +277,16 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
+  '/demo/certify': typeof DemoCertifyRoute
+  '/demo/compare': typeof DemoCompareRoute
+  '/demo/govern': typeof DemoGovernRoute
+  '/demo/overview': typeof DemoOverviewRoute
+  '/demo/rightsize': typeof DemoRightsizeRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners_/apply': typeof PartnersApplyRoute
+  '/demo/': typeof DemoIndexRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
@@ -258,10 +311,16 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/workspace'
+    | '/demo/certify'
+    | '/demo/compare'
+    | '/demo/govern'
+    | '/demo/overview'
+    | '/demo/rightsize'
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners/apply'
+    | '/demo/'
     | '/admin/partner-applications'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
@@ -273,7 +332,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/demo'
     | '/intelligence'
     | '/models'
     | '/partners'
@@ -284,10 +342,16 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/workspace'
+    | '/demo/certify'
+    | '/demo/compare'
+    | '/demo/govern'
+    | '/demo/overview'
+    | '/demo/rightsize'
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners/apply'
+    | '/demo'
     | '/admin/partner-applications'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
@@ -311,10 +375,16 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/workspace'
+    | '/demo/certify'
+    | '/demo/compare'
+    | '/demo/govern'
+    | '/demo/overview'
+    | '/demo/rightsize'
     | '/legal/methodology'
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners_/apply'
+    | '/demo/'
     | '/_authenticated/admin/partner-applications'
     | '/api/public/payments/webhook'
     | '/api/public/sync/benchmarks'
@@ -328,7 +398,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  DemoRoute: typeof DemoRoute
+  DemoRoute: typeof DemoRouteWithChildren
   IntelligenceRoute: typeof IntelligenceRoute
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
@@ -411,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/': {
+      id: '/demo/'
+      path: '/'
+      fullPath: '/demo/'
+      preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
     '/partners_/apply': {
       id: '/partners_/apply'
       path: '/partners/apply'
@@ -438,6 +515,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/legal/methodology'
       preLoaderRoute: typeof LegalMethodologyRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/demo/rightsize': {
+      id: '/demo/rightsize'
+      path: '/rightsize'
+      fullPath: '/demo/rightsize'
+      preLoaderRoute: typeof DemoRightsizeRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/overview': {
+      id: '/demo/overview'
+      path: '/overview'
+      fullPath: '/demo/overview'
+      preLoaderRoute: typeof DemoOverviewRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/govern': {
+      id: '/demo/govern'
+      path: '/govern'
+      fullPath: '/demo/govern'
+      preLoaderRoute: typeof DemoGovernRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/compare': {
+      id: '/demo/compare'
+      path: '/compare'
+      fullPath: '/demo/compare'
+      preLoaderRoute: typeof DemoCompareRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/certify': {
+      id: '/demo/certify'
+      path: '/certify'
+      fullPath: '/demo/certify'
+      preLoaderRoute: typeof DemoCertifyRouteImport
+      parentRoute: typeof DemoRoute
     }
     '/_authenticated/workspace': {
       id: '/_authenticated/workspace'
@@ -548,11 +660,31 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface DemoRouteChildren {
+  DemoCertifyRoute: typeof DemoCertifyRoute
+  DemoCompareRoute: typeof DemoCompareRoute
+  DemoGovernRoute: typeof DemoGovernRoute
+  DemoOverviewRoute: typeof DemoOverviewRoute
+  DemoRightsizeRoute: typeof DemoRightsizeRoute
+  DemoIndexRoute: typeof DemoIndexRoute
+}
+
+const DemoRouteChildren: DemoRouteChildren = {
+  DemoCertifyRoute: DemoCertifyRoute,
+  DemoCompareRoute: DemoCompareRoute,
+  DemoGovernRoute: DemoGovernRoute,
+  DemoOverviewRoute: DemoOverviewRoute,
+  DemoRightsizeRoute: DemoRightsizeRoute,
+  DemoIndexRoute: DemoIndexRoute,
+}
+
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  DemoRoute: DemoRoute,
+  DemoRoute: DemoRouteWithChildren,
   IntelligenceRoute: IntelligenceRoute,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,

@@ -1,14 +1,18 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Outlet, createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { ArrowRight, Handshake, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
 
-import { DashboardView } from "@/components/dashboard/DashboardView";
 import { supabase } from "@/integrations/supabase/client";
 import { acceptInvite, listMyInvites } from "@/lib/invites.functions";
 import { createWorkspace, listMyWorkspaces } from "@/lib/workspace.functions";
 import { suggestWorkspaceName, validateWorkspaceName } from "@/lib/workspace/naming";
 
+/**
+ * Layout for the signed-in workspace. It owns the one question every level
+ * page would otherwise repeat — does this person have a workspace at all — and
+ * the account chrome. The level itself is the child route.
+ */
 export const Route = createFileRoute("/_authenticated/workspace")({
   head: () => ({
     meta: [
@@ -27,10 +31,10 @@ export const Route = createFileRoute("/_authenticated/workspace")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: WorkspacePage,
+  component: WorkspaceLayout,
 });
 
-function WorkspacePage() {
+function WorkspaceLayout() {
   const { user } = Route.useRouteContext();
   const workspaces = useQuery({
     queryKey: ["my-workspaces"],
@@ -50,7 +54,7 @@ function WorkspacePage() {
 
   return (
     <div className="relative">
-      <div className="absolute right-6 top-6 z-50 flex items-center gap-2">
+      <div className="absolute top-6 right-6 z-50 flex items-center gap-2">
         <Link
           to="/settings"
           className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
@@ -75,7 +79,7 @@ function WorkspacePage() {
         <SignOutButton inline />
       </div>
 
-      <DashboardView scope="mine" />
+      <Outlet />
     </div>
   );
 }
@@ -214,7 +218,7 @@ function SignOutButton({ inline = false }: { inline?: boolean }) {
       className={
         inline
           ? "mb-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-          : "absolute right-6 top-6 z-50 flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
+          : "absolute top-6 right-6 z-50 flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
       }
     >
       <LogOut className="h-3.5 w-3.5" />
