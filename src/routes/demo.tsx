@@ -1,12 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { DashboardView } from "@/components/dashboard/DashboardView";
-import { dashboardQuery } from "@/lib/dashboard-queries";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 
 /**
  * The public demo workspace. This is the dashboard language — dark hero, live
  * synthetic ecosystem — deliberately kept separate from the light marketing
- * pages that link to it.
+ * pages that link to it. Each level is a real child route.
  */
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -27,7 +24,6 @@ export const Route = createFileRoute("/demo")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(dashboardQuery("30d")),
   errorComponent: () => (
     <div className="mx-auto max-w-lg p-16 text-center">
       <h1 className="text-xl font-semibold">Usage data is unavailable</h1>
@@ -41,5 +37,5 @@ export const Route = createFileRoute("/demo")({
       Workspace not found.
     </div>
   ),
-  component: () => <DashboardView scope="demo" />,
+  component: () => <Outlet />,
 });
