@@ -18,10 +18,17 @@ const topNav = [
   { label: "Plans", to: "/pricing" },
 ] as const;
 
+/**
+ * Account destinations that are real routes. "Workspace" used to sit here and
+ * pointed at the level pages the switcher above already covers, so clicking it
+ * appeared to do nothing — it is gone rather than dead.
+ */
 const accountNav = [
-  { label: "Settings", to: "/settings" },
-  { label: "Workspace", to: "/workspace" },
+  { label: "Settings", to: "/settings", icon: Settings },
+  { label: "Billing", to: "/billing", icon: CreditCard },
+  { label: "Team", to: "/team", icon: Users },
 ] as const;
+
 
 const ICONS: Record<LevelKey, typeof Layers> = {
   overview: Layers,
