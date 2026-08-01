@@ -266,7 +266,7 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
         <path
           d={arc(angleFor(0.02), angleFor(clamped))}
           fill="none"
-          stroke={safe ? "oklch(0.66 0.15 160)" : "oklch(0.62 0.19 24)"}
+          stroke={safe ? "var(--saving)" : "var(--destructive)"}
           strokeWidth={stroke}
           strokeLinecap="round"
           style={{ transition: "d 1s cubic-bezier(0.22,1,0.36,1)" }}
@@ -275,10 +275,11 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
         <path
           d={arc(START, angleFor(1))}
           fill="none"
-          stroke="oklch(0.62 0.19 24)"
+          stroke="var(--destructive)"
           strokeWidth={3}
           strokeLinecap="round"
         />
+
         <circle cx={nx} cy={ny} r={5} fill="var(--background)" stroke="currentColor" strokeWidth={2} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
