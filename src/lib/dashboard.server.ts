@@ -135,6 +135,59 @@ function medianOf(values: number[]) {
   return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
 }
 
+interface RollupRow {
+  bucket_start: string;
+  model_key: string;
+  host: string;
+  task_hint: string;
+  requests: number | string;
+  input_tokens: number | string;
+  output_tokens: number | string;
+  cost_usd: number | string;
+  output_p50?: number | string | null;
+  output_p95?: number | string | null;
+}
+
+/**
+ * Collapse rollups into one aggregate per workload. Shared by the window read
+ * and the fixed 30-day baseline the headline claim is anchored to, so both
+ * shape their input identically.
+ */
+function aggregateUsage(rows: RollupRow[], days: number): UsageAggregate[] {
+  const byWorkload = new Map<string, UsageAggregate>();
+  const shapes = new Map<string, { p50: number[]; p95: number[] }>();
+  for (const r of rows) {
+    const key = `${r.model_key}|${r.host}|${r.task_hint}`;
+    const agg = byWorkload.get(key) ?? {
+      model_key: r.model_key,
+      host: r.host,
+      task_hint: r.task_hint,
+      requests: 0,
+      input_tokens: 0,
+      output_tokens: 0,
+      cost_usd: 0,
+      days,
+    };
+    agg.requests += Number(r.requests);
+    agg.input_tokens += Number(r.input_tokens);
+    agg.output_tokens += Number(r.output_tokens);
+    agg.cost_usd += Number(r.cost_usd);
+    byWorkload.set(key, agg);
+
+    const shape = shapes.get(key) ?? { p50: [], p95: [] };
+    if (r.output_p50) shape.p50.push(Number(r.output_p50));
+    if (r.output_p95) shape.p95.push(Number(r.output_p95));
+    shapes.set(key, shape);
+  }
+  return [...byWorkload.entries()].map(([key, u]) => ({
+    ...u,
+    output_p50: medianOf(shapes.get(key)?.p50 ?? []),
+    output_p95: medianOf(shapes.get(key)?.p95 ?? []),
+  }));
+}
+
+
+
 export interface SnapshotInput {
   days: RangeDays;
   objective?: ObjectiveSelection | null;
@@ -303,15 +356,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const buckets = new Map<string, SeriesPoint>();
   const totals = emptyTotals();
   const previous = emptyTotals();
-  const shapes = new Map<string, { p50: number[]; p95: number[] }>();
-  const byWorkload = new Map<string, UsageAggregate>();
 
   const split = partitionRollups(rollups.data ?? [], w);
+
   for (const r of split.previous) addTo(previous, r);
 
   for (const r of split.current) {
     addTo(totals, r);
-
 
     const label = bucketLabel(r.bucket_start, days);
     const point = buckets.get(label) ?? {
@@ -326,37 +377,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     point.inputTokens += Number(r.input_tokens);
     point.outputTokens += Number(r.output_tokens);
     buckets.set(label, point);
-
-    const key = `${r.model_key}|${r.host}|${r.task_hint}`;
-    const agg = byWorkload.get(key) ?? {
-      model_key: r.model_key,
-      host: r.host,
-      task_hint: r.task_hint,
-      requests: 0,
-      input_tokens: 0,
-      output_tokens: 0,
-      cost_usd: 0,
-      days,
-    };
-    agg.requests += Number(r.requests);
-    agg.input_tokens += Number(r.input_tokens);
-    agg.output_tokens += Number(r.output_tokens);
-    agg.cost_usd += Number(r.cost_usd);
-    byWorkload.set(key, agg);
-
-    const shape = shapes.get(key) ?? { p50: [], p95: [] };
-    if (r.output_p50) shape.p50.push(Number(r.output_p50));
-    if (r.output_p95) shape.p95.push(Number(r.output_p95));
-    shapes.set(key, shape);
   }
+
 
   const series = [...buckets.values()].map((p) => ({ ...p, spend: round2(p.spend) }));
 
-  const usage = [...byWorkload.entries()].map(([key, u]) => ({
-    ...u,
-    output_p50: medianOf(shapes.get(key)?.p50 ?? []),
-    output_p95: medianOf(shapes.get(key)?.p95 ?? []),
-  }));
+  const usage = aggregateUsage(split.current as RollupRow[], days);
+
 
   // ---- The engine, over exactly the traffic shown above ---------------------
   const priceRows = (prices.data ?? []).map((p) => ({
@@ -429,6 +456,69 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const hostArbitrage = arbitrageLevel.items;
   const qualityMatched = qualityLevel.items;
   const oversized = oversizedLevel.items;
+
+  /**
+   * The headline claim and the month-end projection are NOT window-dependent.
+   *
+   * The 24h/7d/30d toggle governs what traffic and which lists you are looking
+   * at. It must not silently redefine "what you can stop paying" or "where this
+   * month lands" — those swung by thousands of dollars purely because a user
+   * clicked a different tab. Both are anchored to one fixed 30-day basis, the
+   * same basis on every tab.
+   */
+  const baselineDays = 30;
+  const baselineStart = new Date(now - baselineDays * DAY_MS).toISOString();
+  let baselineRows: RollupRow[];
+  if (days === baselineDays) {
+    baselineRows = split.current as RollupRow[];
+  } else {
+    const { data } = await supabase
+      .from("usage_rollups")
+      .select(
+        "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+      )
+      .eq("org_id", orgId)
+      .eq("granularity", "day")
+      .gte("bucket_start", baselineStart)
+      .limit(100_000);
+    baselineRows = (data ?? []) as RollupRow[];
+  }
+
+  const baselineSpend = baselineRows.reduce((s, r) => s + Number(r.cost_usd), 0);
+  const baselineResult =
+    days === baselineDays
+      ? result
+      : runPipeline({
+          usage: aggregateUsage(baselineRows, baselineDays),
+          prices: priceRows,
+          benchmarks: (benchmarks.data ?? []).map((b) => ({
+            ...b,
+            score: Number(b.score),
+          })) as BenchmarkRow[],
+          margins: (margins.data ?? []).map((m) => ({ ...m, margin: Number(m.margin) })) as MarginRow[],
+          models: (models.data ?? []) as ModelRow[],
+          objectives: objectiveRows,
+        });
+
+  const baselineArbitrage = gateLevel(
+    "host_arbitrage",
+    plan,
+    baselineResult.hostArbitrage.map(toOpportunity),
+    (r) => r.monthlySaving,
+  );
+  const baselineQuality = gateLevel(
+    "quality_match",
+    plan,
+    baselineResult.qualityMatched.map(toOpportunity),
+    (r) => r.monthlySaving,
+  );
+  const baselineOversized = gateLevel(
+    "rightsize",
+    plan,
+    baselineResult.oversized.map((r) => ({ wasted: round2(r.monthlySavingUsd) })),
+    (o) => o.wasted,
+  );
+
 
   // ---- What is already running, inside the selected window -------------------
   const toSwitchRow = (s: {
@@ -517,13 +607,33 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   );
   const lastPricingSync = pricingSnapshot.data?.synced_at ?? null;
 
-  const availableMonthly = round2(
+  /** Window-scoped opportunity — matches exactly the lists rendered below the hero. */
+  const windowAvailableMonthly = round2(
     arbitrageLevel.unlockedMonthly + qualityLevel.unlockedMonthly + oversizedLevel.unlockedMonthly,
   );
-  const lockedMonthly = round2(
+  const windowLockedMonthly = round2(
     arbitrageLevel.lockedMonthly + qualityLevel.lockedMonthly + oversizedLevel.lockedMonthly,
   );
-  const activeMonthly = round2(activeSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+
+  /** Headline claim — fixed 30-day basis, identical on every tab. */
+  const availableMonthly = round2(
+    baselineArbitrage.unlockedMonthly + baselineQuality.unlockedMonthly + baselineOversized.unlockedMonthly,
+  );
+  const lockedMonthly = round2(
+    baselineArbitrage.lockedMonthly + baselineQuality.lockedMonthly + baselineOversized.lockedMonthly,
+  );
+
+  /**
+   * Everything running right now is saving money right now, whatever day it was
+   * switched on. Filtering the capture rate by activation date reported 0%
+   * captured on the 7d and 24h tabs while two switches were actively saving
+   * ~$1.3k/mo — the rate is a present-tense fact, not this window's news.
+   */
+  const runningSwitches = (switches.data ?? [])
+    .filter((s) => s.status === "active")
+    .map(toSwitchRow);
+  const activeMonthly = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+
 
   const dataState: DataState = deriveDataState({
     hasEverIngested: (firstEvent.data ?? []).length > 0,
@@ -593,11 +703,23 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       activeMonthly,
       availableMonthly,
       lockedMonthly,
-      certifiedCount: hostArbitrage.length + qualityMatched.length,
-      savedToDate: round2(activeSwitches.reduce((s, a) => s + a.saved, 0)),
+      certifiedCount: baselineArbitrage.items.length + baselineQuality.items.length,
+      savedToDate: round2(runningSwitches.reduce((s, a) => s + a.saved, 0)),
+      /** Same figures scoped to the selected window — what the lists below add up to. */
+      windowAvailableMonthly,
+      windowLockedMonthly,
+      windowCertifiedCount: hostArbitrage.length + qualityMatched.length,
+      /** How the headline and projection are derived, so the UI can say so. */
+      basisDays: baselineDays,
+    },
+    /** One month-end projection, from the fixed 30-day run rate, on every tab. */
+    projection: {
+      monthEndUsd: round2(baselineSpend),
+      basisDays: baselineDays,
     },
     reconciliation,
     reconciliationOutsideWindow,
+
     coverage: {
       untrackedModels: untracked.size,
       pricesSyncedAgo: relativeAgo(lastPricingSync, now),

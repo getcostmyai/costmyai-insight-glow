@@ -28,7 +28,7 @@ import { ObjectiveSelect, LevelEmpty, LevelLocked } from "@/components/dashboard
 import { dashboardQuery, ranges, rangeFor, type RangeKey, type DashboardScope } from "@/lib/dashboard-queries";
 import type { ObjectiveKind } from "@/lib/engine/types";
 import type { SwitchOpportunity } from "@/lib/dashboard.server";
-import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
+import { compact, int, useLiveTotals } from "@/lib/gateway-metrics";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { supabase } from "@/integrations/supabase/client";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
@@ -176,7 +176,10 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
     data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
-  const runRateMonthly = (live.spend / rangeHours(range)) * 720;
+  // One projection basis on every tab — the 30-day run rate, not whatever
+  // window happens to be selected.
+  const runRateMonthly = data.projection.monthEndUsd;
+
   const totalTokens = live.inputTokens + live.outputTokens;
   const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
 
@@ -363,8 +366,10 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                   <span className="text-white/80">a month — today.</span>
                 </h1>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  {savings.certifiedCount} certified switches are waiting on your {plan} plan. Every
-                  one is quality-checked against your own traffic — same output, lower bill.
+                  {savings.certifiedCount} certified switches are waiting on your {plan} plan,
+                  measured across your last {savings.basisDays} days of traffic — the same basis on
+                  every period tab. Every one is quality-checked against your own traffic — same
+                  output, lower bill.
                   {savings.lockedMonthly > 0 && (
                     <>
                       {" "}
@@ -387,11 +392,12 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
                     accent="oklch(0.85 0.1 300)"
                   />
                   <HeroStat
-                    label="Projected month-end"
+                    label={`Projected month-end · ${data.projection.basisDays}-day rate`}
                     value={usd(runRateMonthly, 0)}
                     sub={`${usd(Math.max(0, runRateMonthly - savings.availableMonthly), 0)} if all switches run`}
                     accent="oklch(0.9 0.03 285)"
                   />
+
                   <HeroStat
                     label="Blended cost / 1M tok"
                     value={usd(costPerMillion)}
