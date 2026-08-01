@@ -7,7 +7,7 @@ import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { LEVELS } from "@/lib/dashboard/levels";
-import { compact, useLiveTotals } from "@/lib/gateway-metrics";
+import { compact } from "@/lib/gateway-metrics";
 import { planAtLeast, type PlanTier } from "@/lib/engine/types";
 
 /**
