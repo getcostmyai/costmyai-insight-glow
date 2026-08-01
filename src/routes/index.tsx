@@ -643,10 +643,14 @@ function SectionHead({
   align?: "center" | "left";
 }) {
   return (
-    <div className={align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-xl"}>
+    <Reveal className={align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-xl"}>
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-bold tracking-[-0.028em] sm:text-4xl">{title}</h2>
-      {lead ? <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">{lead}</p> : null}
-    </div>
+      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-[2.75rem] sm:leading-[1.05]">
+        {title}
+      </h2>
+      {lead ? (
+        <p className="mt-5 text-base leading-relaxed text-muted-foreground">{lead}</p>
+      ) : null}
+    </Reveal>
   );
 }
