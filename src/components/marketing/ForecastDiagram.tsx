@@ -274,8 +274,8 @@ export function ForecastDiagram() {
               x={xForDay(TODAY - 1) - 10}
               y={padY + 18}
               textAnchor="end"
-              className="fill-foreground text-[12px] font-semibold"
-              style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.8s 0.2s" }}
+              className="text-[12px] font-semibold"
+              style={{ fill: "var(--foreground)", opacity: mounted ? 1 : 0, transition: "opacity 0.8s 0.2s" }}
             >
               Today
             </text>
