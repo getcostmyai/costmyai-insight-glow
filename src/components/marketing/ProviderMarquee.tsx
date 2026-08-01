@@ -1,4 +1,5 @@
 import { ProviderLogo } from "@/components/marketing/ProviderLogo";
+import { CountUp } from "@/components/marketing/Reveal";
 import type { MarketingStats } from "@/lib/marketing.functions";
 
 /**
@@ -17,9 +18,11 @@ function LiveStat({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="inline-flex items-baseline gap-2">
-        <span className="num text-xl font-semibold leading-none text-gradient-brand sm:text-2xl">
-          {value.toLocaleString("en-US")}
-        </span>
+        <CountUp
+          value={value}
+          format={(n) => Math.round(n).toLocaleString("en-US")}
+          className="num text-xl font-semibold leading-none text-gradient-brand sm:text-2xl"
+        />
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
           Live
@@ -39,14 +42,11 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
 
   return (
     <section className="border-y border-border bg-card">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:px-8">
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
-          <LiveStat value={stats.modelCount} label="Models" />
-          <LiveStat value={stats.providerCount} label="Providers" />
-          <LiveStat value={stats.priceChangesTracked} label="Price changes this month" />
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 sm:px-8">
+        <div className="flex items-center justify-center">
+          <LiveStat value={stats.providerCount} label="Providers priced, synced continuously" />
         </div>
 
-        <div className="h-px w-full bg-border" />
 
         <div className="marquee-mask relative min-w-0 overflow-hidden">
           <div className="flex w-max animate-marquee items-center gap-10 pr-10">

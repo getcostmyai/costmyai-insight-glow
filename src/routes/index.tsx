@@ -18,6 +18,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram";
 import { Estimator } from "@/components/marketing/Estimator";
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
+import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
@@ -72,19 +73,23 @@ function Hero({ stats }: { stats: MarketingStats }) {
   return (
     <section className="relative overflow-hidden wash-hero">
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-3xl px-5 pb-24 pt-24 text-center sm:px-8 sm:pb-28 sm:pt-32">
-        <h1 className="mt-6 text-[2.9rem] font-bold leading-[1.02] tracking-[-0.035em] sm:text-[4.2rem]">
+      <div className="relative mx-auto max-w-4xl px-5 pb-28 pt-28 text-center sm:px-8 sm:pb-36 sm:pt-40">
+        <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
           Stop overpaying <span className="text-gradient-brand">for AI.</span>
-        </h1>
+        </Reveal>
 
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+        <Reveal
+          delay={120}
+          as="p"
+          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+        >
           Same model on a cheaper host. A different model that benchmarks the same. A frontier model
           doing work a small one does identically. CostMyAI finds all three from your gateway
           metadata, proves each one before it moves anything — then switches it manually or lets
           Govern do it automatically.
-        </p>
+        </Reveal>
 
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+        <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
             See if you are overpaying
             <ArrowRight className="h-4 w-4" />
@@ -97,11 +102,32 @@ function Hero({ stats }: { stats: MarketingStats }) {
           >
             Book a Demo
           </a>
-        </div>
+        </Reveal>
 
-        <p className="mt-5 text-sm text-muted-foreground">
+        <Reveal delay={300} as="p" className="mt-6 text-sm text-muted-foreground">
           Metadata only. Never your prompt content.
-        </p>
+        </Reveal>
+
+        {stats.live ? (
+          <div className="mt-20 grid grid-cols-3 gap-6 border-t border-border/60 pt-12 sm:gap-10">
+            {[
+              { value: stats.modelCount, label: "Models tracked" },
+              { value: stats.providerCount, label: "Providers priced" },
+              { value: stats.priceChangesTracked, label: "Price moves this month" },
+            ].map((s, i) => (
+              <Reveal key={s.label} delay={380 + i * 90}>
+                <CountUp
+                  value={s.value}
+                  format={(n) => Math.round(n).toLocaleString("en-US")}
+                  className="block text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-6xl"
+                />
+                <p className="mt-3 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
+                  {s.label}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -115,13 +141,13 @@ function Hero({ stats }: { stats: MarketingStats }) {
 function VideoSection() {
   return (
     <section className="border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="See It Working"
           title="From live usage to a governed decision in under 60 seconds."
           lead="Watch the Verification Engine read real usage, benchmark every workload, and produce a defensible verdict."
         />
-        <div className="mx-auto mt-12 max-w-4xl">
+        <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
           <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[1.75rem] border border-border bg-background">
             <div className="absolute inset-0 opacity-[0.07] fill-gradient-brand" aria-hidden />
             <div className="relative text-center">
@@ -142,7 +168,7 @@ function VideoSection() {
               </a>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -153,15 +179,15 @@ function VideoSection() {
 function Architecture() {
   return (
     <section id="architecture" className="scroll-mt-24 wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Architecture"
           title="Runs in your environment. Sees only metadata."
           lead="The Verification Engine is middleware. Your application routes every AI request through it. The engine forwards the request unchanged, reads only token counts and model names, then sends aggregate metadata to CostMyAI. It never reads prompt content."
         />
-        <div className="mt-12">
+        <Reveal delay={80} className="mt-14">
           <ArchitectureDiagram />
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -196,14 +222,14 @@ function HowItWorks() {
   const [open, setOpen] = useState(0);
   return (
     <section id="how" className="scroll-mt-24 border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="How It Works"
           title="Connect once. Governed decisions on every workload."
           lead="Four steps. No manual exports. A defensible, benchmark-backed verdict for every workload in your live spend."
         />
 
-        <div className="mx-auto mt-12 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
           {STEPS.map((s, i) => {
             const isOpen = open === i;
             return (
@@ -228,7 +254,7 @@ function HowItWorks() {
               </div>
             );
           })}
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -267,15 +293,15 @@ const PERSONAS = [
 function BuiltFor() {
   return (
     <section className="wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Built For"
           title="Built for whoever is accountable for the AI spend."
           lead="From solo founders watching their first AI invoice to enterprise teams standardizing governance across every model deployment."
         />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PERSONAS.map((p) => (
-            <div key={p.title} className="card-surface flex flex-col p-6">
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PERSONAS.map((p, i) => (
+            <Reveal key={p.title} delay={i * 80} className="card-surface flex flex-col p-6">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-soft">
                 <p.icon className="h-5 w-5 text-primary" />
               </div>
@@ -290,7 +316,7 @@ function BuiltFor() {
                 Book a Demo
                 <ArrowRight className="h-4 w-4" />
               </a>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -334,7 +360,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
 
   return (
     <section id="pricing" className="scroll-mt-24 border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Pricing"
           title="Start free. Scale when you need to."
@@ -362,13 +388,14 @@ function Pricing({ stats }: { stats: MarketingStats }) {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {LEVELS.map((plan) => {
+          {LEVELS.map((plan, i) => {
             const meta = PLAN_META[plan];
             const price = yearly ? meta.yearly : meta.monthly;
             const featured = plan === "rightsize";
             return (
-              <div
+              <Reveal
                 key={plan}
+                delay={i * 80}
                 className={`flex flex-col rounded-3xl border p-6 ${
                   featured
                     ? "border-primary/40 bg-primary-soft shadow-[var(--shadow-card)]"
@@ -402,7 +429,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
                 >
                   {plan === "compare" ? "Start free" : `Get ${meta.label}`}
                 </Link>
-              </div>
+              </Reveal>
             );
           })}
         </div>
@@ -455,16 +482,17 @@ function Neutrality() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CHARTER.map((c) => (
-              <div
+          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CHARTER.map((c, i) => (
+              <Reveal
                 key={c.title}
+                delay={i * 80}
                 className="rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10 p-5 backdrop-blur-sm"
               >
                 <ShieldCheck className="h-5 w-5 opacity-90" />
                 <p className="mt-3 font-semibold tracking-tight">{c.title}</p>
                 <p className="mt-1.5 text-sm leading-relaxed opacity-85">{c.body}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
@@ -534,9 +562,9 @@ function Faq({ stats }: { stats: MarketingStats }) {
 
   return (
     <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
-        <div className="mx-auto mt-12 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
           {items.map((item, i) => {
             const isOpen = open === i;
             return (
@@ -558,7 +586,7 @@ function Faq({ stats }: { stats: MarketingStats }) {
               </div>
             );
           })}
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -617,10 +645,14 @@ function SectionHead({
   align?: "center" | "left";
 }) {
   return (
-    <div className={align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-xl"}>
+    <Reveal className={align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-xl"}>
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-bold tracking-[-0.028em] sm:text-4xl">{title}</h2>
-      {lead ? <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">{lead}</p> : null}
-    </div>
+      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-[2.75rem] sm:leading-[1.05]">
+        {title}
+      </h2>
+      {lead ? (
+        <p className="mt-5 text-base leading-relaxed text-muted-foreground">{lead}</p>
+      ) : null}
+    </Reveal>
   );
 }
