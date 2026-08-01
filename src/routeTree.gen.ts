@@ -20,6 +20,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
@@ -106,6 +107,11 @@ const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DemoRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
 } as any)
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
   id: '/partners_/apply',
@@ -281,7 +287,7 @@ const ApiPublicOgIntelligenceMonthRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/demo': typeof DemoRouteWithChildren
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
@@ -325,7 +332,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/pricing': typeof PricingRoute
@@ -345,6 +351,7 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
@@ -369,7 +376,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/demo': typeof DemoRouteWithChildren
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
@@ -391,6 +398,7 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/partners_/apply': typeof PartnersApplyRoute
+  '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
@@ -437,6 +445,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners/apply'
+    | '/blog/'
     | '/demo/'
     | '/intelligence/'
     | '/admin/partner-applications'
@@ -459,7 +468,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/blog'
     | '/models'
     | '/partners'
     | '/pricing'
@@ -479,6 +487,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners/apply'
+    | '/blog'
     | '/demo'
     | '/intelligence'
     | '/admin/partner-applications'
@@ -524,6 +533,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/partners_/apply'
+    | '/blog/'
     | '/demo/'
     | '/intelligence/'
     | '/_authenticated/admin/partner-applications'
@@ -548,7 +558,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  BlogRoute: typeof BlogRoute
+  BlogRoute: typeof BlogRouteWithChildren
   DemoRoute: typeof DemoRouteWithChildren
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
@@ -651,6 +661,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/'
       preLoaderRoute: typeof DemoIndexRouteImport
       parentRoute: typeof DemoRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/partners_/apply': {
       id: '/partners_/apply'
@@ -923,6 +940,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface BlogRouteChildren {
+  BlogIndexRoute: typeof BlogIndexRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogIndexRoute: BlogIndexRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 interface DemoRouteChildren {
   DemoCertifyRoute: typeof DemoCertifyRoute
   DemoCompareRoute: typeof DemoCompareRoute
@@ -947,7 +974,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  BlogRoute: BlogRoute,
+  BlogRoute: BlogRouteWithChildren,
   DemoRoute: DemoRouteWithChildren,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,
