@@ -1,24 +1,32 @@
-import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck, ShieldOff, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck, Zap } from "lucide-react";
 
 import { HeroStat, LevelHero, LocalTime, RangeToggle, SectionTitle } from "@/components/dashboard/primitives";
+import { ActiveSwitchesSection, OversizedSection } from "@/components/dashboard/levels/RightsizeLevel";
+import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
+import { compositionSentence } from "@/lib/dashboard/composition";
 import { PLAN_META } from "@/lib/engine/types";
 
 /**
  * Govern — everything Rightsize does, applied without you.
  *
- * Structurally this mirrors Rightsize on purpose: the same money, the same
- * switches. The one new object is the autonomous toggle, and the one new
- * question is which of those switches are safe to run unattended — which is
- * why the refusals list is given equal weight to the eligible list. A locked
- * workspace sees the real toggle, inert, with its real numbers behind it.
+ * It is Rightsize's page plus one new object: the manual/autonomous mode
+ * control, which sits in the hero because it is the decision this level is
+ * about. The refusals list is given equal weight to the eligible list — a
+ * switch that cannot be proven unattended is never applied unattended.
  */
 export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, canAct, autonomousMutation, errorFor } = ctl;
   const govern = data.govern;
   const meta = PLAN_META["govern"];
   const live = govern.unlocked && govern.enabled;
+  const interactive = govern.unlocked && canAct;
+
+  const setMode = (autonomous: boolean) => {
+    if (!interactive || autonomous === govern.enabled) return;
+    autonomousMutation.mutate(autonomous);
+  };
 
   return (
     <>
@@ -80,71 +88,85 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             />
           </>
         }
+        aside={
+          /* The mode control is the point of this level, so it sits in the hero.
+             A locked workspace sees the real control, inert — not a description. */
+          <div className="w-full max-w-xs rounded-3xl bg-white/10 p-5 backdrop-blur">
+            <div className="flex items-center gap-3">
+              <span
+                className={`flex size-10 items-center justify-center rounded-2xl ${
+                  live ? "bg-[oklch(0.82_0.16_155)]/20 text-[oklch(0.86_0.16_155)]" : "bg-white/10 text-white/70"
+                }`}
+              >
+                <ShieldCheck className="size-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-white">Switching mode</p>
+                <p className="text-[11px] text-white/60">
+                  {live ? "Applying certified switches for you" : "You approve every switch"}
+                </p>
+              </div>
+            </div>
+
+            <div
+              role="radiogroup"
+              aria-label="Switching mode"
+              className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-black/25 p-1 text-xs font-semibold"
+            >
+              {([
+                ["Manual", false],
+                ["Autonomous", true],
+              ] as const).map(([label, value]) => {
+                const on = govern.enabled === value;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    disabled={!interactive || autonomousMutation.isPending}
+                    onClick={() => setMode(value)}
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 transition-colors ${
+                      on
+                        ? "bg-white text-[oklch(0.22_0.07_285)]"
+                        : "text-white/70 hover:text-white disabled:hover:text-white/70"
+                    } ${interactive ? "" : "cursor-not-allowed"}`}
+                  >
+                    {autonomousMutation.isPending && !on ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : null}
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="mt-3 text-[11px] leading-relaxed text-white/60">
+              {govern.unlocked
+                ? "In autonomous mode, certified switches that clear the gate are applied as prices and benchmarks move — within three minutes of a price change, once a day for a benchmark change. Every switch stays reversible."
+                : `Autonomous mode is part of ${meta.label}. The gate below has already run against your traffic — turning it on is all that is missing.`}
+            </p>
+            {errorFor("autonomous") ? (
+              <p className="mt-2 text-[11px] text-[oklch(0.8_0.15_25)]">{errorFor("autonomous")}</p>
+            ) : null}
+            {govern.unlocked ? null : (
+              <a
+                href="/pricing"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white"
+              >
+                Upgrade to {meta.label}
+                <ArrowUpRight className="size-3.5" />
+              </a>
+            )}
+          </div>
+        }
       />
 
-      {/* The toggle is always rendered — locked workspaces see the real control,
-          disabled, rather than a description of a control they cannot see. */}
-      <section
-        className={`card-surface flex flex-wrap items-center gap-5 p-6 ${
-          govern.unlocked ? "" : "border-primary/25"
-        }`}
-      >
-        <span
-          className={`flex size-12 items-center justify-center rounded-2xl ${
-            live ? "bg-saving-soft text-saving" : "bg-muted text-muted-foreground"
-          }`}
-        >
-          {live ? <ShieldCheck className="size-6" /> : <ShieldOff className="size-6" />}
-        </span>
-        <div className="min-w-60 flex-1">
-          <p className="text-sm font-semibold">Autonomous switching</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {govern.unlocked
-              ? "When this is on, certified switches that clear the gate are applied as prices and benchmarks move — within three minutes of a price change, once a day for a benchmark change. Every switch stays reversible."
-              : `Autonomous switching is part of ${meta.label}. The gate below has already run against your traffic — turning it on is all that is missing.`}
-          </p>
-          {errorFor("autonomous") ? (
-            <p className="mt-2 text-xs text-destructive">{errorFor("autonomous")}</p>
-          ) : null}
-        </div>
+      <UsageSection ctl={ctl} />
 
-        {govern.unlocked && canAct ? (
-          <button
-            type="button"
-            role="switch"
-            aria-checked={govern.enabled}
-            disabled={autonomousMutation.isPending}
-            onClick={() => autonomousMutation.mutate(!govern.enabled)}
-            className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform active:scale-95 disabled:opacity-60 ${
-              govern.enabled
-                ? "border border-border text-muted-foreground hover:text-foreground"
-                : "bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
-            }`}
-          >
-            {autonomousMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            {govern.enabled ? "Turn autonomous off" : "Turn autonomous on"}
-          </button>
-        ) : (
-          <div className="flex flex-col items-end gap-2">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={false}
-              disabled
-              className="inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-muted px-5 py-2.5 text-sm font-semibold text-muted-foreground"
-            >
-              Turn autonomous on
-            </button>
-            <a
-              href="/pricing"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary"
-            >
-              {govern.unlocked ? "Open your own workspace" : `Upgrade to ${meta.label}`}
-              <ArrowUpRight className="size-3.5" />
-            </a>
-          </div>
-        )}
-      </section>
+      {/* Govern is Rightsize plus autonomy — the same evidence, same controls. */}
+      <OversizedSection ctl={ctl} />
+      <ActiveSwitchesSection ctl={ctl} />
 
       <section>
         <SectionTitle
@@ -154,6 +176,9 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
           badge={`${usd(govern.eligibleMonthly, 0)}/mo`}
           badgeTone="saving"
         />
+        <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
+          {compositionSentence(data.composition)}
+        </p>
         {govern.eligible.length === 0 ? (
           <div className="card-surface p-6 text-sm text-muted-foreground">
             Nothing currently clears the gate. That is a real answer, not an empty state — every
