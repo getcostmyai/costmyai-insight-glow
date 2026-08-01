@@ -1,7 +1,8 @@
+import { AccountShell } from "@/components/dashboard/AccountShell";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Loader2, Mail, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Loader2, Mail, ShieldCheck, UserPlus, X } from "lucide-react";
 
 import { listMyWorkspaces } from "@/lib/workspace.functions";
 import {
@@ -75,20 +76,12 @@ function Team({ orgId, orgName, manager }: { orgId: string; orgName: string; man
   const open = (invites.data ?? []).filter((i) => i.state === "pending");
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-3xl px-6 py-14">
-      <Link
-        to="/workspace"
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Back to {orgName}
-      </Link>
-
-      <h1 className="mt-6 text-2xl font-semibold tracking-tight">Team</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Everyone here sees the same measured spend. Owners and admins can invite and act on
-        switches; members can look.
-      </p>
+    <AccountShell
+      active="team"
+      title="Team"
+      intro={`Everyone in ${orgName} sees the same measured spend. Owners and admins can invite and act on switches; members can look.`}
+    >
+      <div className="w-full max-w-3xl">
 
       {manager ? (
         <section className="mt-8 rounded-2xl border border-border bg-card p-6">
@@ -185,7 +178,8 @@ function Team({ orgId, orgName, manager }: { orgId: string; orgName: string; man
           )}
         </section>
       ) : null}
-    </main>
+      </div>
+    </AccountShell>
   );
 }
 

@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
+
+import { AccountShell } from "@/components/dashboard/AccountShell";
 
 import {
   createIngestToken,
@@ -46,7 +48,7 @@ function SettingsPage() {
   return <Tokens orgId={org.id} orgName={org.name} />;
 }
 
-function Tokens({ orgId, orgName }: { orgId: string; orgName: string }) {
+function Tokens({ orgId }: { orgId: string; orgName: string }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [minted, setMinted] = useState<MintedTokenRow | null>(null);
@@ -197,7 +199,7 @@ function Tokens({ orgId, orgName }: { orgId: string; orgName: string }) {
         <Quickstart token={minted?.token ?? null} />
         <ReferralCard orgId={orgId} />
       </div>
-    </main>
+    </AccountShell>
   );
 }
 
