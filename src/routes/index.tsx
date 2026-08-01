@@ -84,11 +84,23 @@ function Hero({ stats }: { stats: MarketingStats }) {
           as="p"
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
-          Same model on a cheaper host. A different model that benchmarks the same. A frontier model
-          doing work a small one does identically. CostMyAI finds all three from your gateway
-          metadata, proves each one before it moves anything — then switches it manually or lets
-          Govern do it automatically.
+          CostMyAI reads your gateway metadata, proves cheaper options against real benchmarks, and
+          switches only what holds quality — manually, or automatically with Govern.
         </Reveal>
+
+        <Reveal delay={180} className="mx-auto mt-9 grid max-w-3xl gap-3 text-left sm:grid-cols-3">
+          {[
+            { k: "Cheaper host", v: "Same model, lower price" },
+            { k: "Cheaper model", v: "Benchmarks the same" },
+            { k: "Smaller model", v: "Same result, less compute" },
+          ].map((m) => (
+            <div key={m.k} className="border-t border-border pt-3">
+              <p className="text-sm font-semibold tracking-[-0.01em]">{m.k}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{m.v}</p>
+            </div>
+          ))}
+        </Reveal>
+
 
         <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
