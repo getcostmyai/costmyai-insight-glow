@@ -61,7 +61,9 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         headline={
           <>
             <span className="num text-[oklch(0.83_0.11_195)]">{usd(govern.eligibleSaving)}</span>{" "}
-            <span className="text-white/80">a month could apply itself.</span>
+            <span className="text-white/80">
+              in the {activeRange.long} could have applied itself.
+            </span>
           </>
         }
         sub={`${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate on your traffic. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
