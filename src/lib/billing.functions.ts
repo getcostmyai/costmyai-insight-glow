@@ -193,3 +193,61 @@ export const createBillingPortal = createServerFn({ method: "POST" })
   });
 
 export type { SubscriptionState };
+
+export interface InvoiceRow {
+  id: string;
+  number: string | null;
+  status: string | null;
+  amountPaidUsd: number;
+  currency: string;
+  createdIso: string;
+  hostedUrl: string | null;
+  pdfUrl: string | null;
+}
+
+/**
+ * Invoice history for the workspace, read straight from the payment provider.
+ *
+ * We deliberately do not mirror invoices into our own tables: the provider is
+ * the record of what was charged, and a stale copy of a receipt is worse than
+ * no copy at all.
+ */
+export const listWorkspaceInvoices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orgId: string; environment: Env }) => {
+    if (!UUID.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
+    return { orgId: data.orgId, environment: validEnv(data.environment) };
+  })
+  .handler(async ({ data, context }): Promise<InvoiceRow[]> => {
+    const { data: sub } = await context.supabase
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("org_id", data.orgId)
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!sub?.stripe_customer_id) return [];
+
+    const { createStripeClient } = await import("./stripe.server");
+    try {
+      const stripe = createStripeClient(data.environment);
+      const list = await stripe.invoices.list({
+        customer: sub.stripe_customer_id as string,
+        limit: 24,
+      });
+      return list.data.map((i) => ({
+        id: i.id ?? "",
+        number: i.number ?? null,
+        status: i.status ?? null,
+        amountPaidUsd: (i.amount_paid ?? 0) / 100,
+        currency: (i.currency ?? "usd").toUpperCase(),
+        createdIso: new Date((i.created ?? 0) * 1000).toISOString(),
+        hostedUrl: i.hosted_invoice_url ?? null,
+        pdfUrl: i.invoice_pdf ?? null,
+      }));
+    } catch {
+      // A billing page that 500s is worse than one that says "no receipts yet".
+      return [];
+    }
+  });

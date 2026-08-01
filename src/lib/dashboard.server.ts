@@ -96,6 +96,32 @@ export interface GovernRefusal extends GovernCandidate {
   detail: string;
 }
 
+/**
+ * A workload the certification engine looked at and could not turn into money,
+ * carrying the engine's own verdict rather than a generic refusal message.
+ */
+export interface NonQualifyingWorkload {
+  fromModel: string;
+  fromHost: string;
+  taskHint: string;
+  reason: string;
+  /** Plain-English rendering of the engine's verdict code. */
+  label: string;
+  detail: string;
+  monthlySpend: number;
+}
+
+/** The four-cell certification matrix, in the words a customer reads. */
+export const REFUSAL_LABEL: Record<string, string> = {
+  no_baseline_price: "no published price for this endpoint",
+  no_baseline_score: "no valid benchmark instrument for this task type",
+  benchmark_not_discriminating: "benchmark saturated — it cannot separate these models",
+  no_candidate_clears_bar: "quality gap outside the equivalence band",
+  no_cheaper_candidate: "already the cheapest model that holds this quality",
+  latency_ceiling_unmet: "no equal-quality option met your latency ceiling",
+  saving_below_floor: "saving below the materiality floor",
+};
+
 
 
 export interface OversizedWorkload {
@@ -737,6 +763,29 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   governEligible.sort((a, b) => b.monthlySaving - a.monthlySaving);
   governRefusals.sort((a, b) => b.monthlySaving - a.monthlySaving);
 
+  /**
+   * List C. Every workload the equivalence check evaluated and refused, with
+   * the engine's own verdict code — never invented copy — and what that
+   * workload costs per month, so a refusal can be weighed against its bill.
+   */
+  const usageByKey = new Map(usage.map((u) => [`${u.model_key}|${u.host}|${u.task_hint}`, u]));
+  const nonQualifying: NonQualifyingWorkload[] = result.refusals
+    .map((r) => {
+      const u = usageByKey.get(`${r.fromModel}|${r.fromHost}|${r.taskHint}`);
+      const monthlySpend = u ? round2((u.cost_usd / Math.max(1, u.days)) * 30) : 0;
+      return {
+        fromModel: r.fromModel,
+        fromHost: r.fromHost,
+        taskHint: r.taskHint,
+        reason: r.reason,
+        label: REFUSAL_LABEL[r.reason] ?? r.reason.replace(/_/g, " "),
+        detail: r.detail,
+        monthlySpend,
+      };
+    })
+    .sort((a, b) => b.monthlySpend - a.monthlySpend);
+
+
   /** One shared statement of how the four levels' counts relate. */
   const composition = buildComposition({
     arbitrageCount: hostArbitrage.length,
@@ -788,6 +837,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     },
     stats: result.stats,
     refusals: result.refusals.length,
+    nonQualifying,
+
     hostArbitrage,
     qualityMatched,
     oversized,

@@ -10,6 +10,7 @@ import {
 } from "@/lib/dashboard-queries";
 import type { ChartMetric } from "@/components/dashboard/SpendChart";
 import type { ObjectiveKind } from "@/lib/engine/types";
+import { useLiveTotals } from "@/lib/gateway-metrics";
 import {
   activateOpportunity,
   pauseSwitch,
@@ -35,6 +36,19 @@ export function useDashboardController(scope: DashboardScope) {
   const [objective, setObjective] = useState<ObjectiveKind>("cost");
   const { data } = useSuspenseQuery(dashboardQuery(range, objective, scope));
   const session = useSessionUser();
+  /**
+   * One live ticker per page, owned here.
+   *
+   * Every component that shows spend, requests or tokens reads this object, so
+   * the hero and the usage widget can never disagree by a cent — the previous
+   * bug was each of them calling useLiveTotals and accruing on its own clock.
+   */
+  const { live, series: liveSeries } = useLiveTotals(
+    range,
+    data.series,
+    data.totals,
+    data.generatedAt,
+  );
   const queryClient = useQueryClient();
 
   /** The demo workspace is read-only by design; only "mine" gets live controls. */
@@ -132,6 +146,8 @@ export function useDashboardController(scope: DashboardScope) {
     activeRange: rangeFor(range),
     metric,
     setMetric,
+    live,
+    liveSeries,
     objective,
     chooseObjective,
     canAct,

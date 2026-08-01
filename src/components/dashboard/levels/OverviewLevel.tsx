@@ -1,7 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, Lock } from "lucide-react";
 
-import { HeroStat, LevelHero, RangeToggle, Legend, SectionTitle } from "@/components/dashboard/primitives";
+import {
+  HeroStat,
+  LevelHero,
+  RangeToggle,
+  Legend,
+  SectionTitle,
+} from "@/components/dashboard/primitives";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -19,12 +25,14 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  * evidence for the switch is shown.
  */
 export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, activeRange, scope } = ctl;
+  const { data, range, setRange, activeRange, live, scope } = ctl;
   const { savings, stats, plan } = data;
 
   // Exact snapshot figures, not the live ticker: this window must read the same
   // here as it does on every level page.
-  const windowSpend = data.totals.spend;
+  // Shared with the gateway usage widget below via the controller, so the two
+  // spend figures on this page are literally the same number.
+  const windowSpend = live.spend;
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
@@ -72,11 +80,26 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
   const levelCards = LEVELS.filter((l) => l.key !== "overview").map((meta) => {
     const unlocked = planAtLeast(plan as PlanTier, meta.requiredPlan!);
     if (meta.key === "compare")
-      return { meta, unlocked, count: data.hostArbitrage.length, monthly: levelMonthly(data, "host_arbitrage") };
+      return {
+        meta,
+        unlocked,
+        count: data.hostArbitrage.length,
+        monthly: levelMonthly(data, "host_arbitrage"),
+      };
     if (meta.key === "certify")
-      return { meta, unlocked, count: data.qualityMatched.length, monthly: levelMonthly(data, "quality_match") };
+      return {
+        meta,
+        unlocked,
+        count: data.qualityMatched.length,
+        monthly: levelMonthly(data, "quality_match"),
+      };
     if (meta.key === "rightsize")
-      return { meta, unlocked, count: data.oversized.length, monthly: levelMonthly(data, "rightsize") };
+      return {
+        meta,
+        unlocked,
+        count: data.oversized.length,
+        monthly: levelMonthly(data, "rightsize"),
+      };
     return {
       meta,
       unlocked,
@@ -111,11 +134,12 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
             {savings.certifiedCount === 1 ? " is" : "es are"} certified and ready to activate,
             measured over your last {savings.basisDays} days of traffic — the same basis on every
             period tab.
-
             {savings.lockedMonthly > 0 && (
               <>
                 {" "}
-                A further <span className="num text-white">{usd(savings.lockedMonthly, 0)}/mo</span>{" "}
+                A further <span className="num text-white">
+                  {usd(savings.lockedMonthly, 0)}/mo
+                </span>{" "}
                 was found by checks your plan does not include yet.
               </>
             )}
@@ -205,7 +229,9 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
                 <p className="eyebrow">{meta.label}</p>
                 {unlocked ? null : <Lock className="size-3.5 text-muted-foreground" />}
               </div>
-              <span className={`num mt-2 text-3xl ${unlocked ? "text-saving" : "text-muted-foreground"}`}>
+              <span
+                className={`num mt-2 text-3xl ${unlocked ? "text-saving" : "text-muted-foreground"}`}
+              >
                 {usd(monthly, 0)}
               </span>
               <p className="mt-1 text-xs text-muted-foreground">

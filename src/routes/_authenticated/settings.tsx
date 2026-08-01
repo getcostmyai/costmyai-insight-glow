@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
+
+import { AccountShell } from "@/components/dashboard/AccountShell";
 
 import {
   createIngestToken,
@@ -46,7 +48,7 @@ function SettingsPage() {
   return <Tokens orgId={org.id} orgName={org.name} />;
 }
 
-function Tokens({ orgId, orgName }: { orgId: string; orgName: string }) {
+function Tokens({ orgId }: { orgId: string; orgName: string }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [minted, setMinted] = useState<MintedTokenRow | null>(null);
@@ -94,22 +96,12 @@ function Tokens({ orgId, orgName }: { orgId: string; orgName: string }) {
   const live = (tokens.data ?? []).filter((t) => !t.revokedAt);
 
   return (
-    <main className="min-h-screen bg-background px-6 py-12">
-      <div className="mx-auto w-full max-w-3xl">
-        <Link
-          to="/workspace"
-          className="mb-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to {orgName}
-        </Link>
-
-        <h1 className="text-2xl font-semibold tracking-tight">Connect your stack</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          Your Verification Engine authenticates with a workspace ingest token. It sends usage
-          metadata only — never prompts, completions, or your provider keys.
-        </p>
-
+    <AccountShell
+      active="settings"
+      title="Connect your stack"
+      intro="Your Verification Engine authenticates with a workspace ingest token. It sends usage metadata only — never prompts, completions, or your provider keys."
+    >
+      <div className="w-full max-w-3xl">
         {minted ? <MintedPanel minted={minted} onDismiss={() => setMinted(null)} /> : null}
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6">
@@ -206,7 +198,7 @@ function Tokens({ orgId, orgName }: { orgId: string; orgName: string }) {
         <Quickstart token={minted?.token ?? null} />
         <ReferralCard orgId={orgId} />
       </div>
-    </main>
+    </AccountShell>
   );
 }
 

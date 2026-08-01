@@ -33,7 +33,8 @@ function PartnerPage() {
   const partner = useQuery({ queryKey: ["my-partner"], queryFn: () => getMyPartner() });
 
   if (partner.isPending) return <Shell>Loading your partner account…</Shell>;
-  if (partner.isError) return <Shell>We could not read your partner account. Try again shortly.</Shell>;
+  if (partner.isError)
+    return <Shell>We could not read your partner account. Try again shortly.</Shell>;
   if (!partner.data) return <NotAPartner />;
   return <PartnerDashboardView data={partner.data} />;
 }

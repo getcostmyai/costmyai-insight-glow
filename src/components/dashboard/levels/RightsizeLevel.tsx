@@ -13,6 +13,7 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
+import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 
@@ -28,7 +29,7 @@ import { usd } from "@/lib/dashboard-data";
  * plus autonomy — it renders the same content rather than a narrower copy of it.
  */
 export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange } = ctl;
+  const { data, range, setRange, activeRange, live } = ctl;
   const { savings } = data;
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
@@ -56,6 +57,12 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
         sub={`Both figures are monthly run-rates measured across your last ${savings.basisDays} days of traffic — the same basis on every period tab. Activating is one click and reversible.`}
         stats={
           <>
+            <HeroStat
+              label={`Spend · ${activeRange.long}`}
+              value={usd(live.spend)}
+              sub="through the hosts you use today"
+              accent="oklch(0.85 0.1 300)"
+            />
             <HeroStat
               label="Active saving"
               value={usd(savings.activeMonthly, 0)}
@@ -97,12 +104,98 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             </div>
           </>
         }
-      />
+      >
+        {/* Manual switching is what this level sells, so the control sits in
+            the hero: the single biggest certified switch, one click, reversible. */}
+        <TopSwitchControl ctl={ctl} />
+      </LevelHero>
 
       <UsageSection ctl={ctl} />
+      <TransparencyLists ctl={ctl} />
       <OversizedSection ctl={ctl} />
       <ActiveSwitchesSection ctl={ctl} />
     </>
+  );
+}
+
+/**
+ * The hero's one-click switch.
+ *
+ * Rightsize's product is manual switching, so the largest certified switch is
+ * actionable before any scrolling happens. It is the same mutation the row
+ * below uses — no second code path, no second source of truth.
+ */
+export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
+  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel } = ctl;
+  const arb = data.hostArbitrage[0];
+  const qual = data.levels.quality_match.unlocked ? data.qualityMatched[0] : undefined;
+  const best = arb && qual ? (arb.monthlySaving >= qual.monthlySaving ? arb : qual) : (arb ?? qual);
+  if (!best) return null;
+  const isArb = best === arb;
+  const key = isArb
+    ? `host:${best.fromModel}|${best.fromHost}|${best.toHost}|${best.taskHint}`
+    : `quality:${best.fromModel}|${best.toModel}|${best.taskHint}`;
+
+  return (
+    <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-2xl bg-white/10 p-5 backdrop-blur">
+      <div className="min-w-60 flex-1">
+        <p className="text-[11px] font-semibold tracking-widest text-white/55 uppercase">
+          Biggest switch waiting on you
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="font-mono text-sm text-white/60 line-through decoration-white/30">
+            {best.fromModel}
+          </span>
+          <ArrowRight className="size-3.5 text-white/70" />
+          <span className="font-mono text-sm font-semibold text-white">{best.toModel}</span>
+          <span className="text-[11px] text-white/55">
+            {best.toHostLabel || best.toHost} · {best.taskHint}
+          </span>
+        </div>
+        <p className="mt-1 text-[11px] text-white/55">
+          {isArb ? "Same model, cheaper host" : "Quality-proven model swap"} · reversible at any
+          time
+        </p>
+      </div>
+      <div className="text-right">
+        <div className="num text-3xl text-[oklch(0.86_0.16_155)]">
+          {usd(best.monthlySaving, 0)}
+          <span className="text-sm text-white/55">/mo</span>
+        </div>
+      </div>
+      {canAct ? (
+        <button
+          type="button"
+          disabled={busy(key)}
+          onClick={() =>
+            activate.mutate({
+              key,
+              kind: isArb ? "host_arbitrage" : "quality_match",
+              fromModel: best.fromModel,
+              fromHost: best.fromHost,
+              toModel: best.toModel,
+              toHost: best.toHost,
+              taskHint: best.taskHint,
+            })
+          }
+          className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[oklch(0.22_0.07_285)] transition-transform active:scale-95 disabled:opacity-60"
+        >
+          {busy(key) ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
+          {busy(key) ? "Switching…" : "Switch now"}
+        </button>
+      ) : (
+        <Link
+          to={ctaHref}
+          className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[oklch(0.22_0.07_285)]"
+        >
+          {ctaLabel}
+          <ArrowUpRight className="size-4" />
+        </Link>
+      )}
+      {errorFor(key) ? (
+        <p className="w-full text-[11px] text-[oklch(0.8_0.15_25)]">{errorFor(key)}</p>
+      ) : null}
+    </div>
   );
 }
 

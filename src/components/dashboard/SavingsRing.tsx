@@ -17,7 +17,6 @@ export function SavingsRing({ captured, available }: Props) {
   const r = (size - stroke) / 2;
   const c = Math.round(2 * Math.PI * r * 100) / 100;
 
-
   return (
     <div className="relative mx-auto" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">

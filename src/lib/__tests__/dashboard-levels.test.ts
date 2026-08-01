@@ -10,6 +10,13 @@ import { describe, expect, it } from "vitest";
 const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
 
 const SHELL = read("components/dashboard/DashboardShell.tsx");
+const SIDEBAR = read("components/dashboard/DashboardSidebar.tsx");
+const ACCOUNT_SHELL = read("components/dashboard/AccountShell.tsx");
+const ACCOUNT_PAGES = {
+  settings: read("routes/_authenticated/settings.tsx"),
+  team: read("routes/_authenticated/team.tsx"),
+  billing: read("routes/_authenticated/billing.tsx"),
+};
 const LEVEL_FILES = {
   overview: read("components/dashboard/levels/OverviewLevel.tsx"),
   compare: read("components/dashboard/levels/CompareLevel.tsx"),
@@ -20,17 +27,38 @@ const LEVEL_FILES = {
 
 describe("dashboard shell", () => {
   it("names the level being viewed, not one hardcoded tier", () => {
-    expect(SHELL).toContain("LEVELS.find((l) => l.key === level)?.label");
+    expect(SIDEBAR).toContain("LEVELS.find((l) => l.key === level)?.label");
   });
 
   it("still shows the plan, labelled as the plan", () => {
-    expect(SHELL).toContain("{data.workspace.plan} plan");
+    expect(SIDEBAR).toContain("{plan} plan");
   });
 
   it("has no dead Workspace account link", () => {
-    const account = SHELL.slice(SHELL.indexOf("const accountNav"), SHELL.indexOf("const ICONS"));
-    expect(account).not.toContain('label: "Workspace"');
-    expect(account).toContain('to: "/settings"');
+    expect(SIDEBAR).not.toContain('label: "Workspace"');
+    expect(SIDEBAR).toContain('to: "/settings"');
+    expect(SIDEBAR).toContain('to: "/billing"');
+    expect(SIDEBAR).toContain('to: "/team"');
+  });
+
+  it("keeps one sidebar implementation shared by levels and account pages", () => {
+    expect(SHELL).toContain("<DashboardSidebar");
+    expect(ACCOUNT_SHELL).toContain("<DashboardSidebar");
+  });
+});
+
+describe("account subpages keep the dashboard sidebar", () => {
+  for (const [name, src] of Object.entries(ACCOUNT_PAGES)) {
+    it(`${name} renders inside AccountShell`, () => {
+      expect(src).toContain("<AccountShell");
+    });
+  }
+
+  it("billing shows the real subscription, receipts and a way back", () => {
+    expect(ACCOUNT_PAGES.billing).toContain("listWorkspaceInvoices");
+    expect(ACCOUNT_PAGES.billing).toContain("createBillingPortal");
+    expect(ACCOUNT_PAGES.billing).toContain("Invoice history");
+    expect(ACCOUNT_PAGES.billing).toContain("Back to dashboard");
   });
 });
 
@@ -52,11 +80,14 @@ describe("every level page", () => {
 });
 
 describe("cross-page dollar parity", () => {
-  it("reads window spend from the snapshot, never the live ticker", () => {
-    expect(LEVEL_FILES.overview).not.toContain("live.spend");
-    expect(LEVEL_FILES.compare).not.toContain("live.spend");
-    expect(LEVEL_FILES.overview).toContain("data.totals.spend");
-    expect(LEVEL_FILES.compare).toContain("data.totals.spend");
+  it("reads window spend from the one shared ticker the usage widget uses", () => {
+    // The hero card and the Gateway Usage widget disagreed by cents because
+    // each mounted its own ticker. Both now read controller-owned `live`.
+    expect(SHELL).toContain("usd(live.spend)");
+    for (const name of ["overview", "compare", "certify", "rightsize", "govern"] as const) {
+      expect(LEVEL_FILES[name], name).toContain("live.spend");
+    }
+    expect(read("components/dashboard/useDashboardController.ts")).toContain("useLiveTotals");
   });
 
   it("takes the donut figures from one shared savings object", () => {
