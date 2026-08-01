@@ -25,6 +25,7 @@ import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
+import { Route as EmbedIntelligenceWidgetRouteImport } from './routes/embed/intelligence-widget'
 import { Route as DemoRightsizeRouteImport } from './routes/demo.rightsize'
 import { Route as DemoOverviewRouteImport } from './routes/demo.overview'
 import { Route as DemoGovernRouteImport } from './routes/demo.govern'
@@ -128,6 +129,11 @@ const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
 const IntelligenceMonthRoute = IntelligenceMonthRouteImport.update({
   id: '/intelligence/$month',
   path: '/intelligence/$month',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedIntelligenceWidgetRoute = EmbedIntelligenceWidgetRouteImport.update({
+  id: '/embed/intelligence-widget',
+  path: '/embed/intelligence-widget',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRightsizeRoute = DemoRightsizeRouteImport.update({
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
+  '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
+  '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
@@ -368,6 +376,7 @@ export interface FileRoutesById {
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
+  '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/legal/privacy': typeof LegalPrivacyRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
+    | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/legal/privacy'
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
+    | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/legal/privacy'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
+    | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/legal/privacy'
@@ -529,6 +541,7 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   PricingRoute: typeof PricingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
@@ -658,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/intelligence/$month'
       fullPath: '/intelligence/$month'
       preLoaderRoute: typeof IntelligenceMonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/intelligence-widget': {
+      id: '/embed/intelligence-widget'
+      path: '/embed/intelligence-widget'
+      fullPath: '/embed/intelligence-widget'
+      preLoaderRoute: typeof EmbedIntelligenceWidgetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/rightsize': {
@@ -912,6 +932,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   PricingRoute: PricingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
