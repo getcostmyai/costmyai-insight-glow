@@ -73,19 +73,23 @@ function Hero({ stats }: { stats: MarketingStats }) {
   return (
     <section className="relative overflow-hidden wash-hero">
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-3xl px-5 pb-24 pt-24 text-center sm:px-8 sm:pb-28 sm:pt-32">
-        <h1 className="mt-6 text-[2.9rem] font-bold leading-[1.02] tracking-[-0.035em] sm:text-[4.2rem]">
+      <div className="relative mx-auto max-w-4xl px-5 pb-28 pt-28 text-center sm:px-8 sm:pb-36 sm:pt-40">
+        <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
           Stop overpaying <span className="text-gradient-brand">for AI.</span>
-        </h1>
+        </Reveal>
 
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+        <Reveal
+          delay={120}
+          as="p"
+          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+        >
           Same model on a cheaper host. A different model that benchmarks the same. A frontier model
           doing work a small one does identically. CostMyAI finds all three from your gateway
           metadata, proves each one before it moves anything — then switches it manually or lets
           Govern do it automatically.
-        </p>
+        </Reveal>
 
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+        <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
             See if you are overpaying
             <ArrowRight className="h-4 w-4" />
@@ -98,11 +102,32 @@ function Hero({ stats }: { stats: MarketingStats }) {
           >
             Book a Demo
           </a>
-        </div>
+        </Reveal>
 
-        <p className="mt-5 text-sm text-muted-foreground">
+        <Reveal delay={300} as="p" className="mt-6 text-sm text-muted-foreground">
           Metadata only. Never your prompt content.
-        </p>
+        </Reveal>
+
+        {stats.live ? (
+          <div className="mt-20 grid grid-cols-3 gap-6 border-t border-border/60 pt-12 sm:gap-10">
+            {[
+              { value: stats.modelCount, label: "Models tracked" },
+              { value: stats.providerCount, label: "Providers priced" },
+              { value: stats.priceChangesTracked, label: "Price moves this month" },
+            ].map((s, i) => (
+              <Reveal key={s.label} delay={380 + i * 90}>
+                <CountUp
+                  value={s.value}
+                  format={(n) => Math.round(n).toLocaleString("en-US")}
+                  className="block text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-6xl"
+                />
+                <p className="mt-3 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
+                  {s.label}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
