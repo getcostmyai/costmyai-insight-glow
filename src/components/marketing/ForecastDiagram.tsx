@@ -15,14 +15,24 @@ const DAYS = 30;
 const TODAY = 18;
 
 // Synthetic daily spend curve: low start, mid-month bump, trailing pattern.
-const ACTUAL = [
+const ACTUAL_DAILY = [
   120, 115, 132, 128, 145, 138, 110, 122, 130, 155, 148, 162, 170, 158, 149, 165, 172, 180,
 ];
-const PROJECTED = [168, 175, 162, 158, 170, 165, 172, 168, 175, 180, 185, 178];
-const FORECAST_POINT = 5_240;
-const FORECAST_RANGE = [4_980, 5_520];
+const PROJECTED_DAILY = [168, 175, 162, 158, 170, 165, 172, 168, 175, 180, 185, 178];
 
-const MAX_SPEND = Math.max(...ACTUAL, ...PROJECTED) * 1.35;
+const ACTUAL_CUMULATIVE = ACTUAL_DAILY.reduce<number[]>(
+  (acc, v) => [...acc, (acc.at(-1) ?? 0) + v],
+  [],
+);
+const LAST_KNOWN_CUMULATIVE = ACTUAL_CUMULATIVE.at(-1) ?? 0;
+const PROJECTED_CUMULATIVE = PROJECTED_DAILY.reduce<number[]>(
+  (acc, v, i) => [...acc, (i === 0 ? LAST_KNOWN_CUMULATIVE : acc.at(-1) ?? 0) + v],
+  [],
+);
+const FORECAST_POINT = PROJECTED_CUMULATIVE.at(-1) ?? 0;
+const FORECAST_RANGE = [FORECAST_POINT * 0.955, FORECAST_POINT * 1.045];
+
+const MAX_SPEND = FORECAST_RANGE[1] * 1.12;
 
 export function ForecastDiagram() {
   const [mounted, setMounted] = useState(false);
