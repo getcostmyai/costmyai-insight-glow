@@ -20,16 +20,27 @@ import { monthLabelOf } from "./snapshot.server";
  */
 
 /**
- * Locked brand identity: indigo accent on warm white, exactly as the live page.
- * Directional tones stay in the same light-background family — a rise is rose,
- * a cut is green — so the poster never invents a palette of its own.
+ * Brand identity, taken straight from the dashboard palette (src/styles.css):
+ * spend purple as the accent on the dashboard background, saving green for a
+ * cut and destructive red for a rise — the same tones the app uses in-product,
+ * so a shared poster reads as the same product as the dashboard.
  */
+const PALETTE = {
+  bg: "#FAFAFC",
+  ink: "#11131D",
+  body: "#4B4C57",
+  muted: "#70717A",
+  hairline: "#E6E6EA",
+  primary: "#7945EC",
+} as const;
+
 const TONE: Record<ShareCard["tone"], string> = {
-  brand: "#4338CA",
-  up: "#BE123C",
-  down: "#047857",
-  neutral: "#292524",
+  brand: PALETTE.primary,
+  up: "#E23439",
+  down: "#008C53",
+  neutral: PALETTE.ink,
 };
+
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
