@@ -23,15 +23,33 @@ export interface PriceMove {
   modelKey: string;
   host: string;
   hostLabel: string;
+  /** The ledger's own verdict for this row. Direction is never re-derived from one side. */
+  kind: "increase" | "decrease";
   inputNow: number | null;
   inputPrev: number | null;
   inputPct: number | null;
   outputNow: number | null;
   outputPrev: number | null;
   outputPct: number | null;
-  /** Signed % move on the input side, used for ranking. */
+  /**
+   * Signed % move used for ranking only: the input side when it moved, otherwise
+   * the output side. Some rows reprice output only — ranking must not silently
+   * drop them (that is what made 11 + 23 fail to equal 36).
+   */
   pct: number;
   observedAt: string;
+}
+
+/** Rows fed to {@link summarizeMoves} — the subset of `price_history` we read. */
+export interface PriceHistoryRow {
+  model_key: string;
+  host: string;
+  change_kind: string;
+  input_usd_per_mtok: number | string | null;
+  output_usd_per_mtok: number | string | null;
+  prev_input_usd_per_mtok: number | string | null;
+  prev_output_usd_per_mtok: number | string | null;
+  observed_at: string;
 }
 
 export interface RepricerRow {
@@ -104,6 +122,59 @@ const pct = (now: number | null, prev: number | null): number | null =>
 
 const num = (v: unknown): number | null => (v == null ? null : Number(v));
 
+/**
+ * Turn raw `price_history` rows into the move buckets the page publishes.
+ *
+ * Invariant this function exists to guarantee:
+ *   `moves.length === increases.length + decreases.length`
+ * "Total moves" therefore means increases + decreases and nothing else; new
+ * listings are counted separately and are NEVER folded into that total.
+ *
+ * Direction comes from the ledger's own `change_kind`, never re-derived from the
+ * input side alone — a row that reprices output only still has a direction.
+ */
+export function summarizeMoves(
+  rows: PriceHistoryRow[],
+  labelByHost: Map<string, string>,
+): {
+  moves: PriceMove[];
+  increases: PriceMove[];
+  decreases: PriceMove[];
+  newListings: number;
+} {
+  const moves: PriceMove[] = rows
+    .filter((h) => h.change_kind === "increase" || h.change_kind === "decrease")
+    .map((h) => {
+      const inputNow = num(h.input_usd_per_mtok);
+      const inputPrev = num(h.prev_input_usd_per_mtok);
+      const outputNow = num(h.output_usd_per_mtok);
+      const outputPrev = num(h.prev_output_usd_per_mtok);
+      const inputPct = pct(inputNow, inputPrev);
+      const outputPct = pct(outputNow, outputPrev);
+      return {
+        modelKey: h.model_key,
+        host: h.host,
+        hostLabel: labelByHost.get(h.host) ?? h.host,
+        kind: h.change_kind as "increase" | "decrease",
+        inputNow,
+        inputPrev,
+        inputPct,
+        outputNow,
+        outputPrev,
+        outputPct,
+        pct: inputPct != null && inputPct !== 0 ? inputPct : (outputPct ?? 0),
+        observedAt: h.observed_at,
+      };
+    });
+
+  return {
+    moves,
+    increases: moves.filter((m) => m.kind === "increase"),
+    decreases: moves.filter((m) => m.kind === "decrease"),
+    newListings: rows.filter((h) => h.change_kind === "new").length,
+  };
+}
+
 export async function readIntelligence(): Promise<IntelligencePayload> {
   const supabase = createPublicServerClient();
   const now = new Date();
@@ -150,31 +221,10 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
   const labelByHost = new Map(prices.map((p) => [p.host, p.host_label]));
 
   // ---- Price moves this month -------------------------------------------------
-  const moves: PriceMove[] = history
-    .filter((h) => h.change_kind === "increase" || h.change_kind === "decrease")
-    .map((h) => {
-      const inputNow = num(h.input_usd_per_mtok);
-      const inputPrev = num(h.prev_input_usd_per_mtok);
-      const outputNow = num(h.output_usd_per_mtok);
-      const outputPrev = num(h.prev_output_usd_per_mtok);
-      const inputPct = pct(inputNow, inputPrev);
-      return {
-        modelKey: h.model_key,
-        host: h.host,
-        hostLabel: labelByHost.get(h.host) ?? h.host,
-        inputNow,
-        inputPrev,
-        inputPct,
-        outputNow,
-        outputPrev,
-        outputPct: pct(outputNow, outputPrev),
-        pct: inputPct ?? 0,
-        observedAt: h.observed_at,
-      };
-    });
-
-  const increases = moves.filter((m) => m.pct > 0);
-  const decreases = moves.filter((m) => m.pct < 0);
+  const { moves, increases, decreases, newListings } = summarizeMoves(
+    history as PriceHistoryRow[],
+    labelByHost,
+  );
 
   // ---- Repricing frequency (trailing window = everything we hold) --------------
   const byHost = new Map<string, { changes: number; models: Set<string> }>();
@@ -301,7 +351,7 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
     changesTotal: moves.length,
     increases: increases.length,
     decreases: decreases.length,
-    newListings: history.filter((h) => h.change_kind === "new").length,
+    newListings,
     // Genuinely new models only — a backfilled catalogue reads 0 here until one lands.
     newModels: models.filter((m) => new Date(m.first_seen_at) >= monthStart).length,
     topIncreases: [...increases].sort((a, b) => b.pct - a.pct).slice(0, 5),
