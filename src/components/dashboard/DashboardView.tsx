@@ -49,7 +49,18 @@ const navItems = [
   { label: "Govern", icon: ShieldCheck, href: "#govern" },
 ];
 
-const topNav = ["Analyzer", "Calculators", "Models", "Intelligence", "Blog", "Plans"];
+/** Only entries that resolve to a route that actually exists today. */
+const topNav: { label: string; to: string }[] = [
+  { label: "Models", to: "/models" },
+  { label: "Intelligence", to: "/intelligence" },
+  { label: "Plans", to: "/pricing" },
+];
+
+const accountNav: { label: string; to: string }[] = [
+  { label: "Settings", to: "/settings" },
+  { label: "Workspace", to: "/workspace" },
+];
+
 
 const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): SwitchRow => ({
   fromModel: o.fromModel,
