@@ -85,25 +85,28 @@ export function HeroStat({
   accent: string;
 }) {
   /**
-   * A stat is a self-contained column: label, number, subtext. The number is
-   * allowed to shrink and never to spill sideways into the neighbouring card,
-   * which is what a long spend figure used to do.
+   * A stat is three stacked rows — label, number, subtext — and it inherits
+   * those rows from its parent grid via `subgrid`, so every card in a hero
+   * shares one baseline per row no matter how far a label wraps. `min-w-0`
+   * plus a clamped, non-wrapping number keeps a long spend figure inside its
+   * own column instead of bleeding into the neighbouring card.
    */
   return (
-    <div className="flex min-w-0 flex-col gap-1 border-l border-white/15 pl-4">
-      <p className="text-[11px] font-semibold tracking-widest text-white/55 uppercase">{label}</p>
+    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pl-4">
+      <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
+        {label}
+      </p>
       <div
-        className="num mt-auto min-w-0 -tracking-tight whitespace-nowrap tabular-nums text-[clamp(0.95rem,1.1vw,1.5rem)]"
+        className="num min-w-0 self-end -tracking-tight whitespace-nowrap tabular-nums text-[clamp(0.95rem,1.1vw,1.5rem)]"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
       >
         {value}
       </div>
-      <p className="text-[11px] break-words text-white/55">{sub}</p>
-
+      <p className="self-start text-[11px] break-words text-white/55">{sub}</p>
     </div>
   );
-
 }
+
 
 /**
  * A labelled band of hero stats. Govern needs two of them — everything
@@ -117,7 +120,11 @@ export function HeroStatRow({ title, children }: { title?: string; children: Rea
           {title}
         </p>
       ) : null}
-      <div className="grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">{children}</div>
+      {/* Three explicit row tracks so each stat's subgrid shares one baseline. */}
+      <div className="grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">
+        {children}
+      </div>
+
     </div>
   );
 }
@@ -155,8 +162,11 @@ export function LevelHero({
           <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">{headline}</h1>
           {sub ? <p className="mt-3 max-w-xl text-sm text-white/70">{sub}</p> : null}
           {stats ? (
-            <div className="mt-8 grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">{stats}</div>
+            <div className="mt-8 grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">
+              {stats}
+            </div>
           ) : null}
+
           {children}
         </div>
         {aside ? <div className="lg:pl-6">{aside}</div> : null}

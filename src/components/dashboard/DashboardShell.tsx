@@ -190,12 +190,15 @@ export function UsageSection({ ctl }: { ctl: DashboardController }) {
       <div className="mt-6">
         <SpendChart series={liveSeries} metric={metric} />
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">
+      {/* The freshness label is a clock reading: the server renders it minutes
+          before the browser hydrates, so the two legitimately differ. */}
+      <p className="mt-1 text-xs text-muted-foreground" suppressHydrationWarning>
         {data.coverage.untrackedModels > 0
           ? `${data.coverage.untrackedModels} model${data.coverage.untrackedModels === 1 ? "" : "s"} excluded from the spend total — no pricing data available. `
           : "Every model in this window has live pricing coverage. "}
         Prices verified {data.coverage.pricesSyncedAgo}.
       </p>
+
     </section>
   );
 }
