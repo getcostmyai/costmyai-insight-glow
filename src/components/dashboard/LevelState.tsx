@@ -1,4 +1,4 @@
-import { Clock, Lock, PlugZap, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, Clock, Lock, PlugZap, ShieldCheck, Sparkles } from "lucide-react";
 
 import { emptyCopy, type DataState } from "@/lib/dashboard/onboarding";
 import { OBJECTIVE_OPTIONS } from "@/lib/dashboard/objective";
@@ -135,5 +135,56 @@ export function ObjectiveSelect({
         {locked ? `Objective selection starts on ${PLAN_META[requiredPlan].label}.` : active.hint}
       </p>
     </div>
+  );
+}
+
+/**
+ * The next level's real, already-computed finding — shown on the level below it.
+ *
+ * The count and the money come from the same engine run the next level's own
+ * page renders, so this is never marketing copy: it is that page's number,
+ * quoted one level early.
+ */
+export function NextLevelUpsell({
+  to,
+  requiredPlan,
+  count,
+  monthly,
+  what,
+  unlocked,
+}: {
+  to: string;
+  requiredPlan: PlanTier;
+  count: number;
+  monthly: number;
+  what: string;
+  unlocked: boolean;
+}) {
+  const meta = PLAN_META[requiredPlan];
+  if (count === 0 && monthly === 0) return null;
+  return (
+    <a
+      href={to}
+      className="card-surface group flex flex-wrap items-center gap-5 border-primary/25 p-5 transition-transform hover:-translate-y-0.5"
+    >
+      <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+        <Sparkles className="size-5" />
+      </span>
+      <div className="min-w-60 flex-1">
+        <p className="text-sm font-semibold">
+          {count} {what}
+          {count === 1 ? "" : "s"} could unlock a further{" "}
+          <span className="num text-saving">{usd(monthly, 0)}</span> a month
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Found by the {meta.label} check, already run against your traffic.{" "}
+          {unlocked ? "Open the level to see the evidence." : `${meta.label} shows each one in full.`}
+        </p>
+      </div>
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+        {unlocked ? `Open ${meta.label}` : `See what ${meta.label} found`}
+        <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </a>
   );
 }
