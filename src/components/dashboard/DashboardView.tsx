@@ -319,17 +319,18 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
             </nav>
             <div className="space-y-1 border-t border-border pt-5">
               <p className="eyebrow px-3 pb-1">Account</p>
-              {["Settings", "Workspace"].map((l) => (
-                <a
-                  key={l}
-                  href="#"
+              {accountNav.map(({ label, to }) => (
+                <Link
+                  key={label}
+                  to={to}
                   className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Settings className="size-4" />
-                  {l}
-                </a>
+                  {label}
+                </Link>
               ))}
             </div>
+
           </div>
         </aside>
 
