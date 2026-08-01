@@ -165,7 +165,8 @@ describe("round 3 spec", () => {
     for (const label of [
       "Active saving",
       "Available to activate",
-      "Oversized waste",
+      // Round 4 renamed the oversized card to the mechanism it is —
+      // "Rightsize saving" — and moved it into the shared MechanismStats.
       "Savings captured",
       "Frozen",
       "Running unattended",
