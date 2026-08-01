@@ -607,13 +607,33 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   );
   const lastPricingSync = pricingSnapshot.data?.synced_at ?? null;
 
-  const availableMonthly = round2(
+  /** Window-scoped opportunity — matches exactly the lists rendered below the hero. */
+  const windowAvailableMonthly = round2(
     arbitrageLevel.unlockedMonthly + qualityLevel.unlockedMonthly + oversizedLevel.unlockedMonthly,
   );
-  const lockedMonthly = round2(
+  const windowLockedMonthly = round2(
     arbitrageLevel.lockedMonthly + qualityLevel.lockedMonthly + oversizedLevel.lockedMonthly,
   );
-  const activeMonthly = round2(activeSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+
+  /** Headline claim — fixed 30-day basis, identical on every tab. */
+  const availableMonthly = round2(
+    baselineArbitrage.unlockedMonthly + baselineQuality.unlockedMonthly + baselineOversized.unlockedMonthly,
+  );
+  const lockedMonthly = round2(
+    baselineArbitrage.lockedMonthly + baselineQuality.lockedMonthly + baselineOversized.lockedMonthly,
+  );
+
+  /**
+   * Everything running right now is saving money right now, whatever day it was
+   * switched on. Filtering the capture rate by activation date reported 0%
+   * captured on the 7d and 24h tabs while two switches were actively saving
+   * ~$1.3k/mo — the rate is a present-tense fact, not this window's news.
+   */
+  const runningSwitches = (switches.data ?? [])
+    .filter((s) => s.status === "active")
+    .map(toSwitchRow);
+  const activeMonthly = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+
 
   const dataState: DataState = deriveDataState({
     hasEverIngested: (firstEvent.data ?? []).length > 0,
