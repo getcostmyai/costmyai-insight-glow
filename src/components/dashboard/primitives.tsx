@@ -85,23 +85,24 @@ export function HeroStat({
   accent: string;
 }) {
   /**
-   * Three subgrid rows — label, number, subtext — so every card in a hero row
-   * shares one baseline no matter how long its label wraps.
+   * A stat is a self-contained column: label, number, subtext. The number is
+   * allowed to shrink and never to spill sideways into the neighbouring card,
+   * which is what a long spend figure used to do.
    */
   return (
-    <div className="row-span-3 grid grid-rows-subgrid gap-1 border-l border-white/15 pl-4">
-      <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
-        {label}
-      </p>
+    <div className="flex min-w-0 flex-col gap-1 border-l border-white/15 pl-4">
+      <p className="text-[11px] font-semibold tracking-widest text-white/55 uppercase">{label}</p>
       <div
-        className="num self-end text-2xl tabular-nums"
+        className="num mt-auto min-w-0 text-xl tabular-nums [overflow-wrap:anywhere] sm:text-2xl"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
       >
         {value}
       </div>
-      <p className="self-start text-[11px] text-white/55">{sub}</p>
+
+      <p className="text-[11px] break-words text-white/55">{sub}</p>
     </div>
   );
+
 }
 
 /**
