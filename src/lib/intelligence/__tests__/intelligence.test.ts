@@ -92,3 +92,13 @@ describe("intelligence price-move reconciliation", () => {
     expect(s.increases).toHaveLength(0);
   });
 });
+
+describe("bucketHostCounts", () => {
+  it("buckets provider-per-model counts and conserves the total", () => {
+    const counts = [1, 1, 1, 2, 3, 4, 9, 10, 28];
+    const buckets = bucketHostCounts(counts);
+    expect(buckets.map((b) => b.label)).toEqual(["1", "2–3", "4–9", "10+"]);
+    expect(buckets.map((b) => b.models)).toEqual([3, 2, 2, 2]);
+    expect(buckets.reduce((s, b) => s + b.models, 0)).toBe(counts.length);
+  });
+});
