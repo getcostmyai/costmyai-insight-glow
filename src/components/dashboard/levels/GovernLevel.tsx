@@ -101,7 +101,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
           <p className="mt-1 text-sm text-muted-foreground">
             {govern.unlocked
               ? "When this is on, certified switches that clear the gate are applied as prices and benchmarks move — within three minutes of a price change, once a day for a benchmark change. Every switch stays reversible."
-              : `Autonomous switching is part of ${meta.name}. The gate below has already run against your traffic — turning it on is all that is missing.`}
+              : `Autonomous switching is part of ${meta.label}. The gate below has already run against your traffic — turning it on is all that is missing.`}
           </p>
           {errorFor("autonomous") ? (
             <p className="mt-2 text-xs text-destructive">{errorFor("autonomous")}</p>
@@ -139,7 +139,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               href="/pricing"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary"
             >
-              {govern.unlocked ? "Open your own workspace" : `Upgrade to ${meta.name}`}
+              {govern.unlocked ? "Open your own workspace" : `Upgrade to ${meta.label}`}
               <ArrowUpRight className="size-3.5" />
             </a>
           </div>
