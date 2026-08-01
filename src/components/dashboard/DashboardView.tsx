@@ -241,15 +241,16 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
           </span>
           <nav className="hidden items-center gap-7 lg:flex">
             {topNav.map((item) => (
-              <a
-                key={item}
-                href="#"
+              <Link
+                key={item.label}
+                to={item.to}
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </nav>
+
           <div className="ml-auto flex items-center gap-4">
             {/* Session-driven, never route-driven: after an OAuth callback the
                 session arrives asynchronously and this must follow it. */}
