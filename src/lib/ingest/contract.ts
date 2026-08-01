@@ -24,6 +24,19 @@ export const MAX_CAPTURES_PER_BATCH = 100;
 export const BACKFILL_LOOKBACK_DAYS = 30;
 
 /**
+ * How often the Verification Engine polls a connected provider's invoices.
+ *
+ * Locked here rather than in the container, because the container is the thing
+ * that has not shipped yet: the loop that reads this constant lands with the
+ * published package, and this way the interval is already correct when it does
+ * instead of being invented at packaging time. Nothing in this repo schedules
+ * it — the poll runs inside the customer's own container, on their side of the
+ * zero-credentials boundary, and our pg_cron schedules deliberately cannot
+ * reach it.
+ */
+export const BILLING_POLL_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+/**
  * Every subsequent poll only re-reads this much, since invoices settle late.
  * 3 days matches the original system; captures are idempotent on
  * (org, provider, period_start, period_end), so a wider window buys overlap

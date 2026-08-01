@@ -422,6 +422,27 @@ export type Database = {
           },
         ]
       }
+      job_config: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       memberships: {
         Row: {
           created_at: string
@@ -1399,6 +1420,42 @@ export type Database = {
           },
         ]
       }
+      sync_runs: {
+        Row: {
+          created_at: string
+          detail: Json | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          job: string
+          ok: boolean | null
+          started_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job: string
+          ok?: boolean | null
+          started_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job?: string
+          ok?: boolean | null
+          started_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       usage_events: {
         Row: {
           created_at: string
@@ -1718,6 +1775,25 @@ export type Database = {
           _switch_id: string
         }
         Returns: Database["public"]["Enums"]["switch_status"]
+      }
+      system_apply_switch: { Args: { _rec_id: string }; Returns: string }
+      system_upsert_recommendation: {
+        Args: {
+          _basis: string
+          _from_host: string
+          _from_model: string
+          _kind: Database["public"]["Enums"]["rec_kind"]
+          _min_plan: Database["public"]["Enums"]["plan_tier"]
+          _monthly_saving: number
+          _note?: string
+          _org_id: string
+          _quality_delta?: number
+          _saving_pct: number
+          _task_hint: string
+          _to_host: string
+          _to_model: string
+        }
+        Returns: string
       }
       upsert_recommendation: {
         Args: {
