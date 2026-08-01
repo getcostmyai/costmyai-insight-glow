@@ -62,11 +62,17 @@ function ModelsPage() {
 
 function Hero({ data }: { data: CatalogPayload }) {
   const stats = useMemo(() => {
-    const pricePoints = data.rows.reduce((n, r) => n + r.hosts.length, 0);
     const spreads = data.rows.map(hostSpread).filter((v): v is number => v !== null);
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
-    return { models: data.rows.length, vendors: data.vendors.length, pricePoints, topSpread };
+    return {
+      models: data.rows.length,
+      // Model makers (who trained the weights) — not the same as serving providers.
+      vendors: data.vendors.length,
+      providers: data.providers.length,
+      topSpread,
+    };
   }, [data]);
+
 
   return (
     <section className="relative overflow-hidden wash-hero">
