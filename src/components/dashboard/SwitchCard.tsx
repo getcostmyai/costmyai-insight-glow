@@ -14,8 +14,11 @@ export function SwitchCard({
   disabledHint,
   ctaHref,
   ctaLabel,
+  period,
 }: {
   row: SwitchRow;
+  /** The window the saving was measured over, e.g. "last 7 days". */
+  period: string;
   rank: number;
   /** Absent on the public demo: the row is read-only there. */
   onActivate?: () => void;
@@ -55,8 +58,10 @@ export function SwitchCard({
 
       <div className="flex shrink-0 items-center gap-5 sm:pl-4">
         <div className="text-right">
-          <div className="num text-xl text-saving">+{usd(row.monthlySaving)}</div>
-          <div className="text-[11px] text-muted-foreground">per month · −{row.savingPct}%</div>
+          <div className="num text-xl text-saving">+{usd(row.saving)}</div>
+          <div className="text-[11px] text-muted-foreground">
+            in the {period} · −{row.savingPct}%
+          </div>
         </div>
         <div className="hidden w-24 sm:block">
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
