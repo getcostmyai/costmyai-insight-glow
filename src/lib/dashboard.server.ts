@@ -741,11 +741,29 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       /** How the headline and projection are derived, so the UI can say so. */
       basisDays: baselineDays,
     },
-    /** One month-end projection, from the fixed 30-day run rate, on every tab. */
+    /**
+     * One month-end forecast on every tab: month-to-date actual plus a
+     * trailing 7-day level, weekly factors when the pattern is real, a damped
+     * trend, and a range whenever the data does not support a single number.
+     */
     projection: {
-      monthEndUsd: round2(baselineSpend),
-      basisDays: baselineDays,
+      monthEndUsd: forecast.pointUsd,
+      lowUsd: forecast.lowUsd,
+      highUsd: forecast.highUsd,
+      isRange: forecast.isRange,
+      mtdUsd: forecast.mtdUsd,
+      remainingDays: forecast.remainingDays,
+      dailyLevelUsd: forecast.dailyLevelUsd,
+      seasonalityApplied: forecast.seasonalityApplied,
+      retiredWorkloads: forecast.retiredKeys.length,
+      newWorkloads: forecast.newKeys.length,
+      reasons: forecast.reasons,
+      /** Trailing window behind the projected days. */
+      basisDays: 7,
+      /** Kept for the 30-day run-rate comparison shown alongside. */
+      runRate30dUsd: round2(baselineSpend),
     },
+
     reconciliation,
     reconciliationOutsideWindow,
 
