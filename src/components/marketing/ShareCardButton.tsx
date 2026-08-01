@@ -2,13 +2,11 @@ import { useState } from "react";
 import { Check, Image as ImageIcon, Link2, Linkedin, Share2, Twitter } from "lucide-react";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * Per-card share control.
@@ -38,13 +36,23 @@ export function ShareCardButton({
 
   if (!month) {
     return (
-      <span
-        aria-disabled="true"
-        className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/30 ${className}`}
-        title="Shareable once this month closes and its figures are frozen"
-      >
-        <Share2 className="h-4 w-4" />
-      </span>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              aria-disabled="true"
+              className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground/30 ${className}`}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="max-w-[16rem]">
+              Shareable once this month closes and its figures are frozen.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
@@ -55,51 +63,88 @@ export function ShareCardButton({
   const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`;
   const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${enc}`;
 
+  const linkBase =
+    "inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={`Share: ${title}`}
-        className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
-      >
-        {copied ? <Check className="h-4 w-4 text-saving" /> : <Share2 className="h-4 w-4" />}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-          Links to the frozen {month} figure — this number can never move.
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href={linkedin} target="_blank" rel="noreferrer noopener">
-            <Linkedin className="mr-2 h-4 w-4" />
-            Share on LinkedIn
-          </a>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <a href={tweet} target="_blank" rel="noreferrer noopener">
-            <Twitter className="mr-2 h-4 w-4" />
-            Share on X
-          </a>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={(e) => {
-            e.preventDefault();
-            void navigator.clipboard?.writeText(url).then(() => {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            });
-          }}
-        >
-          <Link2 className="mr-2 h-4 w-4" />
-          {copied ? "Link copied" : "Copy permanent link"}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href={image} target="_blank" rel="noreferrer noopener">
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Open share image
-          </a>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <TooltipProvider delayDuration={0}>
+      <div className={`inline-flex items-center gap-0.5 ${className}`}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a
+              href={linkedin}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={`Share on LinkedIn: ${title}`}
+              className={linkBase}
+            >
+              <Linkedin className="h-3.5 w-3.5" />
+            </a>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Share on LinkedIn</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a
+              href={tweet}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={`Share on X: ${title}`}
+              className={linkBase}
+            >
+              <Twitter className="h-3.5 w-3.5" />
+            </a>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Share on X</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={copied ? "Link copied" : "Copy permanent link"}
+              className={linkBase}
+              onClick={() => {
+                void navigator.clipboard?.writeText(url).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                });
+              }}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-saving" />
+              ) : (
+                <Link2 className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>{copied ? "Link copied" : "Copy permanent link"}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a
+              href={image}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={`Open share image: ${title}`}
+              className={linkBase}
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+            </a>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Open share image</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   );
 }

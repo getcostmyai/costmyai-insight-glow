@@ -90,14 +90,11 @@ function Figure({
           {label}
         </p>
         {cardId && ctx ? (
-          <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-            <ShareCardButton
-              cardId={cardId}
-              month={ctx.citableMonth}
-              title={`${format ? format(value) : value} — ${label}`}
-            />
-
-          </span>
+          <ShareCardButton
+            cardId={cardId}
+            month={ctx.citableMonth}
+            title={`${format ? format(value) : value} — ${label}`}
+          />
         ) : null}
       </div>
       {sub ? (
@@ -172,13 +169,11 @@ function MoveList({
                     {r.outputNow != null ? usd(r.outputNow) : "—"} out
                   </p>
                 </div>
-                <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                  <ShareCardButton
-                    cardId={id}
-                    month={ctx.citableMonth}
-                    title={`${r.modelKey} at ${r.hostLabel}: ${signedPct(r.pct)}`}
-                  />
-                </span>
+                <ShareCardButton
+                  cardId={id}
+                  month={ctx.citableMonth}
+                  title={`${r.modelKey} at ${r.hostLabel}: ${signedPct(r.pct)}`}
+                />
               </div>
             </div>
           </Reveal>
@@ -412,13 +407,11 @@ function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportConte
                         moves · {r.models} model{r.models === 1 ? "" : "s"}
                       </span>
                     </span>
-                    <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                      <ShareCardButton
-                        cardId={repricerCardId(r.host)}
-                        month={ctx.citableMonth}
-                        title={`${r.hostLabel}: ${r.changes} price moves`}
-                      />
-                    </span>
+                    <ShareCardButton
+                      cardId={repricerCardId(r.host)}
+                      month={ctx.citableMonth}
+                      title={`${r.hostLabel}: ${r.changes} price moves`}
+                    />
                   </div>
                 </Reveal>
               ))}
@@ -498,13 +491,11 @@ function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: Report
                         spread
                       </p>
                     </div>
-                    <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                      <ShareCardButton
-                        cardId={spreadCardId(s.modelKey)}
-                        month={ctx.citableMonth}
-                        title={`${s.displayName}: +${Math.round(s.spreadPct)}% provider spread`}
-                      />
-                    </span>
+                    <ShareCardButton
+                      cardId={spreadCardId(s.modelKey)}
+                      month={ctx.citableMonth}
+                      title={`${s.displayName}: +${Math.round(s.spreadPct)}% provider spread`}
+                    />
                   </div>
                 </div>
               </Reveal>
@@ -569,13 +560,11 @@ function QualityPerDollar({ data, ctx }: { data: IntelligencePayload; ctx: Repor
                       per MTok in
                     </p>
                   </div>
-                  <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                    <ShareCardButton
-                      cardId={bandCardId(w.taskClass)}
-                      month={ctx.citableMonth}
-                      title={`${w.taskClass}: ${w.displayName} clears the band at ${usd(w.pricePerMtok)}/MTok`}
-                    />
-                  </span>
+                  <ShareCardButton
+                    cardId={bandCardId(w.taskClass)}
+                    month={ctx.citableMonth}
+                    title={`${w.taskClass}: ${w.displayName} clears the band at ${usd(w.pricePerMtok)}/MTok`}
+                  />
                 </div>
               </div>
             </Reveal>
