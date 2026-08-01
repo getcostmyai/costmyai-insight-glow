@@ -3,6 +3,8 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { ShareCardButton } from "@/components/marketing/ShareCardButton";
+import { EmbedWidgetSection } from "@/components/marketing/EmbedWidgetSection";
+
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import {
   BandDiagram,
@@ -243,8 +245,10 @@ export function IntelligenceReport({
       <PriceMoves data={d} ctx={ctx} />
       <MarketStructure data={d} ctx={ctx} />
       <QualityPerDollar data={d} ctx={ctx} />
+      <EmbedWidgetSection />
       <Archive ctx={ctx} />
       <Method />
+
     </>
   );
 }
