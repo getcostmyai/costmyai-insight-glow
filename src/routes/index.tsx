@@ -141,13 +141,13 @@ function Hero({ stats }: { stats: MarketingStats }) {
 function VideoSection() {
   return (
     <section className="border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="See It Working"
           title="From live usage to a governed decision in under 60 seconds."
           lead="Watch the Verification Engine read real usage, benchmark every workload, and produce a defensible verdict."
         />
-        <div className="mx-auto mt-12 max-w-4xl">
+        <div className="mx-auto mt-14 max-w-4xl">
           <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[1.75rem] border border-border bg-background">
             <div className="absolute inset-0 opacity-[0.07] fill-gradient-brand" aria-hidden />
             <div className="relative text-center">
@@ -179,7 +179,7 @@ function VideoSection() {
 function Architecture() {
   return (
     <section id="architecture" className="scroll-mt-24 wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Architecture"
           title="Runs in your environment. Sees only metadata."
@@ -222,14 +222,14 @@ function HowItWorks() {
   const [open, setOpen] = useState(0);
   return (
     <section id="how" className="scroll-mt-24 border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="How It Works"
           title="Connect once. Governed decisions on every workload."
           lead="Four steps. No manual exports. A defensible, benchmark-backed verdict for every workload in your live spend."
         />
 
-        <div className="mx-auto mt-12 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <div className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
           {STEPS.map((s, i) => {
             const isOpen = open === i;
             return (
@@ -293,13 +293,13 @@ const PERSONAS = [
 function BuiltFor() {
   return (
     <section className="wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Built For"
           title="Built for whoever is accountable for the AI spend."
           lead="From solo founders watching their first AI invoice to enterprise teams standardizing governance across every model deployment."
         />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PERSONAS.map((p) => (
             <div key={p.title} className="card-surface flex flex-col p-6">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-soft">
@@ -360,7 +360,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
 
   return (
     <section id="pricing" className="scroll-mt-24 border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Pricing"
           title="Start free. Scale when you need to."
@@ -481,7 +481,7 @@ function Neutrality() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {CHARTER.map((c) => (
               <div
                 key={c.title}
@@ -560,9 +560,9 @@ function Faq({ stats }: { stats: MarketingStats }) {
 
   return (
     <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
-        <div className="mx-auto mt-12 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <div className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
           {items.map((item, i) => {
             const isOpen = open === i;
             return (
