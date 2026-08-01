@@ -153,12 +153,12 @@ function Hero({ stats }: { stats: MarketingStats }) {
 
 function VideoSection() {
   return (
-    <section className="border-y border-border bg-card">
+    <section className="wash-section">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="See It Working"
           title="From live usage to a governed decision in under 60 seconds."
-          lead="Watch the Verification Engine read real usage, benchmark every workload, and produce a defensible verdict."
+          lead="Real usage in, a defensible verdict out."
         />
         <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
           <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[1.75rem] border border-border bg-background">
@@ -191,12 +191,12 @@ function VideoSection() {
 
 function Architecture() {
   return (
-    <section id="architecture" className="scroll-mt-24 wash-section">
+    <section id="architecture" className="scroll-mt-24 border-y border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Architecture"
           title="Runs in your environment. Sees only metadata."
-          lead="The Verification Engine is middleware. Your application routes every AI request through it. The engine forwards the request unchanged, reads only token counts and model names, then sends aggregate metadata to CostMyAI. It never reads prompt content."
+          lead="The Verification Engine sits in your stack as middleware. Requests pass through unchanged; only token counts and model names leave your environment. Never prompt content."
         />
         <Reveal delay={80} className="mt-14">
           <ArchitectureDiagram />
@@ -233,12 +233,12 @@ const STEPS = [
 
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="how" className="scroll-mt-24 wash-section">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="How It Works"
           title="Connect once. Governed decisions on every workload."
-          lead="Four steps. No manual exports. A defensible, benchmark-backed verdict for every workload in your live spend."
+          lead="Four steps, no manual exports — from one environment variable to a benchmark-backed verdict on every workload."
         />
 
         <div className="mx-auto mt-20 max-w-4xl">
@@ -303,12 +303,12 @@ const PERSONAS = [
 
 function BuiltFor() {
   return (
-    <section className="wash-section">
+    <section className="border-y border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Built For"
           title="Built for whoever is accountable for the AI spend."
-          lead="From solo founders watching their first AI invoice to enterprise teams standardizing governance across every model deployment."
+          lead="From a first scary invoice to governance across every team."
         />
 
         <div className="mx-auto mt-20 max-w-4xl">
