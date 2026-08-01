@@ -210,6 +210,23 @@ const PILLARS = [
   },
 ] as const;
 
+/**
+ * Frozen payloads were written by older code and can lack arrays added later.
+ * Backfill them so an archived month never blanks the page.
+ */
+function withDefaults(data: IntelligencePayload): IntelligencePayload {
+  return {
+    ...data,
+    topIncreases: data.topIncreases ?? [],
+    topDecreases: data.topDecreases ?? [],
+    repricers: data.repricers ?? [],
+    spreads: data.spreads ?? [],
+    bandWinners: data.bandWinners ?? [],
+    saturation: data.saturation ?? [],
+    hostBuckets: data.hostBuckets ?? [],
+  };
+}
+
 export function IntelligenceReport({
   data,
   ctx,
@@ -219,17 +236,19 @@ export function IntelligenceReport({
   ctx: ReportContext;
   hero: React.ReactNode;
 }) {
+  const d = withDefaults(data);
   return (
     <>
       {hero}
-      <PriceMoves data={data} ctx={ctx} />
-      <MarketStructure data={data} ctx={ctx} />
-      <QualityPerDollar data={data} ctx={ctx} />
+      <PriceMoves data={d} ctx={ctx} />
+      <MarketStructure data={d} ctx={ctx} />
+      <QualityPerDollar data={d} ctx={ctx} />
       <Archive ctx={ctx} />
       <Method />
     </>
   );
 }
+
 
 export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   return (
