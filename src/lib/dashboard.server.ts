@@ -356,8 +356,6 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const buckets = new Map<string, SeriesPoint>();
   const totals = emptyTotals();
   const previous = emptyTotals();
-  const shapes = new Map<string, { p50: number[]; p95: number[] }>();
-  const byWorkload = new Map<string, UsageAggregate>();
 
   const split = partitionRollups(rollups.data ?? [], w);
 
@@ -365,7 +363,6 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
 
   for (const r of split.current) {
     addTo(totals, r);
-
 
     const label = bucketLabel(r.bucket_start, days);
     const point = buckets.get(label) ?? {
@@ -380,29 +377,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     point.inputTokens += Number(r.input_tokens);
     point.outputTokens += Number(r.output_tokens);
     buckets.set(label, point);
-
-    const key = `${r.model_key}|${r.host}|${r.task_hint}`;
-    const agg = byWorkload.get(key) ?? {
-      model_key: r.model_key,
-      host: r.host,
-      task_hint: r.task_hint,
-      requests: 0,
-      input_tokens: 0,
-      output_tokens: 0,
-      cost_usd: 0,
-      days,
-    };
-    agg.requests += Number(r.requests);
-    agg.input_tokens += Number(r.input_tokens);
-    agg.output_tokens += Number(r.output_tokens);
-    agg.cost_usd += Number(r.cost_usd);
-    byWorkload.set(key, agg);
-
-    const shape = shapes.get(key) ?? { p50: [], p95: [] };
-    if (r.output_p50) shape.p50.push(Number(r.output_p50));
-    if (r.output_p95) shape.p95.push(Number(r.output_p95));
-    shapes.set(key, shape);
   }
+
 
   const series = [...buckets.values()].map((p) => ({ ...p, spend: round2(p.spend) }));
 
