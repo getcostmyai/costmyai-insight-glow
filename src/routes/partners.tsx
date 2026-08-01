@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck, Handshake, Infinity as InfinityIcon, Receipt } from "lucide-react";
+import { ArrowRight, BadgeCheck, Infinity as InfinityIcon, Receipt, ShieldCheck } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
+
+type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
 
 export const Route = createFileRoute("/partners")({
   loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
@@ -30,7 +33,6 @@ export const Route = createFileRoute("/partners")({
   component: PartnersPage,
 });
 
-
 const PROMISES = [
   {
     icon: InfinityIcon,
@@ -50,128 +52,330 @@ const PROMISES = [
 ] as const;
 
 const STEPS = [
-  { n: "01", t: "Apply", b: "Tell us who you work with. We activate partner accounts by hand, not by form fill." },
-  { n: "02", t: "Share your code", b: "You get a referral code and a dashboard. A workspace enters it once at signup." },
-  { n: "03", t: "Get paid", b: "Every paid invoice from your referrals writes one line in your ledger at your current rate." },
+  {
+    n: "01",
+    t: "Apply",
+    b: "Tell us who you work with. We activate partner accounts by hand, not by form fill.",
+  },
+  {
+    n: "02",
+    t: "Share your code",
+    b: "You get a referral code and a dashboard. A workspace enters it once at signup.",
+  },
+  {
+    n: "03",
+    t: "Get paid",
+    b: "Every paid invoice from your referrals writes one line in your ledger at your current rate.",
+  },
 ] as const;
 
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
   const range = formatRateRange(ladder);
+  const tiers = ladder.tiers;
+  const topRate = tiers.length ? Math.max(...tiers.map((t) => t.ratePct)) : 0;
 
   return (
     <MarketingShell>
-      <section className="px-5 pb-14 pt-16 sm:px-8 sm:pt-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs font-medium text-primary">
-            <Handshake className="h-3.5 w-3.5" />
-            Partner program
-          </div>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
-            Earn{" "}
-            {range ? (
-              <span className="text-primary num tabular-nums">{range}</span>
-            ) : (
-              <span className="text-primary">commission</span>
-            )}{" "}
-            for the lifetime of every account you refer.
-          </h1>
-          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            If you advise teams on their AI stack, CostMyAI is an easy first recommendation: the
-            free level already cuts their bill, and you keep earning for as long as they stay.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/partners/apply" className="btn-gradient px-5 py-2.5 text-sm">
-              Apply to become a Partner
-            </Link>
-            <a
-              href={BOOK_DEMO_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              Book a Demo
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
-      </section>
+      <Hero range={range} topRate={topRate} />
+      <Ladder tiers={tiers} topRate={topRate} />
+      <Promises />
+      <Steps />
+      <ClosingCta />
+    </MarketingShell>
+  );
+}
 
-      <section className="border-y border-border bg-card px-5 py-14 sm:px-8">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-2xl font-semibold tracking-tight">Commission ladder</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your rate is set by lifetime referred revenue and applies to everything your referrals
-            pay from that point on. These levels are read live from the same table that prices your
-            payouts.
-          </p>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
-            {ladder.tiers.map((t) => (
-              <div
-                key={t.tier}
-                className="rounded-2xl border border-border bg-background p-5 text-center"
-              >
-                <p className="text-xs text-muted-foreground">{t.name}</p>
-                <p className="num mt-2 text-2xl font-semibold tabular-nums text-primary">
-                  {formatRate(t.ratePct)}
-                </p>
-                <p className="num mt-1 text-xs tabular-nums text-muted-foreground">
-                  from {formatThreshold(t.minLifetimeUsd)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+/* ---------------------------------- hero --------------------------------- */
 
+function Hero({ range, topRate }: { range: string | null; topRate: number }) {
+  return (
+    <section className="relative overflow-hidden wash-hero">
+      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
+      <div className="relative mx-auto max-w-4xl px-5 pb-24 pt-24 text-center sm:px-8 sm:pb-32 sm:pt-36">
+        <Reveal
+          as="p"
+          className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+        >
+          Partner program
+        </Reveal>
 
-      <section className="px-5 py-16 sm:px-8">
-        <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-3">
-          {PROMISES.map((p) => (
-            <div key={p.title} className="rounded-2xl border border-border p-6">
-              <p.icon className="h-5 w-5 text-primary" />
-              <h2 className="mt-4 text-sm font-semibold">{p.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
-            </div>
+        <Reveal
+          delay={80}
+          as="h1"
+          className="mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[4.6rem]"
+        >
+          You recommend it once.{" "}
+          <span className="text-gradient-brand">It pays for the life of the account.</span>
+        </Reveal>
+
+        <Reveal
+          delay={150}
+          as="p"
+          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+        >
+          If you advise teams on their AI stack, CostMyAI is an easy first recommendation: the free
+          level already cuts their bill — and every invoice they ever pay writes a line in your
+          ledger.
+        </Reveal>
+
+        <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
+          <Link to="/partners/apply" className="btn-gradient px-6 py-3 text-[15px]">
+            Apply to become a Partner
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="btn-quiet px-6 py-3 text-[15px]"
+          >
+            Book a Demo
+          </a>
+        </Reveal>
+
+        <div className="mt-20 grid grid-cols-3 gap-6 border-t border-border/60 pt-12 sm:gap-10">
+          {[
+            {
+              node: topRate ? (
+                <CountUp
+                  value={topRate}
+                  format={(n) => `${Math.round(n)}%`}
+                  className="block text-4xl font-semibold tracking-[-0.045em] text-gradient-brand sm:text-6xl"
+                />
+              ) : (
+                <span className="block text-4xl font-semibold tracking-[-0.045em] text-gradient-brand sm:text-6xl">
+                  {range ?? "—"}
+                </span>
+              ),
+              label: "Top commission rate",
+            },
+            { node: <Stat>Lifetime</Stat>, label: "Attribution window" },
+            { node: <Stat>Paid only</Stat>, label: "When commission is written" },
+          ].map((s, i) => (
+            <Reveal key={s.label} delay={300 + i * 90}>
+              {s.node}
+              <p className="mt-3 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
+                {s.label}
+              </p>
+            </Reveal>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section className="border-t border-border bg-card px-5 py-16 sm:px-8">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {STEPS.map((s) => (
-              <div key={s.n} className="rounded-2xl border border-border bg-background p-6">
-                <p className="num text-2xl font-semibold tabular-nums text-primary">{s.n}</p>
-                <h3 className="mt-3 text-sm font-semibold">{s.t}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.b}</p>
-              </div>
-            ))}
-          </div>
+function Stat({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="block text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-6xl">
+      {children}
+    </span>
+  );
+}
 
-          <div className="mt-10 rounded-2xl border border-border bg-background p-6">
-            <h3 className="text-sm font-semibold">What a partner can and cannot see</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              You see which workspaces are yours, which level they are on, and every dollar you have
-              earned. You never see their spend, their usage or their people. Neutrality applies to
-              partners too.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link to="/partners/apply" className="btn-gradient px-5 py-2.5 text-sm">
-                Apply to become a Partner
-              </Link>
-              <Link
-                to="/pricing"
-                className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
-              >
-                See what your referrals pay
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
+/* --------------------------------- ladder -------------------------------- */
+
+function Ladder({
+  tiers,
+  topRate,
+}: {
+  tiers: PartnerLadder["tiers"];
+  topRate: number;
+}) {
+  return (
+    <section className="border-y border-border bg-card">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="Commission ladder"
+          title="The more you refer, the higher every future invoice pays."
+          lead="Your rate is set by lifetime referred revenue and applies to everything your referrals pay from that point on. Read live from the same table that prices your payouts."
+        />
+
+        <div className="mt-20 grid grid-cols-2 items-end gap-x-4 gap-y-12 sm:grid-cols-5 sm:gap-x-6">
+          {tiers.map((t, i) => {
+            const height = topRate ? Math.max(18, (t.ratePct / topRate) * 100) : 100;
+            const isTop = t.ratePct === topRate;
+            return (
+              <Reveal key={t.tier} delay={i * 110} className="flex flex-col justify-end">
+                <CountUp
+                  value={t.ratePct}
+                  format={(n) => `${n.toFixed(n % 1 === 0 ? 0 : 1)}%`}
+                  className={`block text-3xl font-semibold tracking-[-0.04em] sm:text-[2.6rem] ${
+                    isTop ? "text-gradient-brand" : "text-foreground"
+                  }`}
+                />
+                <div className="mt-4 h-40 w-full">
+                  <div
+                    className={`w-full rounded-t-md transition-[height] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      isTop ? "fill-gradient-brand" : "fill-gradient-brand-soft"
+                    }`}
+                    style={{ height: `${height}%`, marginTop: `${100 - height}%` }}
+                    aria-hidden
+                  />
+                </div>
+                <p className="mt-4 border-t border-border pt-3 text-sm font-semibold tracking-[-0.01em]">
+                  {t.name}
+                </p>
+                <p className="num mt-1 text-xs tabular-nums text-muted-foreground">
+                  from {formatThreshold(t.minLifetimeUsd)} referred
+                </p>
+                <span className="sr-only">{formatRate(t.ratePct)} commission</span>
+              </Reveal>
+            );
+          })}
         </div>
-      </section>
-    </MarketingShell>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------- promises ------------------------------- */
+
+function Promises() {
+  return (
+    <section className="wash-section">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="The deal"
+          title="No cookie games. No estimated money."
+          lead="Three commitments that decide whether a partner program is worth your reputation."
+        />
+
+        <div className="mx-auto mt-16 max-w-4xl">
+          {PROMISES.map((p, i) => (
+            <Reveal
+              key={p.title}
+              delay={i * 90}
+              className="group grid grid-cols-[auto_1fr] items-start gap-5 border-t border-border py-9 sm:gap-8 sm:py-11"
+            >
+              <p.icon className="mt-1 h-6 w-6 shrink-0 text-primary transition-transform duration-500 group-hover:scale-110" />
+              <div className="min-w-0">
+                <h3 className="text-xl font-semibold tracking-[-0.03em] sm:text-2xl">{p.title}</h3>
+                <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                  {p.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* --------------------------------- steps --------------------------------- */
+
+function Steps() {
+  return (
+    <section className="border-y border-border bg-card">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="How it works"
+          title="Three steps from a recommendation to a payout."
+        />
+
+        <div className="mx-auto mt-16 max-w-4xl">
+          {STEPS.map((s, i) => (
+            <Reveal
+              key={s.n}
+              delay={i * 90}
+              className="group grid gap-4 border-t border-border py-10 sm:grid-cols-[9rem_1fr] sm:gap-10 sm:py-12"
+            >
+              <span
+                aria-hidden
+                className="num pointer-events-none select-none text-[3.5rem] leading-none text-gradient-brand opacity-30 transition-opacity duration-500 group-hover:opacity-100 sm:text-[5rem]"
+              >
+                {s.n}
+              </span>
+              <div className="sm:pt-2">
+                <h3 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">{s.t}</h3>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                  {s.b}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
+
+        <Reveal delay={120} className="mx-auto mt-20 max-w-3xl text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary">
+            <ShieldCheck className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="mt-6 text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
+            Neutrality applies to partners too.
+          </h3>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            You see which workspaces are yours, which level they are on, and every dollar you have
+            earned. You never see their spend, their usage or their people.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------- closing cta ------------------------------ */
+
+function ClosingCta() {
+  return (
+    <section className="px-5 py-24 sm:px-8 sm:py-32">
+      <Reveal className="mx-auto max-w-3xl text-center">
+        <h2 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[3.6rem]">
+          Start earning on the <span className="text-gradient-brand">next</span> recommendation you
+          make.
+        </h2>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <Link to="/partners/apply" className="btn-gradient px-6 py-3 text-[15px]">
+            Apply to become a Partner
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link to="/pricing" className="btn-quiet px-6 py-3 text-[15px]">
+            See what your referrals pay
+          </Link>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ------------------------------- section head ----------------------------- */
+
+function SectionHead({
+  eyebrow,
+  title,
+  lead,
+}: {
+  eyebrow: string;
+  title: string;
+  lead?: string;
+}) {
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <Reveal
+        as="p"
+        className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+      >
+        {eyebrow}
+      </Reveal>
+      <Reveal
+        delay={80}
+        as="h2"
+        className="mt-5 text-[2.1rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[3.2rem]"
+      >
+        {title}
+      </Reveal>
+      {lead ? (
+        <Reveal
+          delay={150}
+          as="p"
+          className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg"
+        >
+          {lead}
+        </Reveal>
+      ) : null}
+    </div>
   );
 }
