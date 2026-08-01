@@ -125,7 +125,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <HeroStat
               label={`Spend · ${activeRange.long}`}
-              value={usd(live.spend)}
+              value={usd(windowSpend)}
               sub={
                 <span className="text-white/70">
                   {spendDelta >= 0 ? "▲" : "▼"} {Math.abs(spendDelta).toFixed(1)}% vs previous
