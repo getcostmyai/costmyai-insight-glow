@@ -98,9 +98,8 @@ export function HeroStat({
       >
         {value}
       </div>
-
-
       <p className="text-[11px] break-words text-white/55">{sub}</p>
+
     </div>
   );
 
