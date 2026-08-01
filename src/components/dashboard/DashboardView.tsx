@@ -176,9 +176,11 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
     data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
-  // One projection basis on every tab — the 30-day run rate, not whatever
-  // window happens to be selected.
-  const runRateMonthly = data.projection.monthEndUsd;
+  // One forecast basis on every tab: month-to-date actual plus a trailing
+  // 7-day level for the days still to come — never the selected window.
+  const forecast = data.projection;
+  const runRateMonthly = forecast.monthEndUsd;
+
 
   const totalTokens = live.inputTokens + live.outputTokens;
   const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
