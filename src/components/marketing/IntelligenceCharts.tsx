@@ -43,19 +43,21 @@ export function PriceMovesDonut({
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <defs>
+            {/* Dashboard palette: saving green, destructive red, spend purple. */}
             <linearGradient id="donutDown" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.72 0.16 158)" />
-              <stop offset="100%" stopColor="oklch(0.52 0.13 165)" />
+              <stop offset="0%" stopColor="color-mix(in oklab, var(--saving) 78%, white)" />
+              <stop offset="100%" stopColor="var(--saving)" />
             </linearGradient>
             <linearGradient id="donutUp" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.68 0.19 25)" />
-              <stop offset="100%" stopColor="oklch(0.55 0.18 22)" />
+              <stop offset="0%" stopColor="color-mix(in oklab, var(--destructive) 82%, white)" />
+              <stop offset="100%" stopColor="var(--destructive)" />
             </linearGradient>
             <linearGradient id="donutNew" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.72 0.15 295)" />
-              <stop offset="100%" stopColor="oklch(0.55 0.17 292)" />
+              <stop offset="0%" stopColor="var(--primary-glow)" />
+              <stop offset="100%" stopColor="var(--primary)" />
             </linearGradient>
           </defs>
+
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -102,12 +104,13 @@ export function PriceMovesDonut({
                 style={{
                   background:
                     a.key === "decreases"
-                      ? "oklch(0.66 0.15 160)"
+                      ? "var(--saving)"
                       : a.key === "increases"
-                        ? "oklch(0.62 0.19 24)"
-                        : "oklch(0.64 0.16 293)",
+                        ? "var(--destructive)"
+                        : "var(--primary)",
                 }}
               />
+
               {a.label}
             </span>
             <span className="num text-2xl font-semibold tabular-nums tracking-tight">{a.value}</span>
@@ -263,7 +266,7 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
         <path
           d={arc(angleFor(0.02), angleFor(clamped))}
           fill="none"
-          stroke={safe ? "oklch(0.66 0.15 160)" : "oklch(0.62 0.19 24)"}
+          stroke={safe ? "var(--saving)" : "var(--destructive)"}
           strokeWidth={stroke}
           strokeLinecap="round"
           style={{ transition: "d 1s cubic-bezier(0.22,1,0.36,1)" }}
@@ -272,10 +275,11 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
         <path
           d={arc(START, angleFor(1))}
           fill="none"
-          stroke="oklch(0.62 0.19 24)"
+          stroke="var(--destructive)"
           strokeWidth={3}
           strokeLinecap="round"
         />
+
         <circle cx={nx} cy={ny} r={5} fill="var(--background)" stroke="currentColor" strokeWidth={2} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">

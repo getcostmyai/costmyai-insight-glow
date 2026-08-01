@@ -20,16 +20,27 @@ import { monthLabelOf } from "./snapshot.server";
  */
 
 /**
- * Locked brand identity: indigo accent on warm white, exactly as the live page.
- * Directional tones stay in the same light-background family — a rise is rose,
- * a cut is green — so the poster never invents a palette of its own.
+ * Brand identity, taken straight from the dashboard palette (src/styles.css):
+ * spend purple as the accent on the dashboard background, saving green for a
+ * cut and destructive red for a rise — the same tones the app uses in-product,
+ * so a shared poster reads as the same product as the dashboard.
  */
+const PALETTE = {
+  bg: "#FAFAFC",
+  ink: "#11131D",
+  body: "#4B4C57",
+  muted: "#70717A",
+  hairline: "#E6E6EA",
+  primary: "#7945EC",
+} as const;
+
 const TONE: Record<ShareCard["tone"], string> = {
-  brand: "#4338CA",
-  up: "#BE123C",
-  down: "#047857",
-  neutral: "#292524",
+  brand: PALETTE.primary,
+  up: "#E23439",
+  down: "#008C53",
+  neutral: PALETTE.ink,
 };
+
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -69,27 +80,27 @@ export function buildShareSvg(card: ShareCard, monthKey: string): string {
       <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1200" height="630" fill="#FAFAF9"/>
+  <rect width="1200" height="630" fill="${PALETTE.bg}"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
-  <rect x="0" y="0" width="1200" height="6" fill="#4338CA"/>
+  <rect x="0" y="0" width="1200" height="6" fill="${PALETTE.primary}"/>
 
-  <text x="72" y="104" font-family="Inter" font-size="26" font-weight="600" fill="#1C1917">Cost<tspan fill="#4338CA">My</tspan>AI</text>
-  <text x="215" y="104" font-family="Inter" font-size="26" font-weight="400" fill="#78716C">Intelligence</text>
+  <text x="72" y="104" font-family="Inter" font-size="26" font-weight="600" fill="${PALETTE.ink}">Cost<tspan fill="${PALETTE.primary}">My</tspan>AI</text>
+  <text x="215" y="104" font-family="Inter" font-size="26" font-weight="400" fill="${PALETTE.muted}">Intelligence</text>
 
   <text x="72" y="${330 - (valueSize - 208) / 2}" font-family="Inter" font-size="${valueSize}" font-weight="600" fill="${accent}" letter-spacing="-6">${esc(card.value)}</text>
 
-  <text x="72" y="404" font-family="Inter" font-size="36" font-weight="600" fill="#1C1917">${esc(card.label)}</text>
+  <text x="72" y="404" font-family="Inter" font-size="36" font-weight="600" fill="${PALETTE.ink}">${esc(card.label)}</text>
   ${detail
     .map(
       (l, i) =>
-        `<text x="72" y="${454 + i * 36}" font-family="Inter" font-size="25" font-weight="400" fill="#57534E">${esc(l)}</text>`,
+        `<text x="72" y="${454 + i * 36}" font-family="Inter" font-size="25" font-weight="400" fill="${PALETTE.body}">${esc(l)}</text>`,
     )
     .join("\n  ")}
 
-  <rect x="72" y="536" width="1056" height="1" fill="#E7E5E4"/>
-  <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="#1C1917">${esc(monthLabel)}</text>
-  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="#78716C">· final, frozen figures</text>
-  <text x="1128" y="580" text-anchor="end" font-family="Inter" font-size="22" font-weight="400" fill="#78716C">costmyai.com/intelligence/${esc(monthKey)}</text>
+  <rect x="72" y="536" width="1056" height="1" fill="${PALETTE.hairline}"/>
+  <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">${esc(monthLabel)}</text>
+  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="${PALETTE.muted}">· final, frozen figures</text>
+  <text x="1128" y="580" text-anchor="end" font-family="Inter" font-size="22" font-weight="400" fill="${PALETTE.muted}">costmyai.com/intelligence/${esc(monthKey)}</text>
 </svg>`;
 }
 
