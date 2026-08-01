@@ -142,3 +142,107 @@ describe("level-appropriate copy", () => {
     expect(LEVEL_FILES.certify).not.toContain("<NextLevelUpsell");
   });
 });
+
+/**
+ * Round 3 fix spec. One test per numbered item so a regression names itself.
+ */
+const PRIMITIVES = read("components/dashboard/primitives.tsx");
+const LISTS = read("components/dashboard/TransparencyLists.tsx");
+const SHELL_R3 = read("components/dashboard/DashboardShell.tsx");
+
+describe("round 3 spec", () => {
+  it("item 2 · Certify and Rightsize heroes carry the windowed spend figure", () => {
+    for (const name of ["certify", "rightsize"] as const) {
+      expect(LEVEL_FILES[name], name).toMatch(
+        /label=\{`Spend · \$\{activeRange\.long\}`\}[\s\S]{0,80}usd\(live\.spend\)/,
+      );
+    }
+  });
+
+  it("item 3 · Govern hero shows Rightsize's KPI row plus its own", () => {
+    const rows = LEVEL_FILES.govern.match(/<HeroStatRow/g) ?? [];
+    expect(rows.length).toBe(2);
+    for (const label of [
+      "Active saving",
+      "Available to activate",
+      "Oversized waste",
+      "Savings captured",
+      "Frozen",
+      "Running unattended",
+      "Eligible now",
+      "Held for you",
+      "Minimum to act",
+      "Cooldown",
+    ]) {
+      expect(LEVEL_FILES.govern, label).toContain(label);
+    }
+  });
+
+  it("item 4 · Certify and Rightsize render lists A, B and C", () => {
+    expect(LISTS).toContain("List A · arbitrage saves");
+    expect(LISTS).toContain("List B · benchmark saves");
+    expect(LISTS).toContain("List C · non-qualifying");
+    expect(LEVEL_FILES.rightsize).toContain("<TransparencyLists ctl={ctl} />");
+    expect(LEVEL_FILES.certify).toContain("<ArbitrageList ctl={ctl} />");
+    expect(LEVEL_FILES.certify).toContain("List B · benchmark saves");
+    expect(LEVEL_FILES.certify).toContain("<NonQualifyingList ctl={ctl} />");
+  });
+
+  it("item 4 · List C prints the engine's own verdict per row, not one canned line", () => {
+    // r.label / r.detail come straight from the certification verdict on the
+    // server; a hardcoded refusal sentence here would be invented copy.
+    expect(LISTS).toMatch(/\{r\.label\}/);
+    expect(LISTS).toMatch(/\{r\.detail\}/);
+  });
+
+  it("item 5 · Rightsize puts the manual switch control in the hero", () => {
+    expect(LEVEL_FILES.rightsize).toMatch(
+      /<LevelHero[\s\S]*<TopSwitchControl ctl=\{ctl\} \/>[\s\S]*<\/LevelHero>/,
+    );
+    expect(LEVEL_FILES.rightsize).toContain("Switch now");
+  });
+
+  it("item 6 · every switchable row carries its own activate action", () => {
+    const activates = LISTS.match(/onActivate=/g) ?? [];
+    expect(activates.length).toBe(2); // lists A and B
+    expect(LISTS).toContain("activate.mutate(");
+    expect(LEVEL_FILES.rightsize).toMatch(/activate\.mutate\(/); // oversized rows
+  });
+
+  it("item 7 · Govern is Rightsize plus autonomy", () => {
+    expect(LEVEL_FILES.govern).toContain("<TransparencyLists ctl={ctl} />");
+    expect(LEVEL_FILES.govern).toContain("<TopSwitchControl ctl={ctl} />");
+    expect(LEVEL_FILES.govern).toContain("<OversizedSection ctl={ctl} />");
+    expect(LEVEL_FILES.govern).toContain('role="radiogroup"');
+  });
+
+  it("item 8 · the next-level upsell is a hero-area banner with the real number", () => {
+    for (const name of ["compare", "certify"] as const) {
+      expect(LEVEL_FILES[name], name).toMatch(
+        /<HeroUpsell[\s\S]{0,320}saving=\{[\s\S]{0,40}\}/,
+      );
+      // Placed directly after the hero, before the usage chart.
+      const upsell = LEVEL_FILES[name].indexOf("<HeroUpsell");
+      const usage = LEVEL_FILES[name].indexOf("<UsageSection");
+      expect(upsell, name).toBeGreaterThan(-1);
+      expect(upsell, name).toBeLessThan(usage);
+    }
+  });
+
+  it("item 9 · workspace nav is upsell-only, demo shows all five levels", () => {
+    expect(SIDEBAR).toContain('scope === "demo"\n      ? LEVELS');
+    expect(SIDEBAR).toContain("planAtLeast(meta.requiredPlan, plan)");
+  });
+
+  it("item 11 · hero stat cards share one baseline per row via subgrid", () => {
+    expect(PRIMITIVES).toContain("row-span-3 grid min-w-0 grid-rows-subgrid");
+    const parents = PRIMITIVES.match(/grid grid-rows-\[auto_auto_auto\]/g) ?? [];
+    expect(parents.length).toBe(2); // LevelHero's own grid and HeroStatRow
+    // and the number still cannot bleed into the neighbouring column
+    expect(PRIMITIVES).toContain("whitespace-nowrap");
+  });
+
+  it("does not re-introduce a hydration mismatch on the freshness clock", () => {
+    expect(SHELL_R3).toMatch(/suppressHydrationWarning[\s\S]{0,400}pricesSyncedAgo/);
+  });
+});
