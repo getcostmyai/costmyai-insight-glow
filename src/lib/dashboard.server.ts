@@ -591,7 +591,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     saved_usd: number | string;
     autonomous: boolean;
   }): ActiveSwitchRow => {
-    const activeDays = Math.max(1, (now - new Date(s.activated_at).getTime()) / DAY_MS);
+    // Whole elapsed days, not fractional: a run-rate that moves every second
+    // makes the same figure disagree between server render and client, and
+    // between two pages read a moment apart.
+    const activeDays = Math.max(1, Math.floor((now - new Date(s.activated_at).getTime()) / DAY_MS));
     return {
       switchId: s.id,
       fromModel: s.from_model,
