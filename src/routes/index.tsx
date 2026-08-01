@@ -26,11 +26,11 @@ import { PLAN_META } from "@/lib/engine/types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CostMyAI — forecast and cut your AI spend" },
+      { title: "CostMyAI — stop overpaying for AI" },
       {
         name: "description",
         content:
-          "Forecast your month-end AI bill from real usage, then cut it with benchmark-backed switches. Metadata only, no provider keys, no prompt content.",
+          "CostMyAI reads only metadata from your stack, proves where the same quality costs less, and switches it — manually, or automatically on Govern. No provider keys, no prompt content.",
       },
       { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
       {
