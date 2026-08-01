@@ -28,7 +28,7 @@ import { ObjectiveSelect, LevelEmpty, LevelLocked } from "@/components/dashboard
 import { dashboardQuery, ranges, rangeFor, type RangeKey, type DashboardScope } from "@/lib/dashboard-queries";
 import type { ObjectiveKind } from "@/lib/engine/types";
 import type { SwitchOpportunity } from "@/lib/dashboard.server";
-import { compact, int, rangeHours, useLiveTotals } from "@/lib/gateway-metrics";
+import { compact, int, useLiveTotals } from "@/lib/gateway-metrics";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { supabase } from "@/integrations/supabase/client";
 import { usd, type SwitchRow } from "@/lib/dashboard-data";
