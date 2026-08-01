@@ -184,16 +184,20 @@ export function DashboardShell({
             </nav>
             <div className="space-y-1 border-t border-border pt-5">
               <p className="eyebrow px-3 pb-1">Account</p>
-              {accountNav.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <Settings className="size-4" />
-                  {item.label}
-                </Link>
-              ))}
+              {accountNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <Icon className="size-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+
             </div>
           </div>
         </aside>
