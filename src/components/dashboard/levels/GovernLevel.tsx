@@ -12,9 +12,13 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import {
   ActiveSwitchesSection,
+  MechanismStats,
+  mechanismSavings,
+  mechanismSentence,
   OversizedSection,
   TopSwitchControl,
 } from "@/components/dashboard/levels/RightsizeLevel";
+
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -36,7 +40,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   // Both sides are real sums over the same window — like for like on every tab.
   const totalOpportunity = savings.captured + savings.available;
   const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
-  const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
+  const mech = mechanismSavings(ctl);
   const govern = data.govern;
   const meta = PLAN_META["govern"];
   const autonomyOn = govern.unlocked && govern.enabled;
@@ -66,7 +70,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             </span>
           </>
         }
-        sub={`${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate on your traffic. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
+        sub={`All three mechanisms run on your traffic: ${mechanismSentence(mech)} ${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
         stats={
           /* Two bands: everything Rightsize shows, then what autonomy adds.
              Govern is Rightsize plus autonomy, so it must never show less. */
@@ -90,12 +94,8 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 sub={`${savings.certifiedCount} certified switches`}
                 accent="oklch(0.83 0.11 195)"
               />
-              <HeroStat
-                label="Oversized waste"
-                value={usd(oversizedWaste, 0)}
-                sub={`${data.oversized.length} workloads flagged`}
-                accent="oklch(0.83 0.13 55)"
-              />
+              <MechanismStats mech={mech} />
+
               <HeroStat
                 label="Savings captured"
                 value={`${Math.round(captureRate * 100)}%`}

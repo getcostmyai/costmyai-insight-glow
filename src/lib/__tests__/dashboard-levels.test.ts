@@ -165,7 +165,8 @@ describe("round 3 spec", () => {
     for (const label of [
       "Active saving",
       "Available to activate",
-      "Oversized waste",
+      // Round 4 renamed the oversized card to the mechanism it is —
+      // "Rightsize saving" — and moved it into the shared MechanismStats.
       "Savings captured",
       "Frozen",
       "Running unattended",
@@ -244,5 +245,54 @@ describe("round 3 spec", () => {
 
   it("does not re-introduce a hydration mismatch on the freshness clock", () => {
     expect(SHELL_R3).toMatch(/suppressHydrationWarning[\s\S]{0,400}pricesSyncedAgo/);
+  });
+});
+
+/**
+ * Round 4 — every level's hero itemises the mechanisms its plan includes, so
+ * the value of the upgrade is legible card by card instead of rolled up.
+ */
+describe("round 4 · per-mechanism hero KPIs", () => {
+  const MECH_LABELS = ["Arbitrage saving", "Benchmark saving", "Rightsize saving"];
+
+  it("Certify keeps its two mechanism cards", () => {
+    for (const label of MECH_LABELS.slice(0, 2)) {
+      expect(LEVEL_FILES.certify, label).toContain(`label="${label}"`);
+    }
+  });
+
+  it("Rightsize shows all three mechanism cards, consistently styled", () => {
+    expect(LEVEL_FILES.rightsize).toContain("<MechanismStats mech={mech} />");
+    for (const label of MECH_LABELS) {
+      expect(read("components/dashboard/levels/RightsizeLevel.tsx"), label).toContain(
+        `label="${label}"`,
+      );
+    }
+  });
+
+  it("Govern inherits the same three cards, not a copy", () => {
+    expect(LEVEL_FILES.govern).toContain("<MechanismStats mech={mech} />");
+    expect(LEVEL_FILES.govern).toContain(
+      'from "@/components/dashboard/levels/RightsizeLevel"',
+    );
+    // and keeps its own second row
+    expect((LEVEL_FILES.govern.match(/<HeroStatRow/g) ?? []).length).toBe(2);
+    for (const label of ["Running unattended", "Eligible now", "Held for you", "Cooldown"]) {
+      expect(LEVEL_FILES.govern, label).toContain(label);
+    }
+  });
+
+  it("states the dedup reconciliation next to the mechanism cards", () => {
+    const src = read("components/dashboard/levels/RightsizeLevel.tsx");
+    expect(src).toContain("mechanismSentence");
+    expect(src).toContain("counted twice across");
+    expect(LEVEL_FILES.rightsize).toContain("mechanismSentence(mech)");
+    expect(LEVEL_FILES.govern).toContain("mechanismSentence(mech)");
+  });
+
+  it("mechanism figures are window sums, never run-rates", () => {
+    const src = read("components/dashboard/levels/RightsizeLevel.tsx");
+    expect(src).not.toMatch(/monthlySaving/);
+    expect(src).toContain("r.saving");
   });
 });
