@@ -457,6 +457,69 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const qualityMatched = qualityLevel.items;
   const oversized = oversizedLevel.items;
 
+  /**
+   * The headline claim and the month-end projection are NOT window-dependent.
+   *
+   * The 24h/7d/30d toggle governs what traffic and which lists you are looking
+   * at. It must not silently redefine "what you can stop paying" or "where this
+   * month lands" — those swung by thousands of dollars purely because a user
+   * clicked a different tab. Both are anchored to one fixed 30-day basis, the
+   * same basis on every tab.
+   */
+  const baselineDays = 30;
+  const baselineStart = new Date(now - baselineDays * DAY_MS).toISOString();
+  let baselineRows: RollupRow[];
+  if (days === baselineDays) {
+    baselineRows = split.current as RollupRow[];
+  } else {
+    const { data } = await supabase
+      .from("usage_rollups")
+      .select(
+        "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+      )
+      .eq("org_id", orgId)
+      .eq("granularity", "day")
+      .gte("bucket_start", baselineStart)
+      .limit(100_000);
+    baselineRows = (data ?? []) as RollupRow[];
+  }
+
+  const baselineSpend = baselineRows.reduce((s, r) => s + Number(r.cost_usd), 0);
+  const baselineResult =
+    days === baselineDays
+      ? result
+      : runPipeline({
+          usage: aggregateUsage(baselineRows, baselineDays),
+          prices: priceRows,
+          benchmarks: (benchmarks.data ?? []).map((b) => ({
+            ...b,
+            score: Number(b.score),
+          })) as BenchmarkRow[],
+          margins: (margins.data ?? []).map((m) => ({ ...m, margin: Number(m.margin) })) as MarginRow[],
+          models: (models.data ?? []) as ModelRow[],
+          objectives: objectiveRows,
+        });
+
+  const baselineArbitrage = gateLevel(
+    "host_arbitrage",
+    plan,
+    baselineResult.hostArbitrage.map(toOpportunity),
+    (r) => r.monthlySaving,
+  );
+  const baselineQuality = gateLevel(
+    "quality_match",
+    plan,
+    baselineResult.qualityMatched.map(toOpportunity),
+    (r) => r.monthlySaving,
+  );
+  const baselineOversized = gateLevel(
+    "rightsize",
+    plan,
+    baselineResult.oversized.map((r) => ({ wasted: round2(r.monthlySavingUsd) })),
+    (o) => o.wasted,
+  );
+
+
   // ---- What is already running, inside the selected window -------------------
   const toSwitchRow = (s: {
     id: string;
