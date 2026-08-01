@@ -56,9 +56,7 @@ export function SwitchCard({
       <div className="flex shrink-0 items-center gap-5 sm:pl-4">
         <div className="text-right">
           <div className="num text-xl text-saving">+{usd(row.monthlySaving)}</div>
-          <div className="text-[11px] text-muted-foreground">
-            per month · −{row.savingPct}%
-          </div>
+          <div className="text-[11px] text-muted-foreground">per month · −{row.savingPct}%</div>
         </div>
         <div className="hidden w-24 sm:block">
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">

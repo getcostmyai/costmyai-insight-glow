@@ -54,10 +54,7 @@ export function SpendChart({ series, metric }: Props) {
           </linearGradient>
         </defs>
 
-        <polygon
-          points={`0,${h - pad.b} ${areaPoints} ${w},${h - pad.b}`}
-          fill="url(#areaGrad)"
-        />
+        <polygon points={`0,${h - pad.b} ${areaPoints} ${w},${h - pad.b}`} fill="url(#areaGrad)" />
 
         {series.map((d, i) => {
           const top = y(valueOf(d, metric));
@@ -73,7 +70,10 @@ export function SpendChart({ series, metric }: Props) {
                 rx={barW / 2.4}
                 fill="url(#barGrad)"
                 opacity={isOn ? 1 : 0.32}
-                style={{ transition: "opacity 0.2s, y 0.4s cubic-bezier(0.22,1,0.36,1), height 0.4s cubic-bezier(0.22,1,0.36,1)" }}
+                style={{
+                  transition:
+                    "opacity 0.2s, y 0.4s cubic-bezier(0.22,1,0.36,1), height 0.4s cubic-bezier(0.22,1,0.36,1)",
+                }}
               />
             </g>
           );

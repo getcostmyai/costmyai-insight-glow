@@ -129,8 +129,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel } = ctl;
   const arb = data.hostArbitrage[0];
   const qual = data.levels.quality_match.unlocked ? data.qualityMatched[0] : undefined;
-  const best =
-    arb && qual ? (arb.monthlySaving >= qual.monthlySaving ? arb : qual) : (arb ?? qual);
+  const best = arb && qual ? (arb.monthlySaving >= qual.monthlySaving ? arb : qual) : (arb ?? qual);
   if (!best) return null;
   const isArb = best === arb;
   const key = isArb

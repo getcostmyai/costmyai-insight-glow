@@ -72,7 +72,9 @@ export function AccountShell({
         />
         <main className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          {intro ? <div className="mt-2 max-w-2xl text-sm text-muted-foreground">{intro}</div> : null}
+          {intro ? (
+            <div className="mt-2 max-w-2xl text-sm text-muted-foreground">{intro}</div>
+          ) : null}
           <div className="mt-8 space-y-8">{children}</div>
         </main>
       </div>

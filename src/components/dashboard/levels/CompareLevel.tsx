@@ -1,8 +1,20 @@
-import { HeroStat, LevelHero, Legend, RangeToggle, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import {
+  HeroStat,
+  LevelHero,
+  Legend,
+  RangeToggle,
+  SectionTitle,
+  asSwitchRow,
+} from "@/components/dashboard/primitives";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import { HeroUpsell, LevelEmpty, LevelLocked, NextLevelUpsell } from "@/components/dashboard/LevelState";
+import {
+  HeroUpsell,
+  LevelEmpty,
+  LevelLocked,
+  NextLevelUpsell,
+} from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 
@@ -16,8 +28,20 @@ import { usd } from "@/lib/dashboard-data";
  * activating is a paid action and belongs to Rightsize and Govern.
  */
 export function CompareLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, activeRange, live, canAct, activate, busy, errorFor, ctaHref, ctaLabel, scope } =
-    ctl;
+  const {
+    data,
+    range,
+    setRange,
+    activeRange,
+    live,
+    canAct,
+    activate,
+    busy,
+    errorFor,
+    ctaHref,
+    ctaLabel,
+    scope,
+  } = ctl;
   const level = data.levels.host_arbitrage;
   const certify = data.levels.quality_match;
   const rows = data.hostArbitrage;
@@ -91,7 +115,10 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         }
         aside={
           <>
-            <SavingsRing captured={data.savings.activeMonthly} available={data.savings.availableMonthly} />
+            <SavingsRing
+              captured={data.savings.activeMonthly}
+              available={data.savings.availableMonthly}
+            />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
               <Legend color="oklch(0.72 0.11 195)" label="Available" />

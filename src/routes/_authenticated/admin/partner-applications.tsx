@@ -62,7 +62,9 @@ function ReviewQueue() {
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
         Every application a person needs to read.{" "}
-        <span className="num tabular-nums">{rows.filter((r) => r.status === "pending").length}</span>{" "}
+        <span className="num tabular-nums">
+          {rows.filter((r) => r.status === "pending").length}
+        </span>{" "}
         pending of <span className="num tabular-nums">{rows.length}</span>.
       </p>
 
@@ -74,7 +76,9 @@ function ReviewQueue() {
             <ApplicationRow
               key={r.id}
               row={r}
-              onChanged={() => queryClient.invalidateQueries({ queryKey: ["partner-applications"] })}
+              onChanged={() =>
+                queryClient.invalidateQueries({ queryKey: ["partner-applications"] })
+              }
             />
           ))}
         </div>

@@ -108,44 +108,44 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             </HeroStatRow>
 
             <HeroStatRow title="Govern · what runs without you">
-            <HeroStat
-              label="Running unattended"
-              value={`${govern.running}`}
-              sub={autonomyOn ? "autonomous mode is on" : "autonomous mode is off"}
-              accent="oklch(0.82 0.16 155)"
-            />
-            <HeroStat
-              label="Eligible now"
-              value={`${govern.eligible.length}`}
-              sub={`${usd(govern.eligibleMonthly, 0)}/mo`}
-              accent="oklch(0.83 0.11 195)"
-            />
-            <HeroStat
-              label="Held for you"
-              value={`${govern.refusals.length}`}
-              sub="refused by the autonomous gate"
-              accent="oklch(0.83 0.13 55)"
-            />
-            <HeroStat
-              label="Minimum to act"
-              value={usd(govern.policy.minMonthlySavingUsd, 0)}
-              sub="per switch, per month"
-              accent="oklch(0.86 0.09 265)"
-            />
-            <HeroStat
-              label="Cooldown"
-              value={`${govern.policy.cooldownHours}h`}
-              sub={
-                govern.lastAutonomousAt ? (
-                  <>
-                    last change <LocalTime iso={govern.lastAutonomousAt} />
-                  </>
-                ) : (
-                  "no autonomous change yet"
-                )
-              }
-              accent="oklch(0.9 0.03 285)"
-            />
+              <HeroStat
+                label="Running unattended"
+                value={`${govern.running}`}
+                sub={autonomyOn ? "autonomous mode is on" : "autonomous mode is off"}
+                accent="oklch(0.82 0.16 155)"
+              />
+              <HeroStat
+                label="Eligible now"
+                value={`${govern.eligible.length}`}
+                sub={`${usd(govern.eligibleMonthly, 0)}/mo`}
+                accent="oklch(0.83 0.11 195)"
+              />
+              <HeroStat
+                label="Held for you"
+                value={`${govern.refusals.length}`}
+                sub="refused by the autonomous gate"
+                accent="oklch(0.83 0.13 55)"
+              />
+              <HeroStat
+                label="Minimum to act"
+                value={usd(govern.policy.minMonthlySavingUsd, 0)}
+                sub="per switch, per month"
+                accent="oklch(0.86 0.09 265)"
+              />
+              <HeroStat
+                label="Cooldown"
+                value={`${govern.policy.cooldownHours}h`}
+                sub={
+                  govern.lastAutonomousAt ? (
+                    <>
+                      last change <LocalTime iso={govern.lastAutonomousAt} />
+                    </>
+                  ) : (
+                    "no autonomous change yet"
+                  )
+                }
+                accent="oklch(0.9 0.03 285)"
+              />
             </HeroStatRow>
           </div>
         }
@@ -161,72 +161,80 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               </div>
             </div>
             <div className="rounded-3xl bg-white/10 p-5 backdrop-blur">
-            <div className="flex items-center gap-3">
-              <span
-                className={`flex size-10 items-center justify-center rounded-2xl ${
-                  autonomyOn ? "bg-[oklch(0.82_0.16_155)]/20 text-[oklch(0.86_0.16_155)]" : "bg-white/10 text-white/70"
-                }`}
-              >
-                <ShieldCheck className="size-5" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-white">Switching mode</p>
-                <p className="text-[11px] text-white/60">
-                  {autonomyOn ? "Applying certified switches for you" : "You approve every switch"}
-                </p>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`flex size-10 items-center justify-center rounded-2xl ${
+                    autonomyOn
+                      ? "bg-[oklch(0.82_0.16_155)]/20 text-[oklch(0.86_0.16_155)]"
+                      : "bg-white/10 text-white/70"
+                  }`}
+                >
+                  <ShieldCheck className="size-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-white">Switching mode</p>
+                  <p className="text-[11px] text-white/60">
+                    {autonomyOn
+                      ? "Applying certified switches for you"
+                      : "You approve every switch"}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div
-              role="radiogroup"
-              aria-label="Switching mode"
-              className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-black/25 p-1 text-xs font-semibold"
-            >
-              {([
-                ["Manual", false],
-                ["Autonomous", true],
-              ] as const).map(([label, value]) => {
-                const on = govern.enabled === value;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    role="radio"
-                    aria-checked={on}
-                    disabled={!interactive || autonomousMutation.isPending}
-                    onClick={() => setMode(value)}
-                    className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 transition-colors ${
-                      on
-                        ? "bg-white text-[oklch(0.22_0.07_285)]"
-                        : "text-white/70 hover:text-white disabled:hover:text-white/70"
-                    } ${interactive ? "" : "cursor-not-allowed"}`}
-                  >
-                    {autonomousMutation.isPending && !on ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : null}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <p className="mt-3 text-[11px] leading-relaxed text-white/60">
-              {govern.unlocked
-                ? "In autonomous mode, certified switches that clear the gate are applied as prices and benchmarks move — within three minutes of a price change, once a day for a benchmark change. Every switch stays reversible."
-                : `Autonomous mode is part of ${meta.label}. The gate below has already run against your traffic — turning it on is all that is missing.`}
-            </p>
-            {errorFor("autonomous") ? (
-              <p className="mt-2 text-[11px] text-[oklch(0.8_0.15_25)]">{errorFor("autonomous")}</p>
-            ) : null}
-            {govern.unlocked ? null : (
-              <a
-                href="/pricing"
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white"
+              <div
+                role="radiogroup"
+                aria-label="Switching mode"
+                className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-black/25 p-1 text-xs font-semibold"
               >
-                Upgrade to {meta.label}
-                <ArrowUpRight className="size-3.5" />
-              </a>
-            )}
+                {(
+                  [
+                    ["Manual", false],
+                    ["Autonomous", true],
+                  ] as const
+                ).map(([label, value]) => {
+                  const on = govern.enabled === value;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      disabled={!interactive || autonomousMutation.isPending}
+                      onClick={() => setMode(value)}
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 transition-colors ${
+                        on
+                          ? "bg-white text-[oklch(0.22_0.07_285)]"
+                          : "text-white/70 hover:text-white disabled:hover:text-white/70"
+                      } ${interactive ? "" : "cursor-not-allowed"}`}
+                    >
+                      {autonomousMutation.isPending && !on ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : null}
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="mt-3 text-[11px] leading-relaxed text-white/60">
+                {govern.unlocked
+                  ? "In autonomous mode, certified switches that clear the gate are applied as prices and benchmarks move — within three minutes of a price change, once a day for a benchmark change. Every switch stays reversible."
+                  : `Autonomous mode is part of ${meta.label}. The gate below has already run against your traffic — turning it on is all that is missing.`}
+              </p>
+              {errorFor("autonomous") ? (
+                <p className="mt-2 text-[11px] text-[oklch(0.8_0.15_25)]">
+                  {errorFor("autonomous")}
+                </p>
+              ) : null}
+              {govern.unlocked ? null : (
+                <a
+                  href="/pricing"
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white"
+                >
+                  Upgrade to {meta.label}
+                  <ArrowUpRight className="size-3.5" />
+                </a>
+              )}
             </div>
           </div>
         }

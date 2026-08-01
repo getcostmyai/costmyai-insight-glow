@@ -87,7 +87,8 @@ function BillingPage() {
         data: {
           orgId: org!.id,
           environment: getStripeEnvironment(),
-          returnUrl: typeof window === "undefined" ? undefined : `${window.location.origin}/billing`,
+          returnUrl:
+            typeof window === "undefined" ? undefined : `${window.location.origin}/billing`,
         },
       }),
     onSuccess: (result) => {
@@ -188,9 +189,7 @@ function BillingPage() {
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
             <p className="eyebrow">Current level</p>
-            <p className="mt-1 text-2xl font-semibold tracking-tight">
-              {PLAN_META[current].label}
-            </p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight">{PLAN_META[current].label}</p>
             <p className="mt-1 text-sm text-muted-foreground">{PLAN_META[current].blurb}</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
@@ -200,17 +199,11 @@ function BillingPage() {
             />
             <Fact
               label={billing.data?.cancelAtPeriodEnd ? "Access until" : "Renews"}
-              value={
-                billing.data?.currentPeriodEnd ? fmtDate(billing.data.currentPeriodEnd) : "—"
-              }
+              value={billing.data?.currentPeriodEnd ? fmtDate(billing.data.currentPeriodEnd) : "—"}
             />
             <Fact
               label="Price"
-              value={
-                current === "compare"
-                  ? "$0"
-                  : `${usd(PLAN_META[current].monthly, 0)}/mo`
-              }
+              value={current === "compare" ? "$0" : `${usd(PLAN_META[current].monthly, 0)}/mo`}
             />
           </div>
         </div>

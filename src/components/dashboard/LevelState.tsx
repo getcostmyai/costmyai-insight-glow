@@ -78,7 +78,9 @@ export function LevelLocked({
           </p>
         </div>
         <div className="text-right">
-          <div className="num text-3xl text-primary blur-[0.5px] select-none">{usd(monthly, 0)}</div>
+          <div className="num text-3xl text-primary blur-[0.5px] select-none">
+            {usd(monthly, 0)}
+          </div>
           <p className="text-[11px] text-muted-foreground">per month behind this level</p>
         </div>
         <button className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95">
@@ -178,7 +180,9 @@ export function NextLevelUpsell({
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Found by the {meta.label} check, already run against your traffic.{" "}
-          {unlocked ? "Open the level to see the evidence." : `${meta.label} shows each one in full.`}
+          {unlocked
+            ? "Open the level to see the evidence."
+            : `${meta.label} shows each one in full.`}
         </p>
       </div>
       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
@@ -225,11 +229,16 @@ export function HeroUpsell({
       </span>
       <div className="relative min-w-60 flex-1">
         <p className="eyebrow text-primary">Already found on your traffic · {meta.label}</p>
-        <p className="num mt-1 text-3xl text-saving sm:text-4xl">{usd(monthly, 0)}<span className="text-base text-muted-foreground">/mo</span></p>
+        <p className="num mt-1 text-3xl text-saving sm:text-4xl">
+          {usd(monthly, 0)}
+          <span className="text-base text-muted-foreground">/mo</span>
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">
           across {count} {what}
           {count === 1 ? "" : "s"} the {meta.label} check has already scored.{" "}
-          {unlocked ? "Open the level to see the evidence." : `${meta.label} shows each one in full.`}
+          {unlocked
+            ? "Open the level to see the evidence."
+            : `${meta.label} shows each one in full.`}
         </p>
       </div>
       <span className="relative inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">

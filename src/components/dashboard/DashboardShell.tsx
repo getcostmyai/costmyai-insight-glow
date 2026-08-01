@@ -18,9 +18,6 @@ const topNav = [
   { label: "Plans", to: "/pricing" },
 ] as const;
 
-
-
-
 /**
  * The chrome every level page shares: masthead, the level switcher, account
  * links. The switcher is a real router navigation — each level is its own

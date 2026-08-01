@@ -108,13 +108,7 @@ export function HeroStat({
  * A labelled band of hero stats. Govern needs two of them — everything
  * Rightsize shows, plus its own autonomy row — so the band is its own object.
  */
-export function HeroStatRow({
-  title,
-  children,
-}: {
-  title?: string;
-  children: React.ReactNode;
-}) {
+export function HeroStatRow({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
     <div>
       {title ? (
@@ -200,7 +194,9 @@ export function Metric({
       </span>
       <span className="flex items-baseline gap-1 text-xs text-muted-foreground">
         {label}
-        {live && <span className="animate-pulse-dot inline-block size-1.5 rounded-full bg-saving" />}
+        {live && (
+          <span className="animate-pulse-dot inline-block size-1.5 rounded-full bg-saving" />
+        )}
       </span>
     </div>
   );

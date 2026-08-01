@@ -102,7 +102,6 @@ function Tokens({ orgId }: { orgId: string; orgName: string }) {
       intro="Your Verification Engine authenticates with a workspace ingest token. It sends usage metadata only — never prompts, completions, or your provider keys."
     >
       <div className="w-full max-w-3xl">
-
         {minted ? <MintedPanel minted={minted} onDismiss={() => setMinted(null)} /> : null}
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6">

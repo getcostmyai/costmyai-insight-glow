@@ -1,4 +1,11 @@
-import { HeroStat, LevelHero, Legend, RangeToggle, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import {
+  HeroStat,
+  LevelHero,
+  Legend,
+  RangeToggle,
+  SectionTitle,
+  asSwitchRow,
+} from "@/components/dashboard/primitives";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
@@ -112,7 +119,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         }
         aside={
           <>
-            <SavingsRing captured={data.savings.activeMonthly} available={data.savings.availableMonthly} />
+            <SavingsRing
+              captured={data.savings.activeMonthly}
+              available={data.savings.availableMonthly}
+            />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
               <Legend color="oklch(0.72 0.11 195)" label="Available" />

@@ -108,7 +108,9 @@ export function DashboardSidebar({
             const Icon = ICONS[meta.key];
             const active = meta.key === level;
             const locked =
-              scope === "mine" && meta.requiredPlan !== null && !planAtLeast(plan, meta.requiredPlan);
+              scope === "mine" &&
+              meta.requiredPlan !== null &&
+              !planAtLeast(plan, meta.requiredPlan);
             return (
               <Link
                 key={meta.key}
