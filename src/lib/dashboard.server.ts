@@ -736,6 +736,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   governEligible.sort((a, b) => b.monthlySaving - a.monthlySaving);
   governRefusals.sort((a, b) => b.monthlySaving - a.monthlySaving);
 
+  /** One shared statement of how the four levels' counts relate. */
+  const composition = buildComposition({
+    arbitrageCount: hostArbitrage.length,
+    qualityCount: qualityMatched.length,
+    oversizedCount: oversized.length,
+    eligibleCount: governEligible.length,
+    refusedCount: governRefusals.length,
+  });
+
   const autonomousEnabled = Boolean((org.data as { autonomous_enabled?: boolean }).autonomous_enabled);
   const autonomousRunning = runningSwitches.filter((s) => s.autonomous).length;
 
