@@ -13,6 +13,7 @@ import {
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
+import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 
@@ -28,7 +29,7 @@ import { usd } from "@/lib/dashboard-data";
  * plus autonomy — it renders the same content rather than a narrower copy of it.
  */
 export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange } = ctl;
+  const { data, range, setRange, activeRange, live, canAct, activate, busy, errorFor } = ctl;
   const { savings } = data;
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
@@ -56,6 +57,12 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
         sub={`Both figures are monthly run-rates measured across your last ${savings.basisDays} days of traffic — the same basis on every period tab. Activating is one click and reversible.`}
         stats={
           <>
+            <HeroStat
+              label={`Spend · ${activeRange.long}`}
+              value={usd(live.spend)}
+              sub="through the hosts you use today"
+              accent="oklch(0.85 0.1 300)"
+            />
             <HeroStat
               label="Active saving"
               value={usd(savings.activeMonthly, 0)}
@@ -97,9 +104,20 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             </div>
           </>
         }
-      />
+      >
+        {/* Manual switching is what this level sells, so the control sits in
+            the hero: the single biggest certified switch, one click, reversible. */}
+        <TopSwitchControl
+          ctl={ctl}
+          canAct={canAct}
+          activate={activate}
+          busy={busy}
+          errorFor={errorFor}
+        />
+      </LevelHero>
 
       <UsageSection ctl={ctl} />
+      <TransparencyLists ctl={ctl} />
       <OversizedSection ctl={ctl} />
       <ActiveSwitchesSection ctl={ctl} />
     </>

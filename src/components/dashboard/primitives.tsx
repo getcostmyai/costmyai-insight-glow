@@ -84,16 +84,45 @@ export function HeroStat({
   sub: React.ReactNode;
   accent: string;
 }) {
+  /**
+   * Three subgrid rows — label, number, subtext — so every card in a hero row
+   * shares one baseline no matter how long its label wraps.
+   */
   return (
-    <div className="border-l border-white/15 pl-4">
-      <p className="text-[11px] font-semibold tracking-widest text-white/55 uppercase">{label}</p>
+    <div className="row-span-3 grid grid-rows-subgrid gap-1 border-l border-white/15 pl-4">
+      <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
+        {label}
+      </p>
       <div
-        className="num mt-1.5 text-2xl tabular-nums"
+        className="num self-end text-2xl tabular-nums"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
       >
         {value}
       </div>
-      <p className="mt-0.5 text-[11px] text-white/55">{sub}</p>
+      <p className="self-start text-[11px] text-white/55">{sub}</p>
+    </div>
+  );
+}
+
+/**
+ * A labelled band of hero stats. Govern needs two of them — everything
+ * Rightsize shows, plus its own autonomy row — so the band is its own object.
+ */
+export function HeroStatRow({
+  title,
+  children,
+}: {
+  title?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      {title ? (
+        <p className="mb-3 text-[11px] font-semibold tracking-widest text-white/45 uppercase">
+          {title}
+        </p>
+      ) : null}
+      <div className="grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">{children}</div>
     </div>
   );
 }
@@ -130,7 +159,9 @@ export function LevelHero({
           <div className="flex flex-wrap items-center gap-3 text-xs text-white/70">{eyebrow}</div>
           <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">{headline}</h1>
           {sub ? <p className="mt-3 max-w-xl text-sm text-white/70">{sub}</p> : null}
-          {stats ? <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-5">{stats}</div> : null}
+          {stats ? (
+            <div className="mt-8 grid gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">{stats}</div>
+          ) : null}
           {children}
         </div>
         {aside ? <div className="lg:pl-6">{aside}</div> : null}

@@ -19,12 +19,14 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  * evidence for the switch is shown.
  */
 export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, activeRange, scope } = ctl;
+  const { data, range, setRange, activeRange, live, scope } = ctl;
   const { savings, stats, plan } = data;
 
   // Exact snapshot figures, not the live ticker: this window must read the same
   // here as it does on every level page.
-  const windowSpend = data.totals.spend;
+  // Shared with the gateway usage widget below via the controller, so the two
+  // spend figures on this page are literally the same number.
+  const windowSpend = live.spend;
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =

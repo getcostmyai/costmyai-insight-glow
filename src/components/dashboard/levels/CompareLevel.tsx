@@ -2,7 +2,7 @@ import { HeroStat, LevelHero, Legend, RangeToggle, SectionTitle, asSwitchRow } f
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import { LevelEmpty, LevelLocked, NextLevelUpsell } from "@/components/dashboard/LevelState";
+import { HeroUpsell, LevelEmpty, LevelLocked, NextLevelUpsell } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 
@@ -16,15 +16,16 @@ import { usd } from "@/lib/dashboard-data";
  * activating is a paid action and belongs to Rightsize and Govern.
  */
 export function CompareLevel({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, activeRange, canAct, activate, busy, errorFor, ctaHref, ctaLabel, scope } =
+  const { data, range, setRange, activeRange, live, canAct, activate, busy, errorFor, ctaHref, ctaLabel, scope } =
     ctl;
   const level = data.levels.host_arbitrage;
   const certify = data.levels.quality_match;
   const rows = data.hostArbitrage;
 
-  // The exact snapshot figure, not the live ticker: this must read identically
-  // to the same window on every other level page.
-  const windowSpend = data.totals.spend;
+  // One number, one source: the controller's shared live counter. The hero and
+  // the gateway usage widget below read the same object, so they cannot drift
+  // apart by a cent the way two independent tickers did.
+  const windowSpend = live.spend;
   const availableMonthly = rows.reduce((s, r) => s + r.monthlySaving, 0);
   const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
@@ -97,6 +98,15 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
             </div>
           </>
         }
+      />
+
+      <HeroUpsell
+        to={scope === "demo" ? "/demo/certify" : "/workspace/certify"}
+        requiredPlan="certify"
+        count={certifyCount}
+        monthly={certifyMonthly}
+        what="workload"
+        unlocked={certify.unlocked}
       />
 
       <UsageSection ctl={ctl} />

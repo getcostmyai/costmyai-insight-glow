@@ -2,7 +2,14 @@ import { HeroStat, LevelHero, Legend, RangeToggle, SectionTitle, asSwitchRow } f
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import { ObjectiveSelect, LevelEmpty, LevelLocked, NextLevelUpsell } from "@/components/dashboard/LevelState";
+import {
+  HeroUpsell,
+  LevelEmpty,
+  LevelLocked,
+  NextLevelUpsell,
+  ObjectiveSelect,
+} from "@/components/dashboard/LevelState";
+import { ArbitrageList, NonQualifyingList } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 
@@ -19,6 +26,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
     data,
     range,
     setRange,
+    activeRange,
+    live,
     objective,
     chooseObjective,
     canAct,
@@ -64,10 +73,16 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         stats={
           <>
             <HeroStat
+              label={`Spend · ${activeRange.long}`}
+              value={usd(live.spend)}
+              sub="through the hosts you use today"
+              accent="oklch(0.85 0.1 300)"
+            />
+            <HeroStat
               label="Arbitrage saving"
               value={usd(arbitrageMonthly, 0)}
               sub="Same model, cheaper host — no benchmark needed"
-              accent="oklch(0.85 0.1 300)"
+              accent="oklch(0.86 0.09 265)"
             />
             <HeroStat
               label="Benchmark saving"
@@ -106,11 +121,22 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         }
       />
 
+      <HeroUpsell
+        to={scope === "demo" ? "/demo/rightsize" : "/workspace/rightsize"}
+        requiredPlan="rightsize"
+        count={rightsizeCount}
+        monthly={rightsizeMonthly}
+        what="oversized workload"
+        unlocked={rightsize.unlocked}
+      />
+
       <UsageSection ctl={ctl} />
+
+      <ArbitrageList ctl={ctl} />
 
       <section>
         <SectionTitle
-          eyebrow="Quality-matched"
+          eyebrow="List B · benchmark saves"
           title="Cheaper model, same measured quality"
           hint={`Benchmarked against ${data.coverage.evaluations} measured evaluation bands before we recommend the swap.`}
           badge={`${rows.length} certified`}
@@ -173,6 +199,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           </div>
         )}
       </section>
+
+      <NonQualifyingList ctl={ctl} />
 
       <section className="card-surface p-6">
         <p className="eyebrow">Why some switches never appear</p>

@@ -188,3 +188,54 @@ export function NextLevelUpsell({
     </a>
   );
 }
+
+/**
+ * The same next-level finding as `NextLevelUpsell`, but sized for the top of
+ * the page: a prospect scrolling for two seconds must see the money the next
+ * level already found on their own traffic, not a sentence at the bottom.
+ */
+export function HeroUpsell({
+  to,
+  requiredPlan,
+  count,
+  monthly,
+  what,
+  unlocked,
+}: {
+  to: string;
+  requiredPlan: PlanTier;
+  count: number;
+  monthly: number;
+  what: string;
+  unlocked: boolean;
+}) {
+  const meta = PLAN_META[requiredPlan];
+  if (count === 0 && monthly === 0) return null;
+  return (
+    <a
+      href={to}
+      className="group relative flex flex-wrap items-center gap-6 overflow-hidden rounded-3xl border border-primary/30 bg-primary-soft/60 p-6 transition-transform hover:-translate-y-0.5 sm:p-7"
+    >
+      <div
+        className="pointer-events-none absolute -top-20 -right-10 size-72 rounded-full opacity-30 blur-3xl"
+        style={{ background: "var(--gradient-saving)" }}
+      />
+      <span className="relative flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-glow)]">
+        <Sparkles className="size-6" />
+      </span>
+      <div className="relative min-w-60 flex-1">
+        <p className="eyebrow text-primary">Already found on your traffic · {meta.label}</p>
+        <p className="num mt-1 text-3xl text-saving sm:text-4xl">{usd(monthly, 0)}<span className="text-base text-muted-foreground">/mo</span></p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          across {count} {what}
+          {count === 1 ? "" : "s"} the {meta.label} check has already scored.{" "}
+          {unlocked ? "Open the level to see the evidence." : `${meta.label} shows each one in full.`}
+        </p>
+      </div>
+      <span className="relative inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
+        {unlocked ? `Open ${meta.label}` : `Unlock ${meta.label}`}
+        <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </a>
+  );
+}

@@ -1,15 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, CreditCard, Gauge, Layers, LineChart, Lock, PlugZap, Settings, ShieldCheck, Users } from "lucide-react";
+import { PlugZap } from "lucide-react";
 
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { RangeToggle, LocalTime, Metric } from "@/components/dashboard/primitives";
 import { SpendChart } from "@/components/dashboard/SpendChart";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { supabase } from "@/integrations/supabase/client";
 import { usd } from "@/lib/dashboard-data";
 import type { LevelKey } from "@/lib/dashboard/levels";
-import { LEVELS } from "@/lib/dashboard/levels";
-import { compact, int, useLiveTotals } from "@/lib/gateway-metrics";
-import { planAtLeast, type PlanTier } from "@/lib/engine/types";
+import { compact, int } from "@/lib/gateway-metrics";
+import type { PlanTier } from "@/lib/engine/types";
 
 /** Only entries that resolve to a route that actually exists today. */
 const topNav = [
@@ -18,47 +18,8 @@ const topNav = [
   { label: "Plans", to: "/pricing" },
 ] as const;
 
-/**
- * Account destinations that are real routes. "Workspace" used to sit here and
- * pointed at the level pages the switcher above already covers, so clicking it
- * appeared to do nothing — it is gone rather than dead.
- */
-const accountNav = [
-  { label: "Settings", to: "/settings", icon: Settings },
-  { label: "Billing", to: "/billing", icon: CreditCard },
-  { label: "Team", to: "/team", icon: Users },
-] as const;
 
 
-const ICONS: Record<LevelKey, typeof Layers> = {
-  overview: Layers,
-  compare: LineChart,
-  certify: BadgeCheck,
-  rightsize: Gauge,
-  govern: ShieldCheck,
-};
-
-/**
- * Literal paths, not template strings: TanStack Router type-checks `to`
- * against the generated route tree, which is exactly the guard that would have
- * caught the old hardcoded `href="#"` sidebar before it shipped.
- */
-const PATHS = {
-  demo: {
-    overview: "/demo/overview",
-    compare: "/demo/compare",
-    certify: "/demo/certify",
-    rightsize: "/demo/rightsize",
-    govern: "/demo/govern",
-  },
-  mine: {
-    overview: "/workspace",
-    compare: "/workspace/compare",
-    certify: "/workspace/certify",
-    rightsize: "/workspace/rightsize",
-    govern: "/workspace/govern",
-  },
-} as const;
 
 /**
  * The chrome every level page shares: masthead, the level switcher, account
@@ -76,7 +37,6 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   const { data, session, scope } = ctl;
-  const paths = PATHS[scope];
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -141,66 +101,12 @@ export function DashboardShell({
       </header>
 
       <div className="mx-auto flex max-w-[1440px] gap-8 px-5 py-8 lg:px-8">
-        <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-24 space-y-6">
-            <div>
-              <p className="text-sm font-semibold">{data.workspace.name}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {/* Route-aware: this names the level you are looking at. */}
-                <span className="inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase">
-                  {LEVELS.find((l) => l.key === level)?.label ?? level}
-                </span>
-                {/* What the workspace is actually paying for. */}
-                <span className="inline-flex rounded-full border border-border px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                  {data.workspace.plan} plan
-                </span>
-              </div>
-            </div>
-
-            <nav className="space-y-1">
-              {LEVELS.map((meta) => {
-                const Icon = ICONS[meta.key];
-                const active = meta.key === level;
-                const locked =
-                  meta.requiredPlan !== null &&
-                  !planAtLeast(data.plan as PlanTier, meta.requiredPlan);
-                return (
-                  <Link
-                    key={meta.key}
-                    to={paths[meta.key]}
-                    aria-current={active ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                      active
-                        ? "bg-primary-soft font-semibold text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="size-4" />
-                    {meta.label}
-                    {locked ? <Lock className="ml-auto size-3.5 opacity-60" /> : null}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="space-y-1 border-t border-border pt-5">
-              <p className="eyebrow px-3 pb-1">Account</p>
-              {accountNav.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.to}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    <Icon className="size-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-
-            </div>
-          </div>
-        </aside>
+        <DashboardSidebar
+          workspaceName={data.workspace.name}
+          plan={data.plan as PlanTier}
+          level={level}
+          scope={scope}
+        />
 
         <main className="min-w-0 flex-1 space-y-8">
           {data.dataState === "awaiting_first_event" && <AwaitingFirstEvent />}
@@ -245,8 +151,7 @@ function AwaitingFirstEvent() {
  * levels are about individual switches and do not repeat it.
  */
 export function UsageSection({ ctl }: { ctl: DashboardController }) {
-  const { data, range, setRange, metric, setMetric, activeRange } = ctl;
-  const { series, live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
+  const { data, range, setRange, metric, setMetric, activeRange, live, liveSeries } = ctl;
 
   return (
     <section className="card-surface p-6 sm:p-7">
@@ -286,7 +191,7 @@ export function UsageSection({ ctl }: { ctl: DashboardController }) {
         </div>
       </div>
       <div className="mt-6">
-        <SpendChart series={series} metric={metric} />
+        <SpendChart series={liveSeries} metric={metric} />
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
         {data.coverage.untrackedModels > 0
