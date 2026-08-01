@@ -122,6 +122,59 @@ const pct = (now: number | null, prev: number | null): number | null =>
 
 const num = (v: unknown): number | null => (v == null ? null : Number(v));
 
+/**
+ * Turn raw `price_history` rows into the move buckets the page publishes.
+ *
+ * Invariant this function exists to guarantee:
+ *   `moves.length === increases.length + decreases.length`
+ * "Total moves" therefore means increases + decreases and nothing else; new
+ * listings are counted separately and are NEVER folded into that total.
+ *
+ * Direction comes from the ledger's own `change_kind`, never re-derived from the
+ * input side alone — a row that reprices output only still has a direction.
+ */
+export function summarizeMoves(
+  rows: PriceHistoryRow[],
+  labelByHost: Map<string, string>,
+): {
+  moves: PriceMove[];
+  increases: PriceMove[];
+  decreases: PriceMove[];
+  newListings: number;
+} {
+  const moves: PriceMove[] = rows
+    .filter((h) => h.change_kind === "increase" || h.change_kind === "decrease")
+    .map((h) => {
+      const inputNow = num(h.input_usd_per_mtok);
+      const inputPrev = num(h.prev_input_usd_per_mtok);
+      const outputNow = num(h.output_usd_per_mtok);
+      const outputPrev = num(h.prev_output_usd_per_mtok);
+      const inputPct = pct(inputNow, inputPrev);
+      const outputPct = pct(outputNow, outputPrev);
+      return {
+        modelKey: h.model_key,
+        host: h.host,
+        hostLabel: labelByHost.get(h.host) ?? h.host,
+        kind: h.change_kind as "increase" | "decrease",
+        inputNow,
+        inputPrev,
+        inputPct,
+        outputNow,
+        outputPrev,
+        outputPct,
+        pct: inputPct != null && inputPct !== 0 ? inputPct : (outputPct ?? 0),
+        observedAt: h.observed_at,
+      };
+    });
+
+  return {
+    moves,
+    increases: moves.filter((m) => m.kind === "increase"),
+    decreases: moves.filter((m) => m.kind === "decrease"),
+    newListings: rows.filter((h) => h.change_kind === "new").length,
+  };
+}
+
 export async function readIntelligence(): Promise<IntelligencePayload> {
   const supabase = createPublicServerClient();
   const now = new Date();
