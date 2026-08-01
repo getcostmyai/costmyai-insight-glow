@@ -42,7 +42,8 @@ export function findHostArbitrage(usage: UsageAggregate[], prices: PriceRow[]): 
     const best = arbitrageBaseline(u, byModel);
     if (!best || best.price.host === current.host) continue;
 
-    const saving = toMonthly(currentCost - best.cost, u.days);
+    const rawSaving = currentCost - best.cost;
+    const saving = toMonthly(rawSaving, u.days);
     if (saving < MIN_MONTHLY_SAVING_USD) continue;
 
     out.push({
@@ -55,6 +56,8 @@ export function findHostArbitrage(usage: UsageAggregate[], prices: PriceRow[]): 
       toHost: best.price.host,
       toHostLabel: best.price.host_label,
       taskHint: u.task_hint,
+      savingUsd: round2(rawSaving),
+      windowDays: u.days,
       monthlySavingUsd: round2(saving),
       savingPct: round2(((currentCost - best.cost) / currentCost) * 100),
       basis: "Same model, cheaper host",

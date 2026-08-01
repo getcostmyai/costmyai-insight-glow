@@ -140,6 +140,19 @@ export interface Recommendation {
   toHost: string | null;
   toHostLabel: string | null;
   taskHint: string;
+  /**
+   * The saving actually observed over the window the engine was run on.
+   * This is a real sum of measured traffic — never scaled to a month. Every
+   * period-dependent figure on the dashboard must use this one.
+   */
+  savingUsd: number;
+  /** Length of the observed window, in days, that `savingUsd` covers. */
+  windowDays: number;
+  /**
+   * The same saving projected to 30 days. A labelled run-rate: it is used for
+   * autonomous thresholds and for what is written to the recommendation
+   * ledger, and must never be summed into a window figure.
+   */
   monthlySavingUsd: number;
   savingPct: number;
   basis: string;

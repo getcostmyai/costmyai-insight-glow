@@ -116,7 +116,8 @@ export function findOversized(
     }
     if (!target || target.cost >= baseline.cost) continue;
 
-    const saving = toMonthly(baseline.cost - target.cost, u.days);
+    const rawSaving = baseline.cost - target.cost;
+    const saving = toMonthly(rawSaving, u.days);
     if (saving < 1) continue;
 
     const s = shapeOf(u);
@@ -130,6 +131,8 @@ export function findOversized(
       toHost: target.price.host,
       toHostLabel: target.price.host_label,
       taskHint: u.task_hint,
+      savingUsd: round2(rawSaving),
+      windowDays: u.days,
       monthlySavingUsd: round2(saving),
       savingPct: round2(((baseline.cost - target.cost) / baseline.cost) * 100),
       basis: "Oversized for the workload",
