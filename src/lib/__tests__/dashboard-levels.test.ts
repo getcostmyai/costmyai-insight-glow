@@ -90,9 +90,19 @@ describe("cross-page dollar parity", () => {
     expect(read("components/dashboard/useDashboardController.ts")).toContain("useLiveTotals");
   });
 
-  it("takes the donut figures from one shared savings object", () => {
+  it("takes the donut figures from one shared, window-scoped savings object", () => {
     for (const name of ["overview", "compare", "certify", "rightsize"] as const) {
-      expect(LEVEL_FILES[name], name).toMatch(/SavingsRing[\s\S]{0,120}activeMonthly/);
+      expect(LEVEL_FILES[name], name).toMatch(/SavingsRing[\s\S]{0,160}savings\.captured/);
+      expect(LEVEL_FILES[name], name).toMatch(/SavingsRing[\s\S]{0,220}savings\.available/);
+    }
+  });
+
+  it("never renders a monthly run-rate as if it were the period figure", () => {
+    // The audit: shorter windows showed bigger money because the lists summed
+    // 30-day projections. No level page may read a *Monthly saving field.
+    for (const name of ["overview", "compare", "certify", "rightsize", "govern"] as const) {
+      expect(LEVEL_FILES[name], name).not.toMatch(/savings\.(activeMonthly|availableMonthly|lockedMonthly)/);
+      expect(LEVEL_FILES[name], name).not.toMatch(/r\.monthlySaving|c\.monthlySaving/);
     }
   });
 });
@@ -123,8 +133,12 @@ describe("level-appropriate copy", () => {
     expect(LEVEL_FILES.govern).toContain('role="radiogroup"');
   });
 
-  it("surfaces the real next-level finding as the upsell", () => {
-    expect(LEVEL_FILES.compare).toContain("<NextLevelUpsell");
-    expect(LEVEL_FILES.certify).toContain("<NextLevelUpsell");
+  it("surfaces the real next-level finding once, at the top of the page", () => {
+    // One upsell per page: the duplicate banner at the bottom of Compare and
+    // Certify repeated the same number twice on one screen.
+    expect(LEVEL_FILES.compare).toContain("<HeroUpsell");
+    expect(LEVEL_FILES.certify).toContain("<HeroUpsell");
+    expect(LEVEL_FILES.compare).not.toContain("<NextLevelUpsell");
+    expect(LEVEL_FILES.certify).not.toContain("<NextLevelUpsell");
   });
 });
