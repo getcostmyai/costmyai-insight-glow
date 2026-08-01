@@ -69,6 +69,14 @@ export function ForecastDiagram() {
     Z
   `;
 
+  const areaProjected = `
+    M ${xForDay(TODAY - 1)} ${yForSpend(LAST_KNOWN_CUMULATIVE)}
+    ${PROJECTED_CUMULATIVE.map((v, i) => `L ${xForDay(TODAY - 1 + i)} ${yForSpend(v)}`).join(" ")}
+    L ${xForDay(DAYS - 1)} ${yForSpend(0)}
+    L ${xForDay(TODAY - 1)} ${yForSpend(0)}
+    Z
+  `;
+
   const rangeTop = yForSpend(FORECAST_RANGE[1]);
   const rangeBottom = yForSpend(FORECAST_RANGE[0]);
   const rangeCenter = yForSpend(FORECAST_POINT);
