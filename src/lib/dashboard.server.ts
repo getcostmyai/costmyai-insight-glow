@@ -71,6 +71,9 @@ export interface SwitchOpportunity {
   toHost: string;
   toHostLabel: string;
   taskHint: string;
+  /** Real dollars this switch would have saved inside the selected window. */
+  saving: number;
+  /** The same saving as a labelled 30-day run-rate. Never summed into a window. */
   monthlySaving: number;
   savingPct: number;
   basis: string;
@@ -473,6 +476,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     toHost: r.toHost ?? r.fromHost,
     toHostLabel: r.toHostLabel ?? r.fromHostLabel,
     taskHint: r.taskHint,
+    saving: round2(r.savingUsd),
     monthlySaving: round2(r.monthlySavingUsd),
     savingPct: Math.round(r.savingPct),
     basis: r.basis,
@@ -485,13 +489,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     "host_arbitrage",
     plan,
     result.hostArbitrage.map(toOpportunity),
-    (r) => r.monthlySaving,
+    (r) => r.saving,
   );
   const qualityLevel = gateLevel(
     "quality_match",
     plan,
     result.qualityMatched.map(toOpportunity),
-    (r) => r.monthlySaving,
+    (r) => r.saving,
   );
   const oversizedLevel = gateLevel(
     "rightsize",
@@ -503,7 +507,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         hostKey: r.fromHost,
         task: r.taskHint,
         toModel: r.toModel,
-        wasted: round2(r.monthlySavingUsd),
+        wasted: round2(r.savingUsd),
+        wastedMonthly: round2(r.monthlySavingUsd),
         savingPct: Math.round(r.savingPct),
         note: r.note,
       }),
