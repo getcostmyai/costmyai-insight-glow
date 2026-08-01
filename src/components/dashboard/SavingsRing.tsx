@@ -3,10 +3,12 @@ import { usd } from "@/lib/dashboard-data";
 interface Props {
   captured: number;
   available: number;
+  /** The window both figures were measured over, e.g. "last 7 days". */
+  period?: string;
 }
 
 /** Apple-style progress ring: how much of the identified saving is actually captured. */
-export function SavingsRing({ captured, available }: Props) {
+export function SavingsRing({ captured, available, period }: Props) {
   const total = captured + available;
   // Rounded before it reaches the DOM: the raw ratio carries float noise that
   // differs by a fraction between the server render and the client, which React
@@ -68,6 +70,9 @@ export function SavingsRing({ captured, available }: Props) {
         <span className="mt-1 text-xs text-muted-foreground">
           {usd(captured, 0)} of {usd(total, 0)}
         </span>
+        {period ? (
+          <span className="mt-0.5 text-[11px] text-muted-foreground/70">{period}</span>
+        ) : null}
       </div>
     </div>
   );
