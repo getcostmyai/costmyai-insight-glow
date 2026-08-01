@@ -20,15 +20,18 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  */
 export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, activeRange, scope } = ctl;
-  const { live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const { savings, stats, plan } = data;
 
+  // Exact snapshot figures, not the live ticker: this window must read the same
+  // here as it does on every level page.
+  const windowSpend = data.totals.spend;
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
-    data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
-  const totalTokens = live.inputTokens + live.outputTokens;
-  const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
+    data.previous.spend > 0 ? ((windowSpend - data.previous.spend) / data.previous.spend) * 100 : 0;
+  const totalTokens = data.totals.inputTokens + data.totals.outputTokens;
+  const costPerMillion = totalTokens > 0 ? (windowSpend / totalTokens) * 1_000_000 : 0;
+
   const forecast = data.projection;
 
   const pipelineSteps = [
