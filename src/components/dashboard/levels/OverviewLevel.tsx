@@ -236,7 +236,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
                 {usd(monthly, 0)}
               </span>
               <p className="mt-1 text-xs text-muted-foreground">
-                {count} {count === 1 ? "opportunity" : "opportunities"} · per month
+                {count} {count === 1 ? "opportunity" : "opportunities"} · {activeRange.long}
               </p>
               <p className="mt-3 text-sm text-muted-foreground">{meta.tagline}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
