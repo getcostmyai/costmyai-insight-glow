@@ -176,7 +176,10 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
     data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
-  const runRateMonthly = (live.spend / rangeHours(range)) * 720;
+  // One projection basis on every tab — the 30-day run rate, not whatever
+  // window happens to be selected.
+  const runRateMonthly = data.projection.monthEndUsd;
+
   const totalTokens = live.inputTokens + live.outputTokens;
   const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
 
