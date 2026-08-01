@@ -49,7 +49,18 @@ const navItems = [
   { label: "Govern", icon: ShieldCheck, href: "#govern" },
 ];
 
-const topNav = ["Analyzer", "Calculators", "Models", "Intelligence", "Blog", "Plans"];
+/** Only entries that resolve to a route that actually exists today. */
+const topNav: { label: string; to: string }[] = [
+  { label: "Models", to: "/models" },
+  { label: "Intelligence", to: "/intelligence" },
+  { label: "Plans", to: "/pricing" },
+];
+
+const accountNav: { label: string; to: string }[] = [
+  { label: "Settings", to: "/settings" },
+  { label: "Workspace", to: "/workspace" },
+];
+
 
 const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): SwitchRow => ({
   fromModel: o.fromModel,
@@ -230,15 +241,16 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
           </span>
           <nav className="hidden items-center gap-7 lg:flex">
             {topNav.map((item) => (
-              <a
-                key={item}
-                href="#"
+              <Link
+                key={item.label}
+                to={item.to}
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </nav>
+
           <div className="ml-auto flex items-center gap-4">
             {/* Session-driven, never route-driven: after an OAuth callback the
                 session arrives asynchronously and this must follow it. */}
@@ -307,17 +319,18 @@ export function DashboardView({ scope = "demo" }: { scope?: DashboardScope }) {
             </nav>
             <div className="space-y-1 border-t border-border pt-5">
               <p className="eyebrow px-3 pb-1">Account</p>
-              {["Settings", "Workspace"].map((l) => (
-                <a
-                  key={l}
-                  href="#"
+              {accountNav.map(({ label, to }) => (
+                <Link
+                  key={label}
+                  to={to}
                   className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Settings className="size-4" />
-                  {l}
-                </a>
+                  {label}
+                </Link>
               ))}
             </div>
+
           </div>
         </aside>
 
