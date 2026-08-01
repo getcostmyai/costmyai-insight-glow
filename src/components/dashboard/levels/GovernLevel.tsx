@@ -33,8 +33,9 @@ import { PLAN_META } from "@/lib/engine/types";
 export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, activeRange, live, canAct, autonomousMutation, errorFor } = ctl;
   const { savings } = data;
-  const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
-  const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
+  // Both sides are real sums over the same window — like for like on every tab.
+  const totalOpportunity = savings.captured + savings.available;
+  const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
   const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
   const govern = data.govern;
   const meta = PLAN_META["govern"];
@@ -59,7 +60,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         }
         headline={
           <>
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(govern.eligibleMonthly)}</span>{" "}
+            <span className="num text-[oklch(0.83_0.11_195)]">{usd(govern.eligibleSaving)}</span>{" "}
             <span className="text-white/80">a month could apply itself.</span>
           </>
         }
@@ -77,13 +78,13 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               />
               <HeroStat
                 label="Active saving"
-                value={usd(savings.activeMonthly, 0)}
+                value={usd(savings.captured, 0)}
                 sub={`${data.activeSwitches.length + data.switchesOutsideWindow} switches rerouting traffic`}
                 accent="oklch(0.82 0.16 155)"
               />
               <HeroStat
                 label="Available to activate"
-                value={usd(savings.availableMonthly, 0)}
+                value={usd(savings.available, 0)}
                 sub={`${savings.certifiedCount} certified switches`}
                 accent="oklch(0.83 0.11 195)"
               />
@@ -117,7 +118,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Eligible now"
                 value={`${govern.eligible.length}`}
-                sub={`${usd(govern.eligibleMonthly, 0)}/mo`}
+                sub={`${usd(govern.eligibleSaving, 0)} · ${activeRange.long}`}
                 accent="oklch(0.83 0.11 195)"
               />
               <HeroStat
@@ -154,7 +155,11 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
              A locked workspace sees the real control, inert — not a description. */
           <div className="w-full max-w-xs space-y-5">
             <div>
-              <SavingsRing captured={savings.activeMonthly} available={savings.availableMonthly} />
+              <SavingsRing
+                captured={savings.captured}
+                available={savings.available}
+                period={activeRange.long}
+              />
               <div className="mt-3 flex justify-center gap-5 text-xs text-white/70">
                 <Legend color="oklch(0.65 0.15 158)" label="Captured" />
                 <Legend color="oklch(0.72 0.11 195)" label="Available" />
@@ -254,7 +259,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
           eyebrow="Would run without you"
           title="Cleared by the autonomous gate"
           hint="Certified, above the materiality floor, and outside the cooldown window."
-          badge={`${usd(govern.eligibleMonthly, 0)}/mo`}
+          badge={`${usd(govern.eligibleSaving, 0)} · ${activeRange.long}`}
           badgeTone="saving"
         />
         <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
@@ -287,7 +292,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                     {c.toHost} · {c.taskHint}
                   </span>
                 </div>
-                <span className="num text-lg text-saving">{usd(c.monthlySaving, 0)}/mo</span>
+                <span className="num text-lg text-saving">{usd(c.saving, 0)}</span>
               </div>
             ))}
           </div>
@@ -325,7 +330,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                   {r.reason.replace(/_/g, " ")}
                 </span>
                 <span className="num text-sm text-muted-foreground">
-                  {usd(r.monthlySaving, 0)}/mo
+                  {usd(r.saving, 0)}
                 </span>
               </div>
             ))}
