@@ -107,17 +107,25 @@ export function ForecastDiagram() {
                 <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.35" />
                 <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.05" />
               </linearGradient>
-              <linearGradient id="projectedGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--primary-glow)" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.15" />
+              <linearGradient id="projectedGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--primary-glow)" stopOpacity="0.28" />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.04" />
               </linearGradient>
-              <pattern id="projectedHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="8" stroke="var(--primary)" strokeOpacity="0.12" strokeWidth="1" />
+              <pattern id="projectedHatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="10" stroke="var(--primary)" strokeOpacity="0.10" strokeWidth="1" />
               </pattern>
-              <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="var(--muted-foreground)" />
-              </marker>
             </defs>
+
+            {/* Y-axis hairline + labels */}
+            <line x1={padX} y1={padY} x2={padX} y2={padY + plotH} stroke="var(--border)" strokeWidth="1" />
+            {[0, 2000, 4000, 6000].map((v) => (
+              <g key={v}>
+                <line x1={padX - 5} y1={yForSpend(v)} x2={padX} y2={yForSpend(v)} stroke="var(--border)" />
+                <text x={padX - 10} y={yForSpend(v) + 4} textAnchor="end" className="fill-muted-foreground text-[10px] font-medium tracking-[0.05em]">
+                  ${(v / 1000).toFixed(0)}k
+                </text>
+              </g>
+            ))}
 
             {/* X-axis hairline */}
             <line x1={padX} y1={padY + plotH} x2={padX + plotW} y2={padY + plotH} stroke="var(--border)" strokeWidth="1" />
@@ -132,8 +140,31 @@ export function ForecastDiagram() {
               </g>
             ))}
 
+            {/* Projected area (under the dashed line) */}
+            <path
+              d={areaProjected}
+              fill="url(#projectedGradient)"
+              style={{
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s",
+              }}
+            />
+
+            {/* Projected area band (hatch overlay) */}
+            <rect
+              x={xForDay(TODAY - 1)}
+              y={padY}
+              width={xForDay(DAYS - 1) - xForDay(TODAY - 1)}
+              height={plotH}
+              fill="url(#projectedHatch)"
+              style={{
+                opacity: mounted ? 0.6 : 0,
+                transition: "opacity 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s",
+              }}
+            />
+
             {/* Known area */}
-            <path d={areaActual} fill="url(#knownGradient)" className="transition-all duration-1000" style={{ opacity: mounted ? 1 : 0 }} />
+            <path d={areaActual} fill="url(#knownGradient)" style={{ opacity: mounted ? 1 : 0, transition: "opacity 1s" }} />
 
             {/* Known spend line */}
             <path
@@ -148,17 +179,6 @@ export function ForecastDiagram() {
                 strokeDashoffset: mounted ? 0 : 1200,
                 transition: "stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s",
               }}
-            />
-
-            {/* Projected area band */}
-            <rect
-              x={xForDay(TODAY - 1)}
-              y={padY}
-              width={xForDay(DAYS - 1) - xForDay(TODAY - 1)}
-              height={plotH}
-              fill="url(#projectedHatch)"
-              className="transition-opacity duration-1000"
-              style={{ opacity: mounted ? 1 : 0 }}
             />
 
             {/* Projected spend line (dashed) */}
@@ -185,19 +205,19 @@ export function ForecastDiagram() {
               stroke="var(--foreground)"
               strokeWidth="1"
               strokeDasharray="4 4"
-              style={{ opacity: mounted ? 0.6 : 0, transition: "opacity 1s" }}
+              style={{ opacity: mounted ? 0.5 : 0, transition: "opacity 1s" }}
             />
 
             {/* Forecast range band at month-end */}
             <rect
-              x={xForDay(DAYS - 1) - 38}
+              x={xForDay(DAYS - 1) - 44}
               y={rangeTop}
-              width="76"
-              height={rangeBottom - rangeTop}
-              rx="6"
+              width="88"
+              height={Math.max(18, rangeBottom - rangeTop)}
+              rx="8"
               fill="var(--saving-soft)"
               stroke="var(--saving)"
-              strokeWidth="1"
+              strokeWidth="1.5"
               style={{
                 opacity: mounted ? 1 : 0,
                 transform: `scaleY(${mounted ? 1 : 0})`,
@@ -210,10 +230,10 @@ export function ForecastDiagram() {
             <circle
               cx={xForDay(DAYS - 1)}
               cy={rangeCenter}
-              r="5"
+              r="6"
               fill="var(--saving)"
               stroke="var(--background)"
-              strokeWidth="2"
+              strokeWidth="2.5"
               style={{
                 opacity: mounted ? 1 : 0,
                 transform: `scale(${mounted ? 1 : 0})`,
@@ -222,7 +242,22 @@ export function ForecastDiagram() {
               }}
             />
 
-            {/* Labels */}
+            {/* Forecast value label */}
+            <text
+              x={xForDay(DAYS - 1)}
+              y={rangeCenter - 22}
+              textAnchor="middle"
+              className="text-[13px] font-semibold tabular-nums tracking-tight"
+              style={{
+                fill: "var(--saving)",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.8s 1s",
+              }}
+            >
+              ~${Math.round(FORECAST_POINT / 1000)}k
+            </text>
+
+            {/* Today label */}
             <text
               x={xForDay(TODAY - 1) - 10}
               y={padY + 18}
@@ -233,21 +268,30 @@ export function ForecastDiagram() {
               Today
             </text>
 
+            {/* Forecast side label */}
             <text
-              x={xForDay(DAYS - 1) + 14}
-              y={rangeCenter - 14}
+              x={xForDay(DAYS - 1) + 52}
+              y={rangeCenter - 6}
               textAnchor="start"
-              className="fill-saving text-[12px] font-semibold"
-              style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.8s 0.9s" }}
+              className="text-[12px] font-semibold"
+              style={{
+                fill: "var(--saving)",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.8s 0.9s",
+              }}
             >
-              Forecast
+              Month-end forecast
             </text>
             <text
-              x={xForDay(DAYS - 1) + 14}
-              y={rangeCenter + 6}
+              x={xForDay(DAYS - 1) + 52}
+              y={rangeCenter + 12}
               textAnchor="start"
-              className="fill-muted-foreground text-[11px]"
-              style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.8s 1s" }}
+              className="text-[11px]"
+              style={{
+                fill: "var(--muted-foreground)",
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.8s 1s",
+              }}
             >
               point or range
             </text>
