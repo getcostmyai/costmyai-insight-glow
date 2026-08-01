@@ -130,6 +130,7 @@ export interface IntelligencePayload {
   multiHostModels: number;
   medianHostsPerModel: number;
   maxHostsPerModel: number;
+  hostBuckets: HostBucket[];
   bandWinners: BandWinner[];
   saturation: SaturationRow[];
 }
@@ -378,6 +379,7 @@ export async function readIntelligence(): Promise<IntelligencePayload> {
     multiHostModels: hostCounts.filter((c) => c > 1).length,
     medianHostsPerModel: hostCounts.length ? hostCounts[Math.floor(hostCounts.length / 2)] : 0,
     maxHostsPerModel: hostCounts.length ? hostCounts[hostCounts.length - 1] : 0,
+    hostBuckets: bucketHostCounts(hostCounts),
     bandWinners,
     saturation,
   };
