@@ -93,11 +93,12 @@ export function HeroStat({
     <div className="flex min-w-0 flex-col gap-1 border-l border-white/15 pl-4">
       <p className="text-[11px] font-semibold tracking-widest text-white/55 uppercase">{label}</p>
       <div
-        className="num mt-auto min-w-0 text-xl tabular-nums [overflow-wrap:anywhere] sm:text-2xl"
+        className="num mt-auto min-w-0 -tracking-tight whitespace-nowrap tabular-nums text-[clamp(0.95rem,1.1vw,1.5rem)]"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
       >
         {value}
       </div>
+
 
       <p className="text-[11px] break-words text-white/55">{sub}</p>
     </div>
