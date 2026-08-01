@@ -207,7 +207,11 @@ function Forecast() {
           ))}
         </div>
 
-        <div className="mx-auto mt-20 max-w-4xl">
+        <div className="mt-24">
+          <ForecastDiagram />
+        </div>
+
+        <div className="mx-auto mt-24 max-w-4xl">
           {FORECAST_PRINCIPLES.map((p, i) => (
             <Reveal
               key={p.n}
