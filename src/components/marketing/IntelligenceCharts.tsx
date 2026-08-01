@@ -43,19 +43,21 @@ export function PriceMovesDonut({
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <defs>
+            {/* Dashboard palette: saving green, destructive red, spend purple. */}
             <linearGradient id="donutDown" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.72 0.16 158)" />
-              <stop offset="100%" stopColor="oklch(0.52 0.13 165)" />
+              <stop offset="0%" stopColor="color-mix(in oklab, var(--saving) 78%, white)" />
+              <stop offset="100%" stopColor="var(--saving)" />
             </linearGradient>
             <linearGradient id="donutUp" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.68 0.19 25)" />
-              <stop offset="100%" stopColor="oklch(0.55 0.18 22)" />
+              <stop offset="0%" stopColor="color-mix(in oklab, var(--destructive) 82%, white)" />
+              <stop offset="100%" stopColor="var(--destructive)" />
             </linearGradient>
             <linearGradient id="donutNew" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.72 0.15 295)" />
-              <stop offset="100%" stopColor="oklch(0.55 0.17 292)" />
+              <stop offset="0%" stopColor="var(--primary-glow)" />
+              <stop offset="100%" stopColor="var(--primary)" />
             </linearGradient>
           </defs>
+
           <circle
             cx={size / 2}
             cy={size / 2}
