@@ -17,6 +17,7 @@ import {
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram";
 import { Estimator } from "@/components/marketing/Estimator";
+import { ForecastDiagram } from "@/components/marketing/ForecastDiagram";
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -206,7 +207,11 @@ function Forecast() {
           ))}
         </div>
 
-        <div className="mx-auto mt-20 max-w-4xl">
+        <div className="mt-24">
+          <ForecastDiagram />
+        </div>
+
+        <div className="mx-auto mt-24 max-w-4xl">
           {FORECAST_PRINCIPLES.map((p, i) => (
             <Reveal
               key={p.n}
