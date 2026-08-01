@@ -35,7 +35,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
   // capture rate is a like-for-like ratio on every period tab.
   const totalOpportunity = savings.captured + savings.available;
   const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
-  const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
+  const mech = mechanismSavings(ctl);
 
   return (
     <>
@@ -56,7 +56,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             <span className="text-white/80">left on the table.</span>
           </>
         }
-        sub={`Both figures are real sums over the ${activeRange.long} of your own traffic — no projections, and each workload counted once. Activating is one click and reversible.`}
+        sub={`Your plan runs all three mechanisms over the ${activeRange.long} of your own traffic: ${mechanismSentence(mech)} No projections, and each workload counted once. Activating is one click and reversible.`}
         stats={
           <>
             <HeroStat
@@ -65,6 +65,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
               sub="through the hosts you use today"
               accent="oklch(0.85 0.1 300)"
             />
+            <MechanismStats mech={mech} />
             <HeroStat
               label={`Captured · ${activeRange.long}`}
               value={usd(savings.captured, 0)}
@@ -76,12 +77,6 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
               value={usd(savings.available, 0)}
               sub={`${savings.certifiedCount} certified switches`}
               accent="oklch(0.83 0.11 195)"
-            />
-            <HeroStat
-              label="Oversized waste"
-              value={usd(oversizedWaste, 0)}
-              sub={`${data.oversized.length} workloads flagged`}
-              accent="oklch(0.83 0.13 55)"
             />
             <HeroStat
               label="Savings captured"
@@ -97,6 +92,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             />
           </>
         }
+
         aside={
           <>
             <SavingsRing
