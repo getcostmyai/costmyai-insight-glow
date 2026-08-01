@@ -114,7 +114,7 @@ function MoveTable({ rows, direction }: { rows: PriceMove[]; direction: "up" | "
                   {r.inputPrev != null ? usd(r.inputPrev) : "—"} →{" "}
                 </span>
                 <span className="font-semibold">{r.inputNow != null ? usd(r.inputNow) : "—"}</span>
-                <span className={`ml-2 font-semibold ${accent}`}>{signedPct(r.inputPct)}</span>
+                <span className={`ml-2 whitespace-nowrap font-semibold ${accent}`}>{signedPct(r.inputPct)}</span>
               </td>
               <td className="px-4 py-3 text-right tabular-nums">
                 <span className="text-muted-foreground">
@@ -123,7 +123,7 @@ function MoveTable({ rows, direction }: { rows: PriceMove[]; direction: "up" | "
                 <span className="font-semibold">
                   {r.outputNow != null ? usd(r.outputNow) : "—"}
                 </span>
-                <span className={`ml-2 font-semibold ${accent}`}>{signedPct(r.outputPct)}</span>
+                <span className={`ml-2 whitespace-nowrap font-semibold ${accent}`}>{signedPct(r.outputPct)}</span>
               </td>
             </tr>
           ))}
