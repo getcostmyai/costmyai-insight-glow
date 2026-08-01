@@ -85,21 +85,21 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         meta,
         unlocked,
         count: data.hostArbitrage.length,
-        monthly: levelMonthly(data, "host_arbitrage"),
+        monthly: levelSaving(data, "host_arbitrage"),
       };
     if (meta.key === "certify")
       return {
         meta,
         unlocked,
         count: data.qualityMatched.length,
-        monthly: levelMonthly(data, "quality_match"),
+        monthly: levelSaving(data, "quality_match"),
       };
     if (meta.key === "rightsize")
       return {
         meta,
         unlocked,
         count: data.oversized.length,
-        monthly: levelMonthly(data, "rightsize"),
+        monthly: levelSaving(data, "rightsize"),
       };
     return {
       meta,
@@ -369,13 +369,14 @@ const MINE_PATHS = {
 } as const;
 
 /** Unlocked levels report what they can act on; locked ones report what they found. */
-function levelMonthly(
+/** What one level found over the selected window — real dollars, never a rate. */
+function levelSaving(
   data: DashboardController["data"],
   key: "host_arbitrage" | "quality_match" | "rightsize",
 ) {
   const level = data.levels[key];
-  if (!level.unlocked) return level.lockedMonthly;
-  if (key === "host_arbitrage") return data.hostArbitrage.reduce((s, r) => s + r.monthlySaving, 0);
-  if (key === "quality_match") return data.qualityMatched.reduce((s, r) => s + r.monthlySaving, 0);
+  if (!level.unlocked) return level.lockedSaving;
+  if (key === "host_arbitrage") return data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
+  if (key === "quality_match") return data.qualityMatched.reduce((s, r) => s + r.saving, 0);
   return data.oversized.reduce((s, r) => s + r.wasted, 0);
 }
