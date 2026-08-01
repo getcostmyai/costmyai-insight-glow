@@ -55,14 +55,15 @@ function HomePage() {
       <ProviderMarquee stats={stats} />
 
       <Estimator />
-      <VideoSection />
-      <Architecture />
       <HowItWorks />
+      <Architecture />
       <BuiltFor />
+      <VideoSection />
       <Pricing stats={stats} />
       <Neutrality />
       <Faq stats={stats} />
       <ClosingCta />
+
     </MarketingShell>
   );
 }
@@ -83,11 +84,23 @@ function Hero({ stats }: { stats: MarketingStats }) {
           as="p"
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
-          Same model on a cheaper host. A different model that benchmarks the same. A frontier model
-          doing work a small one does identically. CostMyAI finds all three from your gateway
-          metadata, proves each one before it moves anything — then switches it manually or lets
-          Govern do it automatically.
+          CostMyAI reads your gateway metadata, proves cheaper options against real benchmarks, and
+          switches only what holds quality — manually, or automatically with Govern.
         </Reveal>
+
+        <Reveal delay={180} className="mx-auto mt-9 grid max-w-3xl gap-3 text-left sm:grid-cols-3">
+          {[
+            { k: "Cheaper host", v: "Same model, lower price" },
+            { k: "Cheaper model", v: "Benchmarks the same" },
+            { k: "Smaller model", v: "Same result, less compute" },
+          ].map((m) => (
+            <div key={m.k} className="border-t border-border pt-3">
+              <p className="text-sm font-semibold tracking-[-0.01em]">{m.k}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{m.v}</p>
+            </div>
+          ))}
+        </Reveal>
+
 
         <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
@@ -145,7 +158,7 @@ function VideoSection() {
         <SectionHead
           eyebrow="See It Working"
           title="From live usage to a governed decision in under 60 seconds."
-          lead="Watch the Verification Engine read real usage, benchmark every workload, and produce a defensible verdict."
+          lead="Real usage in, a defensible verdict out."
         />
         <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
           <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[1.75rem] border border-border bg-background">
@@ -178,12 +191,12 @@ function VideoSection() {
 
 function Architecture() {
   return (
-    <section id="architecture" className="scroll-mt-24 wash-section">
+    <section id="architecture" className="scroll-mt-24 border-y border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Architecture"
           title="Runs in your environment. Sees only metadata."
-          lead="The Verification Engine is middleware. Your application routes every AI request through it. The engine forwards the request unchanged, reads only token counts and model names, then sends aggregate metadata to CostMyAI. It never reads prompt content."
+          lead="The Verification Engine sits in your stack as middleware. Requests pass through unchanged; only token counts and model names leave your environment. Never prompt content."
         />
         <Reveal delay={80} className="mt-14">
           <ArchitectureDiagram />
@@ -220,12 +233,12 @@ const STEPS = [
 
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="how" className="scroll-mt-24 wash-section">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="How It Works"
           title="Connect once. Governed decisions on every workload."
-          lead="Four steps. No manual exports. A defensible, benchmark-backed verdict for every workload in your live spend."
+          lead="Four steps, no manual exports — from one environment variable to a benchmark-backed verdict on every workload."
         />
 
         <div className="mx-auto mt-20 max-w-4xl">
@@ -295,7 +308,7 @@ function BuiltFor() {
         <SectionHead
           eyebrow="Built For"
           title="Built for whoever is accountable for the AI spend."
-          lead="From solo founders watching their first AI invoice to enterprise teams standardizing governance across every model deployment."
+          lead="From a first scary invoice to governance across every team."
         />
 
         <div className="mx-auto mt-20 max-w-4xl">
@@ -363,7 +376,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
   const [yearly, setYearly] = useState(true);
 
   return (
-    <section id="pricing" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="pricing" className="scroll-mt-24 wash-section">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Pricing"
