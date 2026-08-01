@@ -11,6 +11,8 @@ import type {
 } from "./engine/types";
 import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
+import { forecastMonthEnd } from "./dashboard/forecast";
+
 import {
   effectiveSelection,
   mergeObjectives,
