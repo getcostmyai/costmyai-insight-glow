@@ -62,11 +62,17 @@ function ModelsPage() {
 
 function Hero({ data }: { data: CatalogPayload }) {
   const stats = useMemo(() => {
-    const pricePoints = data.rows.reduce((n, r) => n + r.hosts.length, 0);
     const spreads = data.rows.map(hostSpread).filter((v): v is number => v !== null);
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
-    return { models: data.rows.length, vendors: data.vendors.length, pricePoints, topSpread };
+    return {
+      models: data.rows.length,
+      // Model makers (who trained the weights) — not the same as serving providers.
+      vendors: data.vendors.length,
+      providers: data.providers.length,
+      topSpread,
+    };
   }, [data]);
+
 
   return (
     <section className="relative overflow-hidden wash-hero">
@@ -107,8 +113,9 @@ function Hero({ data }: { data: CatalogPayload }) {
 
         <div className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
           <HeroStat delay={0} value={stats.models} label="Models priced" />
-          <HeroStat delay={80} value={stats.vendors} label="Vendors tracked" />
-          <HeroStat delay={160} value={stats.pricePoints} label="Verified host rates" />
+          <HeroStat delay={80} value={stats.vendors} label="Model makers" />
+          <HeroStat delay={160} value={stats.providers} label="Serving providers" />
+
           <HeroStat
             delay={240}
             value={Math.round(stats.topSpread)}
@@ -117,6 +124,17 @@ function Hero({ data }: { data: CatalogPayload }) {
             accent
           />
         </div>
+
+        <Reveal
+          delay={320}
+          as="p"
+          className="mx-auto mt-10 max-w-2xl text-xs leading-relaxed text-muted-foreground"
+        >
+          A <span className="text-foreground">model maker</span> trains the weights. A{" "}
+          <span className="text-foreground">serving provider</span> sells access to them. One model
+          can be sold by many providers at different prices — that gap is the arbitrage.
+        </Reveal>
+
       </div>
     </section>
   );
@@ -197,8 +215,9 @@ function Catalog({ data }: { data: CatalogPayload }) {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
               <FilterChip active={vendor === null} onClick={() => setVendor(null)}>
-                All vendors
+                All makers
               </FilterChip>
+
               {data.vendors.map((v) => (
                 <FilterChip key={v} active={vendor === v} onClick={() => setVendor(v)}>
                   {v}
