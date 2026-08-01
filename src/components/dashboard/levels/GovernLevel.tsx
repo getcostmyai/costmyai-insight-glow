@@ -90,12 +90,8 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 sub={`${savings.certifiedCount} certified switches`}
                 accent="oklch(0.83 0.11 195)"
               />
-              <HeroStat
-                label="Oversized waste"
-                value={usd(oversizedWaste, 0)}
-                sub={`${data.oversized.length} workloads flagged`}
-                accent="oklch(0.83 0.13 55)"
-              />
+              <MechanismStats mech={mech} />
+
               <HeroStat
                 label="Savings captured"
                 value={`${Math.round(captureRate * 100)}%`}
