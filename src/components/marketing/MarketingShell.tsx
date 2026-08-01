@@ -18,6 +18,7 @@ const NAV = [
   { to: "/models", label: "Models" },
   { to: "/intelligence", label: "Intelligence" },
   { to: "/partners", label: "Become a Partner" },
+  { to: "/blog", label: "Blog" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
 
