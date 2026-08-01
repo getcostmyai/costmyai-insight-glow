@@ -105,7 +105,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       meta,
       unlocked,
       count: data.govern.eligible.length,
-      monthly: data.govern.eligibleMonthly,
+      monthly: data.govern.eligibleSaving,
     };
   });
 

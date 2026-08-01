@@ -90,6 +90,9 @@ export interface GovernCandidate {
   toModel: string;
   toHost: string;
   taskHint: string;
+  /** Real dollars over the selected window. */
+  saving: number;
+  /** Labelled 30-day run-rate, which the autonomous threshold is written in. */
   monthlySaving: number;
   basis: string;
 }
@@ -739,14 +742,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       toModel: rec.toModel,
       toHost: rec.toHostLabel || rec.toHost,
       taskHint: rec.taskHint,
+      saving: round2(rec.savingUsd),
       monthlySaving: round2(rec.monthlySavingUsd),
       basis: rec.basis,
     };
     if (verdict.allowed) governEligible.push(base);
     else governRefusals.push({ ...base, reason: verdict.reason, detail: verdict.detail });
   }
-  governEligible.sort((a, b) => b.monthlySaving - a.monthlySaving);
-  governRefusals.sort((a, b) => b.monthlySaving - a.monthlySaving);
+  governEligible.sort((a, b) => b.saving - a.saving);
+  governRefusals.sort((a, b) => b.saving - a.saving);
 
   /**
    * List C. Every workload the equivalence check evaluated and refused, with
@@ -863,6 +867,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       lastAutonomousAt: lastAutonomousAt ? new Date(lastAutonomousAt).toISOString() : null,
       eligible: governEligible,
       refusals: governRefusals,
+      /** Real dollars over the window; the run-rate stays available separately. */
+      eligibleSaving: round2(governEligible.reduce((s, c) => s + c.saving, 0)),
       eligibleMonthly: round2(governEligible.reduce((s, c) => s + c.monthlySaving, 0)),
       policy: {
         minMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.minMonthlySavingUsd,
