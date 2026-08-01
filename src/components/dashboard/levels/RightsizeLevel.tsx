@@ -31,8 +31,10 @@ import { usd } from "@/lib/dashboard-data";
 export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, activeRange, live } = ctl;
   const { savings } = data;
-  const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
-  const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
+  // Captured and available are both real sums over the same window, so the
+  // capture rate is a like-for-like ratio on every period tab.
+  const totalOpportunity = savings.captured + savings.available;
+  const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
   const oversizedWaste = data.oversized.reduce((s, o) => s + o.wasted, 0);
 
   return (
@@ -48,13 +50,13 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
         }
         headline={
           <>
-            <span className="num text-[oklch(0.82_0.16_155)]">{usd(savings.activeMonthly)}</span>{" "}
-            <span className="text-white/80">saving now.</span>{" "}
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(savings.availableMonthly)}</span>{" "}
-            <span className="text-white/80">still waiting.</span>
+            <span className="num text-[oklch(0.82_0.16_155)]">{usd(savings.captured)}</span>{" "}
+            <span className="text-white/80">already saved.</span>{" "}
+            <span className="num text-[oklch(0.83_0.11_195)]">{usd(savings.available)}</span>{" "}
+            <span className="text-white/80">left on the table.</span>
           </>
         }
-        sub={`Both figures are monthly run-rates measured across your last ${savings.basisDays} days of traffic — the same basis on every period tab. Activating is one click and reversible.`}
+        sub={`Both figures are real sums over the ${activeRange.long} of your own traffic — no projections, and each workload counted once. Activating is one click and reversible.`}
         stats={
           <>
             <HeroStat
@@ -64,14 +66,14 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.85 0.1 300)"
             />
             <HeroStat
-              label="Active saving"
-              value={usd(savings.activeMonthly, 0)}
+              label={`Captured · ${activeRange.long}`}
+              value={usd(savings.captured, 0)}
               sub={`${data.activeSwitches.length + data.switchesOutsideWindow} switches rerouting traffic`}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
-              label="Available to activate"
-              value={usd(savings.availableMonthly, 0)}
+              label={`Available · ${activeRange.long}`}
+              value={usd(savings.available, 0)}
               sub={`${savings.certifiedCount} certified switches`}
               accent="oklch(0.83 0.11 195)"
             />
@@ -97,7 +99,11 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
         }
         aside={
           <>
-            <SavingsRing captured={savings.activeMonthly} available={savings.availableMonthly} />
+            <SavingsRing
+              captured={savings.captured}
+              available={savings.available}
+              period={activeRange.long}
+            />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
               <Legend color="oklch(0.72 0.11 195)" label="Available" />
@@ -129,7 +135,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel } = ctl;
   const arb = data.hostArbitrage[0];
   const qual = data.levels.quality_match.unlocked ? data.qualityMatched[0] : undefined;
-  const best = arb && qual ? (arb.monthlySaving >= qual.monthlySaving ? arb : qual) : (arb ?? qual);
+  const best = arb && qual ? (arb.saving >= qual.saving ? arb : qual) : (arb ?? qual);
   if (!best) return null;
   const isArb = best === arb;
   const key = isArb
@@ -159,8 +165,8 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
       </div>
       <div className="text-right">
         <div className="num text-3xl text-[oklch(0.86_0.16_155)]">
-          {usd(best.monthlySaving, 0)}
-          <span className="text-sm text-white/55">/mo</span>
+          {usd(best.saving, 0)}
+          <span className="text-sm text-white/55"> · {ctl.activeRange.long}</span>
         </div>
       </div>
       {canAct ? (
@@ -201,7 +207,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
 
 /** Frontier models doing economy-tier work, with the switch that fixes it. */
 export function OversizedSection({ ctl }: { ctl: DashboardController }) {
-  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel } = ctl;
+  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
   const level = data.levels.rightsize;
   const rsKey = (o: { model: string; hostKey: string; task: string }) =>
     `rightsize:${o.model}|${o.hostKey}|${o.task}`;
@@ -219,7 +225,8 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
         <LevelLocked
           requiredPlan={level.requiredPlan}
           count={level.lockedCount}
-          monthly={level.lockedMonthly}
+          saving={level.lockedSaving}
+          period={activeRange.long}
           what="oversized-workload"
         />
       ) : data.oversized.length === 0 ? (
@@ -244,7 +251,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 <TrendingDown className="mb-1 size-4 text-opportunity" />
                 <span className="num text-3xl text-opportunity">{usd(o.wasted, 0)}</span>
                 <span className="pb-1 text-xs text-muted-foreground">
-                  estimated monthly overspend
+                  overspend in the {activeRange.long}
                 </span>
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
