@@ -1,118 +1,94 @@
 import { Boxes, Cloud, Server, ShieldCheck } from "lucide-react";
 
+import { Reveal } from "@/components/marketing/Reveal";
+
 /**
- * The real request path, drawn honestly.
+ * The real request path, drawn honestly — as a single line, not a row of cards.
  *
- * Each leg is separate and numbered: the outbound request, the provider's
+ * Each leg is still separate and numbered: the outbound request, the provider's
  * response back through the engine, and — on its own dashed path — the
  * aggregate metadata that leaves for CostMyAI. Merging those into one arrow
  * would misrepresent what the middleware actually does.
  */
+const NODES = [
+  { icon: Boxes, title: "Your App", body: "Makes API requests" },
+  {
+    icon: Server,
+    title: "Verification Engine",
+    body: "Middleware in your environment",
+    highlight: true,
+  },
+  { icon: Cloud, title: "AI Provider", body: "OpenAI, Anthropic, Gemini, others" },
+];
+
 export function ArchitectureDiagram() {
   return (
-    <div className="card-surface p-6 sm:p-9">
-      <div className="grid items-stretch gap-4 lg:grid-cols-[1fr_auto_1.15fr_auto_1fr]">
-        <Node
-          icon={Boxes}
-          title="Your App"
-          body="Makes API requests"
-        />
+    <div className="relative">
+      {/* The wire every node sits on. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-[16.6%] right-[16.6%] top-9 hidden h-px lg:block"
+        style={{
+          backgroundImage: "var(--gradient-brand)",
+          maskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+          WebkitMaskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+        }}
+      />
 
-        <Leg label="request" number="01" />
-
-        <Node
-          icon={Server}
-          title="Verification Engine"
-          body="Middleware in your environment"
-          highlight
-        />
-
-        <Leg label="forwarded unchanged" number="02" />
-
-        <Node icon={Cloud} title="AI Provider" body="OpenAI, Anthropic, Gemini, others" />
+      <div className="relative grid gap-12 lg:grid-cols-3 lg:gap-6">
+        {NODES.map((n, i) => (
+          <Reveal key={n.title} delay={i * 110} className="text-center">
+            <div className="flex justify-center">
+              <span
+                className={`grid h-[4.5rem] w-[4.5rem] place-items-center rounded-full ${
+                  n.highlight
+                    ? "fill-gradient-brand text-primary-foreground shadow-[var(--shadow-glow)]"
+                    : "bg-secondary text-primary ring-1 ring-border"
+                }`}
+              >
+                <n.icon className="h-7 w-7" />
+              </span>
+            </div>
+            <p className="num mt-6 text-[11px] tracking-[0.18em] text-primary">
+              {`0${i + 1}`}
+              <span className="ml-2 font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {i === 0 ? "request" : i === 1 ? "forwarded unchanged" : "provider"}
+              </span>
+            </p>
+            <p className="mt-2 text-xl font-semibold tracking-[-0.03em]">{n.title}</p>
+            <p className="mx-auto mt-1.5 max-w-[16rem] text-sm leading-relaxed text-muted-foreground">
+              {n.body}
+            </p>
+          </Reveal>
+        ))}
       </div>
 
-      {/* Return leg, drawn separately — the response really does come back. */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-dashed border-border bg-background px-4 py-3">
-        <span className="num shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
-          03
-        </span>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Response</span> travels the same path in
-          reverse — provider → engine → your app. The engine counts tokens; it does not read the
-          body.
+      {/* Return leg, stated separately — the response really does come back. */}
+      <Reveal
+        delay={340}
+        className="mx-auto mt-16 max-w-3xl border-t border-border pt-8 text-center"
+      >
+        <p className="num text-[11px] tracking-[0.18em] text-muted-foreground">03 · RESPONSE</p>
+        <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+          Travels the same path in reverse — provider → engine → your app. The engine counts tokens;{" "}
+          <span className="font-medium text-foreground">it does not read the body.</span>
         </p>
-      </div>
+      </Reveal>
 
       {/* The one leg that leaves your environment. */}
-      <div className="mt-4 grid gap-4 rounded-2xl border border-primary/25 bg-primary-soft p-5 sm:grid-cols-[auto_1fr]">
-        <div className="flex items-start gap-3">
-          <span className="num shrink-0 rounded-full bg-card px-2 py-0.5 text-[11px] text-primary">
-            04
-          </span>
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl fill-gradient-brand text-primary-foreground">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="min-w-0">
-          <p className="font-semibold tracking-tight">
-            Verification Engine → CostMyAI · metadata only
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            Aggregate rows. Token counts, model names. No prompt content. This is the only leg that
-            leaves your environment, and it carries nothing we could reconstruct a prompt from.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Node({
-  icon: Icon,
-  title,
-  body,
-  highlight = false,
-}: {
-  icon: typeof Server;
-  title: string;
-  body: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border p-5 ${
-        highlight
-          ? "border-primary/40 bg-primary-soft shadow-[var(--shadow-card)]"
-          : "border-border bg-background"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div
-          className={`grid h-10 w-10 place-items-center rounded-xl ${
-            highlight ? "fill-gradient-brand text-primary-foreground" : "bg-secondary text-primary"
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-      <p className="mt-3.5 font-semibold tracking-tight">{title}</p>
-      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
-    </div>
-  );
-}
-
-function Leg({ label, number }: { label: string; number: string }) {
-  return (
-    <div className="flex items-center justify-center gap-2 lg:flex-col lg:justify-center">
-      <span className="num rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
-        {number}
-      </span>
-      <div className="hidden h-px w-10 bg-gradient-to-r from-border to-primary/50 lg:block" />
-      <div className="h-6 w-px bg-border lg:hidden" />
-      <span className="max-w-[7rem] text-center text-[11px] leading-tight text-muted-foreground">
-        {label}
-      </span>
+      <Reveal delay={420} className="mx-auto mt-12 max-w-3xl text-center">
+        <span className="grid h-12 w-12 place-items-center justify-self-center rounded-full fill-gradient-brand text-primary-foreground mx-auto">
+          <ShieldCheck className="h-6 w-6" />
+        </span>
+        <p className="num mt-5 text-[11px] tracking-[0.18em] text-primary">04 · METADATA ONLY</p>
+        <p className="mt-3 text-2xl font-semibold leading-snug tracking-[-0.03em] sm:text-[1.75rem]">
+          The only leg that leaves your environment carries nothing we could reconstruct a prompt
+          from.
+        </p>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+          Aggregate rows. Token counts, model names, hosts. No prompt content, ever.
+        </p>
+      </Reveal>
     </div>
   );
 }

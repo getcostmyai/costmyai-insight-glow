@@ -219,7 +219,6 @@ const STEPS = [
 ];
 
 function HowItWorks() {
-  const [open, setOpen] = useState(0);
   return (
     <section id="how" className="scroll-mt-24 border-y border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
@@ -229,32 +228,31 @@ function HowItWorks() {
           lead="Four steps. No manual exports. A defensible, benchmark-backed verdict for every workload in your live spend."
         />
 
-        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
-          {STEPS.map((s, i) => {
-            const isOpen = open === i;
-            return (
-              <div key={s.n}>
-                <button
-                  type="button"
-                  onClick={() => setOpen(isOpen ? -1 : i)}
-                  aria-expanded={isOpen}
-                  className="flex w-full items-center gap-4 px-6 py-5 text-left"
-                >
-                  <span className="num text-sm text-primary">{s.n}</span>
-                  <span className="flex-1 text-lg font-semibold tracking-tight">{s.title}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {isOpen ? (
-                  <p className="px-6 pb-6 pl-[3.6rem] text-sm leading-relaxed text-muted-foreground">
-                    {s.body}
-                  </p>
-                ) : null}
+        <div className="mx-auto mt-20 max-w-4xl">
+          {STEPS.map((s, i) => (
+            <Reveal
+              key={s.n}
+              delay={i * 90}
+              className="group relative grid gap-4 border-t border-border py-10 sm:grid-cols-[9rem_1fr] sm:gap-10 sm:py-12"
+            >
+              <span
+                aria-hidden
+                className="num pointer-events-none select-none text-[3.5rem] leading-none text-gradient-brand opacity-30 transition-opacity duration-500 group-hover:opacity-100 sm:text-[5rem]"
+              >
+                {s.n}
+              </span>
+              <div className="sm:pt-2">
+                <h3 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
+                  {s.title}
+                </h3>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                  {s.body}
+                </p>
               </div>
-            );
-          })}
-        </Reveal>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
       </div>
     </section>
   );
@@ -299,30 +297,36 @@ function BuiltFor() {
           title="Built for whoever is accountable for the AI spend."
           lead="From solo founders watching their first AI invoice to enterprise teams standardizing governance across every model deployment."
         />
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+        <div className="mx-auto mt-20 max-w-4xl">
           {PERSONAS.map((p, i) => (
-            <Reveal key={p.title} delay={i * 80} className="card-surface flex flex-col p-6">
-              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-soft">
-                <p.icon className="h-5 w-5 text-primary" />
-              </div>
-              <p className="mt-4 text-lg font-semibold tracking-tight">{p.title}</p>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{p.pain}</p>
+            <Reveal key={p.title} delay={i * 80}>
               <a
                 href={BOOK_DEMO_URL}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+                className="group grid grid-cols-[auto_1fr_auto] items-center gap-5 border-t border-border py-7 transition-colors hover:border-primary/40"
               >
-                Book a Demo
-                <ArrowRight className="h-4 w-4" />
+                <p.icon className="h-6 w-6 text-primary transition-transform duration-500 group-hover:scale-110" />
+                <div className="min-w-0">
+                  <p className="text-xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-gradient-brand sm:text-2xl">
+                    {p.title}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    {p.pain}
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary" />
               </a>
             </Reveal>
           ))}
+          <div className="border-t border-border" />
         </div>
       </div>
     </section>
   );
 }
+
 
 /* ------------------------------ 08 · pricing ----------------------------- */
 
@@ -564,33 +568,46 @@ function Faq({ stats }: { stats: MarketingStats }) {
     <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
-        <Reveal delay={80} className="mx-auto mt-14 max-w-3xl divide-y divide-border overflow-hidden rounded-[1.5rem] border border-border bg-background">
+        <div className="mx-auto mt-20 max-w-3xl">
           {items.map((item, i) => {
             const isOpen = open === i;
             return (
-              <div key={item.q}>
+              <Reveal key={item.q} delay={i * 70} className="border-t border-border">
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? -1 : i)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center gap-4 px-6 py-5 text-left"
+                  className="group flex w-full items-start gap-6 py-7 text-left"
                 >
-                  <span className="flex-1 font-semibold tracking-tight">{item.q}</span>
+                  <span className="num shrink-0 pt-1.5 text-[11px] tracking-[0.18em] text-primary">
+                    {`0${i + 1}`}
+                  </span>
+                  <span className="flex-1 text-lg font-semibold tracking-[-0.03em] transition-colors group-hover:text-primary sm:text-xl">
+                    {item.q}
+                  </span>
                   <ChevronDown
-                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`mt-1.5 h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180 text-primary" : ""}`}
                   />
                 </button>
-                {isOpen ? (
-                  <p className="px-6 pb-6 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
-                ) : null}
-              </div>
+                <div
+                  className={`grid transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <p className="overflow-hidden pb-7 pl-[3.1rem] pr-10 text-base leading-relaxed text-muted-foreground">
+                    {item.a}
+                  </p>
+                </div>
+              </Reveal>
             );
           })}
-        </Reveal>
+          <div className="border-t border-border" />
+        </div>
       </div>
     </section>
   );
 }
+
 
 /* ----------------------------- 11 · closing ------------------------------ */
 
