@@ -10,11 +10,6 @@ export type InternalPath =
   | "/models"
   | "/intelligence"
   | "/pricing"
-  | "/demo/overview"
-  | "/demo/compare"
-  | "/demo/certify"
-  | "/demo/rightsize"
-  | "/demo/govern"
   | "/legal/methodology";
 
 export type Block =
@@ -103,8 +98,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "See what governed AI spend actually looks like",
-        label: "Explore Compare (Free)",
-        to: "/demo/compare",
+        label: "See what the free level covers",
+        to: "/pricing",
       },
       { t: "h2", v: "Where this goes next" },
       {
@@ -284,8 +279,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "Certified switches, backed by proof, not guesswork",
-        label: "See how Certify works",
-        to: "/demo/certify",
+        label: "Read the certification method",
+        to: "/legal/methodology",
       },
       { t: "h2", v: "Where to start" },
       {
@@ -415,8 +410,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "Every switch we suggest is certified first",
-        label: "See how Certify works",
-        to: "/demo/certify",
+        label: "Read the certification method",
+        to: "/legal/methodology",
       },
       { t: "h2", v: "The actual playbook" },
       {
@@ -472,8 +467,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "See exactly what your agents would do unattended, before you turn autonomy on",
-        label: "See how Govern works",
-        to: "/demo/govern",
+        label: "See what each level does",
+        to: "/pricing",
       },
       {
         t: "p",
@@ -531,8 +526,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "Real billed spend, never estimated",
-        label: "See the Rightsize dashboard",
-        to: "/demo/rightsize",
+        label: "Read how we measure spend",
+        to: "/legal/methodology",
       },
       { t: "h2", v: "Where to start if you are behind" },
       {
@@ -582,8 +577,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "We refuse switches we can't prove, and tell you why",
-        label: "See how Certify's refusals work",
-        to: "/demo/certify",
+        label: "Read when we refuse a switch",
+        to: "/legal/methodology",
       },
       { t: "h2", v: "What a real refusal looks like" },
       {
@@ -634,8 +629,8 @@ export const POSTS: BlogPost[] = [
       {
         t: "cta",
         headline: "See your projected month-end spend, built from real usage patterns",
-        label: "See the Overview dashboard",
-        to: "/demo/overview",
+        label: "See this month's market data",
+        to: "/intelligence",
       },
       { t: "h2", v: "Why this discipline pays off" },
       {
