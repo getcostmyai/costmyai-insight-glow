@@ -53,6 +53,7 @@ interface OrgRow {
   id: string;
   plan: string;
   is_synthetic: boolean;
+  autonomous_enabled: boolean;
 }
 
 function median(values: number[]): number | null {
@@ -79,7 +80,7 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
 
   // Reference data is identical for every workspace: read it once.
   const [orgs, prices, benchmarks, margins, models] = await Promise.all([
-    supabaseAdmin.from("organizations").select("id, plan, is_synthetic").eq("is_synthetic", false),
+    supabaseAdmin.from("organizations").select("id, plan, is_synthetic, autonomous_enabled").eq("is_synthetic", false),
     supabaseAdmin
       .from("host_prices")
       .select(
@@ -263,7 +264,10 @@ async function evaluateOrg(
       // Govern level; every other gate lives in evaluateAutonomous.
       const verdict = evaluateAutonomous(
         rec,
-        { ...DEFAULT_AUTONOMOUS_POLICY, enabled: plan === "govern" },
+        // Two facts, both required: the workspace is genuinely on Govern, and
+        // a manager has deliberately switched autonomous mode on. The plan on
+        // its own has never been consent to change routing unattended.
+        { ...DEFAULT_AUTONOMOUS_POLICY, enabled: plan === "govern" && org.autonomous_enabled },
         { now: new Date(), lastAutonomousChangeAt: lastAutonomous },
       );
       if (!verdict.allowed) {

@@ -657,6 +657,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          autonomous_enabled: boolean
           billing_interval: string
           created_at: string
           created_by: string | null
@@ -673,6 +674,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          autonomous_enabled?: boolean
           billing_interval?: string
           created_at?: string
           created_by?: string | null
@@ -689,6 +691,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          autonomous_enabled?: boolean
           billing_interval?: string
           created_at?: string
           created_by?: string | null

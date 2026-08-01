@@ -311,3 +311,34 @@ export const setObjective = createServerFn({ method: "POST" })
 
     return { objective: data.objective };
   });
+
+/**
+ * Turn autonomous switching on or off for a workspace — the Govern level.
+ *
+ * Being on the Govern plan is necessary but not sufficient: nothing runs
+ * unattended until a manager sets this deliberately. The RLS update policy
+ * ("managers update org") is the identity gate underneath the plan gate.
+ */
+export const setAutonomous = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orgId: string; enabled: boolean }) => {
+    if (!UUID.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
+    if (typeof data?.enabled !== "boolean") throw new Error("Autonomous mode is on or off.");
+    return { orgId: data.orgId, enabled: data.enabled };
+  })
+  .handler(async ({ data, context }) => {
+    await requirePlan(context.supabase, data.orgId, "govern", paymentsEnvironment());
+
+    const { data: row, error } = await context.supabase
+      .from("organizations")
+      .update({ autonomous_enabled: data.enabled })
+      .eq("id", data.orgId)
+      .select("autonomous_enabled")
+      .maybeSingle();
+
+    if (error) throw plainly(error.message);
+    if (!row) throw new Error("Only a workspace manager can change autonomous mode.");
+
+    return { enabled: Boolean(row.autonomous_enabled) };
+  });
+

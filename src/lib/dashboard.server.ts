@@ -1,3 +1,8 @@
+import {
+  DEFAULT_AUTONOMOUS_POLICY,
+  evaluateAutonomous,
+  type AutonomousVerdict,
+} from "./engine/autonomous";
 import type { ObjectiveRow } from "./engine/objectives";
 import { runPipeline } from "./engine/pipeline";
 import type {
@@ -71,6 +76,26 @@ export interface SwitchOpportunity {
   note: string;
   qualityDelta: number | null;
 }
+
+/** A switch the autonomous gate would run unattended. */
+export interface GovernCandidate {
+  kind: string;
+  fromModel: string;
+  fromHost: string;
+  toModel: string;
+  toHost: string;
+  taskHint: string;
+  monthlySaving: number;
+  basis: string;
+}
+
+/** A switch the autonomous gate refuses to run unattended, and why. */
+export interface GovernRefusal extends GovernCandidate {
+  reason: Extract<AutonomousVerdict, { allowed: false }>["reason"];
+  detail: string;
+}
+
+
 
 export interface OversizedWorkload {
   model: string;
@@ -292,7 +317,11 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         )
         .eq("org_id", orgId)
         .order("saved_usd", { ascending: false }),
-      supabase.from("organizations").select("name, plan, is_synthetic").eq("id", orgId).maybeSingle(),
+      supabase
+        .from("organizations")
+        .select("name, plan, is_synthetic, autonomous_enabled")
+        .eq("id", orgId)
+        .maybeSingle(),
       // Onboarding needs "has this workspace ever ingested anything", which is a
       // different question from "is there traffic in the selected window".
       supabase
@@ -663,11 +692,56 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     .map(toSwitchRow);
   const activeMonthly = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
 
+  /**
+   * ---- Govern: what would run unattended, and what refuses to -------------
+   *
+   * The same engine output the manual levels use, run through the real
+   * autonomous gate. The gate is evaluated with `enabled: true` on purpose:
+   * the question this page answers is "which of these are safe to run without
+   * me?", and answering it with "autonomous mode is off" for every row would
+   * tell the workspace nothing. Whether anything actually fires is decided by
+   * `autonomousEnabled` (below) plus the Govern plan, in the writer.
+   */
+  const lastAutonomousAt =
+    (switches.data ?? [])
+      .filter((s) => s.autonomous && s.activated_at)
+      .map((s) => new Date(s.activated_at).getTime())
+      .sort((a, b) => b - a)[0] ?? null;
+
+  const governPolicy = { ...DEFAULT_AUTONOMOUS_POLICY, enabled: true };
+  const governEligible: GovernCandidate[] = [];
+  const governRefusals: GovernRefusal[] = [];
+  for (const rec of [...result.hostArbitrage, ...result.qualityMatched, ...result.oversized]) {
+    if (!rec.toModel || !rec.toHost) continue;
+    const verdict = evaluateAutonomous(rec, governPolicy, {
+      now: new Date(now),
+      lastAutonomousChangeAt: lastAutonomousAt ? new Date(lastAutonomousAt) : null,
+    });
+    const base = {
+      kind: rec.kind,
+      fromModel: rec.fromModel,
+      fromHost: rec.fromHostLabel || rec.fromHost,
+      toModel: rec.toModel,
+      toHost: rec.toHostLabel || rec.toHost,
+      taskHint: rec.taskHint,
+      monthlySaving: round2(rec.monthlySavingUsd),
+      basis: rec.basis,
+    };
+    if (verdict.allowed) governEligible.push(base);
+    else governRefusals.push({ ...base, reason: verdict.reason, detail: verdict.detail });
+  }
+  governEligible.sort((a, b) => b.monthlySaving - a.monthlySaving);
+  governRefusals.sort((a, b) => b.monthlySaving - a.monthlySaving);
+
+  const autonomousEnabled = Boolean((org.data as { autonomous_enabled?: boolean }).autonomous_enabled);
+  const autonomousRunning = runningSwitches.filter((s) => s.autonomous).length;
 
   const dataState: DataState = deriveDataState({
     hasEverIngested: (firstEvent.data ?? []).length > 0,
     rowsInWindow: split.current.length,
   });
+
+
 
   return {
     days,
@@ -728,6 +802,25 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     frozenSwitches,
     switchesOutsideWindow,
     frozen,
+    /**
+     * Govern. `unlocked` is the plan; `enabled` is the workspace's own switch.
+     * Both must be true before anything runs unattended — the plan alone has
+     * never been consent.
+     */
+    govern: {
+      unlocked: plan === "govern",
+      enabled: autonomousEnabled,
+      running: autonomousRunning,
+      lastAutonomousAt: lastAutonomousAt ? new Date(lastAutonomousAt).toISOString() : null,
+      eligible: governEligible,
+      refusals: governRefusals,
+      eligibleMonthly: round2(governEligible.reduce((s, c) => s + c.monthlySaving, 0)),
+      policy: {
+        minMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.minMonthlySavingUsd,
+        cooldownHours: DEFAULT_AUTONOMOUS_POLICY.cooldownHours,
+      },
+    },
+
     savings: {
       activeMonthly,
       availableMonthly,
