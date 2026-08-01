@@ -66,12 +66,13 @@ function Hero({ data }: { data: CatalogPayload }) {
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
     return {
       models: data.rows.length,
-      // Model makers (who trained the weights) — not the same as serving providers.
-      vendors: data.vendors.length,
+      // Models sold by more than one verified host — every one of these is a live price race.
+      contested: data.rows.filter((r) => r.hosts.length > 1).length,
       providers: data.providers.length,
       topSpread,
     };
   }, [data]);
+
 
 
   return (
