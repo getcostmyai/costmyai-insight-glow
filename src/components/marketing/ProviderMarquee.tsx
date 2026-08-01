@@ -42,14 +42,11 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
 
   return (
     <section className="border-y border-border bg-card">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:px-8">
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
-          <LiveStat value={stats.modelCount} label="Models" />
-          <LiveStat value={stats.providerCount} label="Providers" />
-          <LiveStat value={stats.priceChangesTracked} label="Price changes this month" />
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 sm:px-8">
+        <div className="flex items-center justify-center">
+          <LiveStat value={stats.providerCount} label="Providers priced, synced continuously" />
         </div>
 
-        <div className="h-px w-full bg-border" />
 
         <div className="marquee-mask relative min-w-0 overflow-hidden">
           <div className="flex w-max animate-marquee items-center gap-10 pr-10">
