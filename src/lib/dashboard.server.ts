@@ -834,6 +834,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       },
     },
 
+    composition,
+
+
+
     savings: {
       activeMonthly,
       availableMonthly,
