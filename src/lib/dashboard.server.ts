@@ -17,6 +17,7 @@ import type {
 import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import { forecastMonthEnd } from "./dashboard/forecast";
+import { buildComposition } from "./dashboard/composition";
 
 import {
   effectiveSelection,
@@ -591,7 +592,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     saved_usd: number | string;
     autonomous: boolean;
   }): ActiveSwitchRow => {
-    const activeDays = Math.max(1, (now - new Date(s.activated_at).getTime()) / DAY_MS);
+    // Whole elapsed days, not fractional: a run-rate that moves every second
+    // makes the same figure disagree between server render and client, and
+    // between two pages read a moment apart.
+    const activeDays = Math.max(1, Math.floor((now - new Date(s.activated_at).getTime()) / DAY_MS));
     return {
       switchId: s.id,
       fromModel: s.from_model,
@@ -733,6 +737,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   governEligible.sort((a, b) => b.monthlySaving - a.monthlySaving);
   governRefusals.sort((a, b) => b.monthlySaving - a.monthlySaving);
 
+  /** One shared statement of how the four levels' counts relate. */
+  const composition = buildComposition({
+    arbitrageCount: hostArbitrage.length,
+    qualityCount: qualityMatched.length,
+    oversizedCount: oversized.length,
+    eligibleCount: governEligible.length,
+    refusedCount: governRefusals.length,
+  });
+
   const autonomousEnabled = Boolean((org.data as { autonomous_enabled?: boolean }).autonomous_enabled);
   const autonomousRunning = runningSwitches.filter((s) => s.autonomous).length;
 
@@ -820,6 +833,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         cooldownHours: DEFAULT_AUTONOMOUS_POLICY.cooldownHours,
       },
     },
+
+    composition,
+
+
 
     savings: {
       activeMonthly,

@@ -20,7 +20,9 @@ describe("marketing nav", () => {
       "Models",
       "Intelligence",
       "Become a Partner",
+      "Blog",
       "Pricing",
+
     ]);
   });
 

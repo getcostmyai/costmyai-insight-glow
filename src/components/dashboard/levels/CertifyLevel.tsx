@@ -1,6 +1,8 @@
-import { HeroStat, LevelHero, RangeToggle, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { HeroStat, LevelHero, Legend, RangeToggle, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { SavingsRing } from "@/components/dashboard/SavingsRing";
+import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
-import { ObjectiveSelect, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
+import { ObjectiveSelect, LevelEmpty, LevelLocked, NextLevelUpsell } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 
@@ -25,8 +27,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
     errorFor,
     ctaHref,
     ctaLabel,
+    scope,
   } = ctl;
   const level = data.levels.quality_match;
+  const rightsize = data.levels.rightsize;
   const rows = data.qualityMatched;
 
   const benchmarkMonthly = rows.reduce((s, r) => s + r.monthlySaving, 0);
@@ -34,6 +38,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const refused = data.stats.qualityRefused;
   const evaluated = data.stats.qualityEvaluated;
   const certifyRate = evaluated > 0 ? (data.stats.qualityCertified / evaluated) * 100 : 0;
+  const rightsizeMonthly = rightsize.unlocked
+    ? data.oversized.reduce((s, r) => s + r.wasted, 0)
+    : rightsize.lockedMonthly;
+  const rightsizeCount = rightsize.unlocked ? data.oversized.length : rightsize.lockedCount;
 
   return (
     <>
@@ -58,13 +66,13 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Arbitrage saving"
               value={usd(arbitrageMonthly, 0)}
-              sub="same model, cheaper host"
+              sub="Same model, cheaper host — no benchmark needed"
               accent="oklch(0.85 0.1 300)"
             />
             <HeroStat
               label="Benchmark saving"
               value={usd(benchmarkMonthly, 0)}
-              sub="different model, quality proven"
+              sub="Different model, quality proven before it is shown"
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat
@@ -87,7 +95,18 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             />
           </>
         }
+        aside={
+          <>
+            <SavingsRing captured={data.savings.activeMonthly} available={data.savings.availableMonthly} />
+            <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
+              <Legend color="oklch(0.65 0.15 158)" label="Captured" />
+              <Legend color="oklch(0.72 0.11 195)" label="Available" />
+            </div>
+          </>
+        }
       />
+
+      <UsageSection ctl={ctl} />
 
       <section>
         <SectionTitle
@@ -164,6 +183,16 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           we cannot.
         </p>
       </section>
+
+      {/* The Rightsize check has already run here — this is its real finding. */}
+      <NextLevelUpsell
+        to={scope === "demo" ? "/demo/rightsize" : "/workspace/rightsize"}
+        requiredPlan="rightsize"
+        count={rightsizeCount}
+        monthly={rightsizeMonthly}
+        what="oversized workload"
+        unlocked={rightsize.unlocked}
+      />
     </>
   );
 }

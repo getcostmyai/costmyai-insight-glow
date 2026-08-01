@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Gauge, Layers, LineChart, Lock, PlugZap, Settings, ShieldCheck } from "lucide-react";
+import { BadgeCheck, CreditCard, Gauge, Layers, LineChart, Lock, PlugZap, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { RangeToggle, LocalTime, Metric } from "@/components/dashboard/primitives";
 import { SpendChart } from "@/components/dashboard/SpendChart";
@@ -18,10 +18,17 @@ const topNav = [
   { label: "Plans", to: "/pricing" },
 ] as const;
 
+/**
+ * Account destinations that are real routes. "Workspace" used to sit here and
+ * pointed at the level pages the switcher above already covers, so clicking it
+ * appeared to do nothing — it is gone rather than dead.
+ */
 const accountNav = [
-  { label: "Settings", to: "/settings" },
-  { label: "Workspace", to: "/workspace" },
+  { label: "Settings", to: "/settings", icon: Settings },
+  { label: "Billing", to: "/billing", icon: CreditCard },
+  { label: "Team", to: "/team", icon: Users },
 ] as const;
+
 
 const ICONS: Record<LevelKey, typeof Layers> = {
   overview: Layers,
@@ -138,10 +145,18 @@ export function DashboardShell({
           <div className="sticky top-24 space-y-6">
             <div>
               <p className="text-sm font-semibold">{data.workspace.name}</p>
-              <span className="mt-2 inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase">
-                {data.workspace.plan}
-              </span>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {/* Route-aware: this names the level you are looking at. */}
+                <span className="inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase">
+                  {LEVELS.find((l) => l.key === level)?.label ?? level}
+                </span>
+                {/* What the workspace is actually paying for. */}
+                <span className="inline-flex rounded-full border border-border px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                  {data.workspace.plan} plan
+                </span>
+              </div>
             </div>
+
             <nav className="space-y-1">
               {LEVELS.map((meta) => {
                 const Icon = ICONS[meta.key];
@@ -169,16 +184,20 @@ export function DashboardShell({
             </nav>
             <div className="space-y-1 border-t border-border pt-5">
               <p className="eyebrow px-3 pb-1">Account</p>
-              {accountNav.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <Settings className="size-4" />
-                  {item.label}
-                </Link>
-              ))}
+              {accountNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <Icon className="size-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+
             </div>
           </div>
         </aside>

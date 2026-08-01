@@ -7,7 +7,7 @@ import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { LEVELS } from "@/lib/dashboard/levels";
-import { compact, useLiveTotals } from "@/lib/gateway-metrics";
+import { compact } from "@/lib/gateway-metrics";
 import { planAtLeast, type PlanTier } from "@/lib/engine/types";
 
 /**
@@ -20,15 +20,18 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  */
 export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, activeRange, scope } = ctl;
-  const { live } = useLiveTotals(range, data.series, data.totals, data.generatedAt);
   const { savings, stats, plan } = data;
 
+  // Exact snapshot figures, not the live ticker: this window must read the same
+  // here as it does on every level page.
+  const windowSpend = data.totals.spend;
   const totalOpportunity = savings.activeMonthly + savings.availableMonthly;
   const captureRate = totalOpportunity > 0 ? savings.activeMonthly / totalOpportunity : 0;
   const spendDelta =
-    data.previous.spend > 0 ? ((live.spend - data.previous.spend) / data.previous.spend) * 100 : 0;
-  const totalTokens = live.inputTokens + live.outputTokens;
-  const costPerMillion = totalTokens > 0 ? (live.spend / totalTokens) * 1_000_000 : 0;
+    data.previous.spend > 0 ? ((windowSpend - data.previous.spend) / data.previous.spend) * 100 : 0;
+  const totalTokens = data.totals.inputTokens + data.totals.outputTokens;
+  const costPerMillion = totalTokens > 0 ? (windowSpend / totalTokens) * 1_000_000 : 0;
+
   const forecast = data.projection;
 
   const pipelineSteps = [
@@ -104,9 +107,11 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         }
         sub={
           <>
-            {savings.certifiedCount} certified switches are waiting on your {plan} plan, measured
-            across your last {savings.basisDays} days of traffic — the same basis on every period
-            tab.
+            Across every check your workspace runs, {savings.certifiedCount} switch
+            {savings.certifiedCount === 1 ? " is" : "es are"} certified and ready to activate,
+            measured over your last {savings.basisDays} days of traffic — the same basis on every
+            period tab.
+
             {savings.lockedMonthly > 0 && (
               <>
                 {" "}
@@ -120,7 +125,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <HeroStat
               label={`Spend · ${activeRange.long}`}
-              value={usd(live.spend)}
+              value={usd(windowSpend)}
               sub={
                 <span className="text-white/70">
                   {spendDelta >= 0 ? "▲" : "▼"} {Math.abs(spendDelta).toFixed(1)}% vs previous
