@@ -334,13 +334,14 @@ export function ForecastDiagram() {
               />
               <text
                 x={xForDay(TODAY - 1)}
-                y={padY - 26}
+                y={padY - (narrow ? 26 : 26)}
                 textAnchor="middle"
-                className="num text-[11px] font-semibold uppercase tracking-[0.16em]"
-                style={{ fill: "var(--foreground)" }}
+                className="num font-semibold uppercase tracking-[0.16em]"
+                style={{ fill: "var(--foreground)", fontSize: labelSize.tag }}
               >
                 Today
               </text>
+
             </g>
           </svg>
         </div>
