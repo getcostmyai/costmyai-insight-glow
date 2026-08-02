@@ -61,6 +61,7 @@ export type Database = {
       backup_export_runs: {
         Row: {
           bytes: number | null
+          counts_match: boolean | null
           destination: string | null
           error: string | null
           finished_at: string | null
@@ -70,9 +71,13 @@ export type Database = {
           pruned_keys: number
           row_counts: Json | null
           started_at: string
+          statements: number | null
+          target_row_counts: Json | null
+          triggers_ok: boolean | null
         }
         Insert: {
           bytes?: number | null
+          counts_match?: boolean | null
           destination?: string | null
           error?: string | null
           finished_at?: string | null
@@ -82,9 +87,13 @@ export type Database = {
           pruned_keys?: number
           row_counts?: Json | null
           started_at?: string
+          statements?: number | null
+          target_row_counts?: Json | null
+          triggers_ok?: boolean | null
         }
         Update: {
           bytes?: number | null
+          counts_match?: boolean | null
           destination?: string | null
           error?: string | null
           finished_at?: string | null
@@ -94,6 +103,9 @@ export type Database = {
           pruned_keys?: number
           row_counts?: Json | null
           started_at?: string
+          statements?: number | null
+          target_row_counts?: Json | null
+          triggers_ok?: boolean | null
         }
         Relationships: []
       }
