@@ -3,7 +3,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { CircleUserRound, LogIn, Menu, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { resetConsent } from "@/lib/analytics";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+
 
 import { Wordmark } from "./Wordmark";
 
