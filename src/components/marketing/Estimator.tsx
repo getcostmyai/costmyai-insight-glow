@@ -21,6 +21,33 @@ const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(Math.round(n
 
 const STEPS = ["Spend", "Workload", "Where it runs"] as const;
 
+/** Quick jumps on the spend slider, in the range most inbound teams sit in. */
+const SPEND_PRESETS = [1000, 5000, 25000, 100000] as const;
+
+/** Bar heights (0-1) that show, at a glance, what each spread shape means. */
+const SPREAD_GLYPHS: number[][] = [
+  [1, 0.28, 0.2, 0.16],
+  [0.72, 0.62, 0.55, 0.48],
+  [0.42, 0.38, 0.34, 0.3],
+];
+
+function SpreadGlyph({ bars, on }: { bars: number[]; on: boolean }) {
+  return (
+    <div className="flex h-7 items-end gap-1" aria-hidden>
+      {bars.map((h, i) => (
+        <span
+          key={i}
+          className={`w-2 rounded-sm transition-all duration-300 ${
+            on ? "bg-primary" : "bg-border group-hover:bg-primary/40"
+          }`}
+          style={{ height: `${Math.round(h * 100)}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -118,6 +145,8 @@ export function Estimator() {
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
+  const spendPct = ((spend - 200) / (200000 - 200)) * 100;
+
 
 
   const goto = (next: number) => {
@@ -154,64 +183,74 @@ export function Estimator() {
 
         <div className="card-surface mt-9 overflow-hidden">
           {/* ---------------- header: rail + live figure ---------------- */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4 sm:px-8">
-            <div className="flex items-center gap-2">
-              {STEPS.map((label, i) => {
-                const active = !showResult && i === step;
-                const done = showResult || i < step;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => {
-                      if (showResult) reset();
-                      goto(i);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${
-                      active
-                        ? "bg-primary-soft text-primary"
-                        : done
-                          ? "text-foreground/70 hover:text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                        active ? "bg-primary" : done ? "bg-saving" : "bg-border"
-                      }`}
-                    />
-                    {label}
-                  </button>
-                );
-              })}
+          <div className="grid gap-5 border-b border-border px-6 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:px-8">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                {STEPS.map((label, i) => {
+                  const active = !showResult && i === step;
+                  const done = showResult || i < step;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        if (showResult) reset();
+                        goto(i);
+                      }}
+                      className="group flex min-w-0 flex-1 flex-col gap-2 text-left"
+                      aria-current={active ? "step" : undefined}
+                    >
+                      <span
+                        className={`h-[3px] w-full rounded-full transition-all duration-500 ${
+                          active
+                            ? "fill-gradient-brand"
+                            : done
+                              ? "bg-saving/70"
+                              : "bg-border group-hover:bg-primary/25"
+                        }`}
+                      />
+                      <span
+                        className={`truncate text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-300 ${
+                          active
+                            ? "text-primary"
+                            : done
+                              ? "text-foreground/60"
+                              : "text-muted-foreground group-hover:text-foreground"
+                        }`}
+                      >
+                        <span className="num mr-1.5 opacity-50">0{i + 1}</span>
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="eyebrow">
-                {showResult
-                  ? "Result"
-                  : indicative
-                    ? `Indicative · ${basisLabel}`
-                    : "Indicative"}
+                {showResult ? "Result" : indicative ? `Indicative · ${basisLabel}` : "Indicative"}
               </p>
               <p
-                className={`num text-2xl leading-tight tabular-nums transition-colors duration-300 ${
-                  indicative && !showResult ? "text-saving" : "text-muted-foreground"
+                className={`num mt-1 text-[2.1rem] leading-none tabular-nums transition-colors duration-300 sm:text-[2.5rem] ${
+                  indicative && !showResult ? "text-saving" : "text-muted-foreground/40"
                 }`}
               >
                 {showResult ? "—" : indicative ? `$${fmtNum(rolled)}` : "—"}
                 {!showResult && indicative ? (
-                  <span className="ml-1 text-xs font-medium text-muted-foreground">/ mo</span>
+                  <span className="ml-1.5 text-xs font-medium tracking-normal text-muted-foreground">
+                    / mo
+                  </span>
                 ) : null}
               </p>
               {!showResult && !indicative ? (
-                <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                <p className="mt-1 max-w-[15rem] text-[11px] leading-snug font-medium text-muted-foreground sm:ml-auto">
                   Pick a workload and a provider — spend alone is not a measurement
                 </p>
               ) : null}
             </div>
-
           </div>
+
 
           {/* ---------------- body ---------------- */}
           <div className="relative min-h-[262px] px-6 py-7 sm:px-8">
@@ -235,8 +274,10 @@ export function Estimator() {
                 {step === 0 ? (
                   <div>
                     <Label>Monthly AI spend</Label>
-                    <div className="flex items-baseline gap-3">
-                      <p className="num text-4xl tabular-nums text-foreground">${fmtNum(spend)}</p>
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <p className="num text-5xl leading-none tabular-nums text-foreground sm:text-6xl">
+                        ${fmtNum(spend)}
+                      </p>
                       <span className="text-sm text-muted-foreground">/ month</span>
                     </div>
                     <input
@@ -247,29 +288,58 @@ export function Estimator() {
                       value={spend}
                       onChange={(e) => setSpend(Number(e.target.value))}
                       aria-label="Monthly AI spend"
-                      className="mt-5 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
+                      className="slider-brand mt-6 w-full cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${spendPct}%, var(--secondary) ${spendPct}%, var(--secondary) 100%)`,
+                      }}
                     />
-                    <Label className="mt-7">How is it spread?</Label>
+                    <div className="mt-2.5 flex items-center justify-between">
+                      <span className="num text-[11px] font-medium text-muted-foreground">$200</span>
+                      <div className="flex gap-1.5">
+                        {SPEND_PRESETS.map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setSpend(p)}
+                            className={`num rounded-full px-2.5 py-1 text-[11px] transition-colors duration-200 ${
+                              spend === p
+                                ? "bg-primary-soft text-primary"
+                                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            }`}
+                          >
+                            ${p >= 1000 ? `${p / 1000}k` : p}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="num text-[11px] font-medium text-muted-foreground">$200k</span>
+                    </div>
+
+                    <Label className="mt-8">How is it spread?</Label>
                     <div className="grid gap-2 sm:grid-cols-3">
-                      {DISTRIBUTIONS.map((d) => (
-                        <button
-                          key={d.id}
-                          type="button"
-                          onClick={() => setDistribution(d.id)}
-                          className={`rounded-xl border px-3 py-2.5 text-left transition-all duration-200 hover:-translate-y-0.5 ${
-                            distribution === d.id
-                              ? "border-primary/45 bg-primary-soft"
-                              : "border-border bg-card hover:border-primary/25"
-                          }`}
-                        >
-                          <p className="text-sm font-semibold tracking-tight">{d.label}</p>
-                          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-                            {d.hint}
-                          </p>
-                        </button>
-                      ))}
+                      {DISTRIBUTIONS.map((d, i) => {
+                        const on = distribution === d.id;
+                        return (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => setDistribution(d.id)}
+                            className={`group rounded-2xl border px-3.5 py-3 text-left transition-all duration-200 hover:-translate-y-0.5 ${
+                              on
+                                ? "border-primary/45 bg-primary-soft shadow-[0_6px_20px_-12px_var(--primary)]"
+                                : "border-border bg-card hover:border-primary/25"
+                            }`}
+                          >
+                            <SpreadGlyph bars={SPREAD_GLYPHS[i] ?? SPREAD_GLYPHS[1]!} on={on} />
+                            <p className="mt-2.5 text-sm font-semibold tracking-tight">{d.label}</p>
+                            <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                              {d.hint}
+                            </p>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
+
                 ) : step === 1 ? (
                   <div>
                     <Label>What does most of that spend do?</Label>
@@ -446,16 +516,31 @@ function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
           <Sparkles className="h-3 w-3" /> {r.savingPct}% cheaper per call
         </span>
       </div>
-      <p className="num mt-2 text-4xl tabular-nums text-saving">
-        ${fmtNum(r.lowUsd)} – ${fmtNum(r.highUsd)}
+      <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
+        ${fmtNum(r.lowUsd)}
+        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(r.highUsd)}
       </p>
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      {/* Share of spend the estimate actually covers, drawn rather than asserted. */}
+      <div className="mt-4">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full rounded-full bg-saving transition-all duration-700"
+            style={{ width: `${Math.min(100, Math.max(2, r.sharePct))}%` }}
+          />
+        </div>
+        <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
+          Applied to <span className="num text-foreground">{r.sharePct}%</span> of your stated spend
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-x-8 sm:grid-cols-2">
         <Row label="From" value={r.fromModelLabel} />
         <Row label="To" value={`${r.toModelLabel} · ${r.toHostLabel}`} />
         <Row label="Quality bar" value={`${r.suite} / ${r.taskClass} ±${r.margin}`} />
         <Row label="Share of spend" value={`${r.sharePct}%`} />
       </div>
+
 
       <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
         Basis: conservative half-to-four-fifths of the modelled price delta, applied to{" "}
@@ -532,10 +617,11 @@ function Refused({ r }: { r: Extract<EstimatorResult, { state: "refused" }> }) {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-background px-3.5 py-2.5">
+    <div className="flex items-start justify-between gap-4 border-b border-border/70 py-2.5">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-right text-sm font-medium">{value}</span>
     </div>
+
   );
 }
 
