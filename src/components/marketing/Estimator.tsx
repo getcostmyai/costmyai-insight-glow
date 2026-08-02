@@ -528,31 +528,46 @@ function NotADeadEnd({ lead }: { lead: string }) {
 
 
 function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
+  const reduced = usePrefersReducedMotion();
+  const mounted = useMounted(reduced);
+  // Count both ends of the range up from zero, so the answer lands rather than appears.
+  const low = useRollingNumber(mounted ? r.lowUsd : 0, reduced);
+  const high = useRollingNumber(mounted ? r.highUsd : 0, reduced);
+  const share = Math.min(100, Math.max(2, r.sharePct));
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
         <p className="eyebrow">Estimated monthly saving</p>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-saving">
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-saving transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? "translateY(0) scale(1)" : "translateY(2px) scale(0.96)",
+            transitionDelay: "260ms",
+          }}
+        >
           <Sparkles className="h-3 w-3" /> {r.savingPct}% cheaper per call
         </span>
       </div>
       <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
-        ${fmtNum(r.lowUsd)}
-        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(r.highUsd)}
+        ${fmtNum(low)}
+        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(high)}
       </p>
 
       {/* Share of spend the estimate actually covers, drawn rather than asserted. */}
       <div className="mt-4">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
           <div
-            className="h-full rounded-full bg-saving transition-all duration-700"
-            style={{ width: `${Math.min(100, Math.max(2, r.sharePct))}%` }}
+            className="h-full rounded-full bg-saving transition-[width] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{ width: `${mounted ? share : 0}%`, transitionDelay: "200ms" }}
           />
         </div>
         <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
           Applied to <span className="num text-foreground">{r.sharePct}%</span> of your stated spend
         </p>
       </div>
+
 
       <div className="mt-5 grid gap-x-8 sm:grid-cols-2">
         <Row label="From" value={r.fromModelLabel} />
