@@ -185,7 +185,15 @@ export function MarketingFooter() {
               <FooterLink to="/privacy">Privacy</FooterLink>
               <FooterLink to="/terms">Terms</FooterLink>
               <FooterLink to="/disclaimer">Disclaimer</FooterLink>
+              <button
+                type="button"
+                onClick={() => resetConsent()}
+                className="text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Cookie preferences
+              </button>
             </FooterColumn>
+
 
           </div>
         </div>
