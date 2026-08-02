@@ -16,6 +16,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -92,6 +93,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const ModelsRoute = ModelsRouteImport.update({
   id: '/models',
   path: '/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DisclaimerRoute = DisclaimerRouteImport.update({
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRouteWithChildren
   '/disclaimer': typeof DisclaimerRoute
+  '/faq': typeof FaqRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/faq': typeof FaqRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRouteWithChildren
   '/disclaimer': typeof DisclaimerRoute
+  '/faq': typeof FaqRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
@@ -473,6 +482,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/demo'
     | '/disclaimer'
+    | '/faq'
     | '/models'
     | '/partners'
     | '/press'
@@ -521,6 +531,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/disclaimer'
+    | '/faq'
     | '/models'
     | '/partners'
     | '/press'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/demo'
     | '/disclaimer'
+    | '/faq'
     | '/models'
     | '/partners'
     | '/press'
@@ -623,6 +635,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRouteWithChildren
   DisclaimerRoute: typeof DisclaimerRoute
+  FaqRoute: typeof FaqRoute
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
   PressRoute: typeof PressRoute
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       path: '/models'
       fullPath: '/models'
       preLoaderRoute: typeof ModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/disclaimer': {
@@ -1080,6 +1100,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DemoRoute: DemoRouteWithChildren,
   DisclaimerRoute: DisclaimerRoute,
+  FaqRoute: FaqRoute,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,
   PressRoute: PressRoute,
@@ -1106,13 +1127,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
