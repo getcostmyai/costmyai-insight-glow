@@ -296,7 +296,7 @@ export function Estimator() {
                     <Label>Monthly AI spend</Label>
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                       <p className="num text-5xl leading-none tabular-nums text-foreground sm:text-6xl">
-                        ${fmtNum(spend)}
+                        ${fmtNum(rolledSpend)}
                       </p>
                       <span className="text-sm text-muted-foreground">/ month</span>
                     </div>
