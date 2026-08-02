@@ -28,6 +28,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as ApiIndexRouteImport } from './routes/api.index'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
@@ -153,6 +154,11 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => BlogRoute,
+} as any)
+const ApiIndexRoute = ApiIndexRouteImport.update({
+  id: '/api/',
+  path: '/api/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
   id: '/partners_/apply',
@@ -351,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/api': typeof ApiIndexRoute
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
@@ -452,6 +460,7 @@ export interface FileRoutesById {
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partners_/apply': typeof PartnersApplyRoute
+  '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
@@ -505,6 +514,7 @@ export interface FileRouteTypes {
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/partners/apply'
+    | '/api/'
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
@@ -553,6 +563,7 @@ export interface FileRouteTypes {
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/partners/apply'
+    | '/api'
     | '/blog'
     | '/demo'
     | '/intelligence'
@@ -605,6 +616,7 @@ export interface FileRouteTypes {
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/partners_/apply'
+    | '/api/'
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
@@ -647,6 +659,7 @@ export interface RootRouteChildren {
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
+  ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -794,6 +807,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof BlogRoute
+    }
+    '/api/': {
+      id: '/api/'
+      path: '/api'
+      fullPath: '/api/'
+      preLoaderRoute: typeof ApiIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/partners_/apply': {
       id: '/partners_/apply'
@@ -1112,6 +1132,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
   PartnersApplyRoute: PartnersApplyRoute,
+  ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
