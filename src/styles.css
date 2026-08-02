@@ -425,3 +425,43 @@
     animation: none;
   }
 }
+
+/* Estimator spend slider: brand thumb with a soft focus halo. */
+@utility slider-brand {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-secondary);
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 22px;
+    width: 22px;
+    border-radius: 999px;
+    background: var(--color-card);
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 2px 10px color-mix(in oklab, var(--primary) 35%, transparent);
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  &::-webkit-slider-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+  &:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    transform: scale(0.96);
+  }
+  &::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 999px;
+    background: var(--color-card);
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 2px 10px color-mix(in oklab, var(--primary) 35%, transparent);
+    cursor: grab;
+  }
+}
