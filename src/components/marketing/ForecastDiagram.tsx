@@ -139,27 +139,39 @@ export function ForecastDiagram() {
   const rangeTop = yForSpend(FORECAST_RANGE[1]);
   const rangeBottom = yForSpend(FORECAST_RANGE[0]);
   const rangeCenter = yForSpend(FORECAST_POINT);
-  const bandX = xForDay(DAYS - 1) - 40;
+  const bandHalf = narrow ? 56 : 40;
+  const bandX = xForDay(DAYS - 1) - bandHalf;
+  const tickDays = narrow ? [0, 14, 29] : [0, 7, 14, 21, 29];
+  const labelSize = narrow ? { axis: 18, tag: 20 } : { axis: 10, tag: 12 };
 
   return (
     <div ref={hostRef} className="mx-auto max-w-5xl">
       {/* Answer first: the month-end range, in display type. */}
       <Reveal>
         <div className="text-center">
-          <p className="num text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+          <p className="num text-[10px] font-medium uppercase tracking-[0.2em] text-primary sm:text-[11px] sm:tracking-[0.22em]">
             Month-end forecast
           </p>
-          <p className="num mt-5 text-[clamp(3rem,9vw,5.5rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-saving">
+          <p className="num mt-4 text-[clamp(3.25rem,15vw,5.5rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-saving sm:mt-5">
             <CountUp value={FORECAST_POINT} format={usd} />
           </p>
-          <p className="num mt-4 text-sm font-medium tracking-[0.04em] text-muted-foreground">
-            range {usd(FORECAST_RANGE[0])} – {usd(FORECAST_RANGE[1])} · day {TODAY} of {DAYS}
+          <p className="num mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[13px] font-medium tracking-[0.04em] text-muted-foreground sm:text-sm">
+            <span>
+              range {usd(FORECAST_RANGE[0])} – {usd(FORECAST_RANGE[1])}
+            </span>
+            <span aria-hidden className="hidden sm:inline">
+              ·
+            </span>
+            <span>
+              day {TODAY} of {DAYS}
+            </span>
           </p>
-          <h3 className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+          <h3 className="mx-auto mt-7 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:mt-8 sm:text-xl">
             Landed before the invoice does. Here is everything that number is built from.
           </h3>
         </div>
       </Reveal>
+
 
       <Reveal delay={120} className="mt-14">
         <div className="relative">
