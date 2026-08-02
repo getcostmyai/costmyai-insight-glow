@@ -139,8 +139,10 @@ export function ForecastDiagram() {
   const rangeTop = yForSpend(FORECAST_RANGE[1]);
   const rangeBottom = yForSpend(FORECAST_RANGE[0]);
   const rangeCenter = yForSpend(FORECAST_POINT);
-  const bandHalf = narrow ? 56 : 40;
-  const bandX = xForDay(DAYS - 1) - bandHalf;
+  const bandHalf = narrow ? 48 : 40;
+  // Keep the band inside the viewBox on narrow screens, where it is widest.
+  const bandX = Math.min(xForDay(DAYS - 1) - bandHalf, width - bandHalf * 2 - 4);
+
   const tickDays = narrow ? [0, 14, 29] : [0, 7, 14, 21, 29];
   const labelSize = narrow ? { axis: 18, tag: 20 } : { axis: 10, tag: 12 };
 
