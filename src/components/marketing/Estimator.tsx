@@ -154,64 +154,74 @@ export function Estimator() {
 
         <div className="card-surface mt-9 overflow-hidden">
           {/* ---------------- header: rail + live figure ---------------- */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4 sm:px-8">
-            <div className="flex items-center gap-2">
-              {STEPS.map((label, i) => {
-                const active = !showResult && i === step;
-                const done = showResult || i < step;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => {
-                      if (showResult) reset();
-                      goto(i);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${
-                      active
-                        ? "bg-primary-soft text-primary"
-                        : done
-                          ? "text-foreground/70 hover:text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                        active ? "bg-primary" : done ? "bg-saving" : "bg-border"
-                      }`}
-                    />
-                    {label}
-                  </button>
-                );
-              })}
+          <div className="grid gap-5 border-b border-border px-6 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:px-8">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                {STEPS.map((label, i) => {
+                  const active = !showResult && i === step;
+                  const done = showResult || i < step;
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        if (showResult) reset();
+                        goto(i);
+                      }}
+                      className="group flex min-w-0 flex-1 flex-col gap-2 text-left"
+                      aria-current={active ? "step" : undefined}
+                    >
+                      <span
+                        className={`h-[3px] w-full rounded-full transition-all duration-500 ${
+                          active
+                            ? "fill-gradient-brand"
+                            : done
+                              ? "bg-saving/70"
+                              : "bg-border group-hover:bg-primary/25"
+                        }`}
+                      />
+                      <span
+                        className={`truncate text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-300 ${
+                          active
+                            ? "text-primary"
+                            : done
+                              ? "text-foreground/60"
+                              : "text-muted-foreground group-hover:text-foreground"
+                        }`}
+                      >
+                        <span className="num mr-1.5 opacity-50">0{i + 1}</span>
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="eyebrow">
-                {showResult
-                  ? "Result"
-                  : indicative
-                    ? `Indicative · ${basisLabel}`
-                    : "Indicative"}
+                {showResult ? "Result" : indicative ? `Indicative · ${basisLabel}` : "Indicative"}
               </p>
               <p
-                className={`num text-2xl leading-tight tabular-nums transition-colors duration-300 ${
-                  indicative && !showResult ? "text-saving" : "text-muted-foreground"
+                className={`num mt-1 text-[2.1rem] leading-none tabular-nums transition-colors duration-300 sm:text-[2.5rem] ${
+                  indicative && !showResult ? "text-saving" : "text-muted-foreground/40"
                 }`}
               >
                 {showResult ? "—" : indicative ? `$${fmtNum(rolled)}` : "—"}
                 {!showResult && indicative ? (
-                  <span className="ml-1 text-xs font-medium text-muted-foreground">/ mo</span>
+                  <span className="ml-1.5 text-xs font-medium tracking-normal text-muted-foreground">
+                    / mo
+                  </span>
                 ) : null}
               </p>
               {!showResult && !indicative ? (
-                <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                <p className="mt-1 max-w-[15rem] text-[11px] leading-snug font-medium text-muted-foreground sm:ml-auto">
                   Pick a workload and a provider — spend alone is not a measurement
                 </p>
               ) : null}
             </div>
-
           </div>
+
 
           {/* ---------------- body ---------------- */}
           <div className="relative min-h-[262px] px-6 py-7 sm:px-8">
