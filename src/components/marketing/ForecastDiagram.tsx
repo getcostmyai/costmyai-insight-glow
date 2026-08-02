@@ -57,6 +57,21 @@ function useStages(active: boolean) {
   return stage;
 }
 
+/** True below the `sm` breakpoint. Defaults to false so SSR renders the wide chart. */
+function useNarrow() {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return narrow;
+}
+
+
+
 export function ForecastDiagram() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
