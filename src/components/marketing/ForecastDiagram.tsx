@@ -212,29 +212,30 @@ export function ForecastDiagram() {
                   strokeOpacity={v === 0 ? 1 : 0.45}
                 />
                 <text
-                  x={padX - 12}
-                  y={yForSpend(v) + 4}
-                  textAnchor="end"
-                  className="num text-[10px] font-medium tracking-[0.08em]"
-                  style={{ fill: "var(--muted-foreground)" }}
+                  x={padX - 10}
+                  y={yForSpend(v) - 6}
+                  textAnchor="start"
+                  className="num font-medium tracking-[0.08em]"
+                  style={{ fill: "var(--muted-foreground)", fontSize: labelSize.axis }}
                 >
                   ${(v / 1000).toFixed(0)}k
                 </text>
               </g>
             ))}
 
-            {[0, 7, 14, 21, 29].map((d) => (
+            {tickDays.map((d) => (
               <text
                 key={d}
                 x={xForDay(d)}
-                y={padY + plotH + 24}
-                textAnchor="middle"
-                className="num text-[10px] font-medium uppercase tracking-[0.16em]"
-                style={{ fill: "var(--muted-foreground)" }}
+                y={padY + plotH + labelSize.axis + 14}
+                textAnchor={d === 0 ? "start" : d === 29 ? "end" : "middle"}
+                className="num font-medium uppercase tracking-[0.16em]"
+                style={{ fill: "var(--muted-foreground)", fontSize: labelSize.axis }}
               >
-                {d + 1}
+                Day {d + 1}
               </text>
             ))}
+
 
             {/* STAGE 0 — the forecast range lands first. */}
             <g
