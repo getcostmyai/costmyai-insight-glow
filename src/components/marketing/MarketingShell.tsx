@@ -177,19 +177,16 @@ export function MarketingFooter() {
             </FooterColumn>
 
             <FooterColumn title="Company">
-              <FooterLink to="/" hash="neutrality">
-                About
-              </FooterLink>
-              <FooterExternal href={BOOK_DEMO_URL}>Contact</FooterExternal>
-              <FooterLink to="/" hash="neutrality">
-                Press
-              </FooterLink>
+              <FooterLink to="/about">About</FooterLink>
+              <FooterLink to="/contact">Contact</FooterLink>
+              <FooterLink to="/press">Press</FooterLink>
             </FooterColumn>
             <FooterColumn title="Legal">
-              <FooterLink to="/legal/privacy">Privacy</FooterLink>
-              <FooterLink to="/legal/terms">Terms</FooterLink>
-              <FooterLink to="/legal/terms">Disclaimer</FooterLink>
+              <FooterLink to="/privacy">Privacy</FooterLink>
+              <FooterLink to="/terms">Terms</FooterLink>
+              <FooterLink to="/disclaimer">Disclaimer</FooterLink>
             </FooterColumn>
+
           </div>
         </div>
 
