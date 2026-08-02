@@ -145,6 +145,8 @@ export function Estimator() {
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
+  const spendPct = ((spend - 200) / (200000 - 200)) * 100;
+
 
 
   const goto = (next: number) => {
