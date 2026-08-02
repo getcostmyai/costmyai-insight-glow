@@ -4,8 +4,8 @@ import { timingSafeEqual } from "crypto";
 /**
  * Scheduled off-platform export.
  *
- * Runs every 6 hours, beating the platform's own ~24h daily snapshot cadence,
- * and keeps 90 days, far beyond the platform's ~14 day window. This is the only
+ * Runs every 6 hours into the independent Neon project costmyai-dr-backup, beating the platform's own ~24h daily snapshot cadence,
+ * and retains history through Neon branching, far beyond the platform's ~14 day window. This is the only
  * backup path for this project that can be restored independently and verified
  * without destroying production, so it is treated as the primary safety net.
  */
