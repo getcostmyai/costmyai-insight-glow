@@ -179,21 +179,16 @@ function StepRow({
   index: number;
 }) {
   const isActive = step.status === "in_progress";
-  const isDone = step.status === "done";
 
   return (
     <div className="group py-7 sm:py-8">
       <div className="flex items-start gap-4 sm:gap-6">
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-            isActive
-              ? "bg-primary text-primary-foreground"
-              : isDone
-                ? "bg-saving text-white"
-                : "bg-muted text-muted-foreground"
+            isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           }`}
         >
-          {isDone ? <CheckCircle2 className="size-4" /> : <span className="num">{index}</span>}
+          <span className="num">{index}</span>
         </div>
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3">
