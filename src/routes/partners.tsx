@@ -133,6 +133,14 @@ function Hero({ range, topRate }: { range: string | null; topRate: number }) {
           </a>
         </Reveal>
 
+        <Reveal delay={280} className="mt-6 text-sm text-muted-foreground">
+          Already a partner?{" "}
+          <Link to="/partner/login" className="text-foreground underline underline-offset-4">
+            Sign in to the partner portal
+          </Link>
+        </Reveal>
+
+
         <div className="mt-20 grid grid-cols-3 gap-6 border-t border-border/60 pt-12 sm:gap-10">
           {[
             {
