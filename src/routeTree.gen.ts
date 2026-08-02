@@ -50,6 +50,7 @@ import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
 import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_authenticated/workspace.certify'
+import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
@@ -272,6 +273,12 @@ const AuthenticatedWorkspaceCertifyRoute =
     path: '/certify',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedAdminPayoutsRoute =
+  AuthenticatedAdminPayoutsRouteImport.update({
+    id: '/admin/payouts',
+    path: '/admin/payouts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPartnerApplicationsRoute =
   AuthenticatedAdminPartnerApplicationsRouteImport.update({
     id: '/admin/partner-applications',
@@ -376,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -427,6 +435,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -483,6 +492,7 @@ export interface FileRoutesById {
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
+  '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/demo/'
     | '/intelligence/'
     | '/admin/partner-applications'
+    | '/admin/payouts'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -590,6 +601,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/intelligence'
     | '/admin/partner-applications'
+    | '/admin/payouts'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -645,6 +657,7 @@ export interface FileRouteTypes {
     | '/demo/'
     | '/intelligence/'
     | '/_authenticated/admin/partner-applications'
+    | '/_authenticated/admin/payouts'
     | '/_authenticated/workspace/certify'
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
@@ -989,6 +1002,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceCertifyRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/admin/payouts': {
+      id: '/_authenticated/admin/payouts'
+      path: '/admin/payouts'
+      fullPath: '/admin/payouts'
+      preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/partner-applications': {
       id: '/_authenticated/admin/partner-applications'
       path: '/admin/partner-applications'
@@ -1105,6 +1125,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
+  AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1115,6 +1136,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRouteWithChildren,
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
+  AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -166,6 +166,43 @@ async function accrueCommission(invoice: any, env: StripeEnv) {
   if (error) throw new Error(`commission accrual failed: ${error.message}`);
 }
 
+/**
+ * The provider tells us when a partner's payout account changes state — a
+ * partner can start onboarding, finish it, or be flagged for more verification
+ * long after they left our page. We record what it reports and never guess.
+ */
+async function syncConnectAccount(account: any) {
+  if (!account?.id) return;
+  const { connectStatusFromAccount } = await import("@/lib/partners/payouts.server");
+  const status = connectStatusFromAccount(account);
+  const { error } = await getSupabase().rpc("partner_set_connect_status_by_account", {
+    _account_id: String(account.id),
+    _status: status,
+  });
+  if (error) throw new Error(`payout account sync failed: ${error.message}`);
+}
+
+/**
+ * Money that came back. A commission line for a reversed invoice is clawed
+ * back; if it was already transferred, the database writes an offsetting
+ * negative line that nets against that partner's next payout.
+ */
+async function clawback(invoiceId: string | null, reason: string, env: StripeEnv) {
+  if (!invoiceId) return;
+  const { error } = await getSupabase().rpc("clawback_commission", {
+    _invoice_id: invoiceId,
+    _reason: reason,
+    _environment: env,
+  });
+  if (error) throw new Error(`clawback failed: ${error.message}`);
+}
+
+function invoiceIdOf(charge: any): string | null {
+  const invoice = charge?.invoice;
+  if (!invoice) return null;
+  return typeof invoice === "string" ? invoice : (invoice.id ?? null);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
@@ -180,6 +217,22 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "invoice.paid":
       await accrueCommission(event.data.object, env);
       break;
+    case "account.updated":
+      await syncConnectAccount(event.data.object);
+      break;
+    case "charge.refunded":
+      await clawback(invoiceIdOf(event.data.object), "invoice refunded", env);
+      break;
+    case "charge.dispute.created": {
+      const dispute = event.data.object;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+      if (chargeId) {
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const charge = await createStripeClient(env).charges.retrieve(chargeId);
+        await clawback(invoiceIdOf(charge), "payment disputed", env);
+      }
+      break;
+    }
     case "checkout.session.completed":
       // Subscription state is carried by the customer.subscription.* events.
       break;
