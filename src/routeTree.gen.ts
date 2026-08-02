@@ -57,6 +57,7 @@ import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
+import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
@@ -307,6 +308,12 @@ const ApiPublicSyncBenchmarksRoute = ApiPublicSyncBenchmarksRouteImport.update({
   path: '/api/public/sync/benchmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncBackupExportRoute =
+  ApiPublicSyncBackupExportRouteImport.update({
+    id: '/api/public/sync/backup-export',
+    path: '/api/public/sync/backup-export',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -369,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -418,6 +426,7 @@ export interface FileRoutesByTo {
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -472,6 +481,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/workspace/'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
+    | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
     | '/api/public/sync/prices'
@@ -575,6 +586,7 @@ export interface FileRouteTypes {
     | '/workspace'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
+    | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
     | '/api/public/sync/prices'
@@ -628,6 +640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
+    | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
     | '/api/public/sync/prices'
@@ -663,6 +676,7 @@ export interface RootRouteChildren {
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
@@ -1011,6 +1025,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncBenchmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/backup-export': {
+      id: '/api/public/sync/backup-export'
+      path: '/api/public/sync/backup-export'
+      fullPath: '/api/public/sync/backup-export'
+      preLoaderRoute: typeof ApiPublicSyncBackupExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -1136,6 +1157,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
