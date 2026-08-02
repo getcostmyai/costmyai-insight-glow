@@ -245,8 +245,10 @@ export function Estimator() {
                 {step === 0 ? (
                   <div>
                     <Label>Monthly AI spend</Label>
-                    <div className="flex items-baseline gap-3">
-                      <p className="num text-4xl tabular-nums text-foreground">${fmtNum(spend)}</p>
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <p className="num text-5xl leading-none tabular-nums text-foreground sm:text-6xl">
+                        ${fmtNum(spend)}
+                      </p>
                       <span className="text-sm text-muted-foreground">/ month</span>
                     </div>
                     <input
@@ -257,29 +259,58 @@ export function Estimator() {
                       value={spend}
                       onChange={(e) => setSpend(Number(e.target.value))}
                       aria-label="Monthly AI spend"
-                      className="mt-5 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
+                      className="slider-brand mt-6 w-full cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${spendPct}%, var(--secondary) ${spendPct}%, var(--secondary) 100%)`,
+                      }}
                     />
-                    <Label className="mt-7">How is it spread?</Label>
+                    <div className="mt-2.5 flex items-center justify-between">
+                      <span className="num text-[11px] font-medium text-muted-foreground">$200</span>
+                      <div className="flex gap-1.5">
+                        {SPEND_PRESETS.map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setSpend(p)}
+                            className={`num rounded-full px-2.5 py-1 text-[11px] transition-colors duration-200 ${
+                              spend === p
+                                ? "bg-primary-soft text-primary"
+                                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            }`}
+                          >
+                            ${p >= 1000 ? `${p / 1000}k` : p}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="num text-[11px] font-medium text-muted-foreground">$200k</span>
+                    </div>
+
+                    <Label className="mt-8">How is it spread?</Label>
                     <div className="grid gap-2 sm:grid-cols-3">
-                      {DISTRIBUTIONS.map((d) => (
-                        <button
-                          key={d.id}
-                          type="button"
-                          onClick={() => setDistribution(d.id)}
-                          className={`rounded-xl border px-3 py-2.5 text-left transition-all duration-200 hover:-translate-y-0.5 ${
-                            distribution === d.id
-                              ? "border-primary/45 bg-primary-soft"
-                              : "border-border bg-card hover:border-primary/25"
-                          }`}
-                        >
-                          <p className="text-sm font-semibold tracking-tight">{d.label}</p>
-                          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-                            {d.hint}
-                          </p>
-                        </button>
-                      ))}
+                      {DISTRIBUTIONS.map((d, i) => {
+                        const on = distribution === d.id;
+                        return (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => setDistribution(d.id)}
+                            className={`group rounded-2xl border px-3.5 py-3 text-left transition-all duration-200 hover:-translate-y-0.5 ${
+                              on
+                                ? "border-primary/45 bg-primary-soft shadow-[0_6px_20px_-12px_var(--primary)]"
+                                : "border-border bg-card hover:border-primary/25"
+                            }`}
+                          >
+                            <SpreadGlyph bars={SPREAD_GLYPHS[i] ?? SPREAD_GLYPHS[1]!} on={on} />
+                            <p className="mt-2.5 text-sm font-semibold tracking-tight">{d.label}</p>
+                            <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                              {d.hint}
+                            </p>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
+
                 ) : step === 1 ? (
                   <div>
                     <Label>What does most of that spend do?</Label>
