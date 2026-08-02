@@ -320,6 +320,8 @@ export type Database = {
       }
       commission_ledger: {
         Row: {
+          clawback_of: string | null
+          clawback_reason: string | null
           commission_usd: number
           created_at: string
           environment: string
@@ -328,14 +330,18 @@ export type Database = {
           org_id: string
           paid_at: string | null
           partner_id: string
+          payout_id: string | null
           period_end: string | null
           period_start: string | null
           rate_pct: number
           revenue_usd: number
           status: Database["public"]["Enums"]["commission_status"]
           stripe_subscription_id: string | null
+          stripe_transfer_id: string | null
         }
         Insert: {
+          clawback_of?: string | null
+          clawback_reason?: string | null
           commission_usd: number
           created_at?: string
           environment?: string
@@ -344,14 +350,18 @@ export type Database = {
           org_id: string
           paid_at?: string | null
           partner_id: string
+          payout_id?: string | null
           period_end?: string | null
           period_start?: string | null
           rate_pct: number
           revenue_usd: number
           status?: Database["public"]["Enums"]["commission_status"]
           stripe_subscription_id?: string | null
+          stripe_transfer_id?: string | null
         }
         Update: {
+          clawback_of?: string | null
+          clawback_reason?: string | null
           commission_usd?: number
           created_at?: string
           environment?: string
@@ -360,14 +370,23 @@ export type Database = {
           org_id?: string
           paid_at?: string | null
           partner_id?: string
+          payout_id?: string | null
           period_end?: string | null
           period_start?: string | null
           rate_pct?: number
           revenue_usd?: number
           status?: Database["public"]["Enums"]["commission_status"]
           stripe_subscription_id?: string | null
+          stripe_transfer_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commission_ledger_clawback_of_fkey"
+            columns: ["clawback_of"]
+            isOneToOne: false
+            referencedRelation: "commission_ledger"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commission_ledger_org_id_fkey"
             columns: ["org_id"]
@@ -380,6 +399,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "partner_payouts"
             referencedColumns: ["id"]
           },
         ]
@@ -869,6 +895,59 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_payouts: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          created_by: string | null
+          environment: string
+          error: string | null
+          id: string
+          line_count: number
+          partner_id: string
+          status: string
+          stripe_destination_account: string | null
+          stripe_transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          created_by?: string | null
+          environment: string
+          error?: string | null
+          id?: string
+          line_count?: number
+          partner_id: string
+          status?: string
+          stripe_destination_account?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          created_by?: string | null
+          environment?: string
+          error?: string | null
+          id?: string
+          line_count?: number
+          partner_id?: string
+          status?: string
+          stripe_destination_account?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_payouts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_tier_audit: {
         Row: {
           actor: string | null
@@ -975,6 +1054,10 @@ export type Database = {
           name: string
           referral_code: string
           status: Database["public"]["Enums"]["partner_status"]
+          stripe_connect_account_id: string | null
+          stripe_connect_environment: string | null
+          stripe_connect_status: string
+          stripe_connect_updated_at: string | null
           tier_override: number | null
           updated_at: string
         }
@@ -986,6 +1069,10 @@ export type Database = {
           name: string
           referral_code: string
           status?: Database["public"]["Enums"]["partner_status"]
+          stripe_connect_account_id?: string | null
+          stripe_connect_environment?: string | null
+          stripe_connect_status?: string
+          stripe_connect_updated_at?: string | null
           tier_override?: number | null
           updated_at?: string
         }
@@ -997,6 +1084,10 @@ export type Database = {
           name?: string
           referral_code?: string
           status?: Database["public"]["Enums"]["partner_status"]
+          stripe_connect_account_id?: string | null
+          stripe_connect_environment?: string | null
+          stripe_connect_status?: string
+          stripe_connect_updated_at?: string | null
           tier_override?: number | null
           updated_at?: string
         }
@@ -1810,6 +1901,10 @@ export type Database = {
       }
       backup_export_counts: { Args: never; Returns: Json }
       backup_export_sql: { Args: never; Returns: string }
+      clawback_commission: {
+        Args: { _environment?: string; _invoice_id: string; _reason: string }
+        Returns: Json
+      }
       create_organization: { Args: { _name: string }; Returns: string }
       has_org_role: {
         Args: {
@@ -1850,6 +1945,31 @@ export type Database = {
           plan: Database["public"]["Enums"]["plan_tier"]
           referred_at: string
         }[]
+      }
+      partner_set_connect_account: {
+        Args: {
+          _account_id: string
+          _environment: string
+          _partner_id: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      partner_set_connect_status_by_account: {
+        Args: { _account_id: string; _status: string }
+        Returns: string
+      }
+      payout_begin: {
+        Args: { _actor?: string; _environment: string; _partner_id: string }
+        Returns: Json
+      }
+      payout_fail: {
+        Args: { _error: string; _payout_id: string }
+        Returns: undefined
+      }
+      payout_settle: {
+        Args: { _payout_id: string; _transfer_id: string }
+        Returns: undefined
       }
       set_org_plan: {
         Args: {
