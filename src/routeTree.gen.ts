@@ -30,6 +30,7 @@ import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ApiIndexRouteImport } from './routes/api.index'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
+import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
 import { Route as EmbedIntelligenceWidgetRouteImport } from './routes/embed/intelligence-widget'
@@ -164,6 +165,11 @@ const ApiIndexRoute = ApiIndexRouteImport.update({
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
   id: '/partners_/apply',
   path: '/partners/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerLoginRoute = PartnerLoginRouteImport.update({
+  id: '/partner_/login',
+  path: '/partner/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
@@ -363,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
+  '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
@@ -413,6 +420,7 @@ export interface FileRoutesByTo {
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
+  '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/api': typeof ApiIndexRoute
   '/blog': typeof BlogIndexRoute
@@ -468,6 +476,7 @@ export interface FileRoutesById {
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
+  '/partner_/login': typeof PartnerLoginRoute
   '/partners_/apply': typeof PartnersApplyRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
@@ -523,6 +532,7 @@ export interface FileRouteTypes {
     | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
+    | '/partner/login'
     | '/partners/apply'
     | '/api/'
     | '/blog/'
@@ -573,6 +583,7 @@ export interface FileRouteTypes {
     | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
+    | '/partner/login'
     | '/partners/apply'
     | '/api'
     | '/blog'
@@ -627,6 +638,7 @@ export interface FileRouteTypes {
     | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
+    | '/partner_/login'
     | '/partners_/apply'
     | '/api/'
     | '/blog/'
@@ -671,6 +683,7 @@ export interface RootRouteChildren {
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
+  PartnerLoginRoute: typeof PartnerLoginRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
@@ -834,6 +847,13 @@ declare module '@tanstack/react-router' {
       path: '/partners/apply'
       fullPath: '/partners/apply'
       preLoaderRoute: typeof PartnersApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner_/login': {
+      id: '/partner_/login'
+      path: '/partner/login'
+      fullPath: '/partner/login'
+      preLoaderRoute: typeof PartnerLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/methodology': {
@@ -1152,6 +1172,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
+  PartnerLoginRoute: PartnerLoginRoute,
   PartnersApplyRoute: PartnersApplyRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,

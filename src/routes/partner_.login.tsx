@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
  * dashboard's own honest "not a partner yet" state handles it; nothing here
  * bounces or errors.
  */
-export const Route = createFileRoute("/partner/login")({
+export const Route = createFileRoute("/partner_/login")({
   head: () => ({
     meta: [
       { title: "Partner sign in — CostMyAI" },
