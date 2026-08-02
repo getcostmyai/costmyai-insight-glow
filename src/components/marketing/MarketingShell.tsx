@@ -164,9 +164,7 @@ export function MarketingFooter() {
               <FooterLink to="/models">Models</FooterLink>
               <FooterLink to="/intelligence">Intelligence</FooterLink>
               <FooterLink to="/pricing">Plans</FooterLink>
-              <FooterLink to="/" hash="architecture">
-                API
-              </FooterLink>
+              <FooterLink to="/api">API</FooterLink>
             </FooterColumn>
             <FooterColumn title="Resources">
               <FooterLink to="/faq">FAQ</FooterLink>
