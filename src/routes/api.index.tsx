@@ -41,6 +41,7 @@ const WHAT_IT_DOES_NOT = [
   "Prompts or completions",
   "Provider API keys",
   "Any customer content",
+  "A way to pull your dashboard data back out programmatically",
 ];
 
 function ApiPage() {
@@ -52,7 +53,7 @@ function ApiPage() {
             <Reveal className="max-w-4xl">
               <p className="eyebrow">API</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
-                Not a dashboard query API,{" "}
+                Not a REST API you query for your own dashboard data,{" "}
                 <span className="text-gradient-brand">not yet</span>.
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
@@ -78,6 +79,11 @@ function ApiPage() {
                     your real AI usage and billing data using your own provider keys, which never
                     leave that environment, and pushes neutral, aggregate records to CostMyAI over
                     its own API.
+                  </p>
+                  <p className="mt-4 text-[1.0625rem] leading-[1.75] text-muted-foreground">
+                    This is the actual integration surface today: an ingestion path, built
+                    specifically so visibility into your AI spend never requires handing a third
+                    party your credentials.
                   </p>
                   <div className="mt-8">
                     <Link
@@ -154,8 +160,10 @@ function ApiPage() {
                   step.
                 </p>
                 <p className="mt-6 text-[1.0625rem] leading-[1.75] text-muted-foreground">
-                  This is not built yet and has no committed timeline. If you have a specific
-                  integration need today, reach out and tell us what you are trying to connect.
+                  This is not built yet, and it will get built the moment real demand shows it is
+                  worth building, not before. If you have a specific integration need today, tell us
+                  what you are trying to connect, and what breaks for you without it. That is the
+                  single most useful thing you can send us right now.
                 </p>
               </Reveal>
             </div>
@@ -166,8 +174,8 @@ function ApiPage() {
           <div className="mx-auto max-w-3xl text-center">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
-                Have an integration in mind?{" "}
-                <span className="text-gradient-brand">Tell us what you need.</span>
+                Tell us what you&apos;re trying to{" "}
+                <span className="text-gradient-brand">connect</span>.
               </h2>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <a
@@ -175,7 +183,7 @@ function ApiPage() {
                   className="btn-gradient inline-flex items-center gap-2 px-6 py-3 text-sm"
                 >
                   <Mail className="h-4 w-4" />
-                  Contact us about integrations
+                  mail@costmyai.com
                 </a>
               </div>
             </Reveal>
