@@ -58,6 +58,45 @@ export type Database = {
           },
         ]
       }
+      backup_export_runs: {
+        Row: {
+          bytes: number | null
+          destination: string | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          object_key: string | null
+          ok: boolean | null
+          pruned_keys: number
+          row_counts: Json | null
+          started_at: string
+        }
+        Insert: {
+          bytes?: number | null
+          destination?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          object_key?: string | null
+          ok?: boolean | null
+          pruned_keys?: number
+          row_counts?: Json | null
+          started_at?: string
+        }
+        Update: {
+          bytes?: number | null
+          destination?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          object_key?: string | null
+          ok?: boolean | null
+          pruned_keys?: number
+          row_counts?: Json | null
+          started_at?: string
+        }
+        Relationships: []
+      }
       benchmark_margins: {
         Row: {
           created_at: string
@@ -1757,6 +1796,8 @@ export type Database = {
         Args: { _code: string; _org_id: string }
         Returns: string
       }
+      backup_export_counts: { Args: never; Returns: Json }
+      backup_export_sql: { Args: never; Returns: string }
       create_organization: { Args: { _name: string }; Returns: string }
       has_org_role: {
         Args: {
