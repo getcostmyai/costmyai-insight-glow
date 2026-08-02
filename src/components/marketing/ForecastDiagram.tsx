@@ -247,7 +247,7 @@ export function ForecastDiagram() {
               <rect
                 x={bandX}
                 y={rangeTop}
-                width="80"
+                width={bandHalf * 2}
                 height={Math.max(18, rangeBottom - rangeTop)}
                 rx="10"
                 fill="var(--saving-soft)"
@@ -262,20 +262,21 @@ export function ForecastDiagram() {
               <circle
                 cx={xForDay(DAYS - 1)}
                 cy={rangeCenter}
-                r="6"
+                r={narrow ? 8 : 6}
                 fill="var(--saving)"
                 stroke="var(--background)"
                 strokeWidth="2.5"
               />
               <text
-                x={bandX - 14}
-                y={rangeCenter + 4}
+                x={narrow ? xForDay(DAYS - 1) : bandX - 14}
+                y={narrow ? rangeTop - 16 : rangeCenter + 4}
                 textAnchor="end"
-                className="num text-[12px] font-semibold uppercase tracking-[0.14em]"
-                style={{ fill: "var(--saving)" }}
+                className="num font-semibold uppercase tracking-[0.14em]"
+                style={{ fill: "var(--saving)", fontSize: labelSize.tag }}
               >
                 Forecast
               </text>
+
             </g>
 
             {/* STAGE 1 — known month-to-date. */}
