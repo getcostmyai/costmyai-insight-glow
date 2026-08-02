@@ -14,7 +14,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
-import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -88,11 +87,6 @@ const PricingRoute = PricingRouteImport.update({
 const PressRoute = PressRouteImport.update({
   id: '/press',
   path: '/press',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PaymentsRoute = PaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersRoute = PartnersRouteImport.update({
@@ -363,7 +357,6 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
-  '/payments': typeof PaymentsRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -417,7 +410,6 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
-  '/payments': typeof PaymentsRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -474,7 +466,6 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
-  '/payments': typeof PaymentsRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -532,7 +523,6 @@ export interface FileRouteTypes {
     | '/faq'
     | '/models'
     | '/partners'
-    | '/payments'
     | '/press'
     | '/pricing'
     | '/privacy'
@@ -586,7 +576,6 @@ export interface FileRouteTypes {
     | '/faq'
     | '/models'
     | '/partners'
-    | '/payments'
     | '/press'
     | '/pricing'
     | '/privacy'
@@ -642,7 +631,6 @@ export interface FileRouteTypes {
     | '/faq'
     | '/models'
     | '/partners'
-    | '/payments'
     | '/press'
     | '/pricing'
     | '/privacy'
@@ -700,7 +688,6 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
-  PaymentsRoute: typeof PaymentsRoute
   PressRoute: typeof PressRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -761,13 +748,6 @@ declare module '@tanstack/react-router' {
       path: '/press'
       fullPath: '/press'
       preLoaderRoute: typeof PressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/payments': {
-      id: '/payments'
-      path: '/payments'
-      fullPath: '/payments'
-      preLoaderRoute: typeof PaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partners': {
@@ -1206,7 +1186,6 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,
-  PaymentsRoute: PaymentsRoute,
   PressRoute: PressRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
@@ -1234,3 +1213,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
