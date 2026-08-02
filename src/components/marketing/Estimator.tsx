@@ -37,15 +37,33 @@ function SpreadGlyph({ bars, on }: { bars: number[]; on: boolean }) {
       {bars.map((h, i) => (
         <span
           key={i}
-          className={`w-2 rounded-sm transition-all duration-300 ${
-            on ? "bg-primary" : "bg-border group-hover:bg-primary/40"
+          className={`w-2 origin-bottom rounded-sm transition-[height,background-color,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            on ? "bg-primary scale-y-100" : "bg-border scale-y-[0.92] group-hover:bg-primary/40 group-hover:scale-y-100"
           }`}
-          style={{ height: `${Math.round(h * 100)}%` }}
+          style={{
+            height: `${Math.round(h * 100)}%`,
+            transitionDelay: `${i * 45}ms`,
+          }}
         />
       ))}
     </div>
   );
 }
+
+/** True one frame after mount, so entry transitions have a from-state to run from. */
+function useMounted(reduced: boolean) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (reduced) {
+      setOn(true);
+      return;
+    }
+    const id = requestAnimationFrame(() => setOn(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduced]);
+  return on;
+}
+
 
 
 function usePrefersReducedMotion() {
@@ -145,7 +163,9 @@ export function Estimator() {
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
-  const spendPct = ((spend - 200) / (200000 - 200)) * 100;
+  const rolledSpend = useRollingNumber(spend, reduced);
+  const spendPct = ((rolledSpend - 200) / (200000 - 200)) * 100;
+
 
 
 
@@ -200,15 +220,15 @@ export function Estimator() {
                       className="group flex min-w-0 flex-1 flex-col gap-2 text-left"
                       aria-current={active ? "step" : undefined}
                     >
-                      <span
-                        className={`h-[3px] w-full rounded-full transition-all duration-500 ${
-                          active
-                            ? "fill-gradient-brand"
-                            : done
-                              ? "bg-saving/70"
-                              : "bg-border group-hover:bg-primary/25"
-                        }`}
-                      />
+                      <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-border transition-colors duration-300 group-hover:bg-primary/25">
+                        <span
+                          className={`absolute inset-y-0 left-0 rounded-full transition-[width,background-color,opacity] duration-[650ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                            active ? "fill-gradient-brand" : "bg-saving/70"
+                          }`}
+                          style={{ width: active || done ? "100%" : "0%", opacity: active || done ? 1 : 0 }}
+                        />
+                      </span>
+
                       <span
                         className={`truncate text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-300 ${
                           active
@@ -276,7 +296,7 @@ export function Estimator() {
                     <Label>Monthly AI spend</Label>
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                       <p className="num text-5xl leading-none tabular-nums text-foreground sm:text-6xl">
-                        ${fmtNum(spend)}
+                        ${fmtNum(rolledSpend)}
                       </p>
                       <span className="text-sm text-muted-foreground">/ month</span>
                     </div>
@@ -508,31 +528,46 @@ function NotADeadEnd({ lead }: { lead: string }) {
 
 
 function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
+  const reduced = usePrefersReducedMotion();
+  const mounted = useMounted(reduced);
+  // Count both ends of the range up from zero, so the answer lands rather than appears.
+  const low = useRollingNumber(mounted ? r.lowUsd : 0, reduced);
+  const high = useRollingNumber(mounted ? r.highUsd : 0, reduced);
+  const share = Math.min(100, Math.max(2, r.sharePct));
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
         <p className="eyebrow">Estimated monthly saving</p>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-saving">
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-saving transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? "translateY(0) scale(1)" : "translateY(2px) scale(0.96)",
+            transitionDelay: "260ms",
+          }}
+        >
           <Sparkles className="h-3 w-3" /> {r.savingPct}% cheaper per call
         </span>
       </div>
       <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
-        ${fmtNum(r.lowUsd)}
-        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(r.highUsd)}
+        ${fmtNum(low)}
+        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(high)}
       </p>
 
       {/* Share of spend the estimate actually covers, drawn rather than asserted. */}
       <div className="mt-4">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
           <div
-            className="h-full rounded-full bg-saving transition-all duration-700"
-            style={{ width: `${Math.min(100, Math.max(2, r.sharePct))}%` }}
+            className="h-full rounded-full bg-saving transition-[width] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{ width: `${mounted ? share : 0}%`, transitionDelay: "200ms" }}
           />
         </div>
         <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
           Applied to <span className="num text-foreground">{r.sharePct}%</span> of your stated spend
         </p>
       </div>
+
 
       <div className="mt-5 grid gap-x-8 sm:grid-cols-2">
         <Row label="From" value={r.fromModelLabel} />
