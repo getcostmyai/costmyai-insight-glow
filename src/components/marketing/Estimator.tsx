@@ -37,15 +37,33 @@ function SpreadGlyph({ bars, on }: { bars: number[]; on: boolean }) {
       {bars.map((h, i) => (
         <span
           key={i}
-          className={`w-2 rounded-sm transition-all duration-300 ${
-            on ? "bg-primary" : "bg-border group-hover:bg-primary/40"
+          className={`w-2 origin-bottom rounded-sm transition-[height,background-color,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            on ? "bg-primary scale-y-100" : "bg-border scale-y-[0.92] group-hover:bg-primary/40 group-hover:scale-y-100"
           }`}
-          style={{ height: `${Math.round(h * 100)}%` }}
+          style={{
+            height: `${Math.round(h * 100)}%`,
+            transitionDelay: `${i * 45}ms`,
+          }}
         />
       ))}
     </div>
   );
 }
+
+/** True one frame after mount, so entry transitions have a from-state to run from. */
+function useMounted(reduced: boolean) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (reduced) {
+      setOn(true);
+      return;
+    }
+    const id = requestAnimationFrame(() => setOn(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduced]);
+  return on;
+}
+
 
 
 function usePrefersReducedMotion() {
