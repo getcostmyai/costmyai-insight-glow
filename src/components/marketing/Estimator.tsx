@@ -21,6 +21,33 @@ const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(Math.round(n
 
 const STEPS = ["Spend", "Workload", "Where it runs"] as const;
 
+/** Quick jumps on the spend slider, in the range most inbound teams sit in. */
+const SPEND_PRESETS = [1000, 5000, 25000, 100000] as const;
+
+/** Bar heights (0-1) that show, at a glance, what each spread shape means. */
+const SPREAD_GLYPHS: number[][] = [
+  [1, 0.28, 0.2, 0.16],
+  [0.72, 0.62, 0.55, 0.48],
+  [0.42, 0.38, 0.34, 0.3],
+];
+
+function SpreadGlyph({ bars, on }: { bars: number[]; on: boolean }) {
+  return (
+    <div className="flex h-7 items-end gap-1" aria-hidden>
+      {bars.map((h, i) => (
+        <span
+          key={i}
+          className={`w-2 rounded-sm transition-all duration-300 ${
+            on ? "bg-primary" : "bg-border group-hover:bg-primary/40"
+          }`}
+          style={{ height: `${Math.round(h * 100)}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
