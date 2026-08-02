@@ -169,9 +169,7 @@ export function MarketingFooter() {
               </FooterLink>
             </FooterColumn>
             <FooterColumn title="Resources">
-              <FooterLink to="/" hash="faq">
-                FAQ
-              </FooterLink>
+              <FooterLink to="/faq">FAQ</FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
               <FooterLink to="/partners">Become a Partner</FooterLink>
