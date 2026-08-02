@@ -57,6 +57,21 @@ function useStages(active: boolean) {
   return stage;
 }
 
+/** True below the `sm` breakpoint. Defaults to false so SSR renders the wide chart. */
+function useNarrow() {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return narrow;
+}
+
+
+
 export function ForecastDiagram() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
@@ -84,12 +99,17 @@ export function ForecastDiagram() {
 
   const at = (i: number) => stage >= i;
 
-  const padX = 64;
-  const padY = 48;
+  // On narrow screens the SVG is scaled down hard, so a wide/short viewBox makes
+  // every label unreadable. Use a taller box with tighter padding there, which
+  // scales the same type up relative to the available width.
+  const narrow = useNarrow();
+  const padX = narrow ? 38 : 64;
+  const padY = narrow ? 44 : 48;
   const width = 900;
-  const height = 340;
+  const height = narrow ? 480 : 340;
   const plotW = width - padX * 2;
   const plotH = height - padY * 2;
+
 
   const xForDay = (d: number) => padX + (d / (DAYS - 1)) * plotW;
   const yForSpend = (s: number) => padY + plotH - (s / MAX_SPEND) * plotH;
@@ -119,27 +139,41 @@ export function ForecastDiagram() {
   const rangeTop = yForSpend(FORECAST_RANGE[1]);
   const rangeBottom = yForSpend(FORECAST_RANGE[0]);
   const rangeCenter = yForSpend(FORECAST_POINT);
-  const bandX = xForDay(DAYS - 1) - 40;
+  const bandHalf = narrow ? 48 : 40;
+  // Keep the band inside the viewBox on narrow screens, where it is widest.
+  const bandX = Math.min(xForDay(DAYS - 1) - bandHalf, width - bandHalf * 2 - 4);
+
+  const tickDays = narrow ? [0, 14, 29] : [0, 7, 14, 21, 29];
+  const labelSize = narrow ? { axis: 18, tag: 20 } : { axis: 10, tag: 12 };
 
   return (
     <div ref={hostRef} className="mx-auto max-w-5xl">
       {/* Answer first: the month-end range, in display type. */}
       <Reveal>
         <div className="text-center">
-          <p className="num text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+          <p className="num text-[10px] font-medium uppercase tracking-[0.2em] text-primary sm:text-[11px] sm:tracking-[0.22em]">
             Month-end forecast
           </p>
-          <p className="num mt-5 text-[clamp(3rem,9vw,5.5rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-saving">
+          <p className="num mt-4 text-[clamp(3.25rem,15vw,5.5rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-saving sm:mt-5">
             <CountUp value={FORECAST_POINT} format={usd} />
           </p>
-          <p className="num mt-4 text-sm font-medium tracking-[0.04em] text-muted-foreground">
-            range {usd(FORECAST_RANGE[0])} – {usd(FORECAST_RANGE[1])} · day {TODAY} of {DAYS}
+          <p className="num mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[13px] font-medium tracking-[0.04em] text-muted-foreground sm:text-sm">
+            <span>
+              range {usd(FORECAST_RANGE[0])} – {usd(FORECAST_RANGE[1])}
+            </span>
+            <span aria-hidden className="hidden sm:inline">
+              ·
+            </span>
+            <span>
+              day {TODAY} of {DAYS}
+            </span>
           </p>
-          <h3 className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+          <h3 className="mx-auto mt-7 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:mt-8 sm:text-xl">
             Landed before the invoice does. Here is everything that number is built from.
           </h3>
         </div>
       </Reveal>
+
 
       <Reveal delay={120} className="mt-14">
         <div className="relative">
@@ -180,29 +214,30 @@ export function ForecastDiagram() {
                   strokeOpacity={v === 0 ? 1 : 0.45}
                 />
                 <text
-                  x={padX - 12}
-                  y={yForSpend(v) + 4}
-                  textAnchor="end"
-                  className="num text-[10px] font-medium tracking-[0.08em]"
-                  style={{ fill: "var(--muted-foreground)" }}
+                  x={padX - 10}
+                  y={yForSpend(v) - 6}
+                  textAnchor="start"
+                  className="num font-medium tracking-[0.08em]"
+                  style={{ fill: "var(--muted-foreground)", fontSize: labelSize.axis }}
                 >
                   ${(v / 1000).toFixed(0)}k
                 </text>
               </g>
             ))}
 
-            {[0, 7, 14, 21, 29].map((d) => (
+            {tickDays.map((d) => (
               <text
                 key={d}
                 x={xForDay(d)}
-                y={padY + plotH + 24}
-                textAnchor="middle"
-                className="num text-[10px] font-medium uppercase tracking-[0.16em]"
-                style={{ fill: "var(--muted-foreground)" }}
+                y={padY + plotH + labelSize.axis + 14}
+                textAnchor={d === 0 ? "start" : d === 29 ? "end" : "middle"}
+                className="num font-medium uppercase tracking-[0.16em]"
+                style={{ fill: "var(--muted-foreground)", fontSize: labelSize.axis }}
               >
-                {d + 1}
+                Day {d + 1}
               </text>
             ))}
+
 
             {/* STAGE 0 — the forecast range lands first. */}
             <g
@@ -214,7 +249,7 @@ export function ForecastDiagram() {
               <rect
                 x={bandX}
                 y={rangeTop}
-                width="80"
+                width={bandHalf * 2}
                 height={Math.max(18, rangeBottom - rangeTop)}
                 rx="10"
                 fill="var(--saving-soft)"
@@ -229,20 +264,21 @@ export function ForecastDiagram() {
               <circle
                 cx={xForDay(DAYS - 1)}
                 cy={rangeCenter}
-                r="6"
+                r={narrow ? 8 : 6}
                 fill="var(--saving)"
                 stroke="var(--background)"
                 strokeWidth="2.5"
               />
               <text
-                x={bandX - 14}
-                y={rangeCenter + 4}
+                x={narrow ? xForDay(DAYS - 1) : bandX - 14}
+                y={narrow ? rangeTop - 16 : rangeCenter + 4}
                 textAnchor="end"
-                className="num text-[12px] font-semibold uppercase tracking-[0.14em]"
-                style={{ fill: "var(--saving)" }}
+                className="num font-semibold uppercase tracking-[0.14em]"
+                style={{ fill: "var(--saving)", fontSize: labelSize.tag }}
               >
                 Forecast
               </text>
+
             </g>
 
             {/* STAGE 1 — known month-to-date. */}
@@ -300,13 +336,14 @@ export function ForecastDiagram() {
               />
               <text
                 x={xForDay(TODAY - 1)}
-                y={padY - 26}
+                y={padY - 24}
                 textAnchor="middle"
-                className="num text-[11px] font-semibold uppercase tracking-[0.16em]"
-                style={{ fill: "var(--foreground)" }}
+                className="num font-semibold uppercase tracking-[0.16em]"
+                style={{ fill: "var(--foreground)", fontSize: labelSize.tag }}
               >
                 Today
               </text>
+
             </g>
           </svg>
         </div>
