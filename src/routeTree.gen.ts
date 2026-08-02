@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -59,6 +61,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -87,6 +94,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const ModelsRoute = ModelsRouteImport.update({
   id: '/models',
   path: '/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -321,12 +333,14 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRouteWithChildren
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRouteWithChildren
+  '/disclaimer': typeof DisclaimerRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -369,12 +383,14 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -420,12 +436,14 @@ export interface FileRoutesById {
   '/blog': typeof BlogRouteWithChildren
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRouteWithChildren
+  '/disclaimer': typeof DisclaimerRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -472,12 +490,14 @@ export interface FileRouteTypes {
     | '/blog'
     | '/contact'
     | '/demo'
+    | '/disclaimer'
     | '/models'
     | '/partners'
     | '/press'
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/billing'
     | '/partner'
     | '/settings'
@@ -520,12 +540,14 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/disclaimer'
     | '/models'
     | '/partners'
     | '/press'
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/billing'
     | '/partner'
     | '/settings'
@@ -570,12 +592,14 @@ export interface FileRouteTypes {
     | '/blog'
     | '/contact'
     | '/demo'
+    | '/disclaimer'
     | '/models'
     | '/partners'
     | '/press'
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/_authenticated/billing'
     | '/_authenticated/partner'
     | '/_authenticated/settings'
@@ -622,12 +646,14 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRouteWithChildren
+  DisclaimerRoute: typeof DisclaimerRoute
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
   PressRoute: typeof PressRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
@@ -649,6 +675,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -689,6 +722,13 @@ declare module '@tanstack/react-router' {
       path: '/models'
       fullPath: '/models'
       preLoaderRoute: typeof ModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -1079,12 +1119,14 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   ContactRoute: ContactRoute,
   DemoRoute: DemoRouteWithChildren,
+  DisclaimerRoute: DisclaimerRoute,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,
   PressRoute: PressRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
