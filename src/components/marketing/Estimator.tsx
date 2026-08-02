@@ -516,16 +516,31 @@ function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
           <Sparkles className="h-3 w-3" /> {r.savingPct}% cheaper per call
         </span>
       </div>
-      <p className="num mt-2 text-4xl tabular-nums text-saving">
-        ${fmtNum(r.lowUsd)} – ${fmtNum(r.highUsd)}
+      <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
+        ${fmtNum(r.lowUsd)}
+        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(r.highUsd)}
       </p>
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      {/* Share of spend the estimate actually covers, drawn rather than asserted. */}
+      <div className="mt-4">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full rounded-full bg-saving transition-all duration-700"
+            style={{ width: `${Math.min(100, Math.max(2, r.sharePct))}%` }}
+          />
+        </div>
+        <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
+          Applied to <span className="num text-foreground">{r.sharePct}%</span> of your stated spend
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-x-8 sm:grid-cols-2">
         <Row label="From" value={r.fromModelLabel} />
         <Row label="To" value={`${r.toModelLabel} · ${r.toHostLabel}`} />
         <Row label="Quality bar" value={`${r.suite} / ${r.taskClass} ±${r.margin}`} />
         <Row label="Share of spend" value={`${r.sharePct}%`} />
       </div>
+
 
       <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
         Basis: conservative half-to-four-fifths of the modelled price delta, applied to{" "}
