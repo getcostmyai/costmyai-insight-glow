@@ -38,6 +38,11 @@ export interface PartnerSummary {
   /** True when a platform admin has pinned the tier away from what was earned. */
   overridden: boolean;
   ratePct: number;
+  /** What the provider says about the partner's payout account, never inferred. */
+  payoutAccount: {
+    connected: boolean;
+    status: "not_started" | "pending" | "active" | "restricted";
+  };
   tiers: PartnerTier[];
   nextTier: PartnerTier | null;
   /** Dollars of referred revenue still needed to reach `nextTier`. */
@@ -63,12 +68,27 @@ export interface CommissionRow {
   status: "pending" | "approved" | "paid" | "clawed_back";
   createdAt: string;
   paidAt: string | null;
+  transferId: string | null;
+  /** Present on the offsetting line written when a paid invoice is reversed. */
+  clawbackOf: string | null;
+}
+
+export interface PayoutRun {
+  id: string;
+  amountUsd: number;
+  lineCount: number;
+  status: "pending" | "paid" | "failed";
+  transferId: string | null;
+  environment: string;
+  error: string | null;
+  createdAt: string;
 }
 
 export interface PartnerDashboard {
   partner: PartnerSummary;
   referrals: ReferredWorkspace[];
   commissions: CommissionRow[];
+  payouts: PayoutRun[];
   totals: {
     earnedUsd: number;
     paidUsd: number;
@@ -95,10 +115,13 @@ export const getMyPartner = createServerFn({ method: "GET" })
 
     const partnerId = membership.data.partner_id;
 
-    const [partner, tiers, revenue, earned, effective, referrals, ledger] = await Promise.all([
+    const [partner, tiers, revenue, earned, effective, referrals, ledger, payoutRuns] =
+      await Promise.all([
       supabase
         .from("partners")
-        .select("id, name, referral_code, contact_email, status, tier_override")
+        .select(
+          "id, name, referral_code, contact_email, status, tier_override, stripe_connect_account_id, stripe_connect_status",
+        )
         .eq("id", partnerId)
         .single(),
       supabase.from("partner_tiers").select("tier, name, min_lifetime_referred_usd, rate_pct").order("tier"),
@@ -113,11 +136,19 @@ export const getMyPartner = createServerFn({ method: "GET" })
       supabase
         .from("commission_ledger")
         .select(
-          "id, org_id, invoice_id, period_start, period_end, revenue_usd, rate_pct, commission_usd, status, created_at, paid_at",
+          "id, org_id, invoice_id, period_start, period_end, revenue_usd, rate_pct, commission_usd, status, created_at, paid_at, stripe_transfer_id, clawback_of",
         )
         .eq("partner_id", partnerId)
         .order("created_at", { ascending: false })
         .limit(200),
+      supabase
+        .from("partner_payouts")
+        .select(
+          "id, amount_usd, line_count, status, stripe_transfer_id, environment, error, created_at",
+        )
+        .eq("partner_id", partnerId)
+        .order("created_at", { ascending: false })
+        .limit(50),
     ]);
     if (partner.error) throw partner.error;
 
@@ -145,6 +176,19 @@ export const getMyPartner = createServerFn({ method: "GET" })
       status: c.status,
       createdAt: c.created_at,
       paidAt: c.paid_at,
+      transferId: c.stripe_transfer_id,
+      clawbackOf: c.clawback_of,
+    }));
+
+    const payouts: PayoutRun[] = (payoutRuns.data ?? []).map((p) => ({
+      id: p.id,
+      amountUsd: Number(p.amount_usd),
+      lineCount: p.line_count,
+      status: p.status as PayoutRun["status"],
+      transferId: p.stripe_transfer_id,
+      environment: p.environment,
+      error: p.error,
+      createdAt: p.created_at,
     }));
 
     const live = commissions.filter((c) => c.status !== "clawed_back");
@@ -166,6 +210,11 @@ export const getMyPartner = createServerFn({ method: "GET" })
         effectiveTier,
         overridden: partner.data.tier_override !== null,
         ratePct: current?.ratePct ?? 0,
+        payoutAccount: {
+          connected: Boolean(partner.data.stripe_connect_account_id),
+          status: partner.data
+            .stripe_connect_status as PartnerSummary["payoutAccount"]["status"],
+        },
         tiers: tierRows,
         nextTier: next,
         toNextTierUsd: next ? Math.max(0, next.minLifetimeReferredUsd - lifetimeRevenueUsd) : null,
@@ -177,6 +226,7 @@ export const getMyPartner = createServerFn({ method: "GET" })
         referredAt: o.referred_at,
       })),
       commissions,
+      payouts,
       totals: {
         earnedUsd: round2(earnedUsd),
         paidUsd: round2(paidUsd),
