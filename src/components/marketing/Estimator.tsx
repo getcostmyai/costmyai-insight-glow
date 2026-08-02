@@ -218,15 +218,15 @@ export function Estimator() {
                       className="group flex min-w-0 flex-1 flex-col gap-2 text-left"
                       aria-current={active ? "step" : undefined}
                     >
-                      <span
-                        className={`h-[3px] w-full rounded-full transition-all duration-500 ${
-                          active
-                            ? "fill-gradient-brand"
-                            : done
-                              ? "bg-saving/70"
-                              : "bg-border group-hover:bg-primary/25"
-                        }`}
-                      />
+                      <span className="relative block h-[3px] w-full overflow-hidden rounded-full bg-border transition-colors duration-300 group-hover:bg-primary/25">
+                        <span
+                          className={`absolute inset-y-0 left-0 rounded-full transition-[width,background-color,opacity] duration-[650ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                            active ? "fill-gradient-brand" : "bg-saving/70"
+                          }`}
+                          style={{ width: active || done ? "100%" : "0%", opacity: active || done ? 1 : 0 }}
+                        />
+                      </span>
+
                       <span
                         className={`truncate text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-300 ${
                           active
