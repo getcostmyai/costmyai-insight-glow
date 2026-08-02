@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as PartnersRouteImport } from './routes/partners'
@@ -61,6 +62,11 @@ import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/p
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -319,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
@@ -366,6 +373,7 @@ export interface FileRoutesByTo {
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
@@ -467,6 +476,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/press'
     | '/pricing'
+    | '/privacy'
     | '/sitemap.xml'
     | '/billing'
     | '/partner'
@@ -514,6 +524,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/press'
     | '/pricing'
+    | '/privacy'
     | '/sitemap.xml'
     | '/billing'
     | '/partner'
@@ -563,6 +574,7 @@ export interface FileRouteTypes {
     | '/partners'
     | '/press'
     | '/pricing'
+    | '/privacy'
     | '/sitemap.xml'
     | '/_authenticated/billing'
     | '/_authenticated/partner'
@@ -614,6 +626,7 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   PressRoute: typeof PressRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
@@ -641,6 +654,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1063,6 +1083,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   PressRoute: PressRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
