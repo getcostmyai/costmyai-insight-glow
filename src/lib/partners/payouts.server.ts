@@ -69,7 +69,11 @@ export async function startConnectOnboarding(
     let accountId = partner.stripe_connect_account_id;
 
     // An account created in one environment is meaningless in the other.
-    if (accountId && partner.stripe_connect_environment && partner.stripe_connect_environment !== env) {
+    if (
+      accountId &&
+      partner.stripe_connect_environment &&
+      partner.stripe_connect_environment !== env
+    ) {
       return {
         error: `This payout account belongs to the ${partner.stripe_connect_environment} environment.`,
       };

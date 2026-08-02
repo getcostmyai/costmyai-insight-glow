@@ -117,39 +117,42 @@ export const getMyPartner = createServerFn({ method: "GET" })
 
     const [partner, tiers, revenue, earned, effective, referrals, ledger, payoutRuns] =
       await Promise.all([
-      supabase
-        .from("partners")
-        .select(
-          "id, name, referral_code, contact_email, status, tier_override, stripe_connect_account_id, stripe_connect_status",
-        )
-        .eq("id", partnerId)
-        .single(),
-      supabase.from("partner_tiers").select("tier, name, min_lifetime_referred_usd, rate_pct").order("tier"),
-      supabase.rpc("partner_lifetime_revenue", { _partner_id: partnerId }),
-      supabase.rpc("partner_earned_tier", { _partner_id: partnerId }),
-      supabase.rpc("partner_effective_tier", { _partner_id: partnerId }),
-      // Attribution is readable to the partner, but a referred workspace's
-      // spend never is. The partner is not a member of those workspaces and
-      // cannot read the table at all — this function returns the three facts
-      // they are entitled to and nothing else.
-      supabase.rpc("partner_referrals", { _partner_id: partnerId }),
-      supabase
-        .from("commission_ledger")
-        .select(
-          "id, org_id, invoice_id, period_start, period_end, revenue_usd, rate_pct, commission_usd, status, created_at, paid_at, stripe_transfer_id, clawback_of",
-        )
-        .eq("partner_id", partnerId)
-        .order("created_at", { ascending: false })
-        .limit(200),
-      supabase
-        .from("partner_payouts")
-        .select(
-          "id, amount_usd, line_count, status, stripe_transfer_id, environment, error, created_at",
-        )
-        .eq("partner_id", partnerId)
-        .order("created_at", { ascending: false })
-        .limit(50),
-    ]);
+        supabase
+          .from("partners")
+          .select(
+            "id, name, referral_code, contact_email, status, tier_override, stripe_connect_account_id, stripe_connect_status",
+          )
+          .eq("id", partnerId)
+          .single(),
+        supabase
+          .from("partner_tiers")
+          .select("tier, name, min_lifetime_referred_usd, rate_pct")
+          .order("tier"),
+        supabase.rpc("partner_lifetime_revenue", { _partner_id: partnerId }),
+        supabase.rpc("partner_earned_tier", { _partner_id: partnerId }),
+        supabase.rpc("partner_effective_tier", { _partner_id: partnerId }),
+        // Attribution is readable to the partner, but a referred workspace's
+        // spend never is. The partner is not a member of those workspaces and
+        // cannot read the table at all — this function returns the three facts
+        // they are entitled to and nothing else.
+        supabase.rpc("partner_referrals", { _partner_id: partnerId }),
+        supabase
+          .from("commission_ledger")
+          .select(
+            "id, org_id, invoice_id, period_start, period_end, revenue_usd, rate_pct, commission_usd, status, created_at, paid_at, stripe_transfer_id, clawback_of",
+          )
+          .eq("partner_id", partnerId)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase
+          .from("partner_payouts")
+          .select(
+            "id, amount_usd, line_count, status, stripe_transfer_id, environment, error, created_at",
+          )
+          .eq("partner_id", partnerId)
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
     if (partner.error) throw partner.error;
 
     const tierRows: PartnerTier[] = (tiers.data ?? []).map((t) => ({
@@ -212,8 +215,7 @@ export const getMyPartner = createServerFn({ method: "GET" })
         ratePct: current?.ratePct ?? 0,
         payoutAccount: {
           connected: Boolean(partner.data.stripe_connect_account_id),
-          status: partner.data
-            .stripe_connect_status as PartnerSummary["payoutAccount"]["status"],
+          status: partner.data.stripe_connect_status as PartnerSummary["payoutAccount"]["status"],
         },
         tiers: tierRows,
         nextTier: next,
@@ -307,4 +309,101 @@ export const setPartnerTier = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { effectiveTier: Number(tier) };
+  });
+
+/* ---------------- payouts ---------------- */
+
+type Env = "sandbox" | "live";
+function validEnv(value: unknown): Env {
+  if (value !== "sandbox" && value !== "live") throw new Error("Unknown payment environment");
+  return value;
+}
+
+/**
+ * Opens the provider's own hosted onboarding. Bank and tax details are entered
+ * with the provider, never in a CostMyAI form, so we never hold them.
+ */
+export const startPayoutOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { partnerId: string; returnUrl: string; environment: Env }) => {
+    if (!UUID.test(data?.partnerId ?? "")) throw new Error("Partner not found");
+    if (typeof data?.returnUrl !== "string" || !data.returnUrl.startsWith("http")) {
+      throw new Error("Invalid return URL");
+    }
+    return {
+      partnerId: data.partnerId,
+      returnUrl: data.returnUrl,
+      environment: validEnv(data.environment),
+    };
+  })
+  .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
+    // Only an owner of this partner account may attach a payout destination.
+    const { data: isOwner, error } = await context.supabase.rpc("is_partner_owner", {
+      _partner_id: data.partnerId,
+    });
+    if (error) throw error;
+    if (!isOwner) throw new Error("Only a partner owner can set up the payout account.");
+
+    const { startConnectOnboarding } = await import("./partners/payouts.server");
+    return startConnectOnboarding(data.partnerId, data.environment, data.returnUrl);
+  });
+
+/** Re-reads the provider's verification state on demand. */
+export const refreshPayoutAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { partnerId: string; environment: Env }) => {
+    if (!UUID.test(data?.partnerId ?? "")) throw new Error("Partner not found");
+    return { partnerId: data.partnerId, environment: validEnv(data.environment) };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: isMember, error } = await context.supabase.rpc("is_partner_member", {
+      _partner_id: data.partnerId,
+    });
+    if (error) throw error;
+    if (!isMember) throw new Error("Partner not found");
+
+    const { refreshConnectStatus } = await import("./partners/payouts.server");
+    return refreshConnectStatus(data.partnerId, data.environment);
+  });
+
+async function assertPlatformAdmin(supabase: {
+  rpc: (fn: "is_platform_admin") => Promise<{ data: unknown; error: unknown }>;
+}) {
+  const { data, error } = await supabase.rpc("is_platform_admin");
+  if (error) throw error;
+  if (!data) throw new Error("Not found");
+}
+
+/** What is owed right now, and who cannot be paid yet and why. */
+export const listPayoutQueue = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: Env }) => ({ environment: validEnv(data?.environment) }))
+  .handler(async ({ data, context }) => {
+    await assertPlatformAdmin(context.supabase as never);
+    const { readPayoutQueue } = await import("./partners/payouts.server");
+    return readPayoutQueue(data.environment);
+  });
+
+/**
+ * Manually triggered payout run. Partners whose payout account is not verified
+ * are returned with a reason and their lines stay unpaid — never dropped.
+ */
+export const runPayouts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { partnerIds: string[]; environment: Env }) => {
+    const ids = Array.isArray(data?.partnerIds) ? data.partnerIds : [];
+    if (!ids.length || ids.length > 100) throw new Error("Select at least one partner");
+    if (ids.some((id) => !UUID.test(id))) throw new Error("Partner not found");
+    return { partnerIds: ids, environment: validEnv(data.environment) };
+  })
+  .handler(async ({ data, context }) => {
+    await assertPlatformAdmin(context.supabase as never);
+    const { runPayoutForPartner } = await import("./partners/payouts.server");
+    const results = [];
+    // Sequential on purpose: one transfer at a time is easier to reconcile than
+    // a burst that half-fails.
+    for (const partnerId of data.partnerIds) {
+      results.push(await runPayoutForPartner(partnerId, data.environment, context.userId));
+    }
+    return results;
   });
