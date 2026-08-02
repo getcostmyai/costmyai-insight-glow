@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy, Handshake, TrendingUp } from "lucide-react";
 
 import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
+import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 
 export const Route = createFileRoute("/_authenticated/partner")({
   head: () => ({
@@ -40,7 +41,7 @@ function PartnerPage() {
 }
 
 function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
-  const { partner, referrals, commissions, totals } = data;
+  const { partner, referrals, commissions, payouts, totals } = data;
   const paying = referrals.filter((r) => r.plan !== "compare").length;
 
   return (
@@ -82,6 +83,12 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
             sub={`${paying} on a paid level`}
           />
         </section>
+
+        <PayoutAccountCard
+          partner={partner}
+          payouts={payouts}
+          outstandingUsd={totals.outstandingUsd}
+        />
 
         <TierProgress partner={partner} />
 
@@ -151,6 +158,11 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
                       </td>
                       <td className="py-2 text-xs capitalize text-muted-foreground">
                         {c.status.replace("_", " ")}
+                        {c.transferId ? (
+                          <span className="ml-2 font-mono text-[11px] normal-case">
+                            {c.transferId}
+                          </span>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
