@@ -84,12 +84,17 @@ export function ForecastDiagram() {
 
   const at = (i: number) => stage >= i;
 
-  const padX = 64;
-  const padY = 48;
+  // On narrow screens the SVG is scaled down hard, so a wide/short viewBox makes
+  // every label unreadable. Use a taller box with tighter padding there, which
+  // scales the same type up relative to the available width.
+  const narrow = useNarrow();
+  const padX = narrow ? 38 : 64;
+  const padY = narrow ? 44 : 48;
   const width = 900;
-  const height = 340;
+  const height = narrow ? 480 : 340;
   const plotW = width - padX * 2;
   const plotH = height - padY * 2;
+
 
   const xForDay = (d: number) => padX + (d / (DAYS - 1)) * plotW;
   const yForSpend = (s: number) => padY + plotH - (s / MAX_SPEND) * plotH;
