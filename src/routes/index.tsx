@@ -21,6 +21,7 @@ import { ForecastDiagram } from "@/components/marketing/ForecastDiagram";
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { FAQ_ITEMS, HOMEPAGE_FAQ_IDS, findFaqItem } from "@/lib/faq/questions";
 import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 
@@ -656,29 +657,10 @@ function Neutrality() {
 
 /* -------------------------------- 10 · faq ------------------------------- */
 
-function Faq({ stats }: { stats: MarketingStats }) {
-  const items = [
-    {
-      q: "Do you see our prompts or hold our provider keys?",
-      a: "No, and not as a policy — as an architecture. The Verification Engine runs in your environment and holds your keys there. What reaches CostMyAI is aggregate metadata: model name, host, task class, token counts, latency, status. The ingest schema rejects prompt or completion content outright, so there is no path for it to arrive even by mistake.",
-    },
-    {
-      q: "How is a saving actually calculated?",
-      a: "We reprice your own observed token mix against every host serving that model, using one cost function shared by the product and this website. For a different model, its benchmark score must clear your current model's score minus that evaluation's own measured margin — and the cheapest option clearing the bar wins, never the highest-scoring or a partner's.",
-    },
-    {
-      q: "Which providers and models are covered?",
-      a: `Currently ${stats.modelCount} models across ${stats.providerCount} providers, with prices read from live public feeds. Coverage is stated live on this page rather than as a marketing round number, and a provider only appears once we hold a verified price row for it.`,
-    },
-    {
-      q: "Does our application code have to change?",
-      a: "One environment variable. Your application points at the Verification Engine endpoint instead of the provider's, and requests forward unchanged. If CostMyAI goes down, your inference does not — the engine keeps forwarding.",
-    },
-    {
-      q: "What happens when no saving can be verified?",
-      a: "You get a refusal that names the reason: the benchmark cannot separate the models on that task class, nothing cheaper clears the quality bar, or the measurement simply does not exist yet. We do not fill that gap with an alternative we cannot prove. Competitors quote a headline cost reduction citing their own internal report; we would rather show you the switch we refused to certify.",
-    },
-  ];
+function Faq(_props: { stats: MarketingStats }) {
+  const items = HOMEPAGE_FAQ_IDS.map((id) => findFaqItem(id)).filter(
+    (i): i is NonNullable<typeof i> => Boolean(i),
+  );
 
   const [open, setOpen] = useState(-1);
 
@@ -690,7 +672,7 @@ function Faq({ stats }: { stats: MarketingStats }) {
           {items.map((item, i) => {
             const isOpen = open === i;
             return (
-              <Reveal key={item.q} delay={i * 70} className="border-t border-border">
+              <Reveal key={item.id} delay={i * 70} className="border-t border-border">
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? -1 : i)}
@@ -712,14 +694,30 @@ function Faq({ stats }: { stats: MarketingStats }) {
                     isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
-                  <p className="overflow-hidden pb-7 pl-[3.1rem] pr-10 text-base leading-relaxed text-muted-foreground">
-                    {item.a}
-                  </p>
+                  <div className="overflow-hidden pb-7 pl-[3.1rem] pr-10">
+                    <p className="text-base leading-relaxed text-muted-foreground">{item.a}</p>
+                    <Link
+                      to="/faq"
+                      hash={item.id}
+                      className="mt-4 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                    >
+                      Read more →
+                    </Link>
+                  </div>
                 </div>
               </Reveal>
             );
           })}
           <div className="border-t border-border" />
+
+          <div className="mt-10 text-center">
+            <Link
+              to="/faq"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
+            >
+              See all {FAQ_ITEMS.length} questions →
+            </Link>
+          </div>
         </div>
       </div>
     </section>
