@@ -1,72 +1,85 @@
 /**
- * Off-platform export of the five tables that cannot be reconstructed:
- * organizations, subscriptions, commission_ledger, monthly_kpi_snapshot,
- * price_history.
+ * Off-platform disaster-recovery restore.
  *
- * Context that makes this the primary safety net rather than defence in depth:
- * the platform's own snapshots are ~14 days, daily, restore-in-place over
- * production, and irreversible. Nothing older than two weeks is recoverable and
- * no restore can be tested without destroying current data. This mechanism can
- * be restored into an independent Postgres and therefore actually verified.
+ * Every run takes a full logical export of the five tables that cannot be
+ * reconstructed from anywhere else (organizations, subscriptions,
+ * commission_ledger, monthly_kpi_snapshot, price_history) and restores it into
+ * an independent Neon project, costmyai-dr-backup, whose credentials are shared
+ * with neither this platform nor the costmyai-ledger production project.
  *
- * The export is a real logical export: types, trigger functions, table
- * structure, constraints, indexes, every row, and the append-only triggers
- * last, so a restore rebuilds the guarantee and not just the data.
+ * Why a live database instead of dump files in object storage: the platform's
+ * own snapshots are ~14 days, daily, restore-in-place over production, and
+ * irreversible, and there is no self-serve point-in-time recovery. A Neon copy
+ * is independently restorable AND branchable to a point in time, which makes the
+ * restore drill possible at all. Retention is therefore Neon's own history on
+ * that project rather than a rolling window of files.
+ *
+ * The export carries types, trigger functions, table structure, constraints,
+ * indexes, rows, and the append-only triggers last, so the copy inherits the
+ * guarantee and not just the data.
  */
 
-import { readS3Config, putObject, listObjects, deleteObject } from "./s3.server";
+import {
+  readNeonConfig,
+  applyDump,
+  readTargetCounts,
+  readTargetTriggers,
+  DR_PROJECT_NAME,
+  type TriggerRow,
+} from "./neon.server";
 
-export const RETENTION_DAYS = 90;
-export const EXPORT_PREFIX = "costmyai/postgres/";
+export const DR_TABLES = [
+  "organizations",
+  "subscriptions",
+  "commission_ledger",
+  "monthly_kpi_snapshot",
+  "price_history",
+] as const;
+
+/** Tables whose append-only trigger must survive the restore. */
+export const APPEND_ONLY_TABLES = ["monthly_kpi_snapshot", "price_history"] as const;
 
 export type ExportResult = {
   ok: boolean;
-  objectKey?: string;
-  bytes?: number;
+  project?: string;
   destination?: string;
+  statements?: number;
+  bytes?: number;
   rowCounts?: Record<string, number>;
-  prunedKeys?: number;
+  targetRowCounts?: Record<string, number>;
+  countsMatch?: boolean;
+  triggersOk?: boolean;
+  triggers?: TriggerRow[];
   startedAt: string;
   finishedAt: string;
   error?: string;
 };
 
-function objectKeyFor(now: Date): string {
-  const iso = now.toISOString().replace(/[:.]/g, "-");
-  return `${EXPORT_PREFIX}${iso.slice(0, 10)}/costmyai-${iso.slice(0, 19)}Z.sql.gz`;
+function countsMatch(a: Record<string, number>, b: Record<string, number>): boolean {
+  return DR_TABLES.every((t) => Number(a[t] ?? -1) === Number(b[t] ?? -2));
 }
 
-async function gzip(text: string): Promise<Uint8Array> {
-  const stream = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
-  const buf = await new Response(stream).arrayBuffer();
-  return new Uint8Array(buf);
-}
-
-/** Drops exports older than RETENTION_DAYS. Never touches anything newer. */
-async function prune(cfg: ReturnType<typeof readS3Config>): Promise<number> {
-  if (!cfg) return 0;
-  const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  const keys = await listObjects(cfg, EXPORT_PREFIX);
-  let pruned = 0;
-  for (const key of keys) {
-    const day = key.slice(EXPORT_PREFIX.length, EXPORT_PREFIX.length + 10);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
-    if (Date.parse(day + "T00:00:00Z") < cutoff) {
-      await deleteObject(cfg, key);
-      pruned += 1;
-    }
-  }
-  return pruned;
+function triggersPresent(rows: TriggerRow[]): boolean {
+  return APPEND_ONLY_TABLES.every((t) =>
+    rows.some((r) => r.table_name === t && r.enabled),
+  );
 }
 
 export async function runBackupExport(): Promise<ExportResult> {
   const startedAt = new Date();
-  const cfg = readS3Config();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  let cfg: ReturnType<typeof readNeonConfig> = null;
+  let configError: string | null = null;
+  try {
+    cfg = readNeonConfig();
+  } catch (err) {
+    configError = err instanceof Error ? err.message : String(err);
+  }
 
   const run = await supabaseAdmin
     .from("backup_export_runs")
-    .insert({ started_at: startedAt.toISOString(), destination: cfg?.bucket ?? null })
+    .insert({ started_at: startedAt.toISOString(), destination: cfg?.host ?? null })
     .select("id")
     .single();
   const runId = run.data?.id as string | undefined;
@@ -79,7 +92,7 @@ export async function runBackupExport(): Promise<ExportResult> {
         .update({ finished_at: finishedAt.toISOString(), ok: false, error })
         .eq("id", runId);
     }
-    console.error("backup export failed:", error);
+    console.error("DR restore failed:", error);
     return {
       ok: false,
       error,
@@ -88,9 +101,10 @@ export async function runBackupExport(): Promise<ExportResult> {
     };
   };
 
+  if (configError) return fail(configError);
   if (!cfg) {
     return fail(
-      "Off-platform destination is not configured. Set BACKUP_S3_ENDPOINT, BACKUP_S3_BUCKET, BACKUP_S3_ACCESS_KEY_ID and BACKUP_S3_SECRET_ACCESS_KEY.",
+      `Off-platform destination is not configured. Set NEON_DR_DATABASE_URL to the connection string of the ${DR_PROJECT_NAME} Neon project.`,
     );
   }
 
@@ -103,43 +117,47 @@ export async function runBackupExport(): Promise<ExportResult> {
     const sql = dump.data as unknown as string;
     if (!sql || sql.length < 100) return fail("export produced an empty payload");
 
-    const body = await gzip(sql);
-    const objectKey = objectKeyFor(startedAt);
-    await putObject(cfg, objectKey, body);
+    const statements = await applyDump(cfg, sql, DR_TABLES);
+    const targetRowCounts = await readTargetCounts(cfg, DR_TABLES);
+    const triggers = await readTargetTriggers(cfg);
 
-    let prunedKeys = 0;
-    try {
-      prunedKeys = await prune(cfg);
-    } catch (err) {
-      // A pruning failure must never make a good export look failed.
-      console.error("backup pruning failed:", err instanceof Error ? err.message : String(err));
-    }
+    const rowCounts = counts.data as unknown as Record<string, number>;
+    const match = countsMatch(rowCounts, targetRowCounts);
+    const triggersOk = triggersPresent(triggers);
 
     const finishedAt = new Date();
-    const rowCounts = counts.data as unknown as Record<string, number>;
     if (runId) {
       await supabaseAdmin
         .from("backup_export_runs")
         .update({
           finished_at: finishedAt.toISOString(),
-          ok: true,
-          object_key: objectKey,
-          bytes: body.byteLength,
+          ok: match && triggersOk,
+          object_key: `${DR_PROJECT_NAME}/${cfg.database}`,
+          bytes: sql.length,
+          statements,
           row_counts: rowCounts,
-          pruned_keys: prunedKeys,
+          target_row_counts: targetRowCounts,
+          counts_match: match,
+          triggers_ok: triggersOk,
+          error: match && triggersOk ? null : "restored copy did not verify",
         })
         .eq("id", runId);
     }
 
     return {
-      ok: true,
-      objectKey,
-      bytes: body.byteLength,
-      destination: cfg.bucket,
+      ok: match && triggersOk,
+      project: DR_PROJECT_NAME,
+      destination: cfg.host,
+      statements,
+      bytes: sql.length,
       rowCounts,
-      prunedKeys,
+      targetRowCounts,
+      countsMatch: match,
+      triggersOk,
+      triggers,
       startedAt: startedAt.toISOString(),
       finishedAt: finishedAt.toISOString(),
+      ...(match && triggersOk ? {} : { error: "restored copy did not verify" }),
     };
   } catch (err) {
     return fail(err instanceof Error ? err.message : String(err));
