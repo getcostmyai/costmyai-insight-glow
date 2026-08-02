@@ -28,8 +28,6 @@ import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.ind
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
-import { Route as LegalTermsRouteImport } from './routes/legal/terms'
-import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
 import { Route as EmbedIntelligenceWidgetRouteImport } from './routes/embed/intelligence-widget'
@@ -153,16 +151,6 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
   id: '/partners_/apply',
   path: '/partners/apply',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalTermsRoute = LegalTermsRouteImport.update({
-  id: '/legal/terms',
-  path: '/legal/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
-  id: '/legal/privacy',
-  path: '/legal/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
@@ -355,8 +343,6 @@ export interface FileRoutesByFullPath {
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
-  '/legal/privacy': typeof LegalPrivacyRoute
-  '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -404,8 +390,6 @@ export interface FileRoutesByTo {
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
-  '/legal/privacy': typeof LegalPrivacyRoute
-  '/legal/terms': typeof LegalTermsRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
@@ -458,8 +442,6 @@ export interface FileRoutesById {
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
-  '/legal/privacy': typeof LegalPrivacyRoute
-  '/legal/terms': typeof LegalTermsRoute
   '/partners_/apply': typeof PartnersApplyRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -512,8 +494,6 @@ export interface FileRouteTypes {
     | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
-    | '/legal/privacy'
-    | '/legal/terms'
     | '/partners/apply'
     | '/blog/'
     | '/demo/'
@@ -561,8 +541,6 @@ export interface FileRouteTypes {
     | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
-    | '/legal/privacy'
-    | '/legal/terms'
     | '/partners/apply'
     | '/blog'
     | '/demo'
@@ -614,8 +592,6 @@ export interface FileRouteTypes {
     | '/embed/intelligence-widget'
     | '/intelligence/$month'
     | '/legal/methodology'
-    | '/legal/privacy'
-    | '/legal/terms'
     | '/partners_/apply'
     | '/blog/'
     | '/demo/'
@@ -657,8 +633,6 @@ export interface RootRouteChildren {
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
-  LegalPrivacyRoute: typeof LegalPrivacyRoute
-  LegalTermsRoute: typeof LegalTermsRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
@@ -806,20 +780,6 @@ declare module '@tanstack/react-router' {
       path: '/partners/apply'
       fullPath: '/partners/apply'
       preLoaderRoute: typeof PartnersApplyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/terms': {
-      id: '/legal/terms'
-      path: '/legal/terms'
-      fullPath: '/legal/terms'
-      preLoaderRoute: typeof LegalTermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal/privacy': {
-      id: '/legal/privacy'
-      path: '/legal/privacy'
-      fullPath: '/legal/privacy'
-      preLoaderRoute: typeof LegalPrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/methodology': {
@@ -1130,8 +1090,6 @@ const rootRouteChildren: RootRouteChildren = {
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
-  LegalPrivacyRoute: LegalPrivacyRoute,
-  LegalTermsRoute: LegalTermsRoute,
   PartnersApplyRoute: PartnersApplyRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
