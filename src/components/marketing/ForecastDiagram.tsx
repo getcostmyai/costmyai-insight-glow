@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Reveal } from "@/components/marketing/Reveal";
+import { CountUp, Reveal } from "@/components/marketing/Reveal";
 
 /**
  * A read-only visual of how a month-end forecast is built.
  *
- * It shows the split between what is already known (month-to-date, solid),
- * what is projected from the trailing pattern (dashed), and the honest
- * range that becomes the final forecast. No weights or coefficients are
- * exposed — only the shape of the mechanism.
+ * Reading order is deliberate: the answer (the month-end range) lands first,
+ * then the evidence behind it appears in sequence — the known month-to-date
+ * curve, the trailing projected run, and finally the "Today" split that
+ * separates the two. No weights or coefficients are exposed, only the shape
+ * of the mechanism.
  */
 
 const DAYS = 30;
@@ -40,27 +41,65 @@ const FORECAST_RANGE = [FORECAST_POINT * 0.955, FORECAST_POINT * 1.045];
 
 const MAX_SPEND = FORECAST_RANGE[1] * 1.12;
 
+const usd = (n: number) =>
+  `$${Math.round(n).toLocaleString("en-GB")}`;
+
+/** Staged choreography: range → known → projected → split. */
+const STAGE_DELAYS = [120, 700, 1200, 1650];
+
+function useStages(active: boolean) {
+  const [stage, setStage] = useState(-1);
+  useEffect(() => {
+    if (!active) return;
+    const timers = STAGE_DELAYS.map((d, i) => setTimeout(() => setStage((s) => Math.max(s, i)), d));
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+  return stage;
+}
+
 export function ForecastDiagram() {
-  const [mounted, setMounted] = useState(false);
-  const svgRef = useRef<SVGSVGElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(false);
+  const stage = useStages(active);
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 150);
-    return () => clearTimeout(t);
+    const el = hostRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setActive(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setActive(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3, rootMargin: "0px 0px -8% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
-  const padX = 56;
-  const padY = 40;
+  const at = (i: number) => stage >= i;
+
+  const padX = 64;
+  const padY = 48;
   const width = 900;
-  const height = 320;
+  const height = 340;
   const plotW = width - padX * 2;
   const plotH = height - padY * 2;
 
   const xForDay = (d: number) => padX + (d / (DAYS - 1)) * plotW;
   const yForSpend = (s: number) => padY + plotH - (s / MAX_SPEND) * plotH;
 
-  const actualPath = ACTUAL_CUMULATIVE.map((v, i) => `${i === 0 ? "M" : "L"} ${xForDay(i)} ${yForSpend(v)}`).join(" ");
-  const projectedPath = PROJECTED_CUMULATIVE.map((v, i) => `${i === 0 ? "M" : "L"} ${xForDay(TODAY - 1 + i)} ${yForSpend(v)}`).join(" ");
+  const actualPath = ACTUAL_CUMULATIVE.map(
+    (v, i) => `${i === 0 ? "M" : "L"} ${xForDay(i)} ${yForSpend(v)}`,
+  ).join(" ");
+  const projectedPath = PROJECTED_CUMULATIVE.map(
+    (v, i) => `${i === 0 ? "M" : "L"} ${xForDay(TODAY - 1 + i)} ${yForSpend(v)}`,
+  ).join(" ");
 
   const areaActual = `
     M ${xForDay(0)} ${yForSpend(0)}
@@ -80,52 +119,71 @@ export function ForecastDiagram() {
   const rangeTop = yForSpend(FORECAST_RANGE[1]);
   const rangeBottom = yForSpend(FORECAST_RANGE[0]);
   const rangeCenter = yForSpend(FORECAST_POINT);
+  const bandX = xForDay(DAYS - 1) - 40;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div ref={hostRef} className="mx-auto max-w-5xl">
+      {/* Answer first: the month-end range, in display type. */}
       <Reveal>
         <div className="text-center">
-          <p className="num text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
-            How the forecast is built
+          <p className="num text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+            Month-end forecast
           </p>
-          <h3 className="mt-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
-            Known spend. Projected days. Honest range.
+          <p className="num mt-5 text-[clamp(3rem,9vw,5.5rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-saving">
+            <CountUp value={FORECAST_POINT} format={usd} />
+          </p>
+          <p className="num mt-4 text-sm font-medium tracking-[0.04em] text-muted-foreground">
+            range {usd(FORECAST_RANGE[0])} – {usd(FORECAST_RANGE[1])} · day {TODAY} of {DAYS}
+          </p>
+          <h3 className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            Landed before the invoice does. Here is everything that number is built from.
           </h3>
         </div>
       </Reveal>
 
-      <Reveal delay={120} className="mt-12">
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-background/50">
+      <Reveal delay={120} className="mt-14">
+        <div className="relative">
           <svg
-            ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}
-            className="w-full select-none"
+            className="w-full select-none overflow-visible"
             preserveAspectRatio="xMidYMid meet"
           >
             <defs>
               <linearGradient id="knownGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.05" />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.30" />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
               </linearGradient>
               <linearGradient id="projectedGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary-glow)" stopOpacity="0.28" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.04" />
+                <stop offset="0%" stopColor="var(--primary-glow)" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
               </linearGradient>
-              <pattern id="projectedHatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="10" stroke="var(--primary)" strokeOpacity="0.10" strokeWidth="1" />
+              <pattern
+                id="projectedHatch"
+                width="10"
+                height="10"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <line x1="0" y1="0" x2="0" y2="10" stroke="var(--primary)" strokeOpacity="0.09" strokeWidth="1" />
               </pattern>
             </defs>
 
-            {/* Y-axis hairline + labels */}
-            <line x1={padX} y1={padY} x2={padX} y2={padY + plotH} stroke="var(--border)" strokeWidth="1" />
+            {/* Baseline + minimal y ticks (hairline only, no boxed frame) */}
             {[0, 2000, 4000, 6000].map((v) => (
               <g key={v}>
-                <line x1={padX - 5} y1={yForSpend(v)} x2={padX} y2={yForSpend(v)} stroke="var(--border)" />
+                <line
+                  x1={padX}
+                  y1={yForSpend(v)}
+                  x2={padX + plotW}
+                  y2={yForSpend(v)}
+                  stroke="var(--border)"
+                  strokeOpacity={v === 0 ? 1 : 0.45}
+                />
                 <text
-                  x={padX - 10}
+                  x={padX - 12}
                   y={yForSpend(v) + 4}
                   textAnchor="end"
-                  className="text-[10px] font-medium tracking-[0.05em]"
+                  className="num text-[10px] font-medium tracking-[0.08em]"
                   style={{ fill: "var(--muted-foreground)" }}
                 >
                   ${(v / 1000).toFixed(0)}k
@@ -133,52 +191,66 @@ export function ForecastDiagram() {
               </g>
             ))}
 
-            {/* X-axis hairline */}
-            <line x1={padX} y1={padY + plotH} x2={padX + plotW} y2={padY + plotH} stroke="var(--border)" strokeWidth="1" />
-
-            {/* Day ticks */}
             {[0, 7, 14, 21, 29].map((d) => (
-              <g key={d}>
-                <line x1={xForDay(d)} y1={padY + plotH} x2={xForDay(d)} y2={padY + plotH + 5} stroke="var(--border)" />
-                <text
-                  x={xForDay(d)}
-                  y={padY + plotH + 22}
-                  textAnchor="middle"
-                  className="text-[11px] font-medium uppercase tracking-[0.1em]"
-                  style={{ fill: "var(--muted-foreground)" }}
-                >
-                  Day {d + 1}
-                </text>
-              </g>
+              <text
+                key={d}
+                x={xForDay(d)}
+                y={padY + plotH + 24}
+                textAnchor="middle"
+                className="num text-[10px] font-medium uppercase tracking-[0.16em]"
+                style={{ fill: "var(--muted-foreground)" }}
+              >
+                {d + 1}
+              </text>
             ))}
 
-            {/* Projected area (under the dashed line) */}
+            {/* STAGE 0 — the forecast range lands first. */}
+            <g
+              style={{
+                opacity: at(0) ? 1 : 0,
+                transition: "opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            >
+              <rect
+                x={bandX}
+                y={rangeTop}
+                width="80"
+                height={Math.max(18, rangeBottom - rangeTop)}
+                rx="10"
+                fill="var(--saving-soft)"
+                stroke="var(--saving)"
+                strokeWidth="1.5"
+                style={{
+                  transform: `scaleY(${at(0) ? 1 : 0.2})`,
+                  transformOrigin: `${xForDay(DAYS - 1)}px ${rangeCenter}px`,
+                  transition: "transform 0.9s cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+              />
+              <circle
+                cx={xForDay(DAYS - 1)}
+                cy={rangeCenter}
+                r="6"
+                fill="var(--saving)"
+                stroke="var(--background)"
+                strokeWidth="2.5"
+              />
+              <text
+                x={bandX - 14}
+                y={rangeCenter + 4}
+                textAnchor="end"
+                className="num text-[12px] font-semibold uppercase tracking-[0.14em]"
+                style={{ fill: "var(--saving)" }}
+              >
+                Forecast
+              </text>
+            </g>
+
+            {/* STAGE 1 — known month-to-date. */}
             <path
-              d={areaProjected}
-              fill="url(#projectedGradient)"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transition: "opacity 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s",
-              }}
+              d={areaActual}
+              fill="url(#knownGradient)"
+              style={{ opacity: at(1) ? 1 : 0, transition: "opacity 0.9s 0.05s" }}
             />
-
-            {/* Projected area band (hatch overlay) */}
-            <rect
-              x={xForDay(TODAY - 1)}
-              y={padY}
-              width={xForDay(DAYS - 1) - xForDay(TODAY - 1)}
-              height={plotH}
-              fill="url(#projectedHatch)"
-              style={{
-                opacity: mounted ? 0.6 : 0,
-                transition: "opacity 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s",
-              }}
-            />
-
-            {/* Known area */}
-            <path d={areaActual} fill="url(#knownGradient)" style={{ opacity: mounted ? 1 : 0, transition: "opacity 1s" }} />
-
-            {/* Known spend line */}
             <path
               d={actualPath}
               fill="none"
@@ -187,167 +259,102 @@ export function ForecastDiagram() {
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                strokeDasharray: mounted ? "none" : "1200",
-                strokeDashoffset: mounted ? 0 : 1200,
-                transition: "stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s",
+                strokeDasharray: 1400,
+                strokeDashoffset: at(1) ? 0 : 1400,
+                transition: "stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1)",
               }}
             />
 
-            {/* Projected spend line (dashed) */}
-            <path
-              d={projectedPath}
-              fill="none"
-              stroke="var(--primary-glow)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray="6 5"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transition: "opacity 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s",
-              }}
-            />
+            {/* STAGE 2 — trailing projected run. */}
+            <g style={{ opacity: at(2) ? 1 : 0, transition: "opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+              <path d={areaProjected} fill="url(#projectedGradient)" />
+              <rect
+                x={xForDay(TODAY - 1)}
+                y={padY}
+                width={xForDay(DAYS - 1) - xForDay(TODAY - 1)}
+                height={plotH}
+                fill="url(#projectedHatch)"
+              />
+              <path
+                d={projectedPath}
+                fill="none"
+                stroke="var(--primary-glow)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="6 5"
+              />
+            </g>
 
-            {/* Today marker */}
-            <line
-              x1={xForDay(TODAY - 1)}
-              y1={padY}
-              x2={xForDay(TODAY - 1)}
-              y2={padY + plotH}
-              stroke="var(--foreground)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-              style={{ opacity: mounted ? 0.5 : 0, transition: "opacity 1s" }}
-            />
-
-            {/* Forecast range band at month-end */}
-            <rect
-              x={xForDay(DAYS - 1) - 44}
-              y={rangeTop}
-              width="88"
-              height={Math.max(18, rangeBottom - rangeTop)}
-              rx="8"
-              fill="var(--saving-soft)"
-              stroke="var(--saving)"
-              strokeWidth="1.5"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transform: `scaleY(${mounted ? 1 : 0})`,
-                transformOrigin: `${xForDay(DAYS - 1)}px ${rangeCenter}px`,
-                transition: "opacity 0.8s 0.6s, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.5s",
-              }}
-            />
-
-            {/* Forecast point */}
-            <circle
-              cx={xForDay(DAYS - 1)}
-              cy={rangeCenter}
-              r="6"
-              fill="var(--saving)"
-              stroke="var(--background)"
-              strokeWidth="2.5"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transform: `scale(${mounted ? 1 : 0})`,
-                transformOrigin: `${xForDay(DAYS - 1)}px ${rangeCenter}px`,
-                transition: "opacity 0.5s 0.8s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.7s",
-              }}
-            />
-
-            {/* Forecast value label */}
-            <text
-              x={xForDay(DAYS - 1)}
-              y={rangeCenter - 22}
-              textAnchor="middle"
-              className="text-[13px] font-semibold tabular-nums tracking-tight"
-              style={{
-                fill: "var(--saving)",
-                opacity: mounted ? 1 : 0,
-                transition: "opacity 0.8s 1s",
-              }}
-            >
-              ~${Math.round(FORECAST_POINT / 1000)}k
-            </text>
-
-            {/* Today label */}
-            <text
-              x={xForDay(TODAY - 1) - 10}
-              y={padY + 18}
-              textAnchor="end"
-              className="text-[12px] font-semibold"
-              style={{ fill: "var(--foreground)", opacity: mounted ? 1 : 0, transition: "opacity 0.8s 0.2s" }}
-            >
-              Today
-            </text>
-
-            {/* Forecast side label */}
-            <text
-              x={xForDay(DAYS - 1) - 52}
-              y={rangeCenter - 6}
-              textAnchor="end"
-              className="text-[12px] font-semibold"
-              style={{
-                fill: "var(--saving)",
-                opacity: mounted ? 1 : 0,
-                transition: "opacity 0.8s 0.9s",
-              }}
-            >
-              Month-end forecast
-            </text>
-            <text
-              x={xForDay(DAYS - 1) - 52}
-              y={rangeCenter + 12}
-              textAnchor="end"
-              className="text-[11px]"
-              style={{
-                fill: "var(--muted-foreground)",
-                opacity: mounted ? 1 : 0,
-                transition: "opacity 0.8s 1s",
-              }}
-            >
-              point or range
-            </text>
+            {/* STAGE 3 — the Today split. */}
+            <g style={{ opacity: at(3) ? 1 : 0, transition: "opacity 0.7s" }}>
+              <line
+                x1={xForDay(TODAY - 1)}
+                y1={padY - 18}
+                x2={xForDay(TODAY - 1)}
+                y2={padY + plotH}
+                stroke="var(--foreground)"
+                strokeOpacity="0.5"
+                strokeWidth="1"
+                strokeDasharray="4 4"
+              />
+              <text
+                x={xForDay(TODAY - 1)}
+                y={padY - 26}
+                textAnchor="middle"
+                className="num text-[11px] font-semibold uppercase tracking-[0.16em]"
+                style={{ fill: "var(--foreground)" }}
+              >
+                Today
+              </text>
+            </g>
           </svg>
         </div>
       </Reveal>
 
-      <Reveal delay={220} className="mx-auto mt-10 max-w-3xl">
-        <div className="grid gap-6 border-t border-border pt-8 sm:grid-cols-3">
+      <Reveal delay={220} className="mx-auto mt-14 max-w-4xl">
+        <div className="grid gap-10 border-t border-border pt-10 sm:grid-cols-3">
           {[
             {
+              step: "01",
               label: "Known",
               value: "Month-to-date",
               body: "Every day already billed is a fixed measurement. It never moves.",
               marker: "solid",
             },
             {
+              step: "02",
               label: "Projected",
               value: "Remaining days",
               body: "Trailing usage shape is carried forward, damped so one spike cannot run away.",
               marker: "dashed",
             },
             {
+              step: "03",
               label: "Forecast",
               value: "Month-end",
-              body: "A single number when the data supports it; a range when that would be dishonest.",
+              body: "A single number when the data supports it. A range when that would be dishonest.",
               marker: "range",
             },
           ].map((item) => (
-            <div key={item.label} className="text-center sm:text-left">
-              <div className="flex items-center justify-center gap-2 sm:justify-start">
-                {item.marker === "solid" && <span className="h-2 w-8 rounded-full bg-primary" />}
+            <div key={item.label}>
+              <div className="flex items-center gap-3">
+                <span className="num text-[11px] font-medium tracking-[0.18em] text-muted-foreground/60">
+                  {item.step}
+                </span>
+                {item.marker === "solid" && <span className="h-[3px] w-8 rounded-full bg-primary" />}
                 {item.marker === "dashed" && (
-                  <span className="h-0.5 w-8 border-t-2 border-dashed border-primary-glow" />
+                  <span className="h-0 w-8 border-t-2 border-dashed border-primary-glow" />
                 )}
                 {item.marker === "range" && (
-                  <span className="h-3 w-5 rounded-sm bg-saving/30 ring-1 ring-saving" />
+                  <span className="h-3 w-6 rounded-sm bg-saving/30 ring-1 ring-saving" />
                 )}
-                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  {item.label}
-                </span>
               </div>
-              <p className="mt-3 text-lg font-semibold tracking-[-0.02em]">{item.value}</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {item.label}
+              </p>
+              <p className="mt-2 text-xl font-semibold tracking-[-0.03em]">{item.value}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
             </div>
           ))}
         </div>
