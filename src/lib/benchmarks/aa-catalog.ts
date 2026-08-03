@@ -5,6 +5,8 @@
  * and the margins the engine relies on can be verified independently of the feed.
  */
 
+import { AA_FIELDS, FIELD_SPECS } from "./task-ladder";
+
 export const AA_SUITE = "aa";
 
 /**
