@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, Handshake, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { INDUSTRIES, USE_CASES, type UseCase } from "@/lib/benchmark/taxonomy";
 import { acceptInvite, listMyInvites } from "@/lib/invites.functions";
 import { createWorkspace, listMyWorkspaces } from "@/lib/workspace.functions";
 import { suggestWorkspaceName, validateWorkspaceName } from "@/lib/workspace/naming";
