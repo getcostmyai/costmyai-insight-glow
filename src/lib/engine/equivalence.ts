@@ -85,6 +85,11 @@ export function buildScoreLookup(
   };
 }
 
+/** Human name of the instrument the ladder picked, for refusal and note copy. */
+function currentInstrumentLabel(resolution: LadderResolution): string {
+  return resolution.field ? FIELD_SPECS[resolution.field].label : "benchmark";
+}
+
 
 export interface EquivalenceResult {
   recommendations: Recommendation[];
