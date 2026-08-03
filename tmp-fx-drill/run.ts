@@ -37,13 +37,14 @@ async function main() {
   await stripe.customers.update(customer.id, {
     invoice_settings: { default_payment_method: pm.id },
   });
+  let invoice = await stripe.invoices.create({ customer: customer.id, auto_advance: false });
   await stripe.invoiceItems.create({
     customer: customer.id,
+    invoice: invoice.id!,
     amount: 49_900,
     currency: "usd",
     description: "CostMyAI Rightsize (FX drill)",
   });
-  let invoice = await stripe.invoices.create({ customer: customer.id, auto_advance: false });
   invoice = await stripe.invoices.finalizeInvoice(invoice.id!);
   if (invoice.status !== "paid") invoice = await stripe.invoices.pay(invoice.id!);
   log("invoice paid:", invoice.id, invoice.amount_paid, invoice.currency);
