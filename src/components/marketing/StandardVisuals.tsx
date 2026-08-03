@@ -342,18 +342,20 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
     <div className="mt-8">
       {/* The arithmetic, as a sentence made of numbers. */}
       <div className="flex flex-wrap items-end gap-x-4 gap-y-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
-        <Term label="leader scores" value={n2(winner.topScore)} />
+        <Term label="best model scores" value={n2(winner.topScore)} />
         <Op>−</Op>
-        <Term label="measured margin" value={`±${n2(winner.margin)}`} />
+        <Term label="how far the test can be off" value={`±${n2(winner.margin)}`} />
         <Op>=</Op>
-        <Term label="the bar" value={n2(winner.bar)} accent />
+        <Term label="the pass mark" value={n2(winner.bar)} accent />
       </div>
       <p className="mt-5 max-w-2xl text-[0.95rem] leading-relaxed text-muted-foreground">
-        Everything at or above <span className="num text-foreground">{n2(winner.bar)}</span> is
-        statistically indistinguishable from the leader on this evaluation.{" "}
+        Any model scoring <span className="num text-foreground">{n2(winner.bar)}</span> or higher is
+        close enough that this test cannot tell it apart from the best one.{" "}
         <span className="num text-foreground">{winner.qualifying}</span> model
-        {winner.qualifying === 1 ? "" : "s"} clear it — so price decides, and the cheapest one wins.
+        {winner.qualifying === 1 ? "" : "s"} pass, so price is the only thing left to decide, and the
+        cheapest one wins.
       </p>
+
 
       {/* The axis ------------------------------------------------------- */}
       <div className="relative mt-16 select-none">
