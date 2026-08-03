@@ -28,10 +28,11 @@ export const RUNGS: Rung[] = [
     n: 1,
     key: "compare",
     name: "Compare",
-    requirement: "Same model, cheaper host — identical weights, nothing to prove about quality.",
+    requirement:
+      "The exact same model, rented from a cheaper host. Identical weights, so quality cannot change.",
     proof: "Model + price",
     proofDetail:
-      "A resolved model identity and a live per-token price on every host serving those exact weights.",
+      "We know exactly which model you run, and the live per-token price at every host serving those same weights.",
     plan: "Free",
   },
   {
@@ -39,10 +40,10 @@ export const RUNGS: Rung[] = [
     key: "certify",
     name: "Certify",
     requirement:
-      "A different, cheaper model — only when it clears the leader's score minus that benchmark's own measured margin.",
+      "A different, cheaper model. Allowed only when its benchmark score is close enough to the best model that the test cannot tell them apart.",
     proof: "Benchmark + margin",
     proofDetail:
-      "A third-party score for the task class and the evaluation's published measurement margin. No margin, no claim.",
+      "An independent test score for this kind of task, plus how far that test can be off. No error margin, no claim.",
     plan: "Paid",
   },
   {
@@ -50,10 +51,10 @@ export const RUNGS: Rung[] = [
     key: "rightsize",
     name: "Rightsize",
     requirement:
-      "The model is larger than the work requires — detected from the real token and complexity profile, switched by you.",
+      "You are paying for a model bigger than the job needs. We spot it in your real traffic, you approve the switch.",
     proof: "Token + complexity profile",
     proofDetail:
-      "Observed input/output token mix and task complexity per workload, not a list-price assumption.",
+      "Your measured input and output token mix and how hard the tasks actually are, per workload. Not a guess from a price list.",
     plan: "Paid",
   },
   {
@@ -61,13 +62,14 @@ export const RUNGS: Rung[] = [
     key: "govern",
     name: "Govern",
     requirement:
-      "Certified switches applied unattended, with automatic rollback the moment the evidence stops holding.",
+      "Approved switches happen on their own, and undo themselves the moment the evidence stops holding.",
     proof: "Full evidence trail",
     proofDetail:
-      "Every autonomous action carries the price, the score, the margin and the rollback condition that authorised it.",
+      "Every automatic action stores the price, the score, the error margin and the condition that would reverse it.",
     plan: "Paid",
   },
 ];
+
 
 const PROOF_ICONS = {
   compare: Coins,
@@ -160,20 +162,20 @@ const QUESTIONS: Question[] = [
   {
     id: "attribution",
     prompt:
-      "Can you attribute last month's AI bill to individual workloads and models without opening a provider console?",
+      "Can you say what last month's AI bill was spent on, feature by feature and model by model, without logging into a provider dashboard?",
     options: [
-      { value: "yes", label: "Yes — attribution is a query" },
-      { value: "partly", label: "Partly — totals yes, per workload no" },
-      { value: "no", label: "No — I'd have to open the console" },
+      { value: "yes", label: "Yes, it is one query away" },
+      { value: "partly", label: "Partly: I know the total, not the split" },
+      { value: "no", label: "No, I would have to go digging" },
     ],
   },
   {
     id: "evidence",
-    prompt: "Was your last model change backed by a benchmark, or by an opinion?",
+    prompt: "Was your last model change based on a test result, or on a hunch?",
     options: [
-      { value: "benchmark", label: "A benchmark, with a stated margin" },
-      { value: "vibes", label: "A leaderboard glance or a team opinion" },
-      { value: "none", label: "We haven't changed a model" },
+      { value: "benchmark", label: "A benchmark, with a stated error margin" },
+      { value: "vibes", label: "A quick leaderboard look or a team opinion" },
+      { value: "none", label: "We have not changed a model yet" },
     ],
   },
 ];
@@ -190,7 +192,7 @@ function verdictFor(attribution: string, evidence: string): Verdict {
     return {
       rung: 0,
       title: "Below rung one",
-      body: "Without per-workload attribution there is nothing to compare, so no optimisation strategy can be evidenced yet. Instrument spend at the request level first — everything above depends on it.",
+      body: "If you cannot see which feature spent what, there is nothing to compare yet, so no saving can be proven. Start by measuring spend request by request. Everything above this rung depends on it.",
       cta: { to: "/pricing", label: "See what the free level covers" },
     };
   }
@@ -198,7 +200,7 @@ function verdictFor(attribution: string, evidence: string): Verdict {
     return {
       rung: 1,
       title: "Rung 1 — Compare",
-      body: "You can see the bill but not yet split it cleanly. Identical-model host switches are available to you today: same weights, cheaper host, zero quality risk and nothing to prove beyond the price.",
+      body: "You can see the bill, but not yet split it cleanly. Same-model host switches are already open to you: identical model, cheaper host, no quality risk, and only the price to check.",
       cta: { to: "/models", label: "Browse the live price catalog" },
     };
   }
@@ -206,17 +208,18 @@ function verdictFor(attribution: string, evidence: string): Verdict {
     return {
       rung: 3,
       title: "Rung 3 — Rightsize",
-      body: "Attribution is solved and your last change carried evidence, so cross-model substitution is already within reach. The open question is whether your models are simply larger than the work requires — that is a token and complexity profile problem, not a price problem.",
+      body: "You can see where the money goes and your last change had evidence behind it, so swapping models is already realistic. The open question is whether your models are simply bigger than the work needs, which your token traffic answers, not the price list.",
       cta: { to: "/pricing", label: "See the Rightsize level" },
     };
   }
   return {
     rung: 2,
     title: "Rung 2 — Certify",
-    body: "You can attribute spend, but your last model change rested on an opinion rather than a measured margin. Certification is the next rung: the cheapest model that clears the leader's score minus that benchmark's own margin, and a refusal when nothing does.",
+    body: "You can see where the money goes, but your last model change rested on an opinion rather than a measured result. Certify is the next step: the cheapest model that still scores close enough to the leader, and an honest no when none does.",
     cta: { to: "/legal/methodology", label: "Read how the bar is set" },
   };
 }
+
 
 export function RungSelfAssessment() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -295,8 +298,10 @@ export function RungSelfAssessment() {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Answer both questions and this returns the highest rung your evidence actually supports.
+            Answer both questions and this tells you the highest rung your evidence can actually
+            back up today.
           </p>
+
         )}
       </div>
     </div>
@@ -337,18 +342,20 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
     <div className="mt-8">
       {/* The arithmetic, as a sentence made of numbers. */}
       <div className="flex flex-wrap items-end gap-x-4 gap-y-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
-        <Term label="leader scores" value={n2(winner.topScore)} />
+        <Term label="best model scores" value={n2(winner.topScore)} />
         <Op>−</Op>
-        <Term label="measured margin" value={`±${n2(winner.margin)}`} />
+        <Term label="how far the test can be off" value={`±${n2(winner.margin)}`} />
         <Op>=</Op>
-        <Term label="the bar" value={n2(winner.bar)} accent />
+        <Term label="the pass mark" value={n2(winner.bar)} accent />
       </div>
       <p className="mt-5 max-w-2xl text-[0.95rem] leading-relaxed text-muted-foreground">
-        Everything at or above <span className="num text-foreground">{n2(winner.bar)}</span> is
-        statistically indistinguishable from the leader on this evaluation.{" "}
+        Any model scoring <span className="num text-foreground">{n2(winner.bar)}</span> or higher is
+        close enough that this test cannot tell it apart from the best one.{" "}
         <span className="num text-foreground">{winner.qualifying}</span> model
-        {winner.qualifying === 1 ? "" : "s"} clear it — so price decides, and the cheapest one wins.
+        {winner.qualifying === 1 ? "" : "s"} pass, so price is the only thing left to decide, and the
+        cheapest one wins.
       </p>
+
 
       {/* The axis ------------------------------------------------------- */}
       <div className="relative mt-16 select-none">
@@ -359,11 +366,12 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
         >
           <div className="rounded-2xl bg-saving/12 px-4 py-2.5 text-center ring-1 ring-inset ring-saving/30">
             <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-saving">
-              cheapest qualifier
+              cheapest model that passes
             </p>
             <p className="mt-1 text-sm font-semibold tracking-tight">
-              {live ? winner.displayName : "cheapest qualifying model"}
+              {live ? winner.displayName : "cheapest passing model"}
             </p>
+
           </div>
           <div className="mx-auto h-4 w-px bg-saving/40" />
         </div>
@@ -395,13 +403,14 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
             className="absolute top-4 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/70"
             style={{ right: `calc(${100 - barX}% + 12px)` }}
           >
-            below the bar · disqualified
+            too low · not allowed
           </p>
           <p
             className="absolute top-4 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-primary"
             style={{ left: `calc(${barX}% + 14px)` }}
           >
-            statistically the same as the leader
+            as good as the best model, as far as this test can tell
+
           </p>
 
           {/* the bar */}
@@ -425,16 +434,16 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
             <Tick
               x={barX}
               value={n2(winner.bar)}
-              label="the bar · what we pay for"
+              label="pass mark · what we pick"
               saving
             />
           ) : (
             <>
-              <Tick x={barX} value={n2(winner.bar)} label="the bar" accent />
-              <Tick x={winX} value={n2(winner.score)} label="what we pay for" saving />
+              <Tick x={barX} value={n2(winner.bar)} label="pass mark" accent />
+              <Tick x={winX} value={n2(winner.score)} label="what we pick" saving />
             </>
           )}
-          <Tick x={leadX} value={n2(winner.topScore)} label="leader" align="end" />
+          <Tick x={leadX} value={n2(winner.topScore)} label="best model" align="end" />
         </div>
       </div>
 
@@ -445,8 +454,10 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
             ${winner.pricePerMtok.toFixed(2)}
           </span>
           <span className="text-sm text-muted-foreground">
-            per MTok in at {winner.hostLabel} — same measured quality band as the leader.
+            per million input tokens (MTok) at {winner.hostLabel}, at a quality this test rates the
+            same as the best model.
           </span>
+
         </div>
       ) : null}
     </div>
