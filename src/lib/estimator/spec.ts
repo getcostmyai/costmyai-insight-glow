@@ -77,6 +77,7 @@ export interface EstimatorInput {
 
 export type EstimatorRefusal =
   | "benchmark_not_discriminating"
+  | "no_valid_instrument"
   | "model_not_in_catalog"
   | "shape_only"
   | "no_baseline_score"

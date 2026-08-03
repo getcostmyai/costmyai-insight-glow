@@ -1,4 +1,5 @@
-import { buildScoreLookup, SEPARATION_FACTOR } from "@/lib/engine/equivalence";
+import { FIELD_SPECS } from "@/lib/benchmarks/task-ladder";
+import { buildScoreLookup } from "@/lib/engine/equivalence";
 import { cheaperWins, costOf, round2 } from "@/lib/engine/cost";
 import type { BenchmarkRow, MarginRow, PriceRow } from "@/lib/engine/types";
 
@@ -102,7 +103,7 @@ export function resolveEstimate(
     }
   } else if (input.provider) {
     const onProvider = prices.filter(
-      (p) => p.host_label === input.provider && lookup.score(p.model_key, shape.taskClass) != null,
+      (p) => p.host_label === input.provider && lookup.score(p.model_key, instrument) != null,
     );
     if (onProvider.length === 0) {
       return refuse(
@@ -152,7 +153,7 @@ export function resolveEstimate(
     return refuse(
       "no_cheaper_equal",
       "Nothing cheaper holds the quality bar here.",
-      `Every model scoring at or above ${bar.toFixed(2)} on ${baselineScore.suite}/${shape.taskClass} costs more than ${nameOf(baseline.model_key)} for this workload shape. On today's catalog you are not overpaying on this one — that is a real answer, not a failure.`,
+      `Every model scoring at or above ${bar.toFixed(2)} on ${baselineScore.suite}/${FIELD_SPECS[instrument].label} costs more than ${nameOf(baseline.model_key)} for this workload shape. On today's catalog you are not overpaying on this one — that is a real answer, not a failure.`,
     );
   }
 
