@@ -30,6 +30,7 @@ import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.ind
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ApiIndexRouteImport } from './routes/api.index'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
@@ -51,6 +52,7 @@ import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
 import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_authenticated/workspace.certify'
+import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
@@ -169,6 +171,11 @@ const ApiIndexRoute = ApiIndexRouteImport.update({
   path: '/api/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
   id: '/partners_/apply',
   path: '/partners/apply',
@@ -279,6 +286,12 @@ const AuthenticatedWorkspaceCertifyRoute =
     path: '/certify',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedAdminReferralsRoute =
+  AuthenticatedAdminReferralsRouteImport.update({
+    id: '/admin/referrals',
+    path: '/admin/referrals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPayoutsRoute =
   AuthenticatedAdminPayoutsRouteImport.update({
     id: '/admin/payouts',
@@ -385,12 +398,14 @@ export interface FileRoutesByFullPath {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/r/$code': typeof RCodeRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -438,12 +453,14 @@ export interface FileRoutesByTo {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/r/$code': typeof RCodeRoute
   '/api': typeof ApiIndexRoute
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -496,12 +513,14 @@ export interface FileRoutesById {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner_/login': typeof PartnerLoginRoute
   '/partners_/apply': typeof PartnersApplyRoute
+  '/r/$code': typeof RCodeRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -554,12 +573,14 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/partner/login'
     | '/partners/apply'
+    | '/r/$code'
     | '/api/'
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
     | '/admin/partner-applications'
     | '/admin/payouts'
+    | '/admin/referrals'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -607,12 +628,14 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/partner/login'
     | '/partners/apply'
+    | '/r/$code'
     | '/api'
     | '/blog'
     | '/demo'
     | '/intelligence'
     | '/admin/partner-applications'
     | '/admin/payouts'
+    | '/admin/referrals'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -664,12 +687,14 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/partner_/login'
     | '/partners_/apply'
+    | '/r/$code'
     | '/api/'
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/referrals'
     | '/_authenticated/workspace/certify'
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
@@ -711,6 +736,7 @@ export interface RootRouteChildren {
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   PartnerLoginRoute: typeof PartnerLoginRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
+  RCodeRoute: typeof RCodeRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
@@ -875,6 +901,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/partners_/apply': {
       id: '/partners_/apply'
       path: '/partners/apply'
@@ -1022,6 +1055,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceCertifyRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/admin/referrals': {
+      id: '/_authenticated/admin/referrals'
+      path: '/admin/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AuthenticatedAdminReferralsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/payouts': {
       id: '/_authenticated/admin/payouts'
       path: '/admin/payouts'
@@ -1146,6 +1186,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1157,6 +1198,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+  AuthenticatedAdminReferralsRoute: AuthenticatedAdminReferralsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1217,6 +1259,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalMethodologyRoute: LegalMethodologyRoute,
   PartnerLoginRoute: PartnerLoginRoute,
   PartnersApplyRoute: PartnersApplyRoute,
+  RCodeRoute: RCodeRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
@@ -1234,13 +1277,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

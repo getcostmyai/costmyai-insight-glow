@@ -37,7 +37,7 @@ const PROMISES = [
   {
     icon: InfinityIcon,
     title: "Lifetime attribution",
-    body: "A workspace attaches your code once and stays yours for the life of the account — no 90-day cookie, no reset at renewal.",
+    body: "A referral link is remembered for 60 days and the first click wins. Once a workspace is attached it stays yours for the life of the account — no reset at renewal.",
   },
   {
     icon: Receipt,
@@ -59,8 +59,8 @@ const STEPS = [
   },
   {
     n: "02",
-    t: "Share your code",
-    b: "You get a referral code and a dashboard. A workspace enters it once at signup.",
+    t: "Share your link",
+    b: "You get a link — costmyai.com/r/YOUR-CODE — and a dashboard. A click attributes the signup for 60 days; the code can also be entered by hand in Settings.",
   },
   {
     n: "03",
