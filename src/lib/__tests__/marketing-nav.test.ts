@@ -8,23 +8,46 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
+import { APP_NAV, MARKETING_NAV } from "@/lib/nav";
+
 const SHELL = readFileSync("src/components/marketing/MarketingShell.tsx", "utf8");
+const DASH = readFileSync("src/components/dashboard/DashboardShell.tsx", "utf8");
 const INTELLIGENCE = readFileSync("src/routes/intelligence.index.tsx", "utf8");
 const PARTNERS = readFileSync("src/routes/partners.tsx", "utf8");
 
 describe("marketing nav", () => {
   it("lists the sections in the agreed order", () => {
-    const labels = [...SHELL.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
-    expect(labels).toEqual([
+    expect(MARKETING_NAV.map((i) => i.label)).toEqual([
       "How it works",
       "Models",
       "Intelligence",
       "Become a Partner",
       "Blog",
       "Pricing",
-
     ]);
   });
+
+  it("is the single source both shells render from", () => {
+    // Neither shell may declare its own list again.
+    expect(SHELL).toMatch(/const NAV = MARKETING_NAV/);
+    expect(DASH).toMatch(/const topNav = APP_NAV/);
+    expect(SHELL).not.toMatch(/label:\s*"/);
+    expect(DASH).not.toMatch(/to:\s*"\/pricing"/);
+  });
+
+  it("gives the signed-in header the same order, minus marketing-only entries", () => {
+    expect(APP_NAV.map((i) => i.label)).toEqual([
+      "Models",
+      "Intelligence",
+      "Become a Partner",
+      "Blog",
+      "Pricing",
+    ]);
+    // One route, one label: "Plans" is gone for good.
+    expect(APP_NAV.some((i) => i.label === "Plans")).toBe(false);
+    expect(APP_NAV.find((i) => i.label === "Pricing")?.to).toBe("/pricing");
+  });
+
 
   it("keeps the wordmark pointing at home", () => {
     expect(SHELL).toMatch(/<Link to="\/"[^>]*>\s*<Wordmark/);
