@@ -644,6 +644,87 @@ export const POSTS: BlogPost[] = [
       },
     ],
   },
+
+  {
+    slug: "ai-cost-governance-framework",
+    title: "The AI cost governance framework: a guide for engineering teams",
+    deck: "Four rungs that take a team from manual spend tracking to autonomous governance, and what has to be true before you climb each one.",
+    description:
+      "A practical AI cost governance framework for engineering teams: the four rungs from manual AI cost management to autonomous switching, and the evidence each one needs.",
+    keyword: "AI cost governance framework",
+    published: "2026-08-03",
+    minutes: 7,
+    blocks: [
+      {
+        t: "p",
+        v: "Most engineering teams arrive at AI cost management the same way. Someone forwards the invoice, the number is larger than expected, and a spreadsheet appears. For a while the spreadsheet works. It stops working the moment a second model, a second host, or a second team enters the picture, because manual tracking measures what already happened and can never act on it. A cost governance framework is what replaces the spreadsheet: a defined ladder where each rung adds one capability and each capability is earned by evidence rather than assumed.",
+      },
+      {
+        t: "p",
+        v: "This is the framework we build against, and the reason it is written as rungs rather than a feature list is that the order genuinely matters. A team that automates switching before it can prove equivalence has not governed its AI spend, it has delegated it to software and hoped for the best.",
+      },
+      { t: "h2", v: "The four rungs" },
+      {
+        t: "defs",
+        items: [
+          {
+            term: "Rung one: visibility and identical-model arbitrage",
+            text: "Before anything else, you need to see spend by model, by host, and by workload, and to know that the same model is frequently cheaper somewhere else. The switch here changes nothing about your output, because it is the identical model on a different host. No quality argument is required, which is why this rung is free and why it is the correct first move for every team.",
+          },
+          {
+            term: "Rung two: certified equal-quality substitution",
+            text: "The next saving comes from changing the model itself, which is only defensible with benchmark evidence that the replacement clears the same quality bar on the kind of task you actually run. The rule is cheapest model that clears the bar, not highest scoring model available, and the measurement margin has to be real rather than assumed.",
+          },
+          {
+            term: "Rung three: rightsizing and manual switching",
+            text: "Most teams are running a frontier model on work a smaller model handles indistinguishably. Rightsizing detects that oversizing from observed token shapes and task complexity, then puts a human in the loop to approve each change. This is where governance becomes a decision rather than a report.",
+          },
+          {
+            term: "Rung four: autonomous governance",
+            text: "Only once the first three rungs are producing proven, reversible switches does it make sense to let the system act on its own inside limits you set. Autonomy is the last rung precisely because it is the one that requires the most trust, and trust here is accumulated evidence, not a setting.",
+          },
+        ],
+      },
+      { t: "h2", v: "Why the order cannot be shuffled" },
+      {
+        t: "p",
+        v: "Every rung depends on the one beneath it. Equal-quality substitution is meaningless without the visibility to know which workload you are substituting. Rightsizing needs enough observed usage to distinguish a genuinely complex task from a simple one that happens to be running on an expensive model. Autonomous switching needs a track record of manual switches that held up, plus a rollback path that returns a workload to its previous model without ceremony. Teams that skip to the end tend to discover the gap during an incident, which is the most expensive possible moment to learn it.",
+      },
+      { t: "h2", v: "What each rung has to prove" },
+      {
+        t: "p",
+        v: "A cost governance framework earns its name through what it refuses to do on thin evidence. Identical-model arbitrage proves the model key and the price, and nothing else needs proving. Equal-quality substitution proves a benchmark score on the relevant task class, with the measurement margin computed rather than borrowed. Rightsizing proves the observed token and complexity profile that made the model oversized in the first place. Autonomous switching proves all three, plus a recorded event trail showing who or what activated each change and when.",
+      },
+      {
+        t: "p",
+        v: "The corollary is the more important half of the framework: when the evidence is not there, the correct behaviour is to refuse rather than to estimate. A recommendation nobody can audit is not a saving, it is a liability with a dollar sign in front of it.",
+      },
+      {
+        t: "cta",
+        headline: "See which rung your AI spend is actually on",
+        label: "See what the free level covers",
+        to: "/pricing",
+      },
+      { t: "h2", v: "How to apply this in your own organisation" },
+      {
+        t: "p",
+        v: "Start by answering one question honestly: can you attribute last month's AI bill to individual workloads and models without opening a provider console? If the answer is no, you are below rung one and no amount of optimisation strategy will help until that is fixed. If the answer is yes, the next question is whether any model change you have made in the last quarter was backed by a benchmark rather than an opinion. That answer usually locates a team precisely on the ladder.",
+      },
+      {
+        t: "p",
+        v: "From there the work is unglamorous and effective. Instrument spend at the request level so attribution is a query rather than an archaeology project. Reconcile estimated cost against the invoice the provider actually issued, so the numbers you govern with are the numbers finance sees. Move the easy identical-model switches first, because they cost nothing in quality risk and they buy political capital for the harder changes. Then, and only then, start moving models.",
+      },
+      { t: "h2", v: "Where governance stops being a report" },
+      {
+        t: "p",
+        v: "The end state of an AI cost governance framework is not a dashboard anyone has to remember to open. It is a system that watches prices and benchmarks continuously, proposes changes with the evidence attached, executes the ones you have authorised, and reverses anything that stops holding up. Manual spend tracking asks a human to notice. Governance removes the requirement to notice, without removing the requirement to be able to explain every change after the fact.",
+      },
+      {
+        t: "p",
+        v: "That is the whole difference between AI cost management as an activity and AI cost governance as a discipline. One tells you what the bill was. The other decides, on evidence, what the bill should be.",
+      },
+    ],
+  },
 ];
 
 export const postBySlug = (slug: string): BlogPost | null =>
