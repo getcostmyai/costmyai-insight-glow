@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Copy, Handshake, TrendingUp } from "lucide-react";
 
 import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
@@ -250,22 +250,37 @@ function TierProgress({ partner }: { partner: PartnerDashboard["partner"] }) {
 }
 
 function ReferralCode({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"link" | "code" | null>(null);
+  const [origin, setOrigin] = useState("https://costmyai.com");
+  useEffect(() => setOrigin(window.location.origin), []);
+  const link = `${origin}/r/${code}`;
+
   return (
-    <div className="flex items-center gap-2">
-      <code className="rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm">
-        {code}
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <code className="truncate rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm">
+        {link}
       </code>
-      <button
-        onClick={async () => {
-          await navigator.clipboard.writeText(code);
-          setCopied(true);
-        }}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
-      >
-        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-        {copied ? "Copied" : "Copy code"}
-      </button>
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          onClick={async () => {
+            await navigator.clipboard.writeText(link);
+            setCopied("link");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
+        >
+          {copied === "link" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied === "link" ? "Copied" : "Copy link"}
+        </button>
+        <button
+          onClick={async () => {
+            await navigator.clipboard.writeText(code);
+            setCopied("code");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+        >
+          {copied === "code" ? "Copied" : "Copy code only"}
+        </button>
+      </div>
     </div>
   );
 }
