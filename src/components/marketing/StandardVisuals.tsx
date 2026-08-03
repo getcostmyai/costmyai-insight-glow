@@ -329,8 +329,12 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
 
   const n2 = (v: number) => v.toFixed(2);
 
+  // When the cheapest qualifier sits right on the bar, one merged tick reads
+  // clearly where two overlapping ones would collide.
+  const merged = Math.abs(winX - barX) < 7;
+
   return (
-    <div>
+    <div className="mt-8">
       {/* The arithmetic, as a sentence made of numbers. */}
       <div className="flex flex-wrap items-end gap-x-4 gap-y-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
         <Term label="leader scores" value={n2(winner.topScore)} />
@@ -417,9 +421,20 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
 
         {/* axis ticks */}
         <div className="relative mt-3 h-12">
-          <Tick x={barX} value={n2(winner.bar)} label="the bar" accent />
+          {merged ? (
+            <Tick
+              x={barX}
+              value={n2(winner.bar)}
+              label="the bar · what we pay for"
+              saving
+            />
+          ) : (
+            <>
+              <Tick x={barX} value={n2(winner.bar)} label="the bar" accent />
+              <Tick x={winX} value={n2(winner.score)} label="what we pay for" saving />
+            </>
+          )}
           <Tick x={leadX} value={n2(winner.topScore)} label="leader" align="end" />
-          <Tick x={winX} value={n2(winner.score)} label="paid for" saving />
         </div>
       </div>
 
