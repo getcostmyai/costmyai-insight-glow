@@ -8,6 +8,7 @@ import {
   Legend,
   SectionTitle,
 } from "@/components/dashboard/primitives";
+import { BenchmarkPanel } from "@/components/dashboard/BenchmarkPanel";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -206,6 +207,8 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
           </>
         }
       />
+
+      {scope === "mine" ? <BenchmarkPanel /> : null}
 
       <UsageSection ctl={ctl} />
 
