@@ -167,6 +167,7 @@ export function MarketingFooter() {
               <FooterLink to="/api">API</FooterLink>
             </FooterColumn>
             <FooterColumn title="Resources">
+              <FooterLink to="/standard">The CostMyAI Standard</FooterLink>
               <FooterLink to="/faq">FAQ</FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
               <FooterLink to="/models">Data Sources</FooterLink>
