@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Coins, FileCheck2, Gauge, ShieldCheck } from "lucide-react";
 
 import { Reveal } from "@/components/marketing/Reveal";
+import type { BandWinner } from "@/lib/intelligence/intelligence.server";
 
 /**
  * Visual grammar for /standard — the framework page.
@@ -298,6 +299,211 @@ export function RungSelfAssessment() {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Equivalence band, explained.
+ *
+ * Same instrument as the Intelligence page's compact BandDiagram, opened up for
+ * a reader who has never seen it: the axis is annotated in plain language, the
+ * two zones are named ("disqualified" vs "statistically the same"), and the
+ * arithmetic that produces the bar is spelled out above the chart rather than
+ * left implicit.
+ * ------------------------------------------------------------------------- */
+
+export function BandExplainer({ winner, live }: { winner: BandWinner; live: boolean }) {
+  // Scale: a little air on the left of the bar, a little past the leader.
+  const pad = winner.margin * 1.35 || 1;
+  const lo = Math.max(0, winner.bar - pad);
+  const hi = winner.topScore + pad * 0.45;
+  const span = hi - lo || 1;
+  const pos = (v: number) => ((v - lo) / span) * 100;
+
+  const barX = pos(winner.bar);
+  const leadX = pos(winner.topScore);
+  const winX = pos(winner.score);
+  // Keep the floating callout inside the frame at any score position.
+  const callout = Math.min(Math.max(winX, 20), 80);
+
+  const n2 = (v: number) => v.toFixed(2);
+
+  // When the cheapest qualifier sits right on the bar, one merged tick reads
+  // clearly where two overlapping ones would collide.
+  const merged = Math.abs(winX - barX) < 7;
+
+  return (
+    <div className="mt-8">
+      {/* The arithmetic, as a sentence made of numbers. */}
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
+        <Term label="leader scores" value={n2(winner.topScore)} />
+        <Op>−</Op>
+        <Term label="measured margin" value={`±${n2(winner.margin)}`} />
+        <Op>=</Op>
+        <Term label="the bar" value={n2(winner.bar)} accent />
+      </div>
+      <p className="mt-5 max-w-2xl text-[0.95rem] leading-relaxed text-muted-foreground">
+        Everything at or above <span className="num text-foreground">{n2(winner.bar)}</span> is
+        statistically indistinguishable from the leader on this evaluation.{" "}
+        <span className="num text-foreground">{winner.qualifying}</span> model
+        {winner.qualifying === 1 ? "" : "s"} clear it — so price decides, and the cheapest one wins.
+      </p>
+
+      {/* The axis ------------------------------------------------------- */}
+      <div className="relative mt-16 select-none">
+        {/* winner callout */}
+        <div
+          className="absolute -top-14 z-20 -translate-x-1/2 whitespace-nowrap"
+          style={{ left: `${callout}%` }}
+        >
+          <div className="rounded-2xl bg-saving/12 px-4 py-2.5 text-center ring-1 ring-inset ring-saving/30">
+            <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-saving">
+              cheapest qualifier
+            </p>
+            <p className="mt-1 text-sm font-semibold tracking-tight">
+              {live ? winner.displayName : "cheapest qualifying model"}
+            </p>
+          </div>
+          <div className="mx-auto h-4 w-px bg-saving/40" />
+        </div>
+
+        {/* zones */}
+        <div className="relative h-[104px] overflow-hidden rounded-2xl">
+          {/* disqualified zone */}
+          <div
+            className="absolute inset-y-0 left-0"
+            style={{
+              width: `${barX}%`,
+              background:
+                "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 4.5%, transparent) 0 6px, transparent 6px 12px)",
+            }}
+          />
+          {/* equivalence band */}
+          <div
+            className="absolute inset-y-0"
+            style={{
+              left: `${barX}%`,
+              right: 0,
+              background:
+                "linear-gradient(90deg, color-mix(in oklab, var(--primary) 16%, transparent), color-mix(in oklab, var(--primary) 7%, transparent))",
+            }}
+          />
+
+          {/* zone labels */}
+          <p
+            className="absolute top-4 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/70"
+            style={{ right: `calc(${100 - barX}% + 12px)` }}
+          >
+            below the bar · disqualified
+          </p>
+          <p
+            className="absolute top-4 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-primary"
+            style={{ left: `calc(${barX}% + 14px)` }}
+          >
+            statistically the same as the leader
+          </p>
+
+          {/* the bar */}
+          <div className="absolute inset-y-0 w-px bg-primary" style={{ left: `${barX}%` }} />
+          {/* the leader */}
+          <div
+            className="absolute inset-y-0 w-px bg-foreground/45"
+            style={{ left: `${leadX}%` }}
+          />
+
+          {/* the winner */}
+          <div className="absolute top-1/2 -ml-2 h-4 w-4 -translate-y-1/2" style={{ left: `${winX}%` }}>
+            <span className="absolute inset-0 rounded-full bg-saving ring-4 ring-background" />
+            <span className="absolute -inset-2 rounded-full bg-saving/25 motion-safe:animate-ping" />
+          </div>
+        </div>
+
+        {/* axis ticks */}
+        <div className="relative mt-3 h-12">
+          {merged ? (
+            <Tick
+              x={barX}
+              value={n2(winner.bar)}
+              label="the bar · what we pay for"
+              saving
+            />
+          ) : (
+            <>
+              <Tick x={barX} value={n2(winner.bar)} label="the bar" accent />
+              <Tick x={winX} value={n2(winner.score)} label="what we pay for" saving />
+            </>
+          )}
+          <Tick x={leadX} value={n2(winner.topScore)} label="leader" align="end" />
+        </div>
+      </div>
+
+      {/* price payoff ---------------------------------------------------- */}
+      {live && winner.pricePerMtok > 0 ? (
+        <div className="mt-10 flex flex-wrap items-baseline gap-x-5 gap-y-2 border-t border-border/60 pt-8">
+          <span className="num text-5xl font-semibold tabular-nums tracking-[-0.045em] text-saving sm:text-6xl">
+            ${winner.pricePerMtok.toFixed(2)}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            per MTok in at {winner.hostLabel} — same measured quality band as the leader.
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Term({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <span className="flex flex-col">
+      <span className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </span>
+      <span
+        className={`num mt-1 tabular-nums tracking-[-0.045em] ${accent ? "text-gradient-brand" : ""}`}
+      >
+        {value}
+      </span>
+    </span>
+  );
+}
+
+function Op({ children }: { children: ReactNode }) {
+  return <span className="pb-0.5 text-xl text-muted-foreground/60 sm:text-2xl">{children}</span>;
+}
+
+function Tick({
+  x,
+  value,
+  label,
+  align = "center",
+  accent,
+  saving,
+}: {
+  x: number;
+  value: string;
+  label: string;
+  align?: "center" | "end";
+  accent?: boolean;
+  saving?: boolean;
+}) {
+  return (
+    <div
+      className={`absolute top-0 flex flex-col ${
+        align === "end" ? "-translate-x-full items-end pr-1" : "-translate-x-1/2 items-center"
+      }`}
+      style={{ left: `${x}%` }}
+    >
+      <span
+        className={`num text-lg font-semibold tabular-nums tracking-[-0.03em] ${
+          saving ? "text-saving" : accent ? "text-primary" : ""
+        }`}
+      >
+        {value}
+      </span>
+      <span className="mt-0.5 whitespace-nowrap text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </span>
     </div>
   );
 }
