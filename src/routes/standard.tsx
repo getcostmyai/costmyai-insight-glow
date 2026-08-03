@@ -126,11 +126,12 @@ function StandardPage() {
             <RungStack />
             <Reveal delay={120}>
               <p className="mt-10 max-w-3xl text-[1.0625rem] leading-[1.75] text-muted-foreground">
-                Four levels, in order. Each one is defined by the evidence it requires, not by the
-                saving it promises. You cannot stand on a higher rung than your evidence supports —
-                and a rung you cannot evidence is not a strategy, it is a guess with a dollar sign
-                in front of it.
+                Four levels, in order. What defines each one is the evidence you need to be on it,
+                not the saving it promises. You cannot climb higher than your evidence reaches, and
+                a step you cannot back up with data is not a plan. It is a guess with a price tag
+                on it.
               </p>
+
             </Reveal>
           </div>
         </section>
