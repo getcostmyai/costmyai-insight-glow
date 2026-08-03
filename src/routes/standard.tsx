@@ -228,12 +228,13 @@ function StandardPage() {
             <Reveal className="max-w-3xl">
               <p className="eyebrow">How to apply this</p>
               <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
-                Two questions locate you on the ladder.
+                Two questions show you where you stand.
               </h2>
               <p className="mt-7 text-[1.0625rem] leading-[1.75] text-muted-foreground">
-                Answer them honestly. The result is the highest rung your evidence currently
-                supports — not the one you would like to be on.
+                Answer them honestly. You get the highest step your evidence can back up right now,
+                not the one you would like to be on.
               </p>
+
             </Reveal>
             <Reveal delay={60} className="mt-12">
               <RungSelfAssessment />
