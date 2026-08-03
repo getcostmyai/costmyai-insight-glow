@@ -21,6 +21,8 @@ export interface Rung {
   proof: string;
   proofDetail: string;
   plan: string;
+  /** Names of the rungs this one contains in full. Empty for rung 1. */
+  inherits: string[];
 }
 
 export const RUNGS: Rung[] = [
