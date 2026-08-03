@@ -1,7 +1,7 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 
 import type { EstimatorOptions } from "../estimator.functions";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 import { readEstimatorCatalog } from "./estimate.server";
 import { resolveEstimate } from "./core";
 import { WORKLOADS } from "./spec";
@@ -17,13 +17,14 @@ const PROBE_SPEND = 1_000_000;
 export async function readEstimatorOptions(): Promise<EstimatorOptions> {
   const supabase = createPublicServerClient();
 
-  const [pricesRes, modelsRes] = await Promise.all([
-    supabase.from("host_prices").select("model_key, host, host_label").eq("is_active", true).limit(MAX_CATALOG_ROWS),
-    supabase.from("model_catalog").select("model_key, display_name").eq("is_active", true).limit(MAX_CATALOG_ROWS),
+  const [prices, models] = await Promise.all([
+    fetchAllRows((f, t) =>
+      supabase.from("host_prices").select("model_key, host, host_label").eq("is_active", true).range(f, t),
+    ),
+    fetchAllRows((f, t) =>
+      supabase.from("model_catalog").select("model_key, display_name").eq("is_active", true).range(f, t),
+    ),
   ]);
-
-  const prices = pricesRes.data ?? [];
-  const models = modelsRes.data ?? [];
 
   // Grouped by display label, not by host id: a provider can publish through
   // several host ids (e.g. two OpenAI endpoints), and showing the same name

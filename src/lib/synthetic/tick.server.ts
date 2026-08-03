@@ -6,7 +6,7 @@ import type { PriceRow } from "@/lib/engine/types";
 import { DAY_MS, generateEvents, type SyntheticEvent } from "./generator";
 import { sizeWorkloads } from "./sizing";
 import { SYNTHETIC_WORKLOADS } from "./workloads";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 
 /** Never generate more than this in one tick, however long the gap was. */
 const MAX_CATCHUP_MS = 15 * 60 * 1000;
@@ -75,13 +75,14 @@ export async function runSyntheticTick(origin: string): Promise<TickReport> {
     };
   }
 
-  const { data: priceRows, error: priceError } = await db
-    .from("host_prices")
-    .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
-    .eq("is_fixture", false)
-    .limit(MAX_CATALOG_ROWS);
-  if (priceError) throw new Error(priceError.message);
-  const priceIndex = new Map((priceRows ?? []).map((p) => [`${p.model_key}|${p.host}`, p as PriceRow]));
+  const priceRows = await fetchAllRows((from_, to_) =>
+    db
+      .from("host_prices")
+      .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
+      .eq("is_fixture", false)
+      .range(from_, to_),
+  );
+  const priceIndex = new Map(priceRows.map((p) => [`${p.model_key}|${p.host}`, p as PriceRow]));
   const priceFor = (modelKey: string, host: string) => priceIndex.get(`${modelKey}|${host}`);
 
   // Volume is solved against the same live prices the dashboard bills with, so

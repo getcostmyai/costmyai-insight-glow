@@ -1,5 +1,5 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 import { AA_INTELLIGENCE_SUITE } from "@/lib/benchmarks/aa-catalog";
 
 
@@ -45,25 +45,31 @@ const SUITE_COLUMN: Record<string, "gpqa" | "ifbench" | "coding"> = {
 export async function readCatalog(): Promise<CatalogPayload> {
   const supabase = createPublicServerClient();
 
-  const [modelsRes, pricesRes, benchRes, snapshot] = await Promise.all([
-    supabase
-      .from("model_catalog")
-      .select("model_key, display_name, vendor, tier, is_reasoning, context_window, modality")
-      .eq("is_active", true)
-      .limit(MAX_CATALOG_ROWS),
-    supabase
-      .from("host_prices")
-      .select(
-        "model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
-      )
-      .eq("is_active", true)
-      .limit(MAX_CATALOG_ROWS),
+  const [models, prices, benchmarks, snapshot] = await Promise.all([
+    fetchAllRows((f, t) =>
+      supabase
+        .from("model_catalog")
+        .select("model_key, display_name, vendor, tier, is_reasoning, context_window, modality")
+        .eq("is_active", true)
+        .range(f, t),
+    ),
+    fetchAllRows((f, t) =>
+      supabase
+        .from("host_prices")
+        .select(
+          "model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
+        )
+        .eq("is_active", true)
+        .range(f, t),
+    ),
     // Oldest first, so the newest measurement is the one that lands in a column.
-    supabase
-      .from("benchmarks")
-      .select("model_key, suite, task_class, score, measured_at")
-      .order("measured_at", { ascending: true })
-      .limit(MAX_CATALOG_ROWS),
+    fetchAllRows((f, t) =>
+      supabase
+        .from("benchmarks")
+        .select("model_key, suite, task_class, score, measured_at")
+        .order("measured_at", { ascending: true })
+        .range(f, t),
+    ),
 
     supabase
       .from("pricing_snapshots")
@@ -74,10 +80,8 @@ export async function readCatalog(): Promise<CatalogPayload> {
       .maybeSingle(),
   ]);
 
-  const prices = pricesRes.data ?? [];
-  const benchmarks = benchRes.data ?? [];
 
-  const rows: CatalogRow[] = (modelsRes.data ?? []).map((m) => {
+  const rows: CatalogRow[] = models.map((m) => {
     const priced = prices.filter((p) => p.model_key === m.model_key);
     const hosts = priced
       .map((p) => ({

@@ -1,5 +1,5 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 import { SEPARATION_FACTOR } from "@/lib/engine/equivalence";
 
 /**
@@ -209,24 +209,30 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1),
   );
 
-  const [modelsRes, pricesRes, historyRes, oldestRes, benchRes, marginRes] = await Promise.all([
-    supabase
-      .from("model_catalog")
-      .select("model_key, display_name, vendor, is_active, first_seen_at")
-      .limit(MAX_CATALOG_ROWS),
-    supabase
-      .from("host_prices")
-      .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, price_source")
-      .eq("is_active", true)
-      .limit(MAX_CATALOG_ROWS),
-    supabase
-      .from("price_history")
-      .select(
-        "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, observed_at",
-      )
-      .gte("observed_at", monthStart.toISOString())
-      .lt("observed_at", monthEnd.toISOString())
-      .limit(MAX_CATALOG_ROWS),
+  const [models, prices, history, oldestRes, benchmarks, marginRes] = await Promise.all([
+    fetchAllRows((f, t) =>
+      supabase
+        .from("model_catalog")
+        .select("model_key, display_name, vendor, is_active, first_seen_at")
+        .range(f, t),
+    ),
+    fetchAllRows((f, t) =>
+      supabase
+        .from("host_prices")
+        .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, price_source")
+        .eq("is_active", true)
+        .range(f, t),
+    ),
+    fetchAllRows((f, t) =>
+      supabase
+        .from("price_history")
+        .select(
+          "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, observed_at",
+        )
+        .gte("observed_at", monthStart.toISOString())
+        .lt("observed_at", monthEnd.toISOString())
+        .range(f, t),
+    ),
 
     supabase
       .from("price_history")
@@ -234,18 +240,14 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
       .order("observed_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    supabase
-      .from("benchmarks")
-      .select("model_key, suite, task_class, score")
-      .limit(MAX_CATALOG_ROWS),
+    fetchAllRows((f, t) =>
+      supabase.from("benchmarks").select("model_key, suite, task_class, score").range(f, t),
+    ),
     supabase.from("benchmark_margins").select("suite, task_class, margin"),
   ]);
 
-  const models = modelsRes.data ?? [];
-  const prices = pricesRes.data ?? [];
-  const history = historyRes.data ?? [];
-  const benchmarks = benchRes.data ?? [];
   const margins = marginRes.data ?? [];
+
 
   const activeModels = models.filter((m) => m.is_active);
   const nameByKey = new Map(models.map((m) => [m.model_key, m.display_name]));

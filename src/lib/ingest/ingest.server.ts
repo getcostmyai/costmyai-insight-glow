@@ -7,7 +7,7 @@ import type { PriceRow } from "@/lib/engine/types";
 import { bucketStart, DAY_MS, rollupEvents, type SyntheticEvent } from "@/lib/synthetic/generator";
 
 import type { IngestEvent } from "./schema";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 
 /**
  * Metadata ingestion.
@@ -112,22 +112,29 @@ async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number
   const from = bucketStart(min, "day");
   const to = new Date(bucketStart(max, "day").getTime() + DAY_MS);
 
-  const { data: raw, error } = await db
-    .from("usage_events")
-    .select("occurred_at, model_key, host, task_hint, input_tokens, output_tokens, latency_ms, status")
-    .eq("org_id", orgId)
-    .gte("occurred_at", from.toISOString())
-    .lt("occurred_at", to.toISOString())
-    .order("occurred_at", { ascending: true })
-    .limit(200_000);
-  if (error) throw new Error(`rollup rebuild failed: ${error.message}`);
+  // Paged: a rollup rebuilt from a truncated page would under-report the day's
+  // real spend, and the truncation is silent.
+  const raw = await fetchAllRows(
+    (f, t) =>
+      db
+        .from("usage_events")
+        .select("occurred_at, model_key, host, task_hint, input_tokens, output_tokens, latency_ms, status")
+        .eq("org_id", orgId)
+        .gte("occurred_at", from.toISOString())
+        .lt("occurred_at", to.toISOString())
+        .order("occurred_at", { ascending: true })
+        .range(f, t),
+    { maxPages: 500 },
+  );
 
-  const { data: priceRows } = await db
-    .from("host_prices")
-    .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
-    .eq("is_fixture", false)
-    .limit(MAX_CATALOG_ROWS);
-  const priceIndex = new Map((priceRows ?? []).map((p) => [`${p.model_key}|${p.host}`, p as PriceRow]));
+  const priceRows = await fetchAllRows((from_, to_) =>
+    db
+      .from("host_prices")
+      .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
+      .eq("is_fixture", false)
+      .range(from_, to_),
+  );
+  const priceIndex = new Map(priceRows.map((p) => [`${p.model_key}|${p.host}`, p as PriceRow]));
   const priceFor = (modelKey: string, host: string) => priceIndex.get(`${modelKey}|${host}`);
 
   const events: SyntheticEvent[] = (raw ?? []).map((r) => ({
