@@ -56,6 +56,25 @@ export function resolveEstimate(
   const lookup = buildScoreLookup(benchmarks, margins);
   const mix = (p: PriceRow) => costOf(p, shape.inputTokens, shape.outputTokens);
 
+  /*
+   * Ladder walk first: which instrument, if any, may certify this kind of work.
+   * No passing rung means we say so plainly rather than quote a saving that
+   * rests on a benchmark which cannot separate the models.
+   */
+  const resolution = lookup.instrument(shape.taskClass);
+  if (!resolution.field) {
+    return refuse(
+      resolution.refusal === "no_valid_instrument"
+        ? "no_valid_instrument"
+        : "benchmark_not_discriminating",
+      resolution.refusal === "no_valid_instrument"
+        ? "No independent instrument measures this kind of work."
+        : "No model currently differentiates enough on this to certify a switch.",
+      resolution.detail,
+    );
+  }
+  const instrument = resolution.field;
+
   /* -------- pick the baseline the estimate is measured against -------- */
 
   let baselinePrices: PriceRow[] = [];
