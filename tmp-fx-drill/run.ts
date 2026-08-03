@@ -37,7 +37,7 @@ async function main() {
   await stripe.customers.update(customer.id, {
     invoice_settings: { default_payment_method: pm.id },
   });
-  let invoice = await stripe.invoices.create({ customer: customer.id, auto_advance: false });
+  let invoice = await stripe.invoices.create({ customer: customer.id, currency: "usd", auto_advance: false });
   await stripe.invoiceItems.create({
     customer: customer.id,
     invoice: invoice.id!,
