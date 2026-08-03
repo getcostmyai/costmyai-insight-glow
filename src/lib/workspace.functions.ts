@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+import { isIndustry, isUseCase, type UseCase } from "./benchmark/taxonomy";
 import type { PlanTier } from "./engine/types";
 import { slugify, validateWorkspaceName } from "./workspace/naming";
 
@@ -45,10 +46,25 @@ export const listMyWorkspaces = createServerFn({ method: "GET" })
 
 export const createWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { name: string }) => {
+  .inputValidator((data: {
+    name: string;
+    useCase: string;
+    useCaseOther?: string | null;
+    industry: string;
+  }) => {
     const problem = validateWorkspaceName(data?.name ?? "");
     if (problem) throw new Error(problem);
-    return { name: data.name.trim() };
+    if (!isUseCase(data?.useCase)) throw new Error("Pick what you mainly use AI for.");
+    if (!isIndustry(data?.industry)) throw new Error("Pick the industry closest to yours.");
+    return {
+      name: data.name.trim(),
+      useCase: data.useCase as UseCase,
+      // Free text only survives as a label on this one workspace: it is never
+      // allowed into a benchmark bucket.
+      useCaseOther:
+        data.useCase === "other" ? (data.useCaseOther ?? "").trim().slice(0, 120) || null : null,
+      industry: data.industry,
+    };
   })
   .handler(async ({ context, data }) => {
     const { supabase, userId, claims } = context;
@@ -66,6 +82,17 @@ export const createWorkspace = createServerFn({ method: "POST" })
 
     const { data: orgId, error } = await supabase.rpc("create_organization", { _name: data.name });
     if (error) throw error;
+
+    // The two signup answers, and nothing else. Everything a benchmark needs
+    // beyond this is asked later, once there is something real to trade for it.
+    const profile = await supabase.from("org_profiles").insert({
+      org_id: orgId as string,
+      use_case: data.useCase,
+      use_case_other: data.useCaseOther,
+      industry: data.industry,
+    });
+    if (profile.error) throw profile.error;
+
     return { id: orgId as string, slug: slugify(data.name) };
   });
 

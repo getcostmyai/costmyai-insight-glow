@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, Handshake, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { INDUSTRIES, USE_CASES, type UseCase } from "@/lib/benchmark/taxonomy";
 import { acceptInvite, listMyInvites } from "@/lib/invites.functions";
 import { createWorkspace, listMyWorkspaces } from "@/lib/workspace.functions";
 import { suggestWorkspaceName, validateWorkspaceName } from "@/lib/workspace/naming";
@@ -89,6 +90,9 @@ function FirstWorkspace({ email }: { email: string | null }) {
   const navigate = useNavigate();
   const suggested = useMemo(() => suggestWorkspaceName(email), [email]);
   const [name, setName] = useState(suggested);
+  const [useCase, setUseCase] = useState<UseCase | "">("");
+  const [useCaseOther, setUseCaseOther] = useState("");
+  const [industry, setIndustry] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,10 +103,18 @@ function FirstWorkspace({ email }: { email: string | null }) {
       setError(problem);
       return;
     }
+    if (!useCase) {
+      setError("Pick what you mainly use AI for.");
+      return;
+    }
+    if (!industry) {
+      setError("Pick the industry closest to yours.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      await createWorkspace({ data: { name } });
+      await createWorkspace({ data: { name, useCase, useCaseOther, industry } });
       await queryClient.invalidateQueries({ queryKey: ["my-workspaces"] });
       // The workspace exists on Compare; choosing a level is the next step, and
       // any paid level goes through checkout before it is provisioned.
@@ -125,7 +137,7 @@ function FirstWorkspace({ email }: { email: string | null }) {
             One workspace per AI stack. You'll connect your gateway next — CostMyAI reads usage
             metadata only, never your provider keys.
           </p>
-          <form onSubmit={submit} className="mt-6 space-y-3">
+          <form onSubmit={submit} className="mt-6 space-y-4">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -133,6 +145,51 @@ function FirstWorkspace({ email }: { email: string | null }) {
               className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
               placeholder="Acme"
             />
+
+            <label className="block">
+              <span className="text-xs font-medium text-muted-foreground">
+                What do you mainly use AI for?
+              </span>
+              <select
+                value={useCase}
+                onChange={(e) => setUseCase(e.target.value as UseCase)}
+                className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              >
+                <option value="">Choose one</option>
+                {USE_CASES.map((u) => (
+                  <option key={u.key} value={u.key}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {useCase === "other" ? (
+              <input
+                value={useCaseOther}
+                onChange={(e) => setUseCaseOther(e.target.value)}
+                maxLength={120}
+                placeholder="In a few words"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+            ) : null}
+
+            <label className="block">
+              <span className="text-xs font-medium text-muted-foreground">Your industry</span>
+              <select
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              >
+                <option value="">Choose one</option>
+                {INDUSTRIES.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <button
               type="submit"
@@ -145,7 +202,8 @@ function FirstWorkspace({ email }: { email: string | null }) {
             </button>
           </form>
           <p className="mt-4 text-xs text-muted-foreground">
-            Next you pick a level. Compare is free; Certify, Rightsize and Govern are paid.
+            That's everything we ask. Next you pick a level: Compare is free; Certify, Rightsize and
+            Govern are paid.
           </p>
         </div>
       </div>
