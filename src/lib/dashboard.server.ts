@@ -176,6 +176,8 @@ export interface ReconciliationRow {
 const DAY_MS = 86_400_000;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+/** Real percentage, one decimal, always short of a bare 100%. */
+const pct1 = (n: number) => Math.min(99.9, Math.max(0, Math.round(n * 10) / 10));
 
 function emptyTotals(): Totals {
   return { spend: 0, requests: 0, inputTokens: 0, outputTokens: 0 };
@@ -495,7 +497,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     taskHint: r.taskHint,
     saving: round2(r.savingUsd),
     monthlySaving: round2(r.monthlySavingUsd),
-    savingPct: Math.round(r.savingPct),
+    savingPct: pct1(r.savingPct),
     basis: r.basis,
     note: r.note,
     qualityDelta: r.qualityDelta,
@@ -526,7 +528,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         toModel: r.toModel,
         wasted: round2(r.savingUsd),
         wastedMonthly: round2(r.monthlySavingUsd),
-        savingPct: Math.round(r.savingPct),
+        savingPct: pct1(r.savingPct),
         note: r.note,
       }),
     ),

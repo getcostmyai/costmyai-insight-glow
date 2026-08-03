@@ -95,6 +95,10 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
         .select(
           "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope",
         )
+        // Delisted rows keep their last observed price for audit. Quoting one
+        // as a switch destination would recommend a host that no longer sells
+        // the model at a price nobody can buy.
+        .eq("is_active", true)
         .range(from, to),
     ).then((data) => ({ data, error: null })),
     fetchAllRows((from, to) =>
@@ -112,7 +116,11 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
         .range(from, to),
     ).then((data) => ({ data, error: null })),
     fetchAllRows((from, to) =>
-      supabaseAdmin.from("model_catalog").select("model_key, display_name, vendor, tier").range(from, to),
+      supabaseAdmin
+        .from("model_catalog")
+        .select("model_key, display_name, vendor, tier")
+        .eq("is_active", true)
+        .range(from, to),
     ).then((data) => ({ data, error: null })),
   ]);
 
@@ -284,7 +292,7 @@ async function evaluateOrg(
         _to_host: rec.toHost,
         _task_hint: rec.taskHint,
         _monthly_saving: Math.round(rec.monthlySavingUsd * 100) / 100,
-        _saving_pct: Math.round(rec.savingPct),
+        _saving_pct: Math.round(rec.savingPct * 100) / 100,
         _basis: rec.basis,
         _note: rec.note,
         _quality_delta: rec.qualityDelta,
