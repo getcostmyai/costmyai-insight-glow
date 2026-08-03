@@ -112,11 +112,17 @@ export function RungStack() {
                 {r.name}
               </span>
               <span className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                <span className="mb-1.5 block text-[0.7rem] font-medium uppercase tracking-[0.14em] text-primary/80">
+                  {r.inherits.length === 0
+                    ? "The base. Everything above includes it"
+                    : `Everything in ${listOf(r.inherits)}, plus`}
+                </span>
                 {r.requirement}
               </span>
               <span className="justify-self-start text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/80 sm:justify-self-end">
                 {r.plan}
               </span>
+
             </div>
           </Reveal>
         );
