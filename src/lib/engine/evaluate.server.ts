@@ -175,15 +175,23 @@ async function evaluateOrg(
     report: EvaluationReport;
   },
 ): Promise<void> {
+  const { fetchAllRows } = await import("../paginate.server");
+
   const [rollups, objectives, subscription] = await Promise.all([
-    supabaseAdmin
-      .from("usage_rollups")
-      .select(
-        "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
-      )
-      .eq("org_id", org.id)
-      .eq("granularity", "day")
-      .gte("bucket_start", ctx.since),
+    // 30 days x every workload x every host is well past one page; a truncated
+    // read here would quietly understate the workspace's spend.
+    fetchAllRows((from, to) =>
+      supabaseAdmin
+        .from("usage_rollups")
+        .select(
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+        )
+        .eq("org_id", org.id)
+        .eq("granularity", "day")
+        .gte("bucket_start", ctx.since)
+        .range(from, to),
+    ).then((data) => ({ data, error: null })),
+
     supabaseAdmin
       .from("objectives")
       .select("model_key, host, task_hint, objective, quality_floor_score, max_latency_ms")
