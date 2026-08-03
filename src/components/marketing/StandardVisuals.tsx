@@ -162,20 +162,20 @@ const QUESTIONS: Question[] = [
   {
     id: "attribution",
     prompt:
-      "Can you attribute last month's AI bill to individual workloads and models without opening a provider console?",
+      "Can you say what last month's AI bill was spent on, feature by feature and model by model, without logging into a provider dashboard?",
     options: [
-      { value: "yes", label: "Yes — attribution is a query" },
-      { value: "partly", label: "Partly — totals yes, per workload no" },
-      { value: "no", label: "No — I'd have to open the console" },
+      { value: "yes", label: "Yes, it is one query away" },
+      { value: "partly", label: "Partly: I know the total, not the split" },
+      { value: "no", label: "No, I would have to go digging" },
     ],
   },
   {
     id: "evidence",
-    prompt: "Was your last model change backed by a benchmark, or by an opinion?",
+    prompt: "Was your last model change based on a test result, or on a hunch?",
     options: [
-      { value: "benchmark", label: "A benchmark, with a stated margin" },
-      { value: "vibes", label: "A leaderboard glance or a team opinion" },
-      { value: "none", label: "We haven't changed a model" },
+      { value: "benchmark", label: "A benchmark, with a stated error margin" },
+      { value: "vibes", label: "A quick leaderboard look or a team opinion" },
+      { value: "none", label: "We have not changed a model yet" },
     ],
   },
 ];
@@ -192,7 +192,7 @@ function verdictFor(attribution: string, evidence: string): Verdict {
     return {
       rung: 0,
       title: "Below rung one",
-      body: "Without per-workload attribution there is nothing to compare, so no optimisation strategy can be evidenced yet. Instrument spend at the request level first — everything above depends on it.",
+      body: "If you cannot see which feature spent what, there is nothing to compare yet, so no saving can be proven. Start by measuring spend request by request. Everything above this rung depends on it.",
       cta: { to: "/pricing", label: "See what the free level covers" },
     };
   }
@@ -200,7 +200,7 @@ function verdictFor(attribution: string, evidence: string): Verdict {
     return {
       rung: 1,
       title: "Rung 1 — Compare",
-      body: "You can see the bill but not yet split it cleanly. Identical-model host switches are available to you today: same weights, cheaper host, zero quality risk and nothing to prove beyond the price.",
+      body: "You can see the bill, but not yet split it cleanly. Same-model host switches are already open to you: identical model, cheaper host, no quality risk, and only the price to check.",
       cta: { to: "/models", label: "Browse the live price catalog" },
     };
   }
@@ -208,17 +208,18 @@ function verdictFor(attribution: string, evidence: string): Verdict {
     return {
       rung: 3,
       title: "Rung 3 — Rightsize",
-      body: "Attribution is solved and your last change carried evidence, so cross-model substitution is already within reach. The open question is whether your models are simply larger than the work requires — that is a token and complexity profile problem, not a price problem.",
+      body: "You can see where the money goes and your last change had evidence behind it, so swapping models is already realistic. The open question is whether your models are simply bigger than the work needs, which your token traffic answers, not the price list.",
       cta: { to: "/pricing", label: "See the Rightsize level" },
     };
   }
   return {
     rung: 2,
     title: "Rung 2 — Certify",
-    body: "You can attribute spend, but your last model change rested on an opinion rather than a measured margin. Certification is the next rung: the cheapest model that clears the leader's score minus that benchmark's own margin, and a refusal when nothing does.",
+    body: "You can see where the money goes, but your last model change rested on an opinion rather than a measured result. Certify is the next step: the cheapest model that still scores close enough to the leader, and an honest no when none does.",
     cta: { to: "/legal/methodology", label: "Read how the bar is set" },
   };
 }
+
 
 export function RungSelfAssessment() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
