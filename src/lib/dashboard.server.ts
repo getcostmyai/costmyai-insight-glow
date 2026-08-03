@@ -35,7 +35,7 @@ import {
   selectSwitchesInWindow,
 } from "./dashboard/window";
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 
 
 /**
@@ -315,40 +315,48 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     pricingSnapshot,
   ] =
     await Promise.all([
-      supabase
-        .from("usage_rollups")
-        .select(
-          "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
-        )
-        .eq("org_id", orgId)
-        .eq("granularity", granularity)
-        .gte("bucket_start", previousStart)
-        .order("bucket_start", { ascending: true })
-        .limit(100_000),
-      supabase
-        .from("host_prices")
-        .select(
-          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope, verified_at",
-        )
-        // Delisted rows would let the engine recommend a host that no longer
-        // sells the model, and the default 1000-row page would hide most of
-        // the market from the comparison entirely.
-        .eq("is_active", true)
-        .limit(MAX_CATALOG_ROWS),
-      supabase
-        .from("benchmarks")
-        .select("model_key, suite, task_class, score")
-        .eq("is_fixture", false)
-        .limit(MAX_CATALOG_ROWS),
+      fetchAllRows((f, t) =>
+        supabase
+          .from("usage_rollups")
+          .select(
+            "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+          )
+          .eq("org_id", orgId)
+          .eq("granularity", granularity)
+          .gte("bucket_start", previousStart)
+          .order("bucket_start", { ascending: true })
+          .range(f, t),
+      ).then((data) => ({ data, error: null })),
+      fetchAllRows((f, t) =>
+        supabase
+          .from("host_prices")
+          .select(
+            "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope, verified_at",
+          )
+          // Delisted rows would let the engine recommend a host that no longer
+          // sells the model, and a single page would hide most of the market
+          // from the comparison entirely.
+          .eq("is_active", true)
+          .range(f, t),
+      ).then((data) => ({ data, error: null })),
+      fetchAllRows((f, t) =>
+        supabase
+          .from("benchmarks")
+          .select("model_key, suite, task_class, score")
+          .eq("is_fixture", false)
+          .range(f, t),
+      ).then((data) => ({ data, error: null })),
       supabase
         .from("benchmark_margins")
         .select("suite, task_class, margin, method, synced_at, source_run_id")
         .eq("is_fixture", false),
-      supabase
-        .from("model_catalog")
-        .select("model_key, display_name, vendor, tier")
-        .eq("is_active", true)
-        .limit(MAX_CATALOG_ROWS),
+      fetchAllRows((f, t) =>
+        supabase
+          .from("model_catalog")
+          .select("model_key, display_name, vendor, tier")
+          .eq("is_active", true)
+          .range(f, t),
+      ).then((data) => ({ data, error: null })),
       supabase
         .from("switches")
         .select(

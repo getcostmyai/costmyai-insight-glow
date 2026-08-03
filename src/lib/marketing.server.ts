@@ -1,5 +1,5 @@
 import { createPublicServerClient } from "./supabase-public.server";
-import { MAX_CATALOG_ROWS } from "@/lib/catalog-limits";
+import { fetchAllRows } from "@/lib/paginate.server";
 
 /**
  * The live numbers the marketing pages are allowed to state.
@@ -44,7 +44,9 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
 
   const [models, prices, snapshot, changes, firstObservation] = await Promise.all([
     supabase.from("model_catalog").select("model_key", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("host_prices").select("host, host_label").eq("is_active", true).limit(MAX_CATALOG_ROWS),
+    fetchAllRows((f, t) =>
+      supabase.from("host_prices").select("host, host_label").eq("is_active", true).range(f, t),
+    ).then((data) => ({ data })),
     supabase
       .from("pricing_snapshots")
       .select("synced_at, status")
