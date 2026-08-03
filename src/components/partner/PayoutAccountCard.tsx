@@ -176,8 +176,11 @@ export function PayoutAccountCard({
                 </div>
                 {p.fxRate !== null && p.amountPaid !== null ? (
                   <p className="mt-1.5 text-[11px] tabular-nums text-muted-foreground">
-                    {usd(p.amountUsd)} commission converted at {p.fxRate} (the rate our payment
-                    provider actually applied) → {money(p.amountPaid, p.currency)} paid
+                    {usd(p.amountUsd)} commission converted at{" "}
+                    {p.fxRateIsWeighted
+                      ? `a blended ${p.fxRate} across several booked rates`
+                      : `${p.fxRate} (the rate our payment provider actually applied)`}{" "}
+                    → {money(p.amountPaid, p.currency)} paid
                   </p>
                 ) : null}
               </div>

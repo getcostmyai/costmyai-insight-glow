@@ -37,8 +37,16 @@ export interface FxBreakdownEntry {
 export interface FxConversion {
   currency: string;
   amountUsd: number;
-  /** Weighted real rate: converted total over USD total, for display only. */
-  weightedRate: number;
+  /**
+   * The headline rate for the payout. When every line settled at the same
+   * provider-booked rate this IS that exact rate, so the stored figure and the
+   * per-line figure never disagree. Only when a run spans charges settled at
+   * different rates does it become the blended effective rate of the payout as
+   * actually paid — flagged by `rateIsWeighted`.
+   */
+  rate: number;
+  /** True only when the lines carried more than one distinct real rate. */
+  rateIsWeighted: boolean;
   amountConverted: number;
   breakdown: FxBreakdownEntry[];
 }
@@ -112,10 +120,17 @@ export function convertCommissionLines(
     );
   }
 
+  // One real rate across the run: report it verbatim. Dividing the
+  // cent-rounded euro total back by the dollar total would otherwise produce a
+  // near-identical but subtly different number, which looks like a second rate.
+  const distinct = new Set(breakdown.map((b) => b.exchangeRate));
+  const rateIsWeighted = distinct.size > 1;
+
   return {
     currency: target,
     amountUsd,
-    weightedRate: round6(amountConverted / amountUsd),
+    rate: rateIsWeighted ? round6(amountConverted / amountUsd) : [...distinct][0]!,
+    rateIsWeighted,
     amountConverted,
     breakdown,
   };

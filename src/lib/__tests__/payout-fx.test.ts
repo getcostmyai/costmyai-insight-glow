@@ -26,7 +26,8 @@ describe("payout FX conversion", () => {
     const out = convertCommissionLines([line()], "eur");
     expect(out.amountUsd).toBe(100);
     expect(out.amountConverted).toBe(86);
-    expect(out.weightedRate).toBe(0.86);
+    expect(out.rate).toBe(0.86);
+    expect(out.rateIsWeighted).toBe(false);
     expect(out.breakdown[0]).toMatchObject({
       invoiceId: "in_1",
       balanceTransactionId: "txn_1",
@@ -34,6 +35,23 @@ describe("payout FX conversion", () => {
       convertedAmount: 86,
     });
   });
+
+  it("reports one shared rate verbatim, without cent-rounding drift", () => {
+    // The real drill case: 74.85 * 0.867525 = 64.934…, transferable as 64.93.
+    // Dividing back would give 0.867468, which reads like a second rate.
+    const out = convertCommissionLines(
+      [
+        line({ invoiceId: "in_1", commissionUsd: 40, exchangeRate: 0.867525, balanceTransactionId: "txn_a" }),
+        line({ invoiceId: "in_2", commissionUsd: 34.85, exchangeRate: 0.867525, balanceTransactionId: "txn_b" }),
+      ],
+      "eur",
+    );
+    expect(out.rate).toBe(0.867525);
+    expect(out.rateIsWeighted).toBe(false);
+    expect(out.amountConverted).toBe(64.93);
+  });
+
+
 
   it("weights each line by its own real rate rather than averaging", () => {
     const out = convertCommissionLines(
@@ -45,7 +63,8 @@ describe("payout FX conversion", () => {
     );
     // 100*0.9 + 300*0.8 = 330, not 400 * mean(0.85) = 340.
     expect(out.amountConverted).toBe(330);
-    expect(out.weightedRate).toBe(0.825);
+    expect(out.rate).toBe(0.825);
+    expect(out.rateIsWeighted).toBe(true);
     expect(out.breakdown).toHaveLength(2);
   });
 

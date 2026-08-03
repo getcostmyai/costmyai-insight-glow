@@ -81,6 +81,8 @@ export interface PayoutRun {
   currency: string;
   /** The real, provider-booked rate the conversion used. Never estimated. */
   fxRate: number | null;
+  /** True when the run spanned several real rates, so `fxRate` is blended. */
+  fxRateIsWeighted: boolean;
   lineCount: number;
   status: "pending" | "paid" | "failed";
   transferId: string | null;
@@ -152,7 +154,7 @@ export const getMyPartner = createServerFn({ method: "GET" })
         supabase
           .from("partner_payouts")
           .select(
-            "id, amount_usd, amount_payout_currency, payout_currency, fx_rate, line_count, status, stripe_transfer_id, environment, error, created_at",
+            "id, amount_usd, amount_payout_currency, payout_currency, fx_rate, fx_detail, line_count, status, stripe_transfer_id, environment, error, created_at",
           )
           .eq("partner_id", partnerId)
           .order("created_at", { ascending: false })
@@ -194,6 +196,12 @@ export const getMyPartner = createServerFn({ method: "GET" })
       amountPaid: p.amount_payout_currency === null ? null : Number(p.amount_payout_currency),
       currency: p.payout_currency ?? "eur",
       fxRate: p.fx_rate === null ? null : Number(p.fx_rate),
+      fxRateIsWeighted:
+        new Set(
+          (Array.isArray(p.fx_detail) ? p.fx_detail : []).map(
+            (d) => (d as { exchangeRate?: number }).exchangeRate,
+          ),
+        ).size > 1,
       lineCount: p.line_count,
       status: p.status as PayoutRun["status"],
       transferId: p.stripe_transfer_id,
