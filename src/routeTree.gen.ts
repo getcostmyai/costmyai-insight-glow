@@ -30,6 +30,7 @@ import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.ind
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ApiIndexRouteImport } from './routes/api.index'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
@@ -167,6 +168,11 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
 const ApiIndexRoute = ApiIndexRouteImport.update({
   id: '/api/',
   path: '/api/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersApplyRoute = PartnersApplyRouteImport.update({
@@ -385,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/r/$code': typeof RCodeRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
+  '/r/$code': typeof RCodeRoute
   '/api': typeof ApiIndexRoute
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
@@ -496,6 +504,7 @@ export interface FileRoutesById {
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner_/login': typeof PartnerLoginRoute
   '/partners_/apply': typeof PartnersApplyRoute
+  '/r/$code': typeof RCodeRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -554,6 +563,7 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/partner/login'
     | '/partners/apply'
+    | '/r/$code'
     | '/api/'
     | '/blog/'
     | '/demo/'
@@ -607,6 +617,7 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/partner/login'
     | '/partners/apply'
+    | '/r/$code'
     | '/api'
     | '/blog'
     | '/demo'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/legal/methodology'
     | '/partner_/login'
     | '/partners_/apply'
+    | '/r/$code'
     | '/api/'
     | '/blog/'
     | '/demo/'
@@ -711,6 +723,7 @@ export interface RootRouteChildren {
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   PartnerLoginRoute: typeof PartnerLoginRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
+  RCodeRoute: typeof RCodeRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
@@ -873,6 +886,13 @@ declare module '@tanstack/react-router' {
       path: '/api'
       fullPath: '/api/'
       preLoaderRoute: typeof ApiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partners_/apply': {
@@ -1217,6 +1237,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalMethodologyRoute: LegalMethodologyRoute,
   PartnerLoginRoute: PartnerLoginRoute,
   PartnersApplyRoute: PartnersApplyRoute,
+  RCodeRoute: RCodeRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
@@ -1234,13 +1255,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

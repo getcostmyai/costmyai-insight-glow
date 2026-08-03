@@ -93,8 +93,47 @@ export const createWorkspace = createServerFn({ method: "POST" })
     });
     if (profile.error) throw profile.error;
 
-    return { id: orgId as string, slug: slugify(data.name) };
+    const referral = await attributeFirstTouchReferral(supabase, orgId as string);
+
+    return { id: orgId as string, slug: slugify(data.name), referral };
   });
+
+/**
+ * If this signup arrived through a /r/CODE link inside the window, hand the
+ * workspace to that partner.
+ *
+ * This deliberately calls the very same attach_referral function the manual
+ * Settings field calls: the guards that matter (active partner only, owner
+ * only, never re-attribute, the freeze_referral trigger) live in the database
+ * and are not restated here. A refusal is not an error for the person signing
+ * up — they get their workspace either way — so it is swallowed, and the cookie
+ * is cleared on both outcomes so a failed attribution never lingers to be
+ * retried against some later workspace.
+ */
+async function attributeFirstTouchReferral(
+  supabase: { rpc: (fn: "attach_referral", args: { _org_id: string; _code: string }) => Promise<{ data: unknown; error: unknown }> },
+  orgId: string,
+): Promise<{ attempted: boolean; attached: boolean }> {
+  const { getRequest, setResponseHeader } = await import("@tanstack/react-start/server");
+  const { clearReferralCookie, isSecureRequest, readReferralCookie } = await import(
+    "./partners/referral-cookie"
+  );
+
+  const request = getRequest();
+  const code = readReferralCookie(request.headers.get("cookie"));
+  if (!code) return { attempted: false, attached: false };
+
+  let attached = false;
+  try {
+    const { error } = await supabase.rpc("attach_referral", { _org_id: orgId, _code: code });
+    attached = !error;
+  } catch {
+    attached = false;
+  }
+
+  setResponseHeader("Set-Cookie", clearReferralCookie(isSecureRequest(request.url)));
+  return { attempted: true, attached };
+}
 
 export const setWorkspacePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
