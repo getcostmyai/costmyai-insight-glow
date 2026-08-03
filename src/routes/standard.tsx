@@ -199,18 +199,19 @@ function StandardPage() {
         <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-6xl">
             <Reveal className="max-w-4xl">
-              <p className="eyebrow">The corollary</p>
+              <p className="eyebrow">The flip side</p>
               <h2 className="mt-5 text-4xl font-semibold leading-[1.06] tracking-[-0.04em] sm:text-6xl">
-                When the evidence is missing, the correct output is a{" "}
-                <span className="text-gradient-brand">refusal</span> — never an estimate.
+                When the proof is missing, the right answer is{" "}
+                <span className="text-gradient-brand">no recommendation</span>, never a guess.
               </h2>
               <p className="mt-8 max-w-2xl text-[1.0625rem] leading-[1.75] text-muted-foreground">
-                No baseline price, no baseline score, a benchmark that cannot discriminate, nothing
-                cheaper clearing the bar, a latency ceiling unmet, a saving below the materiality
-                floor: each of those is a stated refusal with its reason attached. Refusals are a
-                product surface, not an error state, and they are the reason the recommendations
-                that do appear can be audited.
+                No price for what you run today, no score for what you run today, a benchmark that
+                cannot separate the models, nothing cheaper that passes, a speed requirement the
+                alternative would miss, or a saving too small to be worth the switch. In each of
+                those cases we say no and tell you why. That is a feature, not a bug: it is exactly
+                why the recommendations you do get hold up when someone checks them.
               </p>
+
               <Link
                 to="/legal/methodology"
                 className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-opacity hover:opacity-80"
