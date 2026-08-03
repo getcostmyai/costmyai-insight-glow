@@ -20,18 +20,21 @@ import {
  */
 export const UNMEASURED_MARGIN = 0.5;
 
+
 /**
- * Goodhart / discrimination guard.
- * If every model's score on a task class sits inside the measurement margin,
- * the benchmark cannot tell them apart and must not be used to justify a switch.
- * Requires the observed spread to exceed the margin by this factor.
+ * Legacy discrimination guard, kept for the published Intelligence saturation
+ * ratio. The engine itself now walks the ranked ladder and compares each
+ * instrument's separation against SEPARATION_THRESHOLD.
  */
 export const SEPARATION_FACTOR = 2;
 
 export interface ScoreLookup {
-  score(modelKey: string, taskClass: string): { score: number; suite: string } | null;
-  margin(suite: string, taskClass: string): number;
-  spread(taskClass: string): number;
+  score(modelKey: string, instrument: string): { score: number; suite: string } | null;
+  margin(suite: string, instrument: string): number;
+  spread(instrument: string): number;
+  separation(field: AaField): number | null;
+  /** Walk the ranked ladder for a product task and say which instrument certifies it. */
+  instrument(taskHint: string): LadderResolution;
 }
 
 /** Indexes benchmark scores and their measured margins for fast, suite-aware lookup. */
@@ -51,27 +54,30 @@ export function buildScoreLookup(
   const marginBySuiteTask = new Map<string, number>();
   for (const m of margins) marginBySuiteTask.set(`${m.suite}::${m.task_class}`, m.margin);
 
+  const spread = (instrument: string) => {
+    const list = byTask.get(instrument) ?? [];
+    if (list.length < 2) return 0;
+    return Math.max(...list) - Math.min(...list);
+  };
+
+  const separation = (field: AaField) => separationOfScores(byTask.get(field) ?? []);
+
   return {
-    score(modelKey, taskClass) {
-      const exact = byModelTask.get(`${modelKey}::${taskClass}`);
-      if (exact) return { score: exact.score, suite: exact.suite };
-      const fallback = byModelTask.get(`${modelKey}::generation`);
-      return fallback ? { score: fallback.score, suite: fallback.suite } : null;
+    score(modelKey, instrument) {
+      const exact = byModelTask.get(`${modelKey}::${instrument}`);
+      return exact ? { score: exact.score, suite: exact.suite } : null;
     },
-    margin(suite, taskClass) {
-      return (
-        marginBySuiteTask.get(`${suite}::${taskClass}`) ??
-        marginBySuiteTask.get(`${suite}::generation`) ??
-        UNMEASURED_MARGIN
-      );
+    margin(suite, instrument) {
+      return marginBySuiteTask.get(`${suite}::${instrument}`) ?? UNMEASURED_MARGIN;
     },
-    spread(taskClass) {
-      const list = byTask.get(taskClass) ?? byTask.get("generation") ?? [];
-      if (list.length < 2) return 0;
-      return Math.max(...list) - Math.min(...list);
+    spread,
+    separation,
+    instrument(taskHint) {
+      return resolveLadder(taskHint, separation);
     },
   };
 }
+
 
 export interface EquivalenceResult {
   recommendations: Recommendation[];
