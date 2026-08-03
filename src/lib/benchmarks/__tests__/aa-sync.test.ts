@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 
 
 import {
-  chooseEval,
+  INGESTED_FIELDS,
   latencyRowFor,
   marginFor,
   suiteFor,
   transformAaPayload,
-  TASK_EVAL_CANDIDATES,
   type AaModel,
 } from "../aa-catalog";
+import { resolveLadder, walkLadder, SEPARATION_THRESHOLD } from "../task-ladder";
 import { findQualityMatches } from "../../engine/equivalence";
 import type { MarginRow, PriceRow, UsageAggregate } from "../../engine/types";
 
@@ -34,42 +34,61 @@ describe("margin maths", () => {
   });
 });
 
-describe("evaluation selection", () => {
-  it("prefers the first candidate that covers most of the catalogue", () => {
-    const chosen = chooseEval(
-      TASK_EVAL_CANDIDATES.generation,
-      (s) => (s.field === "mmlu_pro" ? 3 : 15),
-      16,
-    );
-    expect(chosen?.spec.field).toBe("gpqa");
+describe("ranked ladder walk", () => {
+  const sep = (scores: Record<string, number | null>) => (f: string) => scores[f] ?? null;
+
+  it("takes the first rung that clears the separation threshold", () => {
+    expect(walkLadder("coding", sep({ terminalbench_v2_1: 85.8, scicode: 43.2 }))).toBe(0);
   });
 
-  it("refuses to pick anything when nothing has real coverage", () => {
-    expect(chooseEval(TASK_EVAL_CANDIDATES.code, () => 1, 16)).toBeNull();
+  it("falls through to the next rung when the first cannot separate models", () => {
+    expect(walkLadder("coding", sep({ terminalbench_v2_1: 4.1, scicode: 43.2 }))).toBe(1);
+  });
+
+  it("REFUSES rather than borrowing an instrument when every rung is saturated", () => {
+    const r = resolveLadder("reasoning", sep({ hle: 2, gpqa: 3 }));
+    expect(r.field).toBeNull();
+    expect(r.rung).toBe(-1);
+    expect(r.refusal).toBe("benchmark_not_discriminating");
+    expect(r.detail).toContain("differentiates enough");
+  });
+
+  it("REFUSES unconditionally for categories with no valid instrument", () => {
+    for (const task of ["translation", "prediction", "recommendation", "monitoring", "simulation"]) {
+      const r = resolveLadder(task, () => 99);
+      expect(r.refusal).toBe("no_valid_instrument");
+      expect(r.field).toBeNull();
+    }
+  });
+
+  it("never falls back to a composite index", () => {
+    expect(resolveLadder("classification", sep({ lcr: 1 })).field).toBeNull();
+  });
+
+  it("uses the same threshold as the ported ladder", () => {
+    expect(SEPARATION_THRESHOLD).toBe(10.0);
   });
 });
 
 describe("transform", () => {
   const models = [
-    model("alpha", { gpqa: 0.9, scicode: 0.5, ifbench: 0.7 }),
-    model("beta", { gpqa: 0.86, scicode: 0.45, ifbench: null }),
-    model("gamma", { gpqa: 0.7, scicode: 0.3, ifbench: 0.4 }),
+    model("alpha", { gpqa: 0.9, scicode: 0.5, lcr: 0.7 }),
+    model("beta", { gpqa: 0.86, scicode: 0.45, lcr: null }),
+    model("gamma", { gpqa: 0.7, scicode: 0.3, lcr: 0.4 }),
   ];
 
-  it("scores every matched model on the same evaluation and tags the suite with it", () => {
+  it("stores every certifiable field under its own instrument task_class", () => {
     const r = transformAaPayload(models, ["alpha", "beta", "gamma"]);
-    const gen = r.scores.filter((s) => s.task_class === "generation");
-    expect(gen).toHaveLength(3);
-    expect(new Set(gen.map((s) => s.suite))).toEqual(new Set(["aa:gpqa"]));
+    const gpqa = r.scores.filter((s) => s.task_class === "gpqa");
+    expect(gpqa).toHaveLength(3);
+    expect(new Set(gpqa.map((s) => s.suite))).toEqual(new Set(["aa:gpqa"]));
     expect(r.unmatchedModels).toHaveLength(0);
   });
 
   it("skips a model with no reported score instead of imputing one", () => {
     const r = transformAaPayload(models, ["alpha", "beta", "gamma"]);
-    expect(r.scores.filter((s) => s.task_class === "classification")).toHaveLength(2);
-    expect(r.skipped.some((s) => s.model_key === "beta" && s.task_class === "classification")).toBe(
-      true,
-    );
+    expect(r.scores.filter((s) => s.task_class === "lcr")).toHaveLength(2);
+    expect(r.skipped.some((s) => s.model_key === "beta" && s.task_class === "lcr")).toBe(true);
   });
 
   it("pairs every margin with the exact suite its scores were written under", () => {
@@ -78,7 +97,7 @@ describe("transform", () => {
       expect(r.scores.some((s) => s.suite === m.suite && s.task_class === m.task_class)).toBe(true);
     }
     expect(r.margins.map((m) => m.suite)).toContain(
-      suiteFor(TASK_EVAL_CANDIDATES.generation[1]),
+      suiteFor(INGESTED_FIELDS.find((f) => f.field === "gpqa")!),
     );
   });
 
@@ -98,7 +117,7 @@ describe("fail-closed flips to certified once real margins exist", () => {
     {
       model_key: "expensive",
       host: "alpha",
-      task_hint: "generation",
+      task_hint: "reasoning",
       requests: 10_000,
       input_tokens: 50_000_000,
       output_tokens: 10_000_000,
@@ -131,11 +150,11 @@ describe("fail-closed flips to certified once real margins exist", () => {
   ];
   // Real shape: GPQA points, 2.8 apart — inside the measured ±5.378 band.
   const benchmarks = [
-    { model_key: "expensive", suite: "aa:gpqa", task_class: "generation", score: 91.5 },
-    { model_key: "cheap", suite: "aa:gpqa", task_class: "generation", score: 88.7 },
-    { model_key: "weak", suite: "aa:gpqa", task_class: "generation", score: 55.0 },
+    { model_key: "expensive", suite: "aa:gpqa", task_class: "hle", score: 91.5 },
+    { model_key: "cheap", suite: "aa:gpqa", task_class: "hle", score: 88.7 },
+    { model_key: "weak", suite: "aa:gpqa", task_class: "hle", score: 55.0 },
   ];
-  const realMargin: MarginRow[] = [{ suite: "aa:gpqa", task_class: "generation", margin: 5.378 }];
+  const realMargin: MarginRow[] = [{ suite: "aa:gpqa", task_class: "hle", margin: 5.378 }];
 
   it("refuses with no margin row (fallback band is too tight for the real gap)", () => {
     const { recommendations, refusals } = findQualityMatches(usage, prices, benchmarks, []);

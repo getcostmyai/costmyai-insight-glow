@@ -42,14 +42,14 @@ const usage = (over: Partial<UsageAggregate> = {}): UsageAggregate => ({
   ...over,
 });
 
-const bench = (model_key: string, score: number, task_class = "generation"): BenchmarkRow => ({
+const bench = (model_key: string, score: number, task_class = "lcr"): BenchmarkRow => ({
   model_key,
   suite: "aa",
   task_class,
   score,
 });
 
-const margins: MarginRow[] = [{ suite: "aa", task_class: "generation", margin: 1 }];
+const margins: MarginRow[] = [{ suite: "aa", task_class: "lcr", margin: 1 }];
 
 describe("cost", () => {
   it("prices input and output per million tokens", () => {
@@ -99,7 +99,7 @@ describe("equivalence (Certify)", () => {
   });
 
   it("uses the measured margin rather than a hardcoded tolerance", () => {
-    const tight: MarginRow[] = [{ suite: "aa", task_class: "generation", margin: 0.6 }];
+    const tight: MarginRow[] = [{ suite: "aa", task_class: "lcr", margin: 0.6 }];
     const { recommendations } = findQualityMatches([usage()], prices, benchmarks, tight);
     // cheap-model (-0.8) now falls outside the band; mid-model (-0.5) wins.
     expect(recommendations[0].toModel).toBe("mid-model");

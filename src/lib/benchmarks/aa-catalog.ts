@@ -5,6 +5,8 @@
  * and the margins the engine relies on can be verified independently of the feed.
  */
 
+import { AA_FIELDS, FIELD_SPECS } from "./task-ladder";
+
 export const AA_SUITE = "aa";
 
 /**
@@ -38,9 +40,13 @@ export function aaSlugFor(modelKey: string): string {
 
 
 /**
- * Which AA evaluation stands in for each workload task class, plus the published
- * item count of that evaluation. The item count is what makes the margin a
- * measured quantity rather than a guess — see marginFor().
+ * Which AA evaluation backs each instrument, plus the published item count of
+ * that evaluation. The item count is what makes the margin a measured quantity
+ * rather than a guess — see marginFor().
+ *
+ * We ingest every certifiable field for every model and store it under its own
+ * task_class. Which instrument a customer's workload is judged on is decided at
+ * decision time by the ranked ladder in ./task-ladder, not at ingest time.
  */
 export interface EvalSpec {
   /** Key inside AA's `evaluations` object. */
@@ -50,50 +56,11 @@ export interface EvalSpec {
   label: string;
 }
 
-/**
- * Candidate evaluations per task class, in preference order. Only evaluations
- * with a published, fixed item count appear here — without `n` there is no
- * honest margin, and a task class with no usable evaluation simply goes
- * unscored rather than being scored against something unmeasurable.
- */
-export const TASK_EVAL_CANDIDATES: Record<string, EvalSpec[]> = {
-  generation: [
-    { field: "mmlu_pro", sampleSize: 12032, label: "MMLU-Pro" },
-    { field: "gpqa", sampleSize: 198, label: "GPQA Diamond" },
-    { field: "hle", sampleSize: 2500, label: "Humanity's Last Exam" },
-  ],
-  code: [
-    { field: "livecodebench", sampleSize: 1055, label: "LiveCodeBench" },
-    { field: "scicode", sampleSize: 338, label: "SciCode" },
-    { field: "terminalbench_hard", sampleSize: 89, label: "Terminal-Bench Hard" },
-  ],
-  classification: [
-    { field: "ifbench", sampleSize: 294, label: "IFBench" },
-    { field: "tau2", sampleSize: 285, label: "tau2-bench" },
-  ],
-};
-
-/**
- * A task class must be scored on ONE evaluation for every model, or the scores
- * are not comparable and no equivalence claim holds. Pick the first candidate
- * that covers at least this share of the catalogue; if none does, the
- * best-covered candidate wins, ties broken by preference order.
- */
-export const COVERAGE_TARGET = 0.8;
-
-export function chooseEval(
-  candidates: EvalSpec[],
-  coverageOf: (spec: EvalSpec) => number,
-  catalogueSize: number,
-): { spec: EvalSpec; covered: number } | null {
-  if (catalogueSize === 0) return null;
-  const scored = candidates.map((spec) => ({ spec, covered: coverageOf(spec) }));
-  const clearing = scored.find((c) => c.covered / catalogueSize >= COVERAGE_TARGET);
-  if (clearing) return clearing;
-  const best = scored.reduce((a, b) => (b.covered > a.covered ? b : a), scored[0]);
-  return best && best.covered > 1 ? best : null;
-}
-
+export const INGESTED_FIELDS: EvalSpec[] = AA_FIELDS.map((f) => ({
+  field: FIELD_SPECS[f].field,
+  sampleSize: FIELD_SPECS[f].sampleSize,
+  label: FIELD_SPECS[f].label,
+}));
 
 /**
  * Composite indices (artificial_analysis_*_index) are deliberately NOT used.
@@ -105,6 +72,7 @@ export const EXCLUDED_FIELDS = [
   "artificial_analysis_coding_index",
   "artificial_analysis_math_index",
 ];
+
 
 /**
  * AA's published Intelligence Index — a real, independently-computed composite.
@@ -276,62 +244,55 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   }
 
 
-  for (const [taskClass, candidates] of Object.entries(TASK_EVAL_CANDIDATES)) {
-    const choice = chooseEval(
-      candidates,
-      (spec) =>
-        [...resolved.values()].filter((m) => m.evaluations?.[spec.field] != null).length,
-      resolved.size,
-    );
-    if (!choice) {
-      skipped.push({
-        model_key: "*",
-        task_class: taskClass,
-        reason: "No evaluation with a published item count covers enough of the catalogue.",
-      });
-      continue;
-    }
-
-    const { spec } = choice;
+  /*
+   * Every certifiable field is ingested for every matched model, under its own
+   * task_class (the instrument name). Nothing is chosen here: the ranked ladder
+   * decides at decision time which instrument a given workload is judged on.
+   */
+  for (const spec of INGESTED_FIELDS) {
     const suite = suiteFor(spec);
-    chosenEvals.push({
-      task_class: taskClass,
-      suite,
-      label: spec.label,
-      covered: choice.covered,
-      sampleSize: spec.sampleSize,
-    });
+    let covered = 0;
 
     for (const [key, model] of resolved) {
       const raw = model.evaluations?.[spec.field];
       if (raw == null || Number.isNaN(Number(raw))) {
         skipped.push({
           model_key: key,
-          task_class: taskClass,
+          task_class: spec.field,
           reason: `${spec.label} not reported for ${model.slug}`,
         });
         continue;
       }
+      covered++;
       scores.push({
         model_key: key,
         suite,
-        task_class: taskClass,
+        task_class: spec.field,
         score: toPoints(Number(raw)),
         sample_size: spec.sampleSize,
         source: `artificialanalysis.ai/${model.slug}#${spec.field}`,
       });
     }
 
+    chosenEvals.push({
+      task_class: spec.field,
+      suite,
+      label: spec.label,
+      covered,
+      sampleSize: spec.sampleSize,
+    });
+
     const margin = marginFor(
-      scores.filter((s) => s.suite === suite && s.task_class === taskClass).map((s) => s.score),
+      scores.filter((s) => s.suite === suite && s.task_class === spec.field).map((s) => s.score),
       spec.sampleSize,
     );
     if (Number.isFinite(margin)) {
-      margins.push({ suite, task_class: taskClass, margin, method: MARGIN_METHOD });
+      margins.push({ suite, task_class: spec.field, margin, method: MARGIN_METHOD });
     }
   }
 
   /*
+
    * AA's own published composite, stored verbatim for display only.
    *
    * It is NOT an evaluation with an item count, so it gets no margin row and is

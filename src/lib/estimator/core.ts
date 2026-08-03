@@ -1,4 +1,5 @@
-import { buildScoreLookup, SEPARATION_FACTOR } from "@/lib/engine/equivalence";
+import { FIELD_SPECS } from "@/lib/benchmarks/task-ladder";
+import { buildScoreLookup } from "@/lib/engine/equivalence";
 import { cheaperWins, costOf, round2 } from "@/lib/engine/cost";
 import type { BenchmarkRow, MarginRow, PriceRow } from "@/lib/engine/types";
 
@@ -56,6 +57,25 @@ export function resolveEstimate(
   const lookup = buildScoreLookup(benchmarks, margins);
   const mix = (p: PriceRow) => costOf(p, shape.inputTokens, shape.outputTokens);
 
+  /*
+   * Ladder walk first: which instrument, if any, may certify this kind of work.
+   * No passing rung means we say so plainly rather than quote a saving that
+   * rests on a benchmark which cannot separate the models.
+   */
+  const resolution = lookup.instrument(shape.taskClass);
+  if (!resolution.field) {
+    return refuse(
+      resolution.refusal === "no_valid_instrument"
+        ? "no_valid_instrument"
+        : "benchmark_not_discriminating",
+      resolution.refusal === "no_valid_instrument"
+        ? "No independent instrument measures this kind of work."
+        : "No model currently differentiates enough on this to certify a switch.",
+      resolution.detail,
+    );
+  }
+  const instrument = resolution.field;
+
   /* -------- pick the baseline the estimate is measured against -------- */
 
   let baselinePrices: PriceRow[] = [];
@@ -83,7 +103,7 @@ export function resolveEstimate(
     }
   } else if (input.provider) {
     const onProvider = prices.filter(
-      (p) => p.host_label === input.provider && lookup.score(p.model_key, shape.taskClass) != null,
+      (p) => p.host_label === input.provider && lookup.score(p.model_key, instrument) != null,
     );
     if (onProvider.length === 0) {
       return refuse(
@@ -105,34 +125,27 @@ export function resolveEstimate(
 
   const baseline = [...baselinePrices].sort((a, b) => mix(a) - mix(b))[0];
   const baselineCost = mix(baseline);
-  const baselineScore = lookup.score(baseline.model_key, shape.taskClass);
+  const baselineScore = lookup.score(baseline.model_key, instrument);
 
   if (!baselineScore) {
     return refuse(
       "no_baseline_score",
       "No independent score for that model on this workload.",
-      `${nameOf(baseline.model_key)} has no published third-party result for ${shape.label.toLowerCase()} work in the catalog. We do not certify a switch off a model whose quality nobody has measured.`,
+      `${nameOf(baseline.model_key)} has no published third-party result on ${FIELD_SPECS[instrument].label}, the instrument that certifies ${shape.label.toLowerCase()} work. We do not certify a switch off a model whose quality nobody has measured.`,
     );
   }
 
-  /* -------- the same discrimination guard the engine uses -------- */
+  /* -------- the equivalence band, on the instrument the ladder picked -------- */
 
-  const margin = lookup.margin(baselineScore.suite, shape.taskClass);
-  const spread = lookup.spread(shape.taskClass);
-  if (spread < margin * SEPARATION_FACTOR) {
-    return refuse(
-      "benchmark_not_discriminating",
-      "The benchmark cannot tell these models apart.",
-      `On ${shape.label.toLowerCase()} work the whole field sits within the evaluation's own measurement margin (spread ${spread.toFixed(2)}, margin ±${margin.toFixed(2)}). Any saving we quoted here would rest on noise, so we refuse to quote one.`,
-    );
-  }
+  const margin = lookup.margin(baselineScore.suite, instrument);
 
   /* -------- cheapest model clearing the bar -------- */
 
   const bar = baselineScore.score - margin;
   const candidates = prices
     .filter((p) => p.model_key !== baseline.model_key)
-    .map((p) => ({ price: p, cost: mix(p), score: lookup.score(p.model_key, shape.taskClass) }))
+    .map((p) => ({ price: p, cost: mix(p), score: lookup.score(p.model_key, instrument) }))
+
     .filter((c) => c.score != null && c.score.score >= bar && c.cost < baselineCost)
     .map((c) => ({ price: c.price, cost: c.cost }));
 
@@ -140,7 +153,7 @@ export function resolveEstimate(
     return refuse(
       "no_cheaper_equal",
       "Nothing cheaper holds the quality bar here.",
-      `Every model scoring at or above ${bar.toFixed(2)} on ${baselineScore.suite}/${shape.taskClass} costs more than ${nameOf(baseline.model_key)} for this workload shape. On today's catalog you are not overpaying on this one — that is a real answer, not a failure.`,
+      `Every model scoring at or above ${bar.toFixed(2)} on ${baselineScore.suite}/${FIELD_SPECS[instrument].label} costs more than ${nameOf(baseline.model_key)} for this workload shape. On today's catalog you are not overpaying on this one — that is a real answer, not a failure.`,
     );
   }
 

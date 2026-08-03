@@ -1,3 +1,11 @@
+import {
+  FIELD_SPECS,
+  resolveLadder,
+  separationOfScores,
+  type AaField,
+  type LadderResolution,
+} from "@/lib/benchmarks/task-ladder";
+
 import { arbitrageBaseline, MIN_MONTHLY_SAVING_USD, sortRecommendations } from "./arbitrage";
 import { cheaperWins, costOfUsage, indexPrices, round2, toMonthly } from "./cost";
 import { expectedLatency, latencyNote, type LatencyEstimate } from "./latency";
@@ -20,18 +28,21 @@ import {
  */
 export const UNMEASURED_MARGIN = 0.5;
 
+
 /**
- * Goodhart / discrimination guard.
- * If every model's score on a task class sits inside the measurement margin,
- * the benchmark cannot tell them apart and must not be used to justify a switch.
- * Requires the observed spread to exceed the margin by this factor.
+ * Legacy discrimination guard, kept for the published Intelligence saturation
+ * ratio. The engine itself now walks the ranked ladder and compares each
+ * instrument's separation against SEPARATION_THRESHOLD.
  */
 export const SEPARATION_FACTOR = 2;
 
 export interface ScoreLookup {
-  score(modelKey: string, taskClass: string): { score: number; suite: string } | null;
-  margin(suite: string, taskClass: string): number;
-  spread(taskClass: string): number;
+  score(modelKey: string, instrument: string): { score: number; suite: string } | null;
+  margin(suite: string, instrument: string): number;
+  spread(instrument: string): number;
+  separation(field: AaField): number | null;
+  /** Walk the ranked ladder for a product task and say which instrument certifies it. */
+  instrument(taskHint: string): LadderResolution;
 }
 
 /** Indexes benchmark scores and their measured margins for fast, suite-aware lookup. */
@@ -51,27 +62,35 @@ export function buildScoreLookup(
   const marginBySuiteTask = new Map<string, number>();
   for (const m of margins) marginBySuiteTask.set(`${m.suite}::${m.task_class}`, m.margin);
 
+  const spread = (instrument: string) => {
+    const list = byTask.get(instrument) ?? [];
+    if (list.length < 2) return 0;
+    return Math.max(...list) - Math.min(...list);
+  };
+
+  const separation = (field: AaField) => separationOfScores(byTask.get(field) ?? []);
+
   return {
-    score(modelKey, taskClass) {
-      const exact = byModelTask.get(`${modelKey}::${taskClass}`);
-      if (exact) return { score: exact.score, suite: exact.suite };
-      const fallback = byModelTask.get(`${modelKey}::generation`);
-      return fallback ? { score: fallback.score, suite: fallback.suite } : null;
+    score(modelKey, instrument) {
+      const exact = byModelTask.get(`${modelKey}::${instrument}`);
+      return exact ? { score: exact.score, suite: exact.suite } : null;
     },
-    margin(suite, taskClass) {
-      return (
-        marginBySuiteTask.get(`${suite}::${taskClass}`) ??
-        marginBySuiteTask.get(`${suite}::generation`) ??
-        UNMEASURED_MARGIN
-      );
+    margin(suite, instrument) {
+      return marginBySuiteTask.get(`${suite}::${instrument}`) ?? UNMEASURED_MARGIN;
     },
-    spread(taskClass) {
-      const list = byTask.get(taskClass) ?? byTask.get("generation") ?? [];
-      if (list.length < 2) return 0;
-      return Math.max(...list) - Math.min(...list);
+    spread,
+    separation,
+    instrument(taskHint) {
+      return resolveLadder(taskHint, separation);
     },
   };
 }
+
+/** Human name of the instrument the ladder picked, for refusal and note copy. */
+function currentInstrumentLabel(resolution: LadderResolution): string {
+  return resolution.field ? FIELD_SPECS[resolution.field].label : "benchmark";
+}
+
 
 export interface EquivalenceResult {
   recommendations: Recommendation[];
@@ -116,24 +135,31 @@ export function findQualityMatches(
       continue;
     }
 
-    const currentScore = lookup.score(u.model_key, u.task_hint);
-    if (!currentScore) {
-      refuse(u, "no_baseline_score", `No benchmark score for ${u.model_key} on ${u.task_hint}.`);
+    /*
+     * Ladder walk first: which instrument, if any, is allowed to judge this
+     * workload. Ranked by semantic fit; the first rung that separates models by
+     * at least SEPARATION_THRESHOLD wins. No rung passing means REFUSE — never
+     * a composite index, never a borrowed instrument.
+     */
+    const resolution = lookup.instrument(u.task_hint);
+    if (!resolution.field) {
+      refuse(u, resolution.refusal ?? "no_valid_instrument", resolution.detail);
       continue;
     }
+    const instrument = resolution.field;
 
-    const margin = lookup.margin(currentScore.suite, u.task_hint);
-
-    // Goodhart guard: a benchmark that cannot separate models cannot certify a switch.
-    const spread = lookup.spread(u.task_hint);
-    if (spread < margin * SEPARATION_FACTOR) {
+    const currentScore = lookup.score(u.model_key, instrument);
+    if (!currentScore) {
       refuse(
         u,
-        "benchmark_not_discriminating",
-        `${currentScore.suite} spread on ${u.task_hint} is ${spread.toFixed(2)}, inside ${SEPARATION_FACTOR}x the ${margin.toFixed(2)} measurement margin — it cannot tell these models apart.`,
+        "no_baseline_score",
+        `No ${currentInstrumentLabel(resolution)} score for ${u.model_key}.`,
       );
       continue;
     }
+
+    const margin = lookup.margin(currentScore.suite, instrument);
+
 
     const objective = objectiveFor(u);
     // quality_floor raises the bar; it never lowers it below the measured band.
@@ -153,7 +179,7 @@ export function findQualityMatches(
 
     for (const [modelKey, candidatePrices] of byModel) {
       if (modelKey === u.model_key) continue;
-      const s = lookup.score(modelKey, u.task_hint);
+      const s = lookup.score(modelKey, instrument);
       if (!s) continue;
       if (s.score < bar) continue;
       anyClearedBar = true;
