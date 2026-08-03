@@ -423,3 +423,50 @@ export const runPayouts = createServerFn({ method: "POST" })
     }
     return results;
   });
+
+/**
+ * Acquisition split: how many workspaces arrived on their own and how many came
+ * through a partner. Read straight from organizations/partners — there is no
+ * cached counter to drift.
+ *
+ * The demo workspace is excluded: it is not an acquisition.
+ */
+export const readReferralSplit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertPlatformAdmin(context.supabase as never);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [orgs, partners] = await Promise.all([
+      supabaseAdmin
+        .from("organizations")
+        .select("id, referred_by_partner_id, created_at")
+        .eq("is_synthetic", false),
+      supabaseAdmin.from("partners").select("id, name, referral_code, status"),
+    ]);
+    if (orgs.error) throw orgs.error;
+    if (partners.error) throw partners.error;
+
+    const rows = orgs.data ?? [];
+    const referred = rows.filter((o) => o.referred_by_partner_id);
+    const counts = new Map<string, number>();
+    for (const o of referred) {
+      const id = o.referred_by_partner_id as string;
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+
+    return {
+      total: rows.length,
+      direct: rows.length - referred.length,
+      partnerReferred: referred.length,
+      byPartner: (partners.data ?? [])
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          code: p.referral_code,
+          status: p.status,
+          referred: counts.get(p.id) ?? 0,
+        }))
+        .sort((a, b) => b.referred - a.referred || a.name.localeCompare(b.name)),
+    };
+  });
