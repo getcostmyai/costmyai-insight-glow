@@ -129,24 +129,31 @@ export function findQualityMatches(
       continue;
     }
 
-    const currentScore = lookup.score(u.model_key, u.task_hint);
-    if (!currentScore) {
-      refuse(u, "no_baseline_score", `No benchmark score for ${u.model_key} on ${u.task_hint}.`);
+    /*
+     * Ladder walk first: which instrument, if any, is allowed to judge this
+     * workload. Ranked by semantic fit; the first rung that separates models by
+     * at least SEPARATION_THRESHOLD wins. No rung passing means REFUSE — never
+     * a composite index, never a borrowed instrument.
+     */
+    const resolution = lookup.instrument(u.task_hint);
+    if (!resolution.field) {
+      refuse(u, resolution.refusal ?? "no_valid_instrument", resolution.detail);
       continue;
     }
+    const instrument = resolution.field;
 
-    const margin = lookup.margin(currentScore.suite, u.task_hint);
-
-    // Goodhart guard: a benchmark that cannot separate models cannot certify a switch.
-    const spread = lookup.spread(u.task_hint);
-    if (spread < margin * SEPARATION_FACTOR) {
+    const currentScore = lookup.score(u.model_key, instrument);
+    if (!currentScore) {
       refuse(
         u,
-        "benchmark_not_discriminating",
-        `${currentScore.suite} spread on ${u.task_hint} is ${spread.toFixed(2)}, inside ${SEPARATION_FACTOR}x the ${margin.toFixed(2)} measurement margin — it cannot tell these models apart.`,
+        "no_baseline_score",
+        `No ${currentInstrumentLabel(resolution)} score for ${u.model_key}.`,
       );
       continue;
     }
+
+    const margin = lookup.margin(currentScore.suite, instrument);
+
 
     const objective = objectiveFor(u);
     // quality_floor raises the bar; it never lowers it below the measured band.
