@@ -85,14 +85,14 @@ export function RungStack() {
     <div className="flex flex-col-reverse gap-3">
       {RUNGS.map((r, i) => {
         // Ascending structure: rung 1 is the widest base, rung 4 the apex.
-        const inset = (r.n - 1) * 3.5;
+        const width = 100 - (r.n - 1) * 4;
         const strength = 0.05 + r.n * 0.045;
         return (
           <Reveal key={r.key} delay={(RUNGS.length - i) * 70}>
             <div
-              className="grid items-center gap-4 rounded-2xl px-5 py-6 sm:ml-[var(--ins)] sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
+              className="grid items-center gap-4 rounded-2xl px-5 py-6 sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
               style={{
-                ["--ins" as string]: `${inset}rem`,
+                width: `${width}%`,
                 background: `color-mix(in oklab, var(--primary) ${strength * 100}%, transparent)`,
               }}
             >
