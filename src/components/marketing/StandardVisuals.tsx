@@ -21,6 +21,8 @@ export interface Rung {
   proof: string;
   proofDetail: string;
   plan: string;
+  /** Names of the rungs this one contains in full. Empty for rung 1. */
+  inherits: string[];
 }
 
 export const RUNGS: Rung[] = [
@@ -34,6 +36,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "We know exactly which model you run, and the live per-token price at every host serving those same weights.",
     plan: "Free",
+    inherits: [],
   },
   {
     n: 2,
@@ -45,6 +48,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "An independent test score for this kind of task, plus how far that test can be off. No error margin, no claim.",
     plan: "Paid",
+    inherits: ["Compare"],
   },
   {
     n: 3,
@@ -56,6 +60,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "Your measured input and output token mix and how hard the tasks actually are, per workload. Not a guess from a price list.",
     plan: "Paid",
+    inherits: ["Compare", "Certify"],
   },
   {
     n: 4,
@@ -67,6 +72,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "Every automatic action stores the price, the score, the error margin and the condition that would reverse it.",
     plan: "Paid",
+    inherits: ["Compare", "Certify", "Rightsize"],
   },
 ];
 
@@ -83,6 +89,12 @@ const PROOF_ICONS = {
  * requirement attached directly to the level rather than listed underneath.
  * ------------------------------------------------------------------------- */
 
+/** "Compare, Certify and Rightsize" */
+function listOf(names: string[]) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 export function RungStack() {
   return (
     <div className="flex flex-col-reverse gap-3">
@@ -93,7 +105,7 @@ export function RungStack() {
         return (
           <Reveal key={r.key} delay={(RUNGS.length - i) * 70}>
             <div
-              className="grid items-center gap-4 rounded-2xl px-5 py-6 sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
+              className="grid items-start gap-4 rounded-2xl px-5 py-6 sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
               style={{
                 width: `${width}%`,
                 background: `color-mix(in oklab, var(--primary) ${strength * 100}%, transparent)`,
@@ -106,11 +118,17 @@ export function RungStack() {
                 {r.name}
               </span>
               <span className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                <span className="mb-1.5 block text-[0.7rem] font-medium uppercase tracking-[0.14em] text-primary/80">
+                  {r.inherits.length === 0
+                    ? "The base. Everything above includes it"
+                    : `Everything in ${listOf(r.inherits)}, plus`}
+                </span>
                 {r.requirement}
               </span>
               <span className="justify-self-start text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/80 sm:justify-self-end">
                 {r.plan}
               </span>
+
             </div>
           </Reveal>
         );
@@ -139,6 +157,11 @@ export function ProofMatrix() {
               </p>
               <p className="mt-2 text-xl font-semibold tracking-[-0.03em]">{r.proof}</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{r.proofDetail}</p>
+              <p className="mt-auto pt-6 text-[0.72rem] leading-relaxed text-muted-foreground/80">
+                {r.inherits.length === 0
+                  ? "Included in every rung above."
+                  : `Also proves everything ${listOf(r.inherits)} proves.`}
+              </p>
             </Reveal>
           </li>
         );
