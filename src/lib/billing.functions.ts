@@ -142,6 +142,7 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
+        billing_address_collection: "required",
         managed_payments: { enabled: true },
         metadata: { userId, orgId: data.orgId, plan: data.plan, managed_payments: "true" },
         subscription_data: {
