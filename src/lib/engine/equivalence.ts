@@ -157,8 +157,23 @@ export function findQualityMatches(
       );
       continue;
     }
+    /*
+     * A stored 0.000 is the sync's "not measured on this instrument" sentinel,
+     * not a real result: every genuine score on these instruments is strictly
+     * positive. Certifying against it produces a negative bar, which anything
+     * clears — so an unmeasured baseline refuses instead.
+     */
+    if (!(currentScore.score > 0)) {
+      refuse(
+        u,
+        "no_baseline_score",
+        `${u.model_key} has no measured ${currentInstrumentLabel(resolution)} result (recorded 0.000), so no equal-quality claim can be made.`,
+      );
+      continue;
+    }
 
     const margin = lookup.margin(currentScore.suite, instrument);
+
 
 
     const objective = objectiveFor(u);
@@ -181,6 +196,9 @@ export function findQualityMatches(
       if (modelKey === u.model_key) continue;
       const s = lookup.score(modelKey, instrument);
       if (!s) continue;
+      // Same sentinel rule on the destination side: an unmeasured candidate is
+      // never "equal quality", however cheap it is.
+      if (!(s.score > 0)) continue;
       if (s.score < bar) continue;
       anyClearedBar = true;
       for (const price of candidatePrices) {

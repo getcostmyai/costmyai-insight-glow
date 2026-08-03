@@ -34,7 +34,8 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         .from("host_prices")
         .select(
           "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms",
-        ),
+        )
+        .eq("is_active", true),
       // Retired fixture rows stay in the table for audit, but the engine must
       // only ever reason over measured data.
       supabase
@@ -46,7 +47,7 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         .select("suite, task_class, margin, method, synced_at, source_run_id")
         .eq("is_fixture", false),
 
-      supabase.from("model_catalog").select("model_key, display_name, vendor, tier"),
+      supabase.from("model_catalog").select("model_key, display_name, vendor, tier").eq("is_active", true),
     ]);
 
     const firstError =
