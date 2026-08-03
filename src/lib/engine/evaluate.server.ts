@@ -78,21 +78,44 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
 
   const since = new Date(Date.now() - EVALUATION_WINDOW_DAYS * DAY_MS).toISOString();
 
-  // Reference data is identical for every workspace: read it once.
+  // Reference data is identical for every workspace: read it once, and read
+  // all of it — the catalogue is past the data API's 1000-row page ceiling, so
+  // an unpaged read silently hands the engine a partial market.
+  const { fetchAllRows } = await import("../paginate.server");
+
   const [orgs, prices, benchmarks, margins, models] = await Promise.all([
-    supabaseAdmin.from("organizations").select("id, plan, is_synthetic, autonomous_enabled").eq("is_synthetic", false),
-    supabaseAdmin
-      .from("host_prices")
-      .select(
-        "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope",
-      ),
-    supabaseAdmin.from("benchmarks").select("model_key, suite, task_class, score").eq("is_fixture", false),
-    supabaseAdmin
-      .from("benchmark_margins")
-      .select("suite, task_class, margin, method, synced_at, source_run_id")
-      .eq("is_fixture", false),
-    supabaseAdmin.from("model_catalog").select("model_key, display_name, vendor, tier"),
+    // The synthetic workspace is evaluated too. It is the only standing body of
+    // realistic traffic we have, and skipping it meant the scheduled writer had
+    // nothing to write against. Its output is stamped is_synthetic at the
+    // database boundary, and the human switch paths stay read-only for it.
+    supabaseAdmin.from("organizations").select("id, plan, is_synthetic, autonomous_enabled"),
+    fetchAllRows((from, to) =>
+      supabaseAdmin
+        .from("host_prices")
+        .select(
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope",
+        )
+        .range(from, to),
+    ).then((data) => ({ data, error: null })),
+    fetchAllRows((from, to) =>
+      supabaseAdmin
+        .from("benchmarks")
+        .select("model_key, suite, task_class, score")
+        .eq("is_fixture", false)
+        .range(from, to),
+    ).then((data) => ({ data, error: null })),
+    fetchAllRows((from, to) =>
+      supabaseAdmin
+        .from("benchmark_margins")
+        .select("suite, task_class, margin, method, synced_at, source_run_id")
+        .eq("is_fixture", false)
+        .range(from, to),
+    ).then((data) => ({ data, error: null })),
+    fetchAllRows((from, to) =>
+      supabaseAdmin.from("model_catalog").select("model_key, display_name, vendor, tier").range(from, to),
+    ).then((data) => ({ data, error: null })),
   ]);
+
 
   const readError = orgs.error ?? prices.error ?? benchmarks.error ?? margins.error ?? models.error;
   if (readError) throw new Error(`evaluation could not read reference data: ${readError.message}`);
@@ -152,15 +175,23 @@ async function evaluateOrg(
     report: EvaluationReport;
   },
 ): Promise<void> {
+  const { fetchAllRows } = await import("../paginate.server");
+
   const [rollups, objectives, subscription] = await Promise.all([
-    supabaseAdmin
-      .from("usage_rollups")
-      .select(
-        "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
-      )
-      .eq("org_id", org.id)
-      .eq("granularity", "day")
-      .gte("bucket_start", ctx.since),
+    // 30 days x every workload x every host is well past one page; a truncated
+    // read here would quietly understate the workspace's spend.
+    fetchAllRows((from, to) =>
+      supabaseAdmin
+        .from("usage_rollups")
+        .select(
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+        )
+        .eq("org_id", org.id)
+        .eq("granularity", "day")
+        .gte("bucket_start", ctx.since)
+        .range(from, to),
+    ).then((data) => ({ data, error: null })),
+
     supabaseAdmin
       .from("objectives")
       .select("model_key, host, task_hint, objective, quality_floor_score, max_latency_ms")
@@ -173,8 +204,9 @@ async function evaluateOrg(
       .maybeSingle(),
   ]);
 
-  if (rollups.error) throw new Error(rollups.error.message);
+  // fetchAllRows throws on a read error, so reaching here means the read was whole.
   if (!rollups.data || rollups.data.length === 0) return; // no traffic, nothing to say
+
 
   const shapes = new Map<string, { p50: number[]; p95: number[] }>();
   const byWorkload = new Map<string, UsageAggregate>();
