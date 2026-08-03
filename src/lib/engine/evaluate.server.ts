@@ -204,8 +204,9 @@ async function evaluateOrg(
       .maybeSingle(),
   ]);
 
-  if (rollups.error) throw new Error(rollups.error.message);
+  // fetchAllRows throws on a read error, so reaching here means the read was whole.
   if (!rollups.data || rollups.data.length === 0) return; // no traffic, nothing to say
+
 
   const shapes = new Map<string, { p50: number[]; p95: number[] }>();
   const byWorkload = new Map<string, UsageAggregate>();
