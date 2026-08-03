@@ -90,9 +90,9 @@ export function RungStack() {
         return (
           <Reveal key={r.key} delay={(RUNGS.length - i) * 70}>
             <div
-              className="grid items-center gap-4 rounded-2xl px-5 py-6 sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
+              className="grid items-center gap-4 rounded-2xl px-5 py-6 sm:ml-[var(--ins)] sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
               style={{
-                marginLeft: `${inset}rem`,
+                ["--ins" as string]: `${inset}rem`,
                 background: `color-mix(in oklab, var(--primary) ${strength * 100}%, transparent)`,
               }}
             >
