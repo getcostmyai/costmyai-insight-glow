@@ -434,16 +434,16 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
             <Tick
               x={barX}
               value={n2(winner.bar)}
-              label="the bar · what we pay for"
+              label="pass mark · what we pick"
               saving
             />
           ) : (
             <>
-              <Tick x={barX} value={n2(winner.bar)} label="the bar" accent />
-              <Tick x={winX} value={n2(winner.score)} label="what we pay for" saving />
+              <Tick x={barX} value={n2(winner.bar)} label="pass mark" accent />
+              <Tick x={winX} value={n2(winner.score)} label="what we pick" saving />
             </>
           )}
-          <Tick x={leadX} value={n2(winner.topScore)} label="leader" align="end" />
+          <Tick x={leadX} value={n2(winner.topScore)} label="best model" align="end" />
         </div>
       </div>
 
@@ -454,8 +454,10 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
             ${winner.pricePerMtok.toFixed(2)}
           </span>
           <span className="text-sm text-muted-foreground">
-            per MTok in at {winner.hostLabel} — same measured quality band as the leader.
+            per million input tokens (MTok) at {winner.hostLabel}, at a quality this test rates the
+            same as the best model.
           </span>
+
         </div>
       ) : null}
     </div>
