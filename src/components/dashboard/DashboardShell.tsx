@@ -11,12 +11,9 @@ import type { LevelKey } from "@/lib/dashboard/levels";
 import { compact, int } from "@/lib/gateway-metrics";
 import type { PlanTier } from "@/lib/engine/types";
 
-/** Only entries that resolve to a route that actually exists today. */
-const topNav = [
-  { label: "Models", to: "/models" },
-  { label: "Intelligence", to: "/intelligence" },
-  { label: "Plans", to: "/pricing" },
-] as const;
+/** Rendered from the one shared nav definition — see src/lib/nav.ts. */
+const topNav = APP_NAV;
+
 
 /**
  * The chrome every level page shares: masthead, the level switcher, account

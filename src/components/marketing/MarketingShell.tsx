@@ -15,14 +15,9 @@ import { Wordmark } from "./Wordmark";
  * shared .btn-gradient utility, so the brand gradient has exactly one source.
  */
 
-const NAV = [
-  { to: "/", label: "How it works", hash: "how" },
-  { to: "/models", label: "Models" },
-  { to: "/intelligence", label: "Intelligence" },
-  { to: "/partners", label: "Become a Partner" },
-  { to: "/blog", label: "Blog" },
-  { to: "/pricing", label: "Pricing" },
-] as const;
+/** Rendered from the one shared nav definition — see src/lib/nav.ts. */
+const NAV = MARKETING_NAV;
+
 
 
 function useSignedIn() {
