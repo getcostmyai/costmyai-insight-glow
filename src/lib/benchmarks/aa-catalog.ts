@@ -244,62 +244,55 @@ export function transformAaPayload(models: AaModel[], catalogKeys: string[]): Tr
   }
 
 
-  for (const [taskClass, candidates] of Object.entries(TASK_EVAL_CANDIDATES)) {
-    const choice = chooseEval(
-      candidates,
-      (spec) =>
-        [...resolved.values()].filter((m) => m.evaluations?.[spec.field] != null).length,
-      resolved.size,
-    );
-    if (!choice) {
-      skipped.push({
-        model_key: "*",
-        task_class: taskClass,
-        reason: "No evaluation with a published item count covers enough of the catalogue.",
-      });
-      continue;
-    }
-
-    const { spec } = choice;
+  /*
+   * Every certifiable field is ingested for every matched model, under its own
+   * task_class (the instrument name). Nothing is chosen here: the ranked ladder
+   * decides at decision time which instrument a given workload is judged on.
+   */
+  for (const spec of INGESTED_FIELDS) {
     const suite = suiteFor(spec);
-    chosenEvals.push({
-      task_class: taskClass,
-      suite,
-      label: spec.label,
-      covered: choice.covered,
-      sampleSize: spec.sampleSize,
-    });
+    let covered = 0;
 
     for (const [key, model] of resolved) {
       const raw = model.evaluations?.[spec.field];
       if (raw == null || Number.isNaN(Number(raw))) {
         skipped.push({
           model_key: key,
-          task_class: taskClass,
+          task_class: spec.field,
           reason: `${spec.label} not reported for ${model.slug}`,
         });
         continue;
       }
+      covered++;
       scores.push({
         model_key: key,
         suite,
-        task_class: taskClass,
+        task_class: spec.field,
         score: toPoints(Number(raw)),
         sample_size: spec.sampleSize,
         source: `artificialanalysis.ai/${model.slug}#${spec.field}`,
       });
     }
 
+    chosenEvals.push({
+      task_class: spec.field,
+      suite,
+      label: spec.label,
+      covered,
+      sampleSize: spec.sampleSize,
+    });
+
     const margin = marginFor(
-      scores.filter((s) => s.suite === suite && s.task_class === taskClass).map((s) => s.score),
+      scores.filter((s) => s.suite === suite && s.task_class === spec.field).map((s) => s.score),
       spec.sampleSize,
     );
     if (Number.isFinite(margin)) {
-      margins.push({ suite, task_class: taskClass, margin, method: MARGIN_METHOD });
+      margins.push({ suite, task_class: spec.field, margin, method: MARGIN_METHOD });
     }
   }
 
   /*
+
    * AA's own published composite, stored verbatim for display only.
    *
    * It is NOT an evaluation with an item count, so it gets no margin row and is
