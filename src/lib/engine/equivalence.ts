@@ -196,6 +196,9 @@ export function findQualityMatches(
       if (modelKey === u.model_key) continue;
       const s = lookup.score(modelKey, instrument);
       if (!s) continue;
+      // Same sentinel rule on the destination side: an unmeasured candidate is
+      // never "equal quality", however cheap it is.
+      if (!(s.score > 0)) continue;
       if (s.score < bar) continue;
       anyClearedBar = true;
       for (const price of candidatePrices) {
