@@ -403,13 +403,14 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
             className="absolute top-4 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/70"
             style={{ right: `calc(${100 - barX}% + 12px)` }}
           >
-            below the bar · disqualified
+            too low · not allowed
           </p>
           <p
             className="absolute top-4 text-[0.7rem] font-medium uppercase tracking-[0.14em] text-primary"
             style={{ left: `calc(${barX}% + 14px)` }}
           >
-            statistically the same as the leader
+            as good as the best model, as far as this test can tell
+
           </p>
 
           {/* the bar */}
