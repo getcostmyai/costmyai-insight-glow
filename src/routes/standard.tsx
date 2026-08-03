@@ -70,7 +70,7 @@ export const Route = createFileRoute("/standard")({
       {
         name: "description",
         content:
-          "The CostMyAI Standard: a four-rung AI spend governance framework built on proof, not estimation. Compare, Certify, Rightsize, Govern — and what each rung has to prove.",
+          "The CostMyAI Standard: a four step framework for cutting your AI bill without guessing. Compare, Certify, Rightsize, Govern, and the proof each step needs.",
       },
       {
         name: "keywords",
@@ -80,8 +80,9 @@ export const Route = createFileRoute("/standard")({
       {
         property: "og:description",
         content:
-          "The AI spend governance framework built on proof, not estimation. Four rungs, one proof requirement each, and a refusal when the evidence is missing.",
+          "A four step framework for getting your AI bill under control. Every saving has to be proven, and when the proof is missing we say no instead of guessing.",
       },
+
       { property: "og:type", content: "article" },
       { property: "og:url", content: "/standard" },
       { name: "twitter:card", content: "summary_large_image" },
