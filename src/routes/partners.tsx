@@ -59,8 +59,8 @@ const STEPS = [
   },
   {
     n: "02",
-    t: "Share your code",
-    b: "You get a referral code and a dashboard. A workspace enters it once at signup.",
+    t: "Share your link",
+    b: "You get a link — costmyai.com/r/YOUR-CODE — and a dashboard. A click attributes the signup for 60 days; the code can also be entered by hand in Settings.",
   },
   {
     n: "03",
