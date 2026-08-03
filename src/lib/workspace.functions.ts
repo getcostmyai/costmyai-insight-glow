@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+import { isIndustry, isUseCase, type UseCase } from "./benchmark/taxonomy";
 import type { PlanTier } from "./engine/types";
 import { slugify, validateWorkspaceName } from "./workspace/naming";
 
@@ -57,7 +58,7 @@ export const createWorkspace = createServerFn({ method: "POST" })
     if (!isIndustry(data?.industry)) throw new Error("Pick the industry closest to yours.");
     return {
       name: data.name.trim(),
-      useCase: data.useCase,
+      useCase: data.useCase as UseCase,
       // Free text only survives as a label on this one workspace: it is never
       // allowed into a benchmark bucket.
       useCaseOther:
