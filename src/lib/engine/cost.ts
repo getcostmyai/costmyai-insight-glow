@@ -54,3 +54,13 @@ export function cheaperWins(
   if (byModel !== 0) return byModel;
   return a.price.host.localeCompare(b.price.host);
 }
+
+/**
+ * Display rounding for a savings percentage. One decimal, and never a bare
+ * "100%": a switch that removes 99.97% of a workload's cost is still not free,
+ * and rounding it to a flat 100 reads as a bug even when the arithmetic is right.
+ */
+export function displaySavingPct(pct: number): number {
+  const oneDecimal = Math.round(pct * 10) / 10;
+  return Math.min(99.9, Math.max(0, oneDecimal));
+}
