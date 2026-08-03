@@ -33,6 +33,9 @@ export function ShareCardButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
 
   if (!month) {
     return (
