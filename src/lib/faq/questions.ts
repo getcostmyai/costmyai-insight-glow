@@ -86,6 +86,11 @@ export const FAQ_CLUSTERS: FaqCluster[] = [
         q: "What data does CostMyAI actually see, if not my API keys?",
         a: "Aggregate, provider neutral records of usage and billed spend, pushed from your own environment. Not your prompts, not your model outputs, unless you explicitly choose to share that separately.",
       },
+      {
+        id: "why-invoice-says-link-llc",
+        q: "Why does my invoice say Link, LLC instead of CostMyAI?",
+        a: "Payments run through Link, LLC, our payment processor. They collect the money and issue the invoice. CostMyAI is the product you're paying for. Same subscription, same support, different name on the receipt.",
+      },
     ],
   },
   {
