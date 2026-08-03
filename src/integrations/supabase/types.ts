@@ -770,6 +770,62 @@ export type Database = {
           },
         ]
       }
+      org_profiles: {
+        Row: {
+          benchmark_prompt_dismissed_at: string | null
+          created_at: string
+          customer_facing: boolean | null
+          headcount_band: string | null
+          industry: string
+          maturity: Database["public"]["Enums"]["deployment_maturity"] | null
+          org_id: string
+          primer_seen_at: string | null
+          quality_flag: string | null
+          revenue_band: string | null
+          updated_at: string
+          use_case: Database["public"]["Enums"]["ai_use_case"]
+          use_case_other: string | null
+        }
+        Insert: {
+          benchmark_prompt_dismissed_at?: string | null
+          created_at?: string
+          customer_facing?: boolean | null
+          headcount_band?: string | null
+          industry: string
+          maturity?: Database["public"]["Enums"]["deployment_maturity"] | null
+          org_id: string
+          primer_seen_at?: string | null
+          quality_flag?: string | null
+          revenue_band?: string | null
+          updated_at?: string
+          use_case: Database["public"]["Enums"]["ai_use_case"]
+          use_case_other?: string | null
+        }
+        Update: {
+          benchmark_prompt_dismissed_at?: string | null
+          created_at?: string
+          customer_facing?: boolean | null
+          headcount_band?: string | null
+          industry?: string
+          maturity?: Database["public"]["Enums"]["deployment_maturity"] | null
+          org_id?: string
+          primer_seen_at?: string | null
+          quality_flag?: string | null
+          revenue_band?: string | null
+          updated_at?: string
+          use_case?: Database["public"]["Enums"]["ai_use_case"]
+          use_case_other?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           autonomous_enabled: boolean
@@ -1913,6 +1969,15 @@ export type Database = {
       }
       backup_export_counts: { Args: never; Returns: Json }
       backup_export_sql: { Args: never; Returns: string }
+      benchmark_cut: {
+        Args: { _industry?: string; _revenue_band?: string; _use_case?: string }
+        Returns: {
+          company_count: number
+          p25_usd: number
+          p50_usd: number
+          p75_usd: number
+        }[]
+      }
       clawback_commission: {
         Args: { _environment?: string; _invoice_id: string; _reason: string }
         Returns: Json
@@ -2051,8 +2116,10 @@ export type Database = {
       }
     }
     Enums: {
+      ai_use_case: "customer_facing" | "internal" | "both" | "other"
       app_role: "owner" | "admin" | "member"
       commission_status: "pending" | "approved" | "paid" | "clawed_back"
+      deployment_maturity: "pilot" | "production"
       objective_kind: "cost" | "latency" | "quality_floor"
       partner_application_path: "meeting" | "async"
       partner_application_status:
@@ -2195,8 +2262,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_use_case: ["customer_facing", "internal", "both", "other"],
       app_role: ["owner", "admin", "member"],
       commission_status: ["pending", "approved", "paid", "clawed_back"],
+      deployment_maturity: ["pilot", "production"],
       objective_kind: ["cost", "latency", "quality_floor"],
       partner_application_path: ["meeting", "async"],
       partner_application_status: [
