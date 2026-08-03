@@ -28,10 +28,11 @@ export const RUNGS: Rung[] = [
     n: 1,
     key: "compare",
     name: "Compare",
-    requirement: "Same model, cheaper host — identical weights, nothing to prove about quality.",
+    requirement:
+      "The exact same model, rented from a cheaper host. Identical weights, so quality cannot change.",
     proof: "Model + price",
     proofDetail:
-      "A resolved model identity and a live per-token price on every host serving those exact weights.",
+      "We know exactly which model you run, and the live per-token price at every host serving those same weights.",
     plan: "Free",
   },
   {
@@ -39,10 +40,10 @@ export const RUNGS: Rung[] = [
     key: "certify",
     name: "Certify",
     requirement:
-      "A different, cheaper model — only when it clears the leader's score minus that benchmark's own measured margin.",
+      "A different, cheaper model. Allowed only when its benchmark score is close enough to the best model that the test cannot tell them apart.",
     proof: "Benchmark + margin",
     proofDetail:
-      "A third-party score for the task class and the evaluation's published measurement margin. No margin, no claim.",
+      "An independent test score for this kind of task, plus how far that test can be off. No error margin, no claim.",
     plan: "Paid",
   },
   {
@@ -50,10 +51,10 @@ export const RUNGS: Rung[] = [
     key: "rightsize",
     name: "Rightsize",
     requirement:
-      "The model is larger than the work requires — detected from the real token and complexity profile, switched by you.",
+      "You are paying for a model bigger than the job needs. We spot it in your real traffic, you approve the switch.",
     proof: "Token + complexity profile",
     proofDetail:
-      "Observed input/output token mix and task complexity per workload, not a list-price assumption.",
+      "Your measured input and output token mix and how hard the tasks actually are, per workload. Not a guess from a price list.",
     plan: "Paid",
   },
   {
@@ -61,13 +62,14 @@ export const RUNGS: Rung[] = [
     key: "govern",
     name: "Govern",
     requirement:
-      "Certified switches applied unattended, with automatic rollback the moment the evidence stops holding.",
+      "Approved switches happen on their own, and undo themselves the moment the evidence stops holding.",
     proof: "Full evidence trail",
     proofDetail:
-      "Every autonomous action carries the price, the score, the margin and the rollback condition that authorised it.",
+      "Every automatic action stores the price, the score, the error margin and the condition that would reverse it.",
     plan: "Paid",
   },
 ];
+
 
 const PROOF_ICONS = {
   compare: Coins,
