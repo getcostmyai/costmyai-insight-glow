@@ -43,24 +43,25 @@ const SUPPORTING = [
   {
     slug: "finops-for-ai",
     title: "FinOps for AI: how it's different from cloud FinOps",
-    note: "Why AI spend became its own discipline — the context rung one exists to fix.",
+    note: "Why AI spend needs its own discipline. This is the problem rung one exists to fix.",
   },
   {
     slug: "ai-cost-governance-101",
     title: "AI cost governance 101: building visibility before finance asks",
-    note: "Tracking is not forecasting. The visibility work that sits under rung one.",
+    note: "Seeing what you spent is not the same as knowing what you will spend. The groundwork under rung one.",
   },
   {
     slug: "benchmark-backed-model-switching",
     title: "Benchmark-backed model switching: why cheaper isn't automatically safe",
-    note: "The equivalence mechanic behind rung two, in full.",
+    note: "How we decide two models are equally good, explained in full. That is rung two.",
   },
   {
     slug: "ai-cost-governance-framework",
     title: "The AI Cost Governance Framework: a guide for engineering teams",
-    note: "The long-form walkthrough of all four rungs for engineering teams.",
+    note: "The long read: all four rungs, step by step, for engineering teams.",
   },
 ];
+
 
 export const Route = createFileRoute("/standard")({
   head: () => ({
