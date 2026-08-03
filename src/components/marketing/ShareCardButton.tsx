@@ -56,9 +56,13 @@ export function ShareCardButton({
     );
   }
 
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  // The origin is only known in the browser, so it is resolved after hydration.
+  // Rendering it during the first paint made the server and client disagree on
+  // every share href.
+  const origin = hydrated && typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}/intelligence/${month}#${cardId}`;
   const image = `${origin}/api/public/og/intelligence/${month}?card=${encodeURIComponent(cardId)}`;
+
   const enc = encodeURIComponent(url);
   const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`;
   const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${enc}`;
