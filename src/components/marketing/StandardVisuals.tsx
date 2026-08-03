@@ -36,6 +36,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "We know exactly which model you run, and the live per-token price at every host serving those same weights.",
     plan: "Free",
+    inherits: [],
   },
   {
     n: 2,
@@ -47,6 +48,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "An independent test score for this kind of task, plus how far that test can be off. No error margin, no claim.",
     plan: "Paid",
+    inherits: ["Compare"],
   },
   {
     n: 3,
@@ -58,6 +60,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "Your measured input and output token mix and how hard the tasks actually are, per workload. Not a guess from a price list.",
     plan: "Paid",
+    inherits: ["Compare", "Certify"],
   },
   {
     n: 4,
@@ -69,6 +72,7 @@ export const RUNGS: Rung[] = [
     proofDetail:
       "Every automatic action stores the price, the score, the error margin and the condition that would reverse it.",
     plan: "Paid",
+    inherits: ["Compare", "Certify", "Rightsize"],
   },
 ];
 
