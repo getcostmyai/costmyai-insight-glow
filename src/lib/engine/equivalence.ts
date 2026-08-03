@@ -173,7 +173,7 @@ export function findQualityMatches(
 
     for (const [modelKey, candidatePrices] of byModel) {
       if (modelKey === u.model_key) continue;
-      const s = lookup.score(modelKey, u.task_hint);
+      const s = lookup.score(modelKey, instrument);
       if (!s) continue;
       if (s.score < bar) continue;
       anyClearedBar = true;
