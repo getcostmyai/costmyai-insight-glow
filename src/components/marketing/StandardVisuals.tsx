@@ -366,11 +366,12 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
         >
           <div className="rounded-2xl bg-saving/12 px-4 py-2.5 text-center ring-1 ring-inset ring-saving/30">
             <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-saving">
-              cheapest qualifier
+              cheapest model that passes
             </p>
             <p className="mt-1 text-sm font-semibold tracking-tight">
-              {live ? winner.displayName : "cheapest qualifying model"}
+              {live ? winner.displayName : "cheapest passing model"}
             </p>
+
           </div>
           <div className="mx-auto h-4 w-px bg-saving/40" />
         </div>
