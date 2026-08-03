@@ -45,7 +45,7 @@ async function main() {
   });
   let invoice = await stripe.invoices.create({ customer: customer.id, auto_advance: false });
   invoice = await stripe.invoices.finalizeInvoice(invoice.id!);
-  invoice = await stripe.invoices.pay(invoice.id!);
+  if (invoice.status !== "paid") invoice = await stripe.invoices.pay(invoice.id!);
   log("invoice paid:", invoice.id, invoice.amount_paid, invoice.currency);
 
   // 3. A connected account that can receive transfers.
