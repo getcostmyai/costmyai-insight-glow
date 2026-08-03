@@ -105,34 +105,27 @@ export function resolveEstimate(
 
   const baseline = [...baselinePrices].sort((a, b) => mix(a) - mix(b))[0];
   const baselineCost = mix(baseline);
-  const baselineScore = lookup.score(baseline.model_key, shape.taskClass);
+  const baselineScore = lookup.score(baseline.model_key, instrument);
 
   if (!baselineScore) {
     return refuse(
       "no_baseline_score",
       "No independent score for that model on this workload.",
-      `${nameOf(baseline.model_key)} has no published third-party result for ${shape.label.toLowerCase()} work in the catalog. We do not certify a switch off a model whose quality nobody has measured.`,
+      `${nameOf(baseline.model_key)} has no published third-party result on ${FIELD_SPECS[instrument].label}, the instrument that certifies ${shape.label.toLowerCase()} work. We do not certify a switch off a model whose quality nobody has measured.`,
     );
   }
 
-  /* -------- the same discrimination guard the engine uses -------- */
+  /* -------- the equivalence band, on the instrument the ladder picked -------- */
 
-  const margin = lookup.margin(baselineScore.suite, shape.taskClass);
-  const spread = lookup.spread(shape.taskClass);
-  if (spread < margin * SEPARATION_FACTOR) {
-    return refuse(
-      "benchmark_not_discriminating",
-      "The benchmark cannot tell these models apart.",
-      `On ${shape.label.toLowerCase()} work the whole field sits within the evaluation's own measurement margin (spread ${spread.toFixed(2)}, margin ±${margin.toFixed(2)}). Any saving we quoted here would rest on noise, so we refuse to quote one.`,
-    );
-  }
+  const margin = lookup.margin(baselineScore.suite, instrument);
 
   /* -------- cheapest model clearing the bar -------- */
 
   const bar = baselineScore.score - margin;
   const candidates = prices
     .filter((p) => p.model_key !== baseline.model_key)
-    .map((p) => ({ price: p, cost: mix(p), score: lookup.score(p.model_key, shape.taskClass) }))
+    .map((p) => ({ price: p, cost: mix(p), score: lookup.score(p.model_key, instrument) }))
+
     .filter((c) => c.score != null && c.score.score >= bar && c.cost < baselineCost)
     .map((c) => ({ price: c.price, cost: c.cost }));
 
