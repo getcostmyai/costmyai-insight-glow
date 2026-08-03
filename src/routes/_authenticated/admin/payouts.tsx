@@ -190,7 +190,10 @@ function PayoutsPage() {
                 </div>
                 {r.ok && r.fxRate ? (
                   <p className="mt-1 tabular-nums text-muted-foreground">
-                    {usd(r.amountUsd ?? 0)} at the provider&apos;s booked rate {r.fxRate}
+                    {usd(r.amountUsd ?? 0)} at{" "}
+                    {r.fxRateIsWeighted
+                      ? `a blended ${r.fxRate} across several booked rates`
+                      : `the provider's booked rate ${r.fxRate}`}
                   </p>
                 ) : null}
               </div>

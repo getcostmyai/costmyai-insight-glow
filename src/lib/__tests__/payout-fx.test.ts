@@ -26,7 +26,8 @@ describe("payout FX conversion", () => {
     const out = convertCommissionLines([line()], "eur");
     expect(out.amountUsd).toBe(100);
     expect(out.amountConverted).toBe(86);
-    expect(out.weightedRate).toBe(0.86);
+    expect(out.rate).toBe(0.86);
+    expect(out.rateIsWeighted).toBe(false);
     expect(out.breakdown[0]).toMatchObject({
       invoiceId: "in_1",
       balanceTransactionId: "txn_1",
@@ -45,7 +46,8 @@ describe("payout FX conversion", () => {
     );
     // 100*0.9 + 300*0.8 = 330, not 400 * mean(0.85) = 340.
     expect(out.amountConverted).toBe(330);
-    expect(out.weightedRate).toBe(0.825);
+    expect(out.rate).toBe(0.825);
+    expect(out.rateIsWeighted).toBe(true);
     expect(out.breakdown).toHaveLength(2);
   });
 

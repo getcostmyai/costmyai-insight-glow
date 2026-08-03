@@ -152,6 +152,8 @@ export interface PayoutOutcome {
   amountPaid?: number;
   currency?: string;
   fxRate?: number;
+  /** True when the run spanned several real rates and `fxRate` is blended. */
+  fxRateIsWeighted?: boolean;
   lineCount?: number;
   payoutId?: string;
   transferId?: string;
@@ -232,7 +234,7 @@ export async function runPayoutForPartner(
   const record = await supabaseAdmin.rpc("payout_record_fx", {
     _payout_id: payoutId,
     _currency: conversion.currency,
-    _rate: conversion.weightedRate,
+    _rate: conversion.rate,
     _amount: conversion.amountConverted,
     _detail: conversion.breakdown as unknown as never,
   });
@@ -246,13 +248,14 @@ export async function runPayoutForPartner(
         amount: minorUnits,
         currency: conversion.currency,
         destination: claim.destination!,
-        description: `CostMyAI partner commission (${claim.line_count} invoice lines, ${conversion.amountUsd} USD at ${conversion.weightedRate})`,
+        description: `CostMyAI partner commission (${claim.line_count} invoice lines, ${conversion.amountUsd} USD at ${conversion.rate})`,
         metadata: {
           partnerId,
           payoutId,
           environment: env,
           amountUsd: String(conversion.amountUsd),
-          fxRate: String(conversion.weightedRate),
+          fxRate: String(conversion.rate),
+          fxRateIsWeighted: String(conversion.rateIsWeighted),
         },
       },
       { idempotencyKey: `partner-payout-${payoutId}` },
@@ -271,7 +274,8 @@ export async function runPayoutForPartner(
       amountUsd,
       amountPaid: conversion.amountConverted,
       currency: conversion.currency,
-      fxRate: conversion.weightedRate,
+      fxRate: conversion.rate,
+      fxRateIsWeighted: conversion.rateIsWeighted,
       lineCount: Number(claim.line_count),
       payoutId,
       transferId: transfer.id,
