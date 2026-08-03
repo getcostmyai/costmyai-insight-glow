@@ -140,18 +140,19 @@ function StandardPage() {
         <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-6xl">
             <Reveal className="max-w-3xl">
-              <p className="eyebrow">Rung 2 · the mechanic</p>
+              <p className="eyebrow">Rung 2 · how it works</p>
               <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
-                The cheapest model that clears the bar.
+                The cheapest model that is still good enough.
                 <br />
-                <span className="text-muted-foreground/60">Not the best-scoring one.</span>
+                <span className="text-muted-foreground/60">Not the highest scoring one.</span>
               </h2>
               <p className="mt-7 text-[1.0625rem] leading-[1.75] text-muted-foreground">
-                The bar is the leader&apos;s score minus that evaluation&apos;s own measured margin.
-                Everything inside that band is statistically indistinguishable from the leader, so
-                within it price is the only remaining variable — and the cheapest qualifier wins. If
-                every model sits inside the margin, the benchmark cannot discriminate and must not
-                be used to justify anything.
+                Every benchmark has a margin of error. Take the best model&apos;s score, subtract
+                that error margin, and you get the pass mark. Any model at or above it scores so
+                close to the best that the test cannot honestly separate them, so the only thing
+                left to compare is price, and the cheapest one that passes wins. If every model
+                lands inside the error margin, the test proves nothing and we refuse to use it as an
+                argument.
               </p>
             </Reveal>
 
@@ -160,17 +161,20 @@ function StandardPage() {
                 <p className="text-sm font-medium">
                   {isLiveBand ? (
                     <>
-                      Live band · {winner.taskClass}{" "}
-                      <span className="text-muted-foreground">({winner.suite})</span>
+                      Live example · {winner.taskClass} tasks{" "}
+                      <span className="text-muted-foreground">({winner.suite} benchmark)</span>
                     </>
                   ) : (
-                    "Illustrative band"
+                    "Example, for illustration"
                   )}
                 </p>
                 <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  {isLiveBand ? "from the live catalog" : "no discriminating band published yet"}
+                  {isLiveBand
+                    ? "live prices and scores"
+                    : "no test currently separates the models"}
                 </p>
               </div>
+
               <BandExplainer winner={winner} live={isLiveBand} />
             </Reveal>
           </div>
