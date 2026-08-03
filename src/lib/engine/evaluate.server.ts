@@ -277,6 +277,7 @@ async function evaluateOrg(
   ];
 
   const lastAutonomous = await lastAutonomousChange(org.id);
+  const cycleStart = new Date().toISOString();
 
   for (const [kind, recs] of batches) {
     for (const rec of recs) {
@@ -328,6 +329,20 @@ async function evaluateOrg(
       ctx.report.autonomousSwitches += 1;
     }
   }
+
+  /*
+   * Anything still open that this cycle did not reaffirm is no longer supported
+   * by current prices, benchmarks or traffic — a delisted destination, a
+   * baseline that turned out to be unmeasured, a gap that closed. Reaffirmed
+   * rows carry a fresh computed_at, so the leftovers are exactly the stale ones,
+   * and they are retired rather than left standing as a live claim.
+   */
+  await supabaseAdmin
+    .from("recommendations")
+    .update({ status: "refused" })
+    .eq("org_id", org.id)
+    .eq("status", "open")
+    .lt("computed_at", cycleStart);
 }
 
 async function lastAutonomousChange(orgId: string): Promise<Date | null> {
