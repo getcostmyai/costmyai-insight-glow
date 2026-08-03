@@ -85,8 +85,8 @@ export function RungStack() {
     <div className="flex flex-col-reverse gap-3">
       {RUNGS.map((r, i) => {
         // Ascending structure: rung 1 is the widest base, rung 4 the apex.
-        const inset = (RUNGS.length - r.n) * 0;
-        const strength = 0.06 + r.n * 0.05;
+        const inset = (r.n - 1) * 3.5;
+        const strength = 0.05 + r.n * 0.045;
         return (
           <Reveal key={r.key} delay={(RUNGS.length - i) * 70}>
             <div
