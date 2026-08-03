@@ -167,24 +167,36 @@ function PayoutsPage() {
             {results.map((r) => (
               <div
                 key={r.partnerId}
-                className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 first:border-0 first:pt-0"
+                className="border-t border-border pt-2 first:border-0 first:pt-0"
               >
-                <span className="font-medium">{r.partnerName || r.partnerId}</span>
-                {r.ok ? (
-                  <>
-                    <span className="tabular-nums text-emerald-400">{usd(r.amountUsd ?? 0)}</span>
-                    <code className="font-mono text-[11px] text-muted-foreground">
-                      {r.transferId}
-                    </code>
-                  </>
-                ) : (
-                  <span className="text-amber-400">
-                    {SKIP_COPY[r.reason ?? ""] ?? r.reason ?? "skipped"}
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-medium">{r.partnerName || r.partnerId}</span>
+                  {r.ok ? (
+                    <>
+                      <span className="tabular-nums text-emerald-400">
+                        {r.amountPaid !== undefined && r.currency
+                          ? `${r.amountPaid.toLocaleString("en-US", { style: "currency", currency: r.currency.toUpperCase() })}`
+                          : usd(r.amountUsd ?? 0)}
+                      </span>
+                      <code className="font-mono text-[11px] text-muted-foreground">
+                        {r.transferId}
+                      </code>
+                    </>
+                  ) : (
+                    <span className="text-amber-400">
+                      {SKIP_COPY[r.reason ?? ""] ?? r.reason ?? "skipped"}
+                    </span>
+                  )}
+                </div>
+                {r.ok && r.fxRate ? (
+                  <p className="mt-1 tabular-nums text-muted-foreground">
+                    {usd(r.amountUsd ?? 0)} at the provider&apos;s booked rate {r.fxRate}
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
+
         </section>
       ) : null}
     </Shell>

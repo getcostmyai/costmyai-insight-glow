@@ -2,6 +2,13 @@ import type Stripe from "stripe";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
+import {
+  convertCommissionLines,
+  FxRateUnavailableError,
+  type FxConversion,
+} from "@/lib/partners/fx";
+import { resolveLineRate } from "@/lib/partners/fx.server";
+
 
 /**
  * Partner payouts.
@@ -141,10 +148,21 @@ export interface PayoutOutcome {
   reason?: string;
   connectStatus?: string;
   amountUsd?: number;
+  /** What actually moved, in the account's settlement currency. */
+  amountPaid?: number;
+  currency?: string;
+  fxRate?: number;
   lineCount?: number;
   payoutId?: string;
   transferId?: string;
 }
+
+/**
+ * The account settles in euro, commission is earned in dollars. The transfer
+ * is denominated in the settlement currency at the rate the provider itself
+ * applied to the underlying charges — see `fx.ts`.
+ */
+export const PAYOUT_CURRENCY = "eur";
 
 /**
  * One partner, one transfer. The ledger lines are reserved first, so a crash
@@ -185,53 +203,128 @@ export async function runPayoutForPartner(
   }
 
   const amountUsd = Number(claim.amount_usd);
-  const cents = Math.round(amountUsd * 100);
+  const partnerName = claim.partner_name ?? "";
+  const payoutId = claim.payout_id!;
+  const stripe = createStripeClient(env);
+
+  // Real rate or nothing. A line whose rate cannot be read releases the whole
+  // run back onto the ledger rather than paying at a guessed rate.
+  let conversion: FxConversion;
+  try {
+    conversion = await convertPayout(stripe, payoutId, amountUsd);
+  } catch (error) {
+    const message =
+      error instanceof FxRateUnavailableError
+        ? error.message
+        : `exchange rate lookup failed: ${(error as Error).message}`;
+    await supabaseAdmin.rpc("payout_fail", { _payout_id: payoutId, _error: message });
+    return {
+      partnerId,
+      partnerName,
+      ok: false,
+      reason: `fx_rate_unavailable: ${message}`,
+      amountUsd,
+      lineCount: Number(claim.line_count),
+      payoutId,
+    };
+  }
+
+  const record = await supabaseAdmin.rpc("payout_record_fx", {
+    _payout_id: payoutId,
+    _currency: conversion.currency,
+    _rate: conversion.weightedRate,
+    _amount: conversion.amountConverted,
+    _detail: conversion.breakdown as unknown as never,
+  });
+  if (record.error) throw new Error(record.error.message);
+
+  const minorUnits = Math.round(conversion.amountConverted * 100);
 
   try {
-    const stripe = createStripeClient(env);
     const transfer = await stripe.transfers.create(
       {
-        amount: cents,
-        currency: "usd",
+        amount: minorUnits,
+        currency: conversion.currency,
         destination: claim.destination!,
-        description: `CostMyAI partner commission (${claim.line_count} invoice lines)`,
-        metadata: { partnerId, payoutId: claim.payout_id!, environment: env },
+        description: `CostMyAI partner commission (${claim.line_count} invoice lines, ${conversion.amountUsd} USD at ${conversion.weightedRate})`,
+        metadata: {
+          partnerId,
+          payoutId,
+          environment: env,
+          amountUsd: String(conversion.amountUsd),
+          fxRate: String(conversion.weightedRate),
+        },
       },
-      { idempotencyKey: `partner-payout-${claim.payout_id}` },
+      { idempotencyKey: `partner-payout-${payoutId}` },
     );
 
     const settle = await supabaseAdmin.rpc("payout_settle", {
-      _payout_id: claim.payout_id!,
+      _payout_id: payoutId,
       _transfer_id: transfer.id,
     });
     if (settle.error) throw new Error(settle.error.message);
 
     return {
       partnerId,
-      partnerName: claim.partner_name ?? "",
+      partnerName,
       ok: true,
       amountUsd,
+      amountPaid: conversion.amountConverted,
+      currency: conversion.currency,
+      fxRate: conversion.weightedRate,
       lineCount: Number(claim.line_count),
-      payoutId: claim.payout_id!,
+      payoutId,
       transferId: transfer.id,
     };
   } catch (error) {
     const message = getStripeErrorMessage(error);
     await supabaseAdmin.rpc("payout_fail", {
-      _payout_id: claim.payout_id!,
+      _payout_id: payoutId,
       _error: message,
     });
     return {
       partnerId,
-      partnerName: claim.partner_name ?? "",
+      partnerName,
       ok: false,
       reason: `transfer_failed: ${message}`,
       amountUsd,
       lineCount: Number(claim.line_count),
-      payoutId: claim.payout_id!,
+      payoutId,
     };
   }
 }
+
+/**
+ * Pulls the reserved ledger lines and resolves each one's real rate from the
+ * provider's own balance transaction, then converts line by line.
+ */
+async function convertPayout(
+  stripe: Stripe,
+  payoutId: string,
+  expectedUsd: number,
+): Promise<FxConversion> {
+  const { data: lines, error } = await supabaseAdmin
+    .from("commission_ledger")
+    .select("invoice_id, commission_usd")
+    .eq("payout_id", payoutId);
+  if (error) throw new Error(error.message);
+  if (!lines?.length) throw new FxRateUnavailableError("No reserved lines for this payout", []);
+
+  const resolved = [];
+  for (const line of lines) {
+    resolved.push(await resolveLineRate(stripe, line.invoice_id, Number(line.commission_usd)));
+  }
+
+  const conversion = convertCommissionLines(resolved, PAYOUT_CURRENCY);
+  if (Math.abs(conversion.amountUsd - expectedUsd) > 0.01) {
+    throw new FxRateUnavailableError(
+      `Reserved lines sum to ${conversion.amountUsd} USD but the payout claims ${expectedUsd} USD`,
+      [],
+    );
+  }
+  return conversion;
+}
+
 
 /** Every partner with unpaid commission, whether or not they can be paid yet. */
 export async function readPayoutQueue(env: StripeEnv) {

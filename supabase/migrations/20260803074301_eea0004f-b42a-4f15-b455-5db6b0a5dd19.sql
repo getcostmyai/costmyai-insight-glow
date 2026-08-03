@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.payout_record_fx(uuid, text, numeric, numeric, jsonb) FROM anon, authenticated, public;
+GRANT EXECUTE ON FUNCTION public.payout_record_fx(uuid, text, numeric, numeric, jsonb) TO service_role;
