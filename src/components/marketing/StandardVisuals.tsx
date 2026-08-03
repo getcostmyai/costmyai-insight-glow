@@ -361,10 +361,7 @@ export function BandExplainer({ winner, live }: { winner: BandWinner; live: bool
               {live ? winner.displayName : "cheapest qualifying model"}
             </p>
           </div>
-          <div
-            className="mx-auto h-4 w-px bg-saving/40"
-            style={{ marginLeft: `calc(50% + ${(winX - callout) * 0}px)` }}
-          />
+          <div className="mx-auto h-4 w-px bg-saving/40" />
         </div>
 
         {/* zones */}

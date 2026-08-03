@@ -3,8 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
-import { BandDiagram } from "@/components/marketing/IntelligenceCharts";
 import {
+  BandExplainer,
   ProofMatrix,
   RungSelfAssessment,
   RungStack,
@@ -167,7 +167,7 @@ function StandardPage() {
                   {isLiveBand ? "from the live catalog" : "no discriminating band published yet"}
                 </p>
               </div>
-              <BandDiagram winner={winner} />
+              <BandExplainer winner={winner} live={isLiveBand} />
             </Reveal>
           </div>
         </section>
