@@ -76,6 +76,11 @@ export interface CommissionRow {
 export interface PayoutRun {
   id: string;
   amountUsd: number;
+  /** What actually left the account, in the settlement currency. */
+  amountPaid: number | null;
+  currency: string;
+  /** The real, provider-booked rate the conversion used. Never estimated. */
+  fxRate: number | null;
   lineCount: number;
   status: "pending" | "paid" | "failed";
   transferId: string | null;
@@ -147,7 +152,7 @@ export const getMyPartner = createServerFn({ method: "GET" })
         supabase
           .from("partner_payouts")
           .select(
-            "id, amount_usd, line_count, status, stripe_transfer_id, environment, error, created_at",
+            "id, amount_usd, amount_payout_currency, payout_currency, fx_rate, line_count, status, stripe_transfer_id, environment, error, created_at",
           )
           .eq("partner_id", partnerId)
           .order("created_at", { ascending: false })
@@ -186,6 +191,9 @@ export const getMyPartner = createServerFn({ method: "GET" })
     const payouts: PayoutRun[] = (payoutRuns.data ?? []).map((p) => ({
       id: p.id,
       amountUsd: Number(p.amount_usd),
+      amountPaid: p.amount_payout_currency === null ? null : Number(p.amount_payout_currency),
+      currency: p.payout_currency ?? "eur",
+      fxRate: p.fx_rate === null ? null : Number(p.fx_rate),
       lineCount: p.line_count,
       status: p.status as PayoutRun["status"],
       transferId: p.stripe_transfer_id,

@@ -9,6 +9,14 @@ import { getStripeEnvironment } from "@/lib/stripe";
 const usd = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 
+const money = (n: number, currency: string) =>
+  n.toLocaleString("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: 2,
+  });
+
+
 const COPY: Record<
   PartnerDashboard["partner"]["payoutAccount"]["status"],
   { label: string; body: string; tone: string; Icon: typeof Banknote }
@@ -139,36 +147,45 @@ export function PayoutAccountCard({
             {payouts.map((p) => (
               <div
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-4 py-3 text-xs"
+                className="rounded-xl border border-border px-4 py-3 text-xs"
               >
-                <span className="tabular-nums text-muted-foreground">
-                  {new Date(p.createdAt).toLocaleDateString()} · {p.lineCount} line
-                  {p.lineCount === 1 ? "" : "s"}
-                </span>
-                <span className="font-semibold tabular-nums text-emerald-400">
-                  {usd(p.amountUsd)}
-                </span>
-                <span
-                  className={
-                    p.status === "paid"
-                      ? "text-emerald-400"
-                      : p.status === "failed"
-                        ? "text-red-400"
-                        : "text-muted-foreground"
-                  }
-                >
-                  {p.status === "paid" ? "Paid" : p.status === "failed" ? "Failed" : "In progress"}
-                </span>
-                {p.transferId ? (
-                  <code className="font-mono text-[11px] text-muted-foreground">
-                    {p.transferId}
-                  </code>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="tabular-nums text-muted-foreground">
+                    {new Date(p.createdAt).toLocaleDateString()} · {p.lineCount} line
+                    {p.lineCount === 1 ? "" : "s"}
+                  </span>
+                  <span className="font-semibold tabular-nums text-emerald-400">
+                    {p.amountPaid !== null ? money(p.amountPaid, p.currency) : usd(p.amountUsd)}
+                  </span>
+                  <span
+                    className={
+                      p.status === "paid"
+                        ? "text-emerald-400"
+                        : p.status === "failed"
+                          ? "text-red-400"
+                          : "text-muted-foreground"
+                    }
+                  >
+                    {p.status === "paid" ? "Paid" : p.status === "failed" ? "Failed" : "In progress"}
+                  </span>
+                  {p.transferId ? (
+                    <code className="font-mono text-[11px] text-muted-foreground">
+                      {p.transferId}
+                    </code>
+                  ) : null}
+                </div>
+                {p.fxRate !== null && p.amountPaid !== null ? (
+                  <p className="mt-1.5 text-[11px] tabular-nums text-muted-foreground">
+                    {usd(p.amountUsd)} commission converted at {p.fxRate} (the rate our payment
+                    provider actually applied) → {money(p.amountPaid, p.currency)} paid
+                  </p>
                 ) : null}
               </div>
             ))}
           </div>
         </div>
       ) : null}
+
     </section>
   );
 }

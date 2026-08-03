@@ -897,42 +897,54 @@ export type Database = {
       }
       partner_payouts: {
         Row: {
+          amount_payout_currency: number | null
           amount_usd: number
           created_at: string
           created_by: string | null
           environment: string
           error: string | null
+          fx_detail: Json | null
+          fx_rate: number | null
           id: string
           line_count: number
           partner_id: string
+          payout_currency: string
           status: string
           stripe_destination_account: string | null
           stripe_transfer_id: string | null
           updated_at: string
         }
         Insert: {
+          amount_payout_currency?: number | null
           amount_usd: number
           created_at?: string
           created_by?: string | null
           environment: string
           error?: string | null
+          fx_detail?: Json | null
+          fx_rate?: number | null
           id?: string
           line_count?: number
           partner_id: string
+          payout_currency?: string
           status?: string
           stripe_destination_account?: string | null
           stripe_transfer_id?: string | null
           updated_at?: string
         }
         Update: {
+          amount_payout_currency?: number | null
           amount_usd?: number
           created_at?: string
           created_by?: string | null
           environment?: string
           error?: string | null
+          fx_detail?: Json | null
+          fx_rate?: number | null
           id?: string
           line_count?: number
           partner_id?: string
+          payout_currency?: string
           status?: string
           stripe_destination_account?: string | null
           stripe_transfer_id?: string | null
@@ -1965,6 +1977,16 @@ export type Database = {
       }
       payout_fail: {
         Args: { _error: string; _payout_id: string }
+        Returns: undefined
+      }
+      payout_record_fx: {
+        Args: {
+          _amount: number
+          _currency: string
+          _detail: Json
+          _payout_id: string
+          _rate: number
+        }
         Returns: undefined
       }
       payout_settle: {
