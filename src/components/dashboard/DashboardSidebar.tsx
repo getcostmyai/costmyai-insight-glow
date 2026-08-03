@@ -3,6 +3,7 @@ import {
   BadgeCheck,
   CreditCard,
   Gauge,
+  Handshake,
   Layers,
   LineChart,
   Lock,
@@ -24,7 +25,7 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  * left no way back into the dashboard except the browser's Back button.
  */
 
-export type AccountKey = "settings" | "billing" | "team";
+export type AccountKey = "settings" | "billing" | "team" | "partner";
 
 export const ICONS: Record<LevelKey, typeof Layers> = {
   overview: Layers,
@@ -38,6 +39,7 @@ const accountNav = [
   { key: "settings" as const, label: "Settings", to: "/settings", icon: Settings },
   { key: "billing" as const, label: "Billing", to: "/billing", icon: CreditCard },
   { key: "team" as const, label: "Team", to: "/team", icon: Users },
+  { key: "partner" as const, label: "Partner", to: "/partner", icon: Handshake },
 ];
 
 /** Literal paths so the router type-checks every destination. */
