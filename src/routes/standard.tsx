@@ -109,8 +109,10 @@ function StandardPage() {
                 The CostMyAI <span className="text-gradient-brand">Standard</span>
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                The AI spend governance framework built on proof, not estimation.
+                A four step framework for getting your AI bill under control, where every saving has
+                to be proven, never estimated.
               </p>
+
               <p className="mt-8 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 <span className="num">{VERSION}</span> · Last updated {UPDATED}
               </p>
