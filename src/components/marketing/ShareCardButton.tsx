@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Image as ImageIcon, Link2, Linkedin, Share2, Twitter } from "lucide-react";
 
 import {
