@@ -1,7 +1,8 @@
-import { Outlet, createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowRight, Handshake, KeyRound, Loader2, LogOut, PlugZap, Users } from "lucide-react";
+import { ArrowRight, Loader2, LogOut, PlugZap } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import { INDUSTRIES, USE_CASES, type UseCase } from "@/lib/benchmark/taxonomy";
