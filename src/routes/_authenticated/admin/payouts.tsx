@@ -32,6 +32,7 @@ const SKIP_COPY: Record<string, string> = {
   partner_not_active: "Partner account is not active",
   nothing_owed: "Nothing owed",
   negative_balance: "Clawbacks exceed what is owed — nets against the next run",
+  below_minimum: "Under the $50 minimum — carries forward to the next run",
   unknown_partner: "Partner not found",
 };
 

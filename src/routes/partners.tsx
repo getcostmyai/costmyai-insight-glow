@@ -65,7 +65,7 @@ const STEPS = [
   {
     n: "03",
     t: "Get paid",
-    b: "Every paid invoice from your referrals writes one line in your ledger at your current rate.",
+    b: "Every paid invoice from your referrals writes one line in your ledger at your current rate. Paid out monthly, on the 1st, once your balance reaches $50. Smaller balances carry over and are never lost.",
   },
 ] as const;
 
