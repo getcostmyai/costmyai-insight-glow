@@ -614,6 +614,7 @@ function BelowThreshold({ r }: { r: Extract<EstimatorResult, { state: "below_thr
 /** Each refusal is named for what it actually is, not for its internal code. */
 const REFUSAL_TITLE: Record<string, string> = {
   benchmark_not_discriminating: "Switch not certifiable",
+  no_valid_instrument: "No instrument measures this work",
   no_cheaper_equal: "No certifiable switch found",
   model_not_in_catalog: "Cannot assess",
   shape_only: "Cannot assess without a named model",
@@ -622,8 +623,10 @@ const REFUSAL_TITLE: Record<string, string> = {
 
 const REFUSAL_LEAD: Record<string, string> = {
 
+  no_valid_instrument:
+    "No independent evaluation measures this kind of work today, so no switch on it can be certified. We would rather name that than quote a number nobody measured.",
   benchmark_not_discriminating:
-    "We will not certify a switch the benchmark cannot separate — on your own traffic the picture is far sharper than a single assumed workload shape.",
+    "No model currently differentiates enough on this to certify a switch — on your own traffic the picture is far sharper than a single assumed workload shape.",
   no_cheaper_equal:
     "On today's catalog this one is not overpriced, but your bill is more than one model.",
   model_not_in_catalog:

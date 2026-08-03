@@ -122,7 +122,9 @@ export interface NonQualifyingWorkload {
 export const REFUSAL_LABEL: Record<string, string> = {
   no_baseline_price: "no published price for this endpoint",
   no_baseline_score: "no valid benchmark instrument for this task type",
-  benchmark_not_discriminating: "benchmark saturated — it cannot separate these models",
+  no_valid_instrument: "no independent instrument measures this task type",
+  benchmark_not_discriminating:
+    "no model currently differentiates enough on this to certify a switch",
   no_candidate_clears_bar: "quality gap outside the equivalence band",
   no_cheaper_candidate: "already the cheapest model that holds this quality",
   latency_ceiling_unmet: "no equal-quality option met your latency ceiling",
