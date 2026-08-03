@@ -298,8 +298,10 @@ export function RungSelfAssessment() {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Answer both questions and this returns the highest rung your evidence actually supports.
+            Answer both questions and this tells you the highest rung your evidence can actually
+            back up today.
           </p>
+
         )}
       </div>
     </div>
