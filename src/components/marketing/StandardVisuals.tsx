@@ -89,6 +89,12 @@ const PROOF_ICONS = {
  * requirement attached directly to the level rather than listed underneath.
  * ------------------------------------------------------------------------- */
 
+/** "Compare, Certify and Rightsize" */
+function listOf(names: string[]) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 export function RungStack() {
   return (
     <div className="flex flex-col-reverse gap-3">
@@ -99,7 +105,7 @@ export function RungStack() {
         return (
           <Reveal key={r.key} delay={(RUNGS.length - i) * 70}>
             <div
-              className="grid items-center gap-4 rounded-2xl px-5 py-6 sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
+              className="grid items-start gap-4 rounded-2xl px-5 py-6 sm:grid-cols-[auto_10rem_minmax(0,1fr)_auto] sm:gap-7 sm:px-8"
               style={{
                 width: `${width}%`,
                 background: `color-mix(in oklab, var(--primary) ${strength * 100}%, transparent)`,
@@ -151,6 +157,11 @@ export function ProofMatrix() {
               </p>
               <p className="mt-2 text-xl font-semibold tracking-[-0.03em]">{r.proof}</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{r.proofDetail}</p>
+              <p className="mt-auto pt-6 text-[0.72rem] leading-relaxed text-muted-foreground/80">
+                {r.inherits.length === 0
+                  ? "Included in every rung above."
+                  : `Also proves everything ${listOf(r.inherits)} proves.`}
+              </p>
             </Reveal>
           </li>
         );
