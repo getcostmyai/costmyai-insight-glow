@@ -60,6 +60,7 @@ import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/ev
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
+import { Route as ApiPublicSyncPartnerPayoutsRouteImport } from './routes/api/public/sync/partner-payouts'
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
@@ -330,6 +331,12 @@ const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   path: '/api/public/sync/prices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncPartnerPayoutsRoute =
+  ApiPublicSyncPartnerPayoutsRouteImport.update({
+    id: '/api/public/sync/partner-payouts',
+    path: '/api/public/sync/partner-payouts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSyncFreezeRoute = ApiPublicSyncFreezeRouteImport.update({
   id: '/api/public/sync/freeze',
   path: '/api/public/sync/freeze',
@@ -416,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
+  '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
@@ -471,6 +479,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
+  '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
@@ -531,6 +540,7 @@ export interface FileRoutesById {
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
+  '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
+    | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
@@ -646,6 +657,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
+    | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
@@ -705,6 +717,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
+    | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
@@ -744,6 +757,7 @@ export interface RootRouteChildren {
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
+  ApiPublicSyncPartnerPayoutsRoute: typeof ApiPublicSyncPartnerPayoutsRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
@@ -1111,6 +1125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/partner-payouts': {
+      id: '/api/public/sync/partner-payouts'
+      path: '/api/public/sync/partner-payouts'
+      fullPath: '/api/public/sync/partner-payouts'
+      preLoaderRoute: typeof ApiPublicSyncPartnerPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/freeze': {
       id: '/api/public/sync/freeze'
       path: '/api/public/sync/freeze'
@@ -1267,6 +1288,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
+  ApiPublicSyncPartnerPayoutsRoute: ApiPublicSyncPartnerPayoutsRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,

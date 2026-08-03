@@ -175,12 +175,13 @@ export const PAYOUT_CURRENCY = "eur";
 export async function runPayoutForPartner(
   partnerId: string,
   env: StripeEnv,
-  actorUserId: string,
+  /** Null when the scheduled monthly run triggered it rather than an admin. */
+  actorUserId: string | null,
 ): Promise<PayoutOutcome> {
   const begun = await supabaseAdmin.rpc("payout_begin", {
     _partner_id: partnerId,
     _environment: env,
-    _actor: actorUserId,
+    _actor: actorUserId as never,
   });
   if (begun.error) throw new Error(begun.error.message);
   const claim = begun.data as {
