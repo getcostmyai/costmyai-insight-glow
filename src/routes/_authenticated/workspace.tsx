@@ -53,37 +53,12 @@ function WorkspaceLayout() {
     return <FirstWorkspace email={user.email ?? null} />;
   }
 
-  return (
-    <div className="relative">
-      <div className="absolute top-6 right-6 z-50 flex items-center gap-2">
-        <Link
-          to="/settings"
-          className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
-        >
-          <KeyRound className="h-3.5 w-3.5" />
-          Connect
-        </Link>
-        <Link
-          to="/partner"
-          className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
-        >
-          <Handshake className="h-3.5 w-3.5" />
-          Partner
-        </Link>
-        <Link
-          to="/team"
-          className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
-        >
-          <Users className="h-3.5 w-3.5" />
-          Team
-        </Link>
-        <SignOutButton inline />
-      </div>
-
-      <Outlet />
-    </div>
-  );
+  // The account chrome lives in the shared sidebar and masthead. A floating
+  // strip pinned over the top-right corner collided with the header's own
+  // account chip, sign-out and primary CTA at ordinary widths.
+  return <Outlet />;
 }
+
 
 function FirstWorkspace({ email }: { email: string | null }) {
   const queryClient = useQueryClient();
