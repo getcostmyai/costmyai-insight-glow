@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StandardRouteImport } from './routes/standard'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -67,6 +68,11 @@ import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/p
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StandardRoute = StandardRouteImport.update({
+  id: '/standard',
+  path: '/standard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -361,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standard': typeof StandardRoute
   '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
@@ -414,6 +421,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standard': typeof StandardRoute
   '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
@@ -470,6 +478,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standard': typeof StandardRoute
   '/terms': typeof TermsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
@@ -527,6 +536,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/standard'
     | '/terms'
     | '/billing'
     | '/partner'
@@ -580,6 +590,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/standard'
     | '/terms'
     | '/billing'
     | '/partner'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/standard'
     | '/terms'
     | '/_authenticated/billing'
     | '/_authenticated/partner'
@@ -692,6 +704,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StandardRoute: typeof StandardRoute
   TermsRoute: typeof TermsRoute
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
@@ -720,6 +733,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/standard': {
+      id: '/standard'
+      path: '/standard'
+      fullPath: '/standard'
+      preLoaderRoute: typeof StandardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1190,6 +1210,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StandardRoute: StandardRoute,
   TermsRoute: TermsRoute,
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
@@ -1213,13 +1234,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
