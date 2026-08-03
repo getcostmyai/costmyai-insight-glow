@@ -111,7 +111,7 @@ export const createWorkspace = createServerFn({ method: "POST" })
  * retried against some later workspace.
  */
 async function attributeFirstTouchReferral(
-  supabase: { rpc: (fn: "attach_referral", args: { _org_id: string; _code: string }) => Promise<{ data: unknown; error: unknown }> },
+  supabase: { rpc: (fn: "attach_referral", args: { _org_id: string; _code: string }) => PromiseLike<{ error: unknown }> },
   orgId: string,
 ): Promise<{ attempted: boolean; attached: boolean }> {
   const { getRequest, setResponseHeader } = await import("@tanstack/react-start/server");
