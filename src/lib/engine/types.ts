@@ -116,6 +116,7 @@ export const DEFAULT_OBJECTIVE: Objective = { objective: "cost" };
 export type RefusalReason =
   | "no_baseline_price"
   | "no_baseline_score"
+  | "no_valid_instrument"
   | "benchmark_not_discriminating"
   | "no_candidate_clears_bar"
   | "no_cheaper_candidate"
