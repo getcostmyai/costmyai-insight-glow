@@ -10,7 +10,8 @@ export type InternalPath =
   | "/models"
   | "/intelligence"
   | "/pricing"
-  | "/legal/methodology";
+  | "/legal/methodology"
+  | "/standard";
 
 export type Block =
   | { t: "p"; v: string }
@@ -109,6 +110,12 @@ export const POSTS: BlogPost[] = [
       {
         t: "p",
         v: "The organizations building real discipline into this now, rather than treating it as a fire drill once finance asks a hard question, are the ones who will scale AI spend without losing control of it.",
+      },
+      {
+        t: "cta",
+        headline: "The four-rung framework this all builds toward, in one place",
+        label: "Read The CostMyAI Standard",
+        to: "/standard",
       },
     ],
   },
@@ -538,6 +545,12 @@ export const POSTS: BlogPost[] = [
         t: "p",
         v: "The organizations closing the gap between tracking and forecasting are not doing anything exotic. They are simply refusing to accept an estimate where a real number is available, and refusing to make a cost saving decision without proof that it will not cost more somewhere else.",
       },
+      {
+        t: "cta",
+        headline: "Visibility is rung one of a four-rung standard",
+        label: "Read The CostMyAI Standard",
+        to: "/standard",
+      },
     ],
   },
 
@@ -589,6 +602,12 @@ export const POSTS: BlogPost[] = [
       {
         t: "p",
         v: "Before treating any model swap as a real saving, ask three questions. Is the comparison based on an independent, task specific benchmark, not a general leaderboard score. Does the comparison account for the benchmark's own measurement uncertainty, not just the headline number. And if the candidate does not clear that bar, does the process say so honestly, or does it quietly suggest the cheaper option anyway. A switch that cannot answer all three was never actually proven safe, it was just cheaper.",
+      },
+      {
+        t: "cta",
+        headline: "Rung two of the standard, defined formally",
+        label: "Read The CostMyAI Standard",
+        to: "/standard",
       },
     ],
   },
@@ -722,6 +741,12 @@ export const POSTS: BlogPost[] = [
       {
         t: "p",
         v: "That is the whole difference between AI cost management as an activity and AI cost governance as a discipline. One tells you what the bill was. The other decides, on evidence, what the bill should be.",
+      },
+      {
+        t: "cta",
+        headline: "The canonical, versioned statement of this framework",
+        label: "Read The CostMyAI Standard",
+        to: "/standard",
       },
     ],
   },
