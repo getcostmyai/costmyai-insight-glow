@@ -34,15 +34,19 @@ export const Route = createFileRoute("/api/public/sync/prices")({
           // Chained, not scheduled separately: a price that moved is only worth
           // syncing if the verdict it changes is recomputed in the same window.
           const evaluation = await runEvaluation("pricing-sync");
-          const rows = report.priceRowsWritten + report.modelsImported;
+          // A locked run wrote nothing because another run holds the window,
+          // not because the feed came back empty. That is a real quiet run.
+          const locked = "skipped" in report && report.skipped === "locked";
+          const rows = locked ? 0 : report.priceRowsWritten + report.modelsImported;
           await recordRun({
             job: "pricing-sync",
             started,
             // The catalogue always has rows to write. Zero is never quiet here.
-            outcome: classifyRun(rows, true),
+            outcome: locked ? "quiet" : classifyRun(rows, true),
             rowsWritten: rows,
             detail: { sync: report, evaluation },
           });
+
           return Response.json({ ...report, evaluation });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
