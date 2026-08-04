@@ -217,6 +217,33 @@ async function main() {
     check("empty cut publishes no percentile", !row || row.p50_usd === null, `count ${row?.company_count ?? 0}`);
   }
 
+  // ---- 6. commission: the only formula here that moves real money ----------
+  console.log("\ncommission");
+  {
+    const [{ data: ledger }, { data: tiers }] = await Promise.all([
+      db.from("commission_ledger").select("revenue_usd, rate_pct, commission_usd, status"),
+      db.from("partner_tiers").select("rate_pct"),
+    ]);
+    const rows = ledger ?? [];
+    const ladder = new Set((tiers ?? []).map((t) => Number(t.rate_pct)));
+    if (rows.length === 0) {
+      // Not a pass. There is nothing to verify yet, and saying so is the point.
+      console.log("  n/a   ledger is empty — no accrued commission to re-derive");
+    } else {
+      const bad = rows.filter(
+        (r) =>
+          !near(
+            Number(r.commission_usd),
+            Math.round(Number(r.revenue_usd) * (Number(r.rate_pct) / 100) * 100) / 100,
+            0.005,
+          ),
+      );
+      check("commission = revenue x rate, to the cent, on every row", bad.length === 0, `${rows.length} rows`);
+      const offLadder = rows.filter((r) => !ladder.has(Number(r.rate_pct)));
+      check("every accrued rate is a real tier rate", offLadder.length === 0, `${ladder.size} tiers`);
+    }
+  }
+
 
   console.log(`\n${failures === 0 ? "All formula checks passed." : `${failures} FAILED`}`);
   process.exit(failures ? 1 : 0);
