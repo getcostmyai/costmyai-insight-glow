@@ -38,8 +38,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, activeRange, live, canAct, autonomousMutation, errorFor } = ctl;
   const { savings } = data;
   // Both sides are real sums over the same window — like for like on every tab.
-  const totalOpportunity = savings.captured + savings.available;
-  const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
+  const capture = captureFigures(savings);
   const mech = mechanismSavings(ctl);
   const govern = data.govern;
   const meta = PLAN_META["govern"];
@@ -115,7 +114,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
 
               <HeroStat
                 label="Savings captured"
-                value={`${Math.round(captureRate * 100)}%`}
+                value={`${capture.pct}%`}
                 sub={`of ${usd(totalOpportunity, 0)} identified`}
                 accent="oklch(0.86 0.09 265)"
               />
