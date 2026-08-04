@@ -892,6 +892,14 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     rowsInWindow: split.current.length,
   });
 
+  /**
+   * Whether anything can still reach us. Read separately from the figures
+   * above precisely because it is the one thing the figures cannot say.
+   */
+  const ingest = await ingestConnection(orgId, now);
+
+
+
 
 
   return {
