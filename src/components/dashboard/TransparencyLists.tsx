@@ -27,9 +27,21 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
   );
 }
 
-/** List A — same model, cheaper host. Every row carries its own activation. */
-export function ArbitrageList({ ctl }: { ctl: DashboardController }) {
-  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
+/**
+ * List A — same model, cheaper host.
+ *
+ * `discovery` is set by Compare and Certify: those levels prove a switch, they
+ * never execute one, so the row links to Rightsize instead of activating.
+ */
+export function ArbitrageList({
+  ctl,
+  discovery = false,
+}: {
+  ctl: DashboardController;
+  discovery?: boolean;
+}) {
+  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
+    ctl;
   const rows = data.hostArbitrage;
   // Real dollars over the window on screen — the same sum the hero shows.
   const total = rows.reduce((s, r) => s + r.saving, 0);
@@ -59,8 +71,10 @@ export function ArbitrageList({ ctl }: { ctl: DashboardController }) {
                 error={errorFor(key)}
                 ctaHref={ctaHref}
                 ctaLabel={ctaLabel}
+                discovery={discovery}
+                discoveryHref={rightsizeHref}
                 onActivate={
-                  canAct
+                  canAct && !discovery
                     ? () =>
                         activate.mutate({
                           key,
