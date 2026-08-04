@@ -162,10 +162,18 @@ export function findQualityMatches(
 
     const currentScore = lookup.score(u.model_key, instrument);
     if (!currentScore) {
+      /*
+       * Two different facts, previously reported as one. Either the model is
+       * absent from the independent benchmark feed entirely, or it is measured
+       * but not on the instrument this task needs. A reader who sees the first
+       * phrased as the second reasonably concludes our coverage check is broken.
+       */
       refuse(
         u,
         "no_baseline_score",
-        `No ${currentInstrumentLabel(resolution)} score for ${u.model_key}.`,
+        lookup.covered(u.model_key)
+          ? `${u.model_key} is measured by the independent benchmark feed, but not on ${currentInstrumentLabel(resolution)} — the evaluation this kind of work has to be judged on.`
+          : `${u.model_key} is not covered by the independent benchmark feed yet, so there is no measured score to certify a switch against.`,
       );
       continue;
     }
