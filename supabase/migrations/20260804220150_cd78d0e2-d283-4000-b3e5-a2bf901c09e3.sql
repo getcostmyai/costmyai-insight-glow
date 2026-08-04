@@ -1,0 +1,1 @@
+ALTER FUNCTION public.plan_rank(plan_tier) SET search_path TO 'public';
