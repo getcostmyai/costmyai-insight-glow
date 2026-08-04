@@ -42,6 +42,8 @@ export interface ScoreLookup {
   margin(suite: string, instrument: string): number;
   spread(instrument: string): number;
   separation(field: AaField): number | null;
+  /** True when the model carries at least one certifiable instrument score. */
+  covered(modelKey: string): boolean;
   /** Walk the ranked ladder for a product task and say which instrument certifies it. */
   instrument(taskHint: string): LadderResolution;
 }
