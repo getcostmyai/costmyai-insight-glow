@@ -218,7 +218,7 @@ describe("forecastMonthEnd — guards", () => {
     }
     const f = forecastMonthEnd(rows, NOW);
     expect(f.highUsd! - f.lowUsd!).toBeGreaterThanOrEqual(
-      f.pointUsd * FORECAST_RULES.rangeFloorPct * 0.99,
+      f.pointUsd! * FORECAST_RULES.rangeFloorPct * 0.99,
     );
   });
 });
