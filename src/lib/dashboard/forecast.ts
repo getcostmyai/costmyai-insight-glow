@@ -34,15 +34,28 @@ export interface ForecastInputRow {
   spend: number;
 }
 
+export interface ForecastOptions {
+  /**
+   * Calendar days inside the trailing window that the platform knows it did
+   * not collect (no successful sync run). A hole here is a data-collection
+   * fact, not a spend fact, and the forecast refuses rather than reads it
+   * as quiet traffic.
+   */
+  syncGapDates?: string[];
+}
+
 export interface MonthEndForecast {
   /** Month-to-date actual, complete days only. Known, not estimated. */
   mtdUsd: number;
-  /** Point estimate for the full calendar month. */
-  pointUsd: number;
+  /** Point estimate for the full calendar month. Null when suppressed. */
+  pointUsd: number | null;
   /** Present only when the data does not support a single number. */
   lowUsd: number | null;
   highUsd: number | null;
   isRange: boolean;
+  /** True when no figure may be shown at all, with the reason beside it. */
+  suppressed: boolean;
+  suppressionReason: string | null;
   /** Days still to project, including today. */
   remainingDays: number;
   /** Trailing daily level used for the remaining days, deseasonalised. */
@@ -52,6 +65,11 @@ export interface MonthEndForecast {
   seasonalityApplied: boolean;
   /** Coefficient of variation of the deseasonalised trailing window. */
   cv: number;
+  /** Trailing days that actually carried data, and the ones that did not. */
+  observedLevelDays: number;
+  missingLevelDates: string[];
+  /** Level-window days the sync-health signal reports as not collected. */
+  syncGapDates: string[];
   /** Workloads dropped as retired, and workloads new inside the window. */
   retiredKeys: string[];
   newKeys: string[];
@@ -62,6 +80,8 @@ export interface MonthEndForecast {
 export const FORECAST_RULES = {
   /** Trailing window used as the level estimate. */
   levelDays: 7,
+  /** Trailing days that must actually carry data before anything is projected. */
+  minObservedLevelDays: 5,
   /** Window used to learn day-of-week factors. */
   seasonalityDays: 28,
   /** Apply weekly factors only when the pattern is this pronounced. */
@@ -78,9 +98,10 @@ export const FORECAST_RULES = {
   rangeFloorPct: 0.06,
   /** A workload below this share of trailing spend cannot trigger a break. */
   breakMinShare: 0.05,
-  /** Consecutive silent days that mark a material workload as retired. */
+  /** Consecutive observed silent days that mark a material workload retired. */
   breakSilentDays: 2,
 } as const;
+
 
 const DAY_MS = 86_400_000;
 
@@ -117,7 +138,11 @@ function round2(n: number): number {
  * excluded from the month-to-date actual and included in the projected days,
  * so a forecast read at 01:00 is not quietly short a day of spend.
  */
-export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndForecast {
+export function forecastMonthEnd(
+  rows: ForecastInputRow[],
+  now: Date,
+  options: ForecastOptions = {},
+): MonthEndForecast {
   const todayMs = utcDayStart(dayKey(now.getTime()));
   const year = new Date(todayMs).getUTCFullYear();
   const month = new Date(todayMs).getUTCMonth();
@@ -128,10 +153,14 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
   const reasons: string[] = [];
 
   // ---- Daily totals, and per-workload dailies for structural breaks ---------
+  // `observed` is the whole point of this pass: a day either carried data or
+  // it did not. Absence is never silently read as a zero-spend day.
   const daily = new Map<string, number>();
+  const observed = new Set<string>();
   const perKey = new Map<string, Map<string, number>>();
   for (const r of rows) {
     const d = r.date.slice(0, 10);
+    observed.add(d);
     daily.set(d, (daily.get(d) ?? 0) + r.spend);
     let k = perKey.get(r.key);
     if (!k) perKey.set(r.key, (k = new Map()));
@@ -144,6 +173,8 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
     const ms = utcDayStart(d);
     if (ms >= monthStartMs && ms < todayMs) mtdUsd += v;
   }
+  /** Today is incomplete, but what has already landed is a hard floor. */
+  const todaySoFarUsd = daily.get(dayKey(todayMs)) ?? 0;
 
   const levelDates: string[] = [];
   for (let i = FORECAST_RULES.levelDays; i >= 1; i--) levelDates.push(dayKey(todayMs - i * DAY_MS));
@@ -152,17 +183,77 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
     seasonDates.push(dayKey(todayMs - i * DAY_MS));
   }
 
+  const observedLevelDates = levelDates.filter((d) => observed.has(d));
+  const missingLevelDates = levelDates.filter((d) => !observed.has(d));
+  const gapSet = new Set(options.syncGapDates ?? []);
+  const syncGapDates = levelDates.filter((d) => gapSet.has(d));
+
+  /** Everything below is computed on observed days only. */
+  const suppressedResult = (reason: string): MonthEndForecast => ({
+    mtdUsd: round2(mtdUsd),
+    pointUsd: null,
+    lowUsd: null,
+    highUsd: null,
+    isRange: false,
+    suppressed: true,
+    suppressionReason: reason,
+    remainingDays,
+    dailyLevelUsd: 0,
+    trendPerDayUsd: 0,
+    seasonalityApplied: false,
+    cv: 0,
+    observedLevelDays: observedLevelDates.length,
+    missingLevelDates,
+    syncGapDates,
+    retiredKeys: [],
+    newKeys: [],
+    reasons: [reason],
+  });
+
+  // ---- F. Sync-health interlock ---------------------------------------------
+  // A day the collector never ran is not a quiet day. Where that day also
+  // carries no usage, the hole is real and the projection refuses. Where data
+  // landed anyway, the gap is a caveat on the basis, not a reason to refuse.
+  const blindGapDates = syncGapDates.filter((d) => !observed.has(d));
+  if (blindGapDates.length > 0) {
+    return suppressedResult(
+      `recent data gap (${blindGapDates.length} day${blindGapDates.length > 1 ? "s" : ""} not collected) — projection unavailable`,
+    );
+  }
+  if (syncGapDates.length > 0) {
+    reasons.push(
+      `${syncGapDates.length} day${syncGapDates.length > 1 ? "s" : ""} in the trailing window had no successful sync run`,
+    );
+  }
+
+  if (observedLevelDates.length < FORECAST_RULES.minObservedLevelDays) {
+    return suppressedResult(
+      `not enough data — only ${observedLevelDates.length} of the last ${FORECAST_RULES.levelDays} days carry usage`,
+    );
+  }
+  if (missingLevelDates.length > 0) {
+    reasons.push(
+      `${missingLevelDates.length} day${missingLevelDates.length > 1 ? "s" : ""} without data excluded from the trailing rate`,
+    );
+  }
+
   // ---- 6. Structural breaks -------------------------------------------------
-  const windowTotal = levelDates.reduce((s, d) => s + (daily.get(d) ?? 0), 0);
+  const windowTotal = observedLevelDates.reduce((s, d) => s + (daily.get(d) ?? 0), 0);
   const retiredKeys: string[] = [];
   const newKeys: string[] = [];
-  const silentDates = levelDates.slice(-FORECAST_RULES.breakSilentDays);
-  const priorDates = seasonDates.filter((d) => !levelDates.includes(d));
+  /**
+   * Retirement needs positive evidence: days that carried data and still show
+   * nothing for this workload. A missing day proves nothing about a workload.
+   */
+  const silentDates = observedLevelDates.slice(-FORECAST_RULES.breakSilentDays);
+  const priorDates = seasonDates.filter((d) => !levelDates.includes(d) && observed.has(d));
 
   for (const [key, series] of perKey) {
-    const keyWindow = levelDates.reduce((s, d) => s + (series.get(d) ?? 0), 0);
+    const keyWindow = observedLevelDates.reduce((s, d) => s + (series.get(d) ?? 0), 0);
     const share = windowTotal > 0 ? keyWindow / windowTotal : 0;
-    const silent = silentDates.every((d) => (series.get(d) ?? 0) === 0);
+    const silent =
+      silentDates.length >= FORECAST_RULES.breakSilentDays &&
+      silentDates.every((d) => (series.get(d) ?? 0) === 0);
     if (share >= FORECAST_RULES.breakMinShare && silent && keyWindow > 0) {
       retiredKeys.push(key);
     }
@@ -174,9 +265,10 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
 
   const retired = new Set(retiredKeys);
   /** Trailing dailies with retired workloads removed — they will not recur. */
-  const levelSeries = levelDates.map((d) => {
+  const levelSeries = observedLevelDates.map((d) => {
     let v = daily.get(d) ?? 0;
     for (const key of retired) v -= perKey.get(key)?.get(d) ?? 0;
+
     return Math.max(0, v);
   });
 
@@ -217,7 +309,7 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
   const factorFor = (iso: string) => (seasonalityApplied ? (factors.get(dow(iso)) ?? 1) : 1);
 
   // ---- 2 + 4. Deseasonalised level and damped, capped trend ------------------
-  const deseasonalised = levelDates.map((d, i) => levelSeries[i]! / (factorFor(d) || 1));
+  const deseasonalised = observedLevelDates.map((d, i) => levelSeries[i]! / (factorFor(d) || 1));
   const level = mean(deseasonalised);
 
   let slope = 0;
@@ -255,17 +347,38 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
   let lowUsd: number | null = null;
   let highUsd: number | null = null;
   if (isRange) {
-    // Day-level noise over the remaining days, plus the uncertainty in the
-    // level itself, which does not average out across days.
+    // Two independent error sources: day-to-day noise over the remaining days,
+    // and the uncertainty in the level itself, which does not average out.
+    // Independent errors add in quadrature, not linearly — adding them
+    // linearly assumed perfect correlation and inflated the band by ~40%.
     const dayNoise = noise * Math.sqrt(remainingDays);
     const levelNoise = (noise / Math.sqrt(Math.max(1, deseasonalised.length))) * remainingDays;
-    const sigma = dayNoise + levelNoise;
+    const sigma = Math.sqrt(dayNoise ** 2 + levelNoise ** 2);
     const half = Math.max(FORECAST_RULES.rangeZ * sigma, pointUsd * FORECAST_RULES.rangeFloorPct);
-    lowUsd = Math.max(mtdUsd, pointUsd - half);
+    lowUsd = Math.max(mtdUsd + todaySoFarUsd, pointUsd - half);
     highUsd = pointUsd + half;
     if (cv > FORECAST_RULES.cvRangeThreshold) {
       reasons.push(`daily spend varies too much (cv ${cv.toFixed(2)}) for a single number`);
     }
+  }
+
+  // ---- D. Coherence gate -----------------------------------------------------
+  // A self-inconsistent figure is worse than no figure. The month cannot close
+  // below what has already been spent, and the bounds must bracket the point.
+  const floor = mtdUsd + todaySoFarUsd;
+  const incoherent =
+    !Number.isFinite(pointUsd) ||
+    pointUsd < floor - 0.01 ||
+    (isRange &&
+      (lowUsd === null ||
+        highUsd === null ||
+        lowUsd > pointUsd + 0.01 ||
+        highUsd < pointUsd - 0.01 ||
+        lowUsd < floor - 0.01));
+  if (incoherent) {
+    return suppressedResult(
+      "not enough data for a coherent projection — the trailing window disagrees with what is already spent",
+    );
   }
 
   return {
@@ -274,13 +387,19 @@ export function forecastMonthEnd(rows: ForecastInputRow[], now: Date): MonthEndF
     lowUsd: lowUsd === null ? null : round2(lowUsd),
     highUsd: highUsd === null ? null : round2(highUsd),
     isRange,
+    suppressed: false,
+    suppressionReason: null,
     remainingDays,
     dailyLevelUsd: round2(level),
     trendPerDayUsd: round2(trendPerDay),
     seasonalityApplied,
     cv: Math.round(cv * 1000) / 1000,
+    observedLevelDays: observedLevelDates.length,
+    missingLevelDates,
+    syncGapDates,
     retiredKeys,
     newKeys,
     reasons,
   };
 }
+

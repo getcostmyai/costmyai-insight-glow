@@ -65,13 +65,13 @@ describe("forecastMonthEnd — shape 2: weekly seasonality", () => {
   it("projects each remaining day at its own day-of-week rate", () => {
     // Jul 16-31 2026: 12 weekdays, 4 weekend days.
     const expectedRemaining = 12 * 120 + 4 * 40;
-    expect(f.pointUsd - f.mtdUsd).toBeCloseTo(expectedRemaining, 0);
+    expect(f.pointUsd! - f.mtdUsd).toBeCloseTo(expectedRemaining, 0);
   });
 
   it("beats a flat trailing-rate extrapolation on the same data", () => {
     const flat = f.mtdUsd + f.remainingDays * (7 * 120 - 2 * 80) / 7; // naive 7-day mean
     const truth = f.mtdUsd + 12 * 120 + 4 * 40;
-    expect(Math.abs(f.pointUsd - truth)).toBeLessThan(Math.abs(flat - truth));
+    expect(Math.abs(f.pointUsd! - truth)).toBeLessThan(Math.abs(flat - truth));
   });
 
   it("does not report a range purely because of a known weekly pattern", () => {
@@ -94,8 +94,8 @@ describe("forecastMonthEnd — shape 3: spiky workload", () => {
   });
 
   it("brackets the point estimate and never dips below money already spent", () => {
-    expect(f.lowUsd!).toBeLessThanOrEqual(f.pointUsd);
-    expect(f.highUsd!).toBeGreaterThanOrEqual(f.pointUsd);
+    expect(f.lowUsd!).toBeLessThanOrEqual(f.pointUsd!);
+    expect(f.highUsd!).toBeGreaterThanOrEqual(f.pointUsd!);
     expect(f.lowUsd!).toBeGreaterThanOrEqual(f.mtdUsd);
   });
 
@@ -111,14 +111,14 @@ describe("forecastMonthEnd — trend handling", () => {
     const f = forecastMonthEnd(history(40, (_d, i) => 60 + i * 4), NOW);
     expect(f.trendPerDayUsd).toBeGreaterThan(0);
     const raw = f.mtdUsd + f.remainingDays * (f.dailyLevelUsd + 4 * f.remainingDays);
-    expect(f.pointUsd).toBeLessThan(raw);
-    expect(f.pointUsd).toBeGreaterThan(f.mtdUsd + f.remainingDays * f.dailyLevelUsd);
+    expect(f.pointUsd!).toBeLessThan(raw);
+    expect(f.pointUsd!).toBeGreaterThan(f.mtdUsd + f.remainingDays * f.dailyLevelUsd);
   });
 
   it("follows a decline without projecting negative spend", () => {
     const f = forecastMonthEnd(history(40, (_d, i) => Math.max(0, 200 - i * 5)), NOW);
     expect(f.trendPerDayUsd).toBeLessThan(0);
-    expect(f.pointUsd).toBeGreaterThanOrEqual(f.mtdUsd);
+    expect(f.pointUsd!).toBeGreaterThanOrEqual(f.mtdUsd);
   });
 });
 
@@ -144,7 +144,7 @@ describe("forecastMonthEnd — shape 4a: structural break, retired workload", ()
   it("excludes it from the remaining days instead of billing it forward", () => {
     // Level should collapse to the surviving $100/day workload.
     expect(f.dailyLevelUsd).toBeCloseTo(100, 0);
-    expect(f.pointUsd).toBeLessThan(flatRate - 2000);
+    expect(f.pointUsd!).toBeLessThan(flatRate - 2000);
   });
 
   it("shows an honest range instead of the confidently-wrong number", () => {
@@ -196,11 +196,13 @@ describe("forecastMonthEnd — shape 4b: newly appeared workload", () => {
 });
 
 describe("forecastMonthEnd — guards", () => {
-  it("returns a zeroed forecast for an empty workspace", () => {
+  it("suppresses rather than projecting zero for an empty workspace", () => {
     const f = forecastMonthEnd([], NOW);
     expect(f.mtdUsd).toBe(0);
-    expect(f.pointUsd).toBe(0);
-    expect(f.isRange).toBe(false);
+    expect(f.suppressed).toBe(true);
+    expect(f.pointUsd).toBeNull();
+    expect(f.observedLevelDays).toBe(0);
+    expect(f.suppressionReason).toMatch(/not enough data/);
   });
 
   it("never projects days that have already happened", () => {
@@ -218,7 +220,151 @@ describe("forecastMonthEnd — guards", () => {
     }
     const f = forecastMonthEnd(rows, NOW);
     expect(f.highUsd! - f.lowUsd!).toBeGreaterThanOrEqual(
-      f.pointUsd * FORECAST_RULES.rangeFloorPct * 0.99,
+      f.pointUsd! * FORECAST_RULES.rangeFloorPct * 0.99,
     );
+  });
+});
+
+/* ---------------- B: a missing day is not a zero-spend day ---------------- */
+
+describe("forecastMonthEnd — missing days are excluded, not zeroed", () => {
+  /** 40 days at $100/day, with two days simply absent from the feed. */
+  const gapped = (): ForecastInputRow[] =>
+    history(40, () => 100).filter((r) => r.date !== iso(-5) && r.date !== iso(-6));
+
+  const f = forecastMonthEnd(gapped(), NOW);
+
+  it("reports which trailing days carried data", () => {
+    expect(f.observedLevelDays).toBe(5);
+    expect(f.missingLevelDates).toEqual([iso(-6), iso(-5)]);
+  });
+
+  it("keeps the level at the observed rate instead of collapsing it", () => {
+    // Zeroing the two absent days would give 500/7 = $71.43/day.
+    expect(f.dailyLevelUsd).toBeCloseTo(100, 6);
+    expect(f.dailyLevelUsd).not.toBeCloseTo(500 / 7, 1);
+  });
+
+  it("keeps sigma at the observed dispersion instead of inventing variance", () => {
+    // Zeroed days would put cv near 0.5; the observed series is flat.
+    expect(f.cv).toBe(0);
+    expect(f.isRange).toBe(false);
+  });
+
+  it("says so in the basis instead of hiding the hole", () => {
+    expect(f.reasons.join(" ")).toMatch(/2 days without data/);
+  });
+
+  it("does not call a workload retired on the strength of missing days", () => {
+    // The whole feed stops for two days: absence, not evidence.
+    const rows = history(40, () => 100, "steady|azure|chat")
+      .concat(history(40, () => 200, "maybe|openai|batch"))
+      .filter((r) => r.date !== iso(-1) && r.date !== iso(-2));
+    const g = forecastMonthEnd(rows, NOW);
+    expect(g.retiredKeys).toEqual([]);
+  });
+
+  it("still calls a workload retired on positive evidence", () => {
+    // Days that carry data for other workloads and show zero for this one.
+    const rows: ForecastInputRow[] = [];
+    for (let i = 40; i >= 1; i--) {
+      const d = iso(-i);
+      rows.push({ date: d, key: "steady|azure|chat", spend: 100 });
+      rows.push({ date: d, key: "retired|openai|batch", spend: i >= 3 ? 200 : 0 });
+    }
+    expect(forecastMonthEnd(rows, NOW).retiredKeys).toEqual(["retired|openai|batch"]);
+  });
+
+  it("suppresses once too few trailing days carry data", () => {
+    const sparse = history(40, () => 100).filter(
+      (r) => ![iso(-2), iso(-3), iso(-4)].includes(r.date),
+    );
+    const g = forecastMonthEnd(sparse, NOW);
+    expect(g.observedLevelDays).toBe(4);
+    expect(g.suppressed).toBe(true);
+    expect(g.pointUsd).toBeNull();
+    expect(g.suppressionReason).toMatch(/only 4 of the last 7 days/);
+  });
+});
+
+/* ------------- sigma combines in quadrature, not linearly ---------------- */
+
+describe("forecastMonthEnd — range width", () => {
+  const spike = (_d: string, i: number) => (i % 3 === 0 ? 260 : 30);
+  const f = forecastMonthEnd(history(40, spike), NOW);
+
+  it("adds day noise and level noise in quadrature", () => {
+    const noiseDays = 7;
+    const days = f.remainingDays;
+    // Reconstruct sigma from the reported half-width and compare both laws.
+    const half = (f.highUsd! - f.lowUsd!) / 2;
+    const sigmaUsed = half / FORECAST_RULES.rangeZ;
+    const unit = sigmaUsed / Math.sqrt(days + days ** 2 / noiseDays);
+    const linear = unit * (Math.sqrt(days) + days / Math.sqrt(noiseDays));
+    expect(sigmaUsed).toBeLessThan(linear * 0.85);
+  });
+});
+
+/* --------------------- D: coherence gate on the output -------------------- */
+
+describe("forecastMonthEnd — coherence gate", () => {
+  it("suppresses when the projection lands below money already spent", () => {
+    /**
+     * Real incoherence: a huge month-to-date, then a trailing week that is a
+     * rounding error next to it. The projected close is below the floor of
+     * month-to-date plus what today has already booked.
+     */
+    const rows: ForecastInputRow[] = [];
+    for (let i = 15; i >= 8; i--) rows.push({ date: iso(-i), key: "k", spend: 20_000 });
+    for (let i = 7; i >= 1; i--) rows.push({ date: iso(-i), key: "k", spend: 1 });
+    // Today has already booked more than the whole projected remainder.
+    rows.push({ date: iso(0), key: "k", spend: 40_000 });
+    const f = forecastMonthEnd(rows, NOW);
+    expect(f.suppressed).toBe(true);
+    expect(f.pointUsd).toBeNull();
+    expect(f.lowUsd).toBeNull();
+    expect(f.suppressionReason).toMatch(/coherent/);
+  });
+
+  it("lets a coherent projection through unchanged", () => {
+    const f = forecastMonthEnd(history(40, () => 100), NOW);
+    expect(f.suppressed).toBe(false);
+    expect(f.pointUsd!).toBeGreaterThanOrEqual(f.mtdUsd);
+  });
+
+  it("floors the low bound at month-to-date plus today's booked spend", () => {
+    const rows = history(40, (_d, i) => (i % 3 === 0 ? 260 : 30));
+    rows.push({ date: iso(0), key: "gpt-5-mini|azure|chat", spend: 120 });
+    const f = forecastMonthEnd(rows, NOW);
+    expect(f.lowUsd!).toBeGreaterThanOrEqual(f.mtdUsd + 120 - 0.01);
+    expect(f.lowUsd!).toBeLessThanOrEqual(f.pointUsd!);
+    expect(f.highUsd!).toBeGreaterThanOrEqual(f.pointUsd!);
+  });
+});
+
+/* --------------------- F: sync-health interlock --------------------------- */
+
+describe("forecastMonthEnd — sync-health interlock", () => {
+  it("refuses to project through a day the collectors never ran and that carries no data", () => {
+    const rows = history(40, () => 100).filter((r) => r.date !== iso(-3));
+    const f = forecastMonthEnd(rows, NOW, { syncGapDates: [iso(-3)] });
+    expect(f.suppressed).toBe(true);
+    expect(f.pointUsd).toBeNull();
+    expect(f.syncGapDates).toEqual([iso(-3)]);
+    expect(f.suppressionReason).toMatch(/recent data gap/);
+  });
+
+  it("caveats rather than refuses when data landed on the unhealthy day", () => {
+    const f = forecastMonthEnd(history(40, () => 100), NOW, { syncGapDates: [iso(-3)] });
+    expect(f.suppressed).toBe(false);
+    expect(f.reasons.join(" ")).toMatch(/no successful sync run/);
+  });
+
+  it("ignores sync gaps that fall outside the level window", () => {
+    const f = forecastMonthEnd(history(40, () => 100), NOW, {
+      syncGapDates: [iso(-20)],
+    });
+    expect(f.suppressed).toBe(false);
+    expect(f.syncGapDates).toEqual([]);
   });
 });

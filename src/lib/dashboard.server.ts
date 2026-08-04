@@ -16,7 +16,8 @@ import type {
 } from "./engine/types";
 import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
-import { forecastMonthEnd } from "./dashboard/forecast";
+import { forecastMonthEnd, FORECAST_RULES } from "./dashboard/forecast";
+import { syncGapDays } from "./dashboard/sync-health.server";
 import { buildComposition } from "./dashboard/composition";
 import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
 
@@ -566,6 +567,12 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       .eq("granularity", "day")
       .gte("bucket_start", forecastStart)
       .limit(100_000);
+  /**
+   * The interlock: the projection refuses to compute through a day the
+   * collectors never ran, read from the same `sync_runs` ledger the platform
+   * already uses to prove sync health.
+   */
+  const forecastSyncGaps = await syncGapDays(now, FORECAST_RULES.levelDays);
   const forecast = forecastMonthEnd(
     (forecastData ?? []).map((r) => ({
       date: String(r.bucket_start).slice(0, 10),
@@ -573,7 +580,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       spend: Number(r.cost_usd),
     })),
     new Date(now),
+    { syncGapDates: forecastSyncGaps },
   );
+
 
 
 
@@ -940,6 +949,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       lowUsd: forecast.lowUsd,
       highUsd: forecast.highUsd,
       isRange: forecast.isRange,
+      /** No figure at all when the data cannot support a coherent one. */
+      suppressed: forecast.suppressed,
+      suppressionReason: forecast.suppressionReason,
+      observedLevelDays: forecast.observedLevelDays,
+      missingLevelDates: forecast.missingLevelDates,
+      syncGapDates: forecast.syncGapDates,
+
       mtdUsd: forecast.mtdUsd,
       remainingDays: forecast.remainingDays,
       dailyLevelUsd: forecast.dailyLevelUsd,
