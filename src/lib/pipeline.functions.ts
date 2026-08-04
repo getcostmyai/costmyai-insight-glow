@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { requireOwner } from "./owner-middleware";
+
 import { runPipeline } from "./engine/pipeline";
 import type {
   BenchmarkRow,
