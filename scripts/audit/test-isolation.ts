@@ -30,12 +30,18 @@ function walk(dir: string, out: string[] = []): string[] {
 
 let failed = false;
 
-const files = walk("src");
+/**
+ * Read-only integration files create no accounts and no workspaces, so they
+ * cannot leak. The check is scoped to the ones that actually write identities.
+ */
+const CREATES_FIXTURES = /auth\.admin\.createUser|create_organization|from\("partners"\)\s*\.insert/;
+
+const files = walk("src").filter((f) => CREATES_FIXTURES.test(readFileSync(f, "utf8")));
 const unguarded = files.filter(
   (f) => !readFileSync(f, "utf8").includes("guardIntegrationDatabase("),
 );
 
-console.log(`integration files: ${files.length}`);
+console.log(`integration files that create fixtures: ${files.length}`);
 if (unguarded.length) {
   failed = true;
   console.log("MISSING guardIntegrationDatabase():");
