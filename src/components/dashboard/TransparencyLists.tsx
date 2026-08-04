@@ -190,7 +190,7 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
   return (
     <section>
       <SectionTitle
-        eyebrow="List C · non-qualifying"
+        eyebrow="List C · nothing worth switching"
         title="Evaluated, and saving you nothing"
         hint="Each row carries the certification engine's own verdict for that workload — not a generic refusal."
         badge={`${rows.length} refused`}
