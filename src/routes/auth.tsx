@@ -72,6 +72,28 @@ function AuthPage() {
     window.location.replace(destination);
   }
 
+  /**
+   * Wait for the session to actually be committed to storage before navigating.
+   * Without this, the protected route fires its server functions against a
+   * half-written session and gets a bare 401 — which used to surface as an
+   * endless spinner. On timeout we raise a real, readable error instead.
+   */
+  async function waitForCommittedSession(timeoutMs = 12_000) {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) return userData.user;
+      }
+      if (Date.now() > deadline) {
+        throw new Error(
+          "Signed in with Google, but the session did not finish saving in this browser. Reload this page and try again.",
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,6 +115,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (!data.user) throw new Error("Sign-in did not return a user.");
+        await waitForCommittedSession();
         finishSignIn(next);
       }
     } catch (err) {
@@ -121,8 +144,7 @@ function AuthPage() {
       if (result.error) throw result.error;
       if (result.redirected) return;
 
-      const { data, error: userError } = await supabase.auth.getUser();
-      if (userError || !data.user) throw userError ?? new Error("Google sign-in did not complete.");
+      await waitForCommittedSession();
       finishSignIn(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
@@ -130,6 +152,7 @@ function AuthPage() {
       setBusy(false);
     }
   }
+
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-16">
