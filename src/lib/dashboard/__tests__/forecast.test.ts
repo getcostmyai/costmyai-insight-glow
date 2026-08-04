@@ -449,6 +449,75 @@ describe("forecastMonthEnd — partial-day coverage", () => {
   });
 });
 
+/* --- A2: sparse traffic is not truncated collection (real new signups) ---- */
+
+describe("forecastMonthEnd — sparse workspaces vs truncated collection", () => {
+  /** A workspace that only calls models for ~10 hours a day, every day. */
+  const sparse = (hours = 10): Record<string, number> => {
+    const map: Record<string, number> = {};
+    for (let i = 40; i >= 0; i--) map[iso(-i)] = hours;
+    return map;
+  };
+
+  it("forecasts normally for a business-hours workspace with 10h days", () => {
+    const f = forecastMonthEnd(history(30, () => 100), NOW, {
+      hourCoverage: sparse(),
+      coverageReliableFrom: iso(-30),
+    });
+    expect(f.partialLevelDates).toEqual([]);
+    expect(f.observedLevelDays).toBe(7);
+    expect(f.suppressed).toBe(false);
+    expect(f.pointUsd).toBeGreaterThan(0);
+  });
+
+  it("still excludes a day that collapses against the workspace's own profile", () => {
+    const cov = sparse();
+    cov[iso(-2)] = 3;
+    const f = forecastMonthEnd(history(30, (d) => (d === iso(-2) ? 12 : 100)), NOW, {
+      hourCoverage: cov,
+      coverageReliableFrom: iso(-30),
+    });
+    expect(f.partialLevelDates).toEqual([iso(-2)]);
+  });
+
+  it("still excludes a short day beside a collection gap (the Aug 3 case)", () => {
+    const rows = history(30, () => 100).filter((r) => r.date !== iso(-3));
+    const cov = sparse(24);
+    cov[iso(-2)] = 6;
+    const f = forecastMonthEnd(rows, NOW, {
+      hourCoverage: cov,
+      coverageReliableFrom: iso(-30),
+      syncGapDates: [iso(-3)],
+    });
+    expect(f.partialLevelDates).toEqual([iso(-2)]);
+  });
+
+  it("still excludes today, which is incomplete by definition", () => {
+    const cov = sparse();
+    cov[iso(0)] = 2;
+    const f = forecastMonthEnd(history(30, () => 100), NOW, {
+      hourCoverage: cov,
+      coverageReliableFrom: iso(-30),
+    });
+    expect(f.partialLevelDates).toEqual([]);
+    expect(f.suppressed).toBe(false);
+  });
+
+
+  it("excludes the first connected day, which starts mid-day", () => {
+    const rows = history(6, () => 100);
+    const cov: Record<string, number> = {};
+    for (let i = 6; i >= 0; i--) cov[iso(-i)] = 24;
+    cov[iso(-6)] = 5;
+    const f = forecastMonthEnd(rows, NOW, {
+      hourCoverage: cov,
+      coverageReliableFrom: iso(-6),
+    });
+    expect(f.partialLevelDates).toContain(iso(-6));
+  });
+});
+
+
 /* ------------------- C: width backstop on the range ---------------------- */
 
 describe("forecastMonthEnd — width backstop", () => {

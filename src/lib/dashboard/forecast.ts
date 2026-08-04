@@ -118,6 +118,14 @@ export const FORECAST_RULES = {
   breakSilentDays: 2,
   /** Hours of real collection a day needs before it counts as a full day. */
   minObservedHours: 20,
+  /**
+   * A sparse workload is not a truncated day. A day below the absolute floor
+   * is only called partial when collection itself could have been cut short
+   * (today, the first day, a day beside a collection gap) or when it collapses
+   * below this share of the workspace's own typical covered hours.
+   */
+  partialRelativeFactor: 0.5,
+
   /** Width backstop: a high above this multiple of the point is not a forecast. */
   maxHighToPointRatio: 3,
   /** Width backstop: half-width above this share of the point is not a forecast. */
@@ -193,22 +201,69 @@ export function forecastMonthEnd(
   // ---- A. Partial-day contamination -----------------------------------------
   // A day with six hours of collection is not a cheap day, it is a fragment of
   // a day. Counted as a full day it drags the level down, invents a downward
-  // trend and inflates sigma. Where an hourly coverage signal exists and is
-  // trustworthy for that day, a day under the coverage floor is removed from
-  // `observed` entirely — the exact same path a fully absent day takes.
+  // trend and inflates sigma.
+  //
+  // But a low hour count has two very different causes, and only one of them
+  // is a data fault:
+  //
+  //   * collection was truncated — the connection started mid-day, the day is
+  //     still running, or the collector died and came back. That is the Aug 3
+  //     failure mode and it must still be excluded.
+  //   * the workspace simply does not call a model every hour. A batch job at
+  //     06:00 and a support bot in office hours is a complete, honest day with
+  //     ten covered hours. Hour buckets are derived from each event's real
+  //     `occurred_at`, so a backfilled day looks exactly like a lived one —
+  //     excluding these would suppress the forecast forever for every small
+  //     or bursty customer, which is most new signups.
+  //
+  // So the absolute floor only bites where collection could actually have been
+  // cut short, or where the day collapses against the workspace's own normal
+  // covered-hour profile.
   const partialDays = new Set<string>();
   const coverage = options.hourCoverage;
   if (coverage) {
     const from = options.coverageReliableFrom ?? null;
-    for (const d of [...observed]) {
-      if (from && d < from) continue;
-      const hours = coverage[d] ?? 0;
-      if (hours < FORECAST_RULES.minObservedHours) {
-        partialDays.add(d);
-        observed.delete(d);
+    const firstDataDay = [...observed].sort()[0] ?? null;
+    const todayKey = dayKey(todayMs);
+    const gapDays = new Set(options.syncGapDates ?? []);
+    const judged = [...observed].filter((d) => !from || d >= from);
+    /** Snapshot: a day dropped by this pass must not make its neighbour look truncated. */
+    const hadData = new Set(observed);
+
+    /** The workspace's own normal, learned from its judged days. */
+    const hourCounts = judged.map((d) => coverage[d] ?? 0).sort((a, b) => a - b);
+    const baselineHours = hourCounts.length
+      ? hourCounts[Math.floor(hourCounts.length / 2)]
+      : 24;
+
+    const truncatable = (d: string): boolean => {
+      if (d === todayKey) return true;
+      if (d === firstDataDay) return true;
+      const prev = dayKey(utcDayStart(d) - DAY_MS);
+      const next = dayKey(utcDayStart(d) + DAY_MS);
+      // Beside a hole in collection: either a day the collector never ran, or
+      // a day that carries no usage at all inside the trailing window.
+      for (const n of [prev, next]) {
+        if (gapDays.has(n)) return true;
+        // Today is always "missing" until it finishes; it is not a hole.
+        if (!hadData.has(n) && utcDayStart(n) >= todayMs - FORECAST_RULES.levelDays * DAY_MS && utcDayStart(n) < todayMs) {
+          return true;
+        }
       }
+      return false;
+    };
+
+    for (const d of judged) {
+      const hours = coverage[d] ?? 0;
+      if (hours >= FORECAST_RULES.minObservedHours) continue;
+      const collapsed = hours < baselineHours * FORECAST_RULES.partialRelativeFactor;
+      if (!truncatable(d) && !collapsed) continue;
+      partialDays.add(d);
+      observed.delete(d);
     }
   }
+
+
 
 
   // ---- 1. Month-to-date actual: complete days only, never re-estimated ------
