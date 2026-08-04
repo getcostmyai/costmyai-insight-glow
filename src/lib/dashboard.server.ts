@@ -950,6 +950,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       unlocked: plan === "govern",
       enabled: autonomousEnabled,
       running: autonomousRunning,
+      /** Real dollars applied unattended inside the window. */
+      captured: autonomousCaptured,
       lastAutonomousAt: lastAutonomousAt ? new Date(lastAutonomousAt).toISOString() : null,
       eligible: governEligible,
       refusals: governRefusals,
