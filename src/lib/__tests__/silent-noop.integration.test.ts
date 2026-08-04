@@ -13,6 +13,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { recordRun } from "../engine/evaluate.server";
 import { mintApiKey, revokeApiKey } from "../ingest/keys.server";
 import { setApplicationStatus } from "../partner-application.server";
+import { guardIntegrationDatabase } from "./support/isolation";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
@@ -36,6 +37,9 @@ const admin = createClient(URL, SERVICE, {
   global: { fetch: keyFetch(SERVICE) },
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// Fixtures never persist in the customer database — see support/isolation.ts.
+guardIntegrationDatabase(admin);
 
 const PASSWORD = "Test-Noop-Pass-2026!";
 const stamp = Date.now();

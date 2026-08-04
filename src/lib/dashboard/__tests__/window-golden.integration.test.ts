@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 
 import { buildDashboardSnapshot } from "../../dashboard.server";
+import { guardIntegrationDatabase } from "../../__tests__/support/isolation";
 
 /**
  * Golden values, straight from the rows.
@@ -22,6 +23,9 @@ const DAY_MS = 86_400_000;
 const admin = createClient(URL, SERVICE, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// Fixtures never persist in the customer database — see support/isolation.ts.
+guardIntegrationDatabase(admin);
 
 /** The raw sum PostgREST returns for a window — the number the UI must match. */
 async function rawSpend(days: 1 | 7 | 30) {
