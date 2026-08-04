@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { PlugZap } from "lucide-react";
+import { Clock, PlugZap } from "lucide-react";
+
+import { relativeAgo } from "@/lib/freshness";
+
 
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { RangeToggle, LocalTime, Metric } from "@/components/dashboard/primitives";
