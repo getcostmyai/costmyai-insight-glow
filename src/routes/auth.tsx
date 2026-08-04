@@ -6,10 +6,22 @@ import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
+/** Only same-origin app paths may be used as a post-sign-in destination. */
+function safeNext(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  if (value.startsWith("/auth")) return null;
+  return value;
+}
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    next: safeNext(search.next) ?? undefined,
+  }),
   // Renders on the server like every other route: all session reads live in
   // effects, so there is nothing here that differs between server and client.
   // `ssr: false` used to short-circuit that and produced a hydration mismatch.
+
   head: () => ({
     meta: [
       { title: "Sign in — CostMyAI" },
