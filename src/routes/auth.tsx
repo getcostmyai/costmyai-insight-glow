@@ -46,6 +46,7 @@ type Mode = "signin" | "signup";
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,15 +55,18 @@ function AuthPage() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
-    // Already signed in (or a session lands from an OAuth round-trip): go through.
+    // Already signed in (or a session lands from an OAuth round-trip): go to the
+    // page the user was actually trying to reach, falling back to the workspace.
+    const dest = next ?? "/workspace";
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate({ to: "/workspace", replace: true });
+      if (session) navigate({ to: dest, replace: true });
     });
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/workspace", replace: true });
+      if (data.session) navigate({ to: dest, replace: true });
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, next]);
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
