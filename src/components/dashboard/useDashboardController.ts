@@ -179,6 +179,7 @@ export function useDashboardController(scope: DashboardScope) {
     ctaLabel,
     rightsizeHref,
     demoReadOnly,
+    pending,
   };
 }
 
