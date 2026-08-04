@@ -450,16 +450,26 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                 <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-3">
                   <div>
                     <p className="eyebrow">Run rate</p>
-                    <p className="num text-lg">
-                      {usd(s.monthlyRate, 0)}
-                      <span className="text-xs text-muted-foreground">/mo</span>
-                    </p>
+                    {s.saved > 0 ? (
+                      <p className="num text-lg">
+                        {usd(s.monthlyRate, 0)}
+                        <span className="text-xs text-muted-foreground">/mo</span>
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Rate still calculating
+                        <span className="block text-[11px]">
+                          first full day of traffic not measured yet
+                        </span>
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="eyebrow">Captured to date</p>
                     <p className="num text-lg text-saving">+{usd(s.saved)}</p>
                   </div>
                 </div>
+
                 <SwitchControls
                   state="active"
                   busy={busy(`switch:${s.switchId}`)}
