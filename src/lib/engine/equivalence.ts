@@ -294,7 +294,20 @@ export function findQualityMatches(
       monthlySavingUsd: round2(saving),
       savingPct: round2(((baseline.cost - winner.cost) / baseline.cost) * 100),
       basis: "Quality-matched cheaper model",
-      note: `${winner.score.toFixed(2)} vs ${currentScore.score.toFixed(2)} on ${currentScore.suite}/${u.task_hint}; bar ${bar.toFixed(2)} (margin ±${margin.toFixed(2)}).${winningLatency ? ` ${latencyNote(winningLatency)}.` : ""}`,
+      /*
+       * Plain language on purpose. A reader must never see a lower number
+       * "win" without being told why that is still an equal-quality claim, so
+       * a negative delta states the measurement precision explicitly rather
+       * than printing raw instrument syntax and leaving them to infer it.
+       */
+      note: qualityNote({
+        winnerScore: winner.score,
+        currentScore: currentScore.score,
+        instrument: currentInstrumentLabel(resolution),
+        bar,
+        margin,
+        latency: winningLatency ? latencyNote(winningLatency) : null,
+      }),
       qualityDelta: round2(winner.score - currentScore.score),
       marginUsed: margin,
       objective: objective.objective,
