@@ -8,7 +8,7 @@ import {
 } from "@/lib/benchmarks/task-ladder";
 
 import { arbitrageBaseline, MIN_MONTHLY_SAVING_USD, sortRecommendations } from "./arbitrage";
-import { cheaperWins, costOfUsage, indexPrices, round2, toMonthly } from "./cost";
+import { cheaperWins, costOfUsage, indexPrices, round2, savingPctOf, toMonthly } from "./cost";
 import { expectedLatency, latencyNote, type LatencyEstimate } from "./latency";
 import {
   DEFAULT_OBJECTIVE,
@@ -316,7 +316,7 @@ export function findQualityMatches(
       savingUsd: round2(rawSaving),
       windowDays: u.days,
       monthlySavingUsd: round2(saving),
-      savingPct: round2(((baseline.cost - winner.cost) / baseline.cost) * 100),
+      savingPct: savingPctOf(baseline.cost, winner.cost),
       basis: "Quality-matched cheaper model",
       /*
        * Plain language on purpose. A reader must never see a lower number

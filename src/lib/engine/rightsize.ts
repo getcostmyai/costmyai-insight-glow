@@ -1,5 +1,5 @@
 import { arbitrageBaseline, sortRecommendations } from "./arbitrage";
-import { costOfUsage, indexPrices, round2, toMonthly } from "./cost";
+import { cheaperWins, costOfUsage, indexPrices, round2, savingPctOf, toMonthly } from "./cost";
 import {
   KIND_MIN_PLAN,
   type ModelRow,
@@ -167,7 +167,7 @@ export function findOversized(
       savingUsd: round2(rawSaving),
       windowDays: u.days,
       monthlySavingUsd: round2(saving),
-      savingPct: round2(((baseline.cost - target.cost) / baseline.cost) * 100),
+      savingPct: savingPctOf(baseline.cost, target.cost),
       basis: "Oversized for the workload",
       note: rightsizeNote(observed, required, s),
       qualityDelta: null,
