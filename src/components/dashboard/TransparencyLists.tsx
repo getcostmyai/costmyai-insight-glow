@@ -1,9 +1,10 @@
-import { ArrowRight, ShieldOff } from "lucide-react";
+import { ArrowRight, Clock, ShieldOff } from "lucide-react";
 
 import { SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
+import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
 
 /**
