@@ -68,10 +68,26 @@ export function SwitchCard({
             <ArrowRight className="size-3.5 text-primary" />
             <span className="font-mono text-sm font-semibold text-primary">{row.toModel}</span>
             <span className="text-[11px] text-muted-foreground">{row.toHost}</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold tracking-wide text-saving uppercase">
-              <ShieldCheck className="size-3" /> Certified
-            </span>
+            {/*
+              Arbitrage moves the identical weights to another provider, so no
+              benchmark is involved. "Certified" is reserved for swaps a
+              third-party measurement actually proved.
+            */}
+            {row.kind === "host" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                <Copy className="size-3" /> Same model
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold tracking-wide text-saving uppercase">
+                <ShieldCheck className="size-3" /> Certified
+              </span>
+            )}
           </div>
+          {row.kind === "quality" && row.note ? (
+            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+              {row.note}
+            </p>
+          ) : null}
           {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
         </div>
       </div>
