@@ -24,6 +24,26 @@ function validEnv(value: unknown): Env {
   return value;
 }
 
+/**
+ * Authority over a workspace is asked of the database, never taken from the
+ * request. The browser names a workspace; whether the caller may act on its
+ * billing is re-derived from their own session by `is_org_manager`.
+ */
+async function assertManager(
+  supabase: {
+    rpc: (
+      fn: "is_org_manager",
+      args: { _org_id: string },
+    ) => PromiseLike<{ data: unknown; error: unknown }>;
+  },
+  orgId: string,
+) {
+  const { data, error } = await supabase.rpc("is_org_manager", { _org_id: orgId });
+  if (error) throw error;
+  if (data !== true) throw new Error("Only a workspace owner or admin can manage billing.");
+}
+
+
 export interface WorkspaceBilling {
   orgId: string;
   recordedPlan: PlanTier;
