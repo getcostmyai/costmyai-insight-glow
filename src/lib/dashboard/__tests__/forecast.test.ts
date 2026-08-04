@@ -345,14 +345,19 @@ describe("forecastMonthEnd — coherence gate", () => {
 /* --------------------- F: sync-health interlock --------------------------- */
 
 describe("forecastMonthEnd — sync-health interlock", () => {
-  it("refuses to project through a day the collectors never ran", () => {
-    const f = forecastMonthEnd(history(40, () => 100), NOW, {
-      syncGapDates: [iso(-3)],
-    });
+  it("refuses to project through a day the collectors never ran and that carries no data", () => {
+    const rows = history(40, () => 100).filter((r) => r.date !== iso(-3));
+    const f = forecastMonthEnd(rows, NOW, { syncGapDates: [iso(-3)] });
     expect(f.suppressed).toBe(true);
     expect(f.pointUsd).toBeNull();
     expect(f.syncGapDates).toEqual([iso(-3)]);
     expect(f.suppressionReason).toMatch(/recent data gap/);
+  });
+
+  it("caveats rather than refuses when data landed on the unhealthy day", () => {
+    const f = forecastMonthEnd(history(40, () => 100), NOW, { syncGapDates: [iso(-3)] });
+    expect(f.suppressed).toBe(false);
+    expect(f.reasons.join(" ")).toMatch(/no successful sync run/);
   });
 
   it("ignores sync gaps that fall outside the level window", () => {
