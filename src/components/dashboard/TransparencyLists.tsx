@@ -97,8 +97,15 @@ export function ArbitrageList({
 }
 
 /** List B — different model, quality proven before it is offered. */
-export function BenchmarkList({ ctl }: { ctl: DashboardController }) {
-  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
+export function BenchmarkList({
+  ctl,
+  discovery = false,
+}: {
+  ctl: DashboardController;
+  discovery?: boolean;
+}) {
+  const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
+    ctl;
   const level = data.levels.quality_match;
   const rows = data.qualityMatched;
   const total = rows.reduce((s, r) => s + r.saving, 0);
