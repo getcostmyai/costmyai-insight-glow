@@ -1680,6 +1680,8 @@ export type Database = {
           id: string
           job: string
           ok: boolean | null
+          outcome: string | null
+          rows_written: number | null
           started_at: string
           updated_at: string
         }
@@ -1691,6 +1693,8 @@ export type Database = {
           id?: string
           job: string
           ok?: boolean | null
+          outcome?: string | null
+          rows_written?: number | null
           started_at?: string
           updated_at?: string
         }
@@ -1702,6 +1706,8 @@ export type Database = {
           id?: string
           job?: string
           ok?: boolean | null
+          outcome?: string | null
+          rows_written?: number | null
           started_at?: string
           updated_at?: string
         }
