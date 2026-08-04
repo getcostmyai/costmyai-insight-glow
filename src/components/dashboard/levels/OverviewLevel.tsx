@@ -14,6 +14,7 @@ import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { LEVELS } from "@/lib/dashboard/levels";
+import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 import { compact } from "@/lib/gateway-metrics";
 import { planAtLeast, type PlanTier } from "@/lib/engine/types";
 
@@ -35,8 +36,8 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
   // spend figures on this page are literally the same number.
   const windowSpend = live.spend;
   // Captured and available are both real sums over the selected window.
-  const totalOpportunity = savings.captured + savings.available;
-  const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
+  const capture = captureFigures(savings);
+  const totalOpportunity = capture.identified;
   const spendDelta =
     data.previous.spend > 0 ? ((windowSpend - data.previous.spend) / data.previous.spend) * 100 : 0;
   const totalTokens = data.totals.inputTokens + data.totals.outputTokens;
@@ -85,7 +86,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       return {
         meta,
         unlocked,
-        count: data.hostArbitrage.length,
+        count: levelCount(data, "host_arbitrage"),
         monthly: levelSaving(data, "host_arbitrage"),
         valueText: null as string | null,
         caption: null as string | null,
@@ -94,7 +95,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       return {
         meta,
         unlocked,
-        count: data.qualityMatched.length,
+        count: levelCount(data, "quality_match"),
         monthly: levelSaving(data, "quality_match"),
         valueText: null as string | null,
         caption: null as string | null,
@@ -103,7 +104,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       return {
         meta,
         unlocked,
-        count: data.oversized.length,
+        count: levelCount(data, "rightsize"),
         monthly: levelSaving(data, "rightsize"),
         valueText: null as string | null,
         caption: null as string | null,
@@ -219,7 +220,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
             />
             <HeroStat
               label="Savings captured"
-              value={`${Math.round(captureRate * 100)}%`}
+              value={`${capture.pct}%`}
               sub={`${usd(savings.captured, 0)} of ${usd(totalOpportunity, 0)} identified · ${activeRange.long}`}
               accent="oklch(0.82 0.16 155)"
             />
@@ -414,16 +415,3 @@ const MINE_PATHS = {
   rightsize: "/workspace/rightsize",
   govern: "/workspace/govern",
 } as const;
-
-/** Unlocked levels report what they can act on; locked ones report what they found. */
-/** What one level found over the selected window — real dollars, never a rate. */
-function levelSaving(
-  data: DashboardController["data"],
-  key: "host_arbitrage" | "quality_match" | "rightsize",
-) {
-  const level = data.levels[key];
-  if (!level.unlocked) return level.lockedSaving;
-  if (key === "host_arbitrage") return data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
-  if (key === "quality_match") return data.qualityMatched.reduce((s, r) => s + r.saving, 0);
-  return data.oversized.reduce((s, r) => s + r.wasted, 0);
-}
