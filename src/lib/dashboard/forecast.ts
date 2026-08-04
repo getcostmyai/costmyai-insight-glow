@@ -227,6 +227,8 @@ export function forecastMonthEnd(
     const todayKey = dayKey(todayMs);
     const gapDays = new Set(options.syncGapDates ?? []);
     const judged = [...observed].filter((d) => !from || d >= from);
+    /** Snapshot: a day dropped by this pass must not make its neighbour look truncated. */
+    const hadData = new Set(observed);
 
     /** The workspace's own normal, learned from its judged days. */
     const hourCounts = judged.map((d) => coverage[d] ?? 0).sort((a, b) => a - b);
@@ -244,7 +246,7 @@ export function forecastMonthEnd(
       for (const n of [prev, next]) {
         if (gapDays.has(n)) return true;
         // Today is always "missing" until it finishes; it is not a hole.
-        if (!observed.has(n) && utcDayStart(n) >= todayMs - FORECAST_RULES.levelDays * DAY_MS && utcDayStart(n) < todayMs) {
+        if (!hadData.has(n) && utcDayStart(n) >= todayMs - FORECAST_RULES.levelDays * DAY_MS && utcDayStart(n) < todayMs) {
           return true;
         }
       }
