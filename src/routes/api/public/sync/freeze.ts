@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/public/sync/freeze")({
            * nothing on purpose — that is `quiet`, not a hole. Only a first-time
            * freeze is expected to produce a row.
            */
-          const wrote = (result as { frozen?: boolean }).frozen === false ? 0 : 1;
+          const wrote = result.action === "already-frozen" ? 0 : 1;
           await recordRun({
             job: "freeze-intelligence",
             started,
