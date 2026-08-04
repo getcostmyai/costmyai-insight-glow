@@ -184,7 +184,8 @@ export function forecastMonthEnd(
   }
 
   const observedLevelDates = levelDates.filter((d) => observed.has(d));
-  const missingLevelDates = levelDates.filter((d) => !observed.has(d));
+  const missingLevelDates = levelDates.filter((d) => !observed.has(d) && !partialDays.has(d));
+  const partialLevelDates = levelDates.filter((d) => partialDays.has(d));
   const gapSet = new Set(options.syncGapDates ?? []);
   const syncGapDates = levelDates.filter((d) => gapSet.has(d));
 
@@ -204,11 +205,13 @@ export function forecastMonthEnd(
     cv: 0,
     observedLevelDays: observedLevelDates.length,
     missingLevelDates,
+    partialLevelDates,
     syncGapDates,
     retiredKeys: [],
     newKeys: [],
     reasons: [reason],
   });
+
 
   // ---- F. Sync-health interlock ---------------------------------------------
   // A day the collector never ran is not a quiet day. Where that day also
