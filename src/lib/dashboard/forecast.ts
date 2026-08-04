@@ -167,6 +167,27 @@ export function forecastMonthEnd(
     k.set(d, (k.get(d) ?? 0) + r.spend);
   }
 
+  // ---- A. Partial-day contamination -----------------------------------------
+  // A day with six hours of collection is not a cheap day, it is a fragment of
+  // a day. Counted as a full day it drags the level down, invents a downward
+  // trend and inflates sigma. Where an hourly coverage signal exists and is
+  // trustworthy for that day, a day under the coverage floor is removed from
+  // `observed` entirely — the exact same path a fully absent day takes.
+  const partialDays = new Set<string>();
+  const coverage = options.hourCoverage;
+  if (coverage) {
+    const from = options.coverageReliableFrom ?? null;
+    for (const d of [...observed]) {
+      if (from && d < from) continue;
+      const hours = coverage[d] ?? 0;
+      if (hours < FORECAST_RULES.minObservedHours) {
+        partialDays.add(d);
+        observed.delete(d);
+      }
+    }
+  }
+
+
   // ---- 1. Month-to-date actual: complete days only, never re-estimated ------
   let mtdUsd = 0;
   for (const [d, v] of daily) {
