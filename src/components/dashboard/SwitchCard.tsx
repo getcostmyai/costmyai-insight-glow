@@ -17,6 +17,7 @@ export function SwitchCard({
   period,
   discovery = false,
   discoveryHref,
+  readOnly = false,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
