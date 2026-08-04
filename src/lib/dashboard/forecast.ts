@@ -113,7 +113,14 @@ export const FORECAST_RULES = {
   breakMinShare: 0.05,
   /** Consecutive observed silent days that mark a material workload retired. */
   breakSilentDays: 2,
+  /** Hours of real collection a day needs before it counts as a full day. */
+  minObservedHours: 20,
+  /** Width backstop: a high above this multiple of the point is not a forecast. */
+  maxHighToPointRatio: 3,
+  /** Width backstop: half-width above this share of the point is not a forecast. */
+  maxHalfWidthPct: 0.6,
 } as const;
+
 
 
 const DAY_MS = 86_400_000;
