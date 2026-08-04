@@ -12,9 +12,10 @@ import { ROBIN_USER_ID } from "@/lib/access";
  */
 export const Route = createFileRoute("/demo")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user)
+      throw redirect({ to: "/auth", search: { next: location.href } });
     if (data.user.id !== ROBIN_USER_ID) throw redirect({ to: "/" });
   },
   head: () => ({
