@@ -37,12 +37,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
     live,
     objective,
     chooseObjective,
-    canAct,
-    activate,
-    busy,
     errorFor,
-    ctaHref,
-    ctaLabel,
+    rightsizeHref,
     scope,
   } = ctl;
   const level = data.levels.quality_match;
@@ -147,7 +143,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
 
       <UsageSection ctl={ctl} />
 
-      <ArbitrageList ctl={ctl} />
+      <ArbitrageList ctl={ctl} discovery />
 
       <section>
         <SectionTitle
@@ -192,25 +188,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
                   row={asSwitchRow(row, "quality")}
                   period={activeRange.long}
                   rank={i + 1}
-                  pending={busy(key)}
-                  error={errorFor(key)}
-                  ctaHref={ctaHref}
-                  ctaLabel={ctaLabel}
-                  onActivate={
-                    canAct
-                      ? () =>
-                          activate.mutate({
-                            key,
-                            kind: "quality_match",
-                            fromModel: row.fromModel,
-                            fromHost: row.fromHost,
-                            toModel: row.toModel,
-                            toHost: row.toHost,
-                            taskHint: row.taskHint,
-                          })
-                      : undefined
-                  }
+                  discovery
+                  discoveryHref={rightsizeHref}
                 />
+
               );
             })}
           </div>
@@ -220,7 +201,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
       <NonQualifyingList ctl={ctl} />
 
       <section className="card-surface p-6">
-        <p className="eyebrow">Why some switches never appear</p>
+        <p className="eyebrow">Why some candidates are refused</p>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           {refused} candidate{refused === 1 ? "" : "s"} on your own traffic cleared on price and
           were still refused, because the measured quality gap fell outside the equivalence band for

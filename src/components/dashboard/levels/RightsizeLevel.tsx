@@ -12,7 +12,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
-import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
+import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
@@ -171,11 +171,16 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.86 0.09 265)"
             />
             <HeroStat
-              label="Frozen"
-              value={`${data.frozen}`}
-              sub={data.frozen === 0 ? "all healthy" : "review needed"}
+              label="Frozen switches"
+              value={`${data.frozen} frozen`}
+              sub={
+                data.frozen === 0
+                  ? "none paused — every running switch is healthy"
+                  : "paused after a regression, waiting for your review"
+              }
               accent="oklch(0.9 0.03 285)"
             />
+
           </>
         }
 
@@ -202,6 +207,16 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
       <TransparencyLists ctl={ctl} />
       <OversizedSection ctl={ctl} />
       <ActiveSwitchesSection ctl={ctl} />
+      {/* Next rung: the same gate, applied without waiting for a human. */}
+      <GovernUpsell
+        to={ctl.scope === "demo" ? "/demo/govern" : "/workspace/govern"}
+        unlocked={data.govern.unlocked}
+        eligibleCount={data.govern.eligible.length}
+        eligibleSaving={data.govern.eligibleSaving}
+        running={data.govern.running}
+        period={activeRange.long}
+      />
+
     </>
   );
 }
@@ -271,6 +286,12 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           {busy(key) ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
           {busy(key) ? "Switching…" : "Switch now"}
         </button>
+      ) : ctl.demoReadOnly ? (
+        /* The demo is a showcase, not a console: the action reads as a label. */
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white/80">
+          <Zap className="size-4" />
+          Switch
+        </span>
       ) : (
         <Link
           to={ctaHref}
@@ -280,6 +301,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           <ArrowUpRight className="size-4" />
         </Link>
       )}
+
       {errorFor(key) ? (
         <p className="w-full text-[11px] text-[oklch(0.8_0.15_25)]">{errorFor(key)}</p>
       ) : null}
@@ -362,6 +384,10 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                       {busy(rsKey(o)) ? <Loader2 className="size-3.5 animate-spin" /> : null}
                       Right-size now
                     </button>
+                  ) : ctl.demoReadOnly ? (
+                    <span className="ml-auto rounded-full border border-opportunity/50 px-3.5 py-1.5 text-xs font-semibold text-opportunity">
+                      Switch
+                    </span>
                   ) : (
                     <Link
                       to={ctaHref}
@@ -371,6 +397,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                       <ArrowUpRight className="size-3" />
                     </Link>
                   )}
+
                 </div>
               ) : null}
               {errorFor(rsKey(o)) ? (
@@ -445,16 +472,26 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                 <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-3">
                   <div>
                     <p className="eyebrow">Run rate</p>
-                    <p className="num text-lg">
-                      {usd(s.monthlyRate, 0)}
-                      <span className="text-xs text-muted-foreground">/mo</span>
-                    </p>
+                    {s.saved > 0 ? (
+                      <p className="num text-lg">
+                        {usd(s.monthlyRate, 0)}
+                        <span className="text-xs text-muted-foreground">/mo</span>
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Rate still calculating
+                        <span className="block text-[11px]">
+                          first full day of traffic not measured yet
+                        </span>
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="eyebrow">Captured to date</p>
                     <p className="num text-lg text-saving">+{usd(s.saved)}</p>
                   </div>
                 </div>
+
                 <SwitchControls
                   state="active"
                   busy={busy(`switch:${s.switchId}`)}
@@ -479,12 +516,18 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
               <Snowflake className="size-5 text-frozen" />
             </div>
             <div>
-              <div className="num text-3xl text-frozen">{data.frozen}</div>
+              <div className="num text-3xl text-frozen">
+                {data.frozen}
+                <span className="text-base"> frozen</span>
+              </div>
               <p className="text-xs text-muted-foreground">
-                frozen switches · {data.frozen === 0 ? "all healthy" : "review needed"}
+                {data.frozen === 0
+                  ? "No switch has been paused after a quality or price regression."
+                  : "Paused after a regression — resume or roll back below."}
               </p>
             </div>
           </div>
+
 
           {data.frozenSwitches.map((s) => (
             <div key={s.switchId} className="card-surface p-5">

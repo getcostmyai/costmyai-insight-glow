@@ -15,6 +15,8 @@ export function SwitchCard({
   ctaHref,
   ctaLabel,
   period,
+  discovery = false,
+  discoveryHref,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
@@ -29,6 +31,13 @@ export function SwitchCard({
   /** Where the read-only demo sends the visitor instead of activating. */
   ctaHref?: string;
   ctaLabel?: string;
+  /**
+   * Compare and Certify find and certify; they never execute. On those levels
+   * the row routes the intent to Rightsize rather than offering an activation
+   * that the level itself cannot honour.
+   */
+  discovery?: boolean;
+  discoveryHref?: string;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
@@ -74,7 +83,15 @@ export function SwitchCard({
             />
           </div>
         </div>
-        {onActivate ? (
+        {discovery ? (
+          <Link
+            to={discoveryHref ?? "/pricing"}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          >
+            Certified — switch via Rightsize
+            <ArrowUpRight className="size-3.5" />
+          </Link>
+        ) : onActivate ? (
           <button
             type="button"
             onClick={onActivate}
