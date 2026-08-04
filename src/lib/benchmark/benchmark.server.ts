@@ -82,7 +82,15 @@ async function spreadFor(client: Client, cut: Cut) {
   return row;
 }
 
-/** Own 30-day spend, read through the caller's own RLS-scoped client. */
+/**
+ * Own 30-day spend, read through the caller's own RLS-scoped client.
+ *
+ * The synthetic filter is not optional and not cosmetic: `benchmark_cut`
+ * builds the cohort from real rows only, so counting demo traffic on this side
+ * would compare a padded "you" against an unpadded "them" and tell a workspace
+ * it overspends purely because it has seeded data. Both sides of a comparison
+ * have to be the same measurement.
+ */
 export async function ownMonthlySpend(client: Client, orgId: string): Promise<number> {
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
   const { data, error } = await client
@@ -90,6 +98,7 @@ export async function ownMonthlySpend(client: Client, orgId: string): Promise<nu
     .select("cost_usd")
     .eq("org_id", orgId)
     .eq("granularity", "day")
+    .eq("is_synthetic", false)
     .gte("bucket_start", since);
   if (error) throw error;
   return (data ?? []).reduce((s: number, r: { cost_usd: number }) => s + Number(r.cost_usd), 0);
