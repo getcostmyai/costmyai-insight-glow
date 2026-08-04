@@ -71,7 +71,7 @@ export const createWorkspace = createServerFn({ method: "POST" })
 
     // Keep the profile in step with the account. There is no auth-schema
     // trigger here by design, so the app owns this write.
-    await supabase.from("profiles").upsert(
+    const profileWrite = await supabase.from("profiles").upsert(
       {
         id: userId,
         email: (claims.email as string | undefined) ?? null,
@@ -79,6 +79,9 @@ export const createWorkspace = createServerFn({ method: "POST" })
       },
       { onConflict: "id" },
     );
+    // Dispatch 91. A swallowed failure here leaves the workspace owner without
+    // the row every member list and invite screen reads them from.
+    if (profileWrite.error) throw new Error(profileWrite.error.message);
 
     const { data: orgId, error } = await supabase.rpc("create_organization", { _name: data.name });
     if (error) throw error;
