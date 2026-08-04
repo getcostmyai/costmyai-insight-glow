@@ -168,6 +168,12 @@ export const createBillingPortal = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PortalResult> => {
     const { createStripeClient, getStripeErrorMessage } = await import("./stripe.server");
 
+    // The portal can cancel the subscription and change the card on file, so
+    // membership is not enough. RLS on `subscriptions` stops another tenant
+    // outright; this stops an ordinary member of this workspace from ending
+    // the plan their owner is paying for.
+    await assertManager(context.supabase, data.orgId);
+
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("stripe_customer_id")
@@ -177,6 +183,7 @@ export const createBillingPortal = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (!sub?.stripe_customer_id) throw new Error("This workspace has no subscription yet.");
+
 
     try {
       const stripe = createStripeClient(data.environment);
