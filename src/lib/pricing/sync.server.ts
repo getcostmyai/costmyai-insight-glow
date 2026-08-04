@@ -382,17 +382,22 @@ async function delistMissing(
         sync_run_id: runId,
         observed_at: syncedAt,
       });
-      await supabase
+      const delist = await supabase
         .from("host_prices")
         .update({ is_active: false, missed_syncs: misses })
         .eq("id", row.id);
+      if (delist.error) throw new Error(`delisting ${row.model_key}@${row.host} failed: ${delist.error.message}`);
     } else {
-      await supabase.from("host_prices").update({ missed_syncs: misses }).eq("id", row.id);
+      const miss = await supabase.from("host_prices").update({ missed_syncs: misses }).eq("id", row.id);
+      if (miss.error) throw new Error(`miss counter for ${row.id} failed: ${miss.error.message}`);
     }
   }
 
   for (const batch of chunk(history, 500)) {
-    await supabase.from("price_history").insert(batch as never);
+    // Dispatch 91. price_history is append-only and permanent; a dropped
+    // batch is a hole in the record that nothing later can reconstruct.
+    const { error } = await supabase.from("price_history").insert(batch as never);
+    if (error) throw new Error(`price history append failed: ${error.message}`);
   }
 
   return delisted;
