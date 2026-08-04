@@ -143,7 +143,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
 
       <UsageSection ctl={ctl} />
 
-      <ArbitrageList ctl={ctl} />
+      <ArbitrageList ctl={ctl} discovery />
 
       <section>
         <SectionTitle
