@@ -17,6 +17,7 @@ import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
+import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
 /**
  * Rightsize — everything the earlier levels found, plus oversized models, and
@@ -61,30 +62,22 @@ export interface MechanismSavings {
 
 export function mechanismSavings(ctl: DashboardController): MechanismSavings {
   const { data } = ctl;
-  const arbitrage = data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
-  const benchmark = data.levels.quality_match.unlocked
-    ? data.qualityMatched.reduce((s, r) => s + r.saving, 0)
-    : data.levels.quality_match.lockedSaving;
-  const rightsize = data.levels.rightsize.unlocked
-    ? data.oversized.reduce((s, o) => s + o.wasted, 0)
-    : data.levels.rightsize.lockedSaving;
+  const arbitrage = levelSaving(data, "host_arbitrage");
+  const benchmark = levelSaving(data, "quality_match");
+  const rightsize = levelSaving(data, "rightsize");
   return {
     arbitrage,
     benchmark,
     rightsize,
-    arbitrageCount: data.hostArbitrage.length,
-    benchmarkCount: data.levels.quality_match.unlocked
-      ? data.qualityMatched.length
-      : data.levels.quality_match.lockedCount,
-    rightsizeCount: data.levels.rightsize.unlocked
-      ? data.oversized.length
-      : data.levels.rightsize.lockedCount,
+    arbitrageCount: levelCount(data, "host_arbitrage"),
+    benchmarkCount: levelCount(data, "quality_match"),
+    rightsizeCount: levelCount(data, "rightsize"),
     overlapUsd: data.savings.overlapUsd,
     overlapCount: data.savings.overlapCount,
     sum: arbitrage + benchmark + rightsize,
     available: data.savings.available,
     captured: data.savings.captured,
-    identified: data.savings.available + data.savings.captured,
+    identified: captureFigures(data.savings).identified,
   };
 }
 
@@ -137,8 +130,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
   const { savings } = data;
   // Captured and available are both real sums over the same window, so the
   // capture rate is a like-for-like ratio on every period tab.
-  const totalOpportunity = savings.captured + savings.available;
-  const captureRate = totalOpportunity > 0 ? savings.captured / totalOpportunity : 0;
+  const capture = captureFigures(savings);
   const mech = mechanismSavings(ctl);
 
   return (
@@ -185,8 +177,8 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
 
             <HeroStat
               label="Savings captured"
-              value={`${Math.round(captureRate * 100)}%`}
-              sub={`of ${usd(totalOpportunity, 0)} identified`}
+              value={`${capture.pct}%`}
+              sub={`of ${usd(capture.identified, 0)} identified`}
               accent="oklch(0.86 0.09 265)"
             />
             <HeroStat

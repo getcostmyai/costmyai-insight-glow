@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
+import { levelCount, levelSaving } from "@/lib/dashboard/figures";
 
 /**
  * Compare — same model, cheaper host. The free level.
@@ -47,15 +48,13 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   const windowSpend = live.spend;
   // Real dollars over the window on screen. Both sides of every ratio below are
   // the same window, so a shorter tab can never report more money than a longer one.
-  const available = rows.reduce((s, r) => s + r.saving, 0);
+  const available = levelSaving(data, "host_arbitrage");
   const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
   const onCheapestHost = Math.max(0, windowSpend - available);
   const coveragePct = windowSpend > 0 ? (onCheapestHost / windowSpend) * 100 : 100;
-  const certifySaving = certify.unlocked
-    ? data.qualityMatched.reduce((s, r) => s + r.saving, 0)
-    : certify.lockedSaving;
-  const certifyCount = certify.unlocked ? data.qualityMatched.length : certify.lockedCount;
+  const certifySaving = levelSaving(data, "quality_match");
+  const certifyCount = levelCount(data, "quality_match");
 
   return (
     <>

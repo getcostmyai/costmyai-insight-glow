@@ -19,6 +19,7 @@ import {
 import { ArbitrageList, NonQualifyingList } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
+import { certificationRate, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
 /**
  * Certify — a different model, proven to hold the same measured quality.
@@ -46,15 +47,13 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const rows = data.qualityMatched;
 
   // Real dollars over the window on screen, never a monthly projection.
-  const benchmarkSaving = rows.reduce((s, r) => s + r.saving, 0);
-  const arbitrageSaving = data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
+  const benchmarkSaving = levelSaving(data, "quality_match");
+  const arbitrageSaving = levelSaving(data, "host_arbitrage");
   const refused = data.stats.qualityRefused;
   const evaluated = data.stats.qualityEvaluated;
-  const certifyRate = evaluated > 0 ? (data.stats.qualityCertified / evaluated) * 100 : 0;
-  const rightsizeSaving = rightsize.unlocked
-    ? data.oversized.reduce((s, r) => s + r.wasted, 0)
-    : rightsize.lockedSaving;
-  const rightsizeCount = rightsize.unlocked ? data.oversized.length : rightsize.lockedCount;
+  const certifyRate = certificationRate(data.stats);
+  const rightsizeSaving = levelSaving(data, "rightsize");
+  const rightsizeCount = levelCount(data, "rightsize");
 
   return (
     <>
