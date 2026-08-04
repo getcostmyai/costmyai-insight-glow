@@ -123,7 +123,7 @@ export function BenchmarkList({
       <SectionTitle
         eyebrow="List B · benchmark saves"
         title="Cheaper model, same measured quality"
-        hint={`Benchmarked against ${data.coverage.evaluations} measured evaluation bands before the swap is offered.`}
+        hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before the swap is offered.`}
         badge={`${usd(total, 0)} · ${activeRange.long} · ${rows.length}`}
         badgeTone="saving"
       />
@@ -190,7 +190,7 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
   return (
     <section>
       <SectionTitle
-        eyebrow="List C · non-qualifying"
+        eyebrow="List C · nothing worth switching"
         title="Evaluated, and saving you nothing"
         hint="Each row carries the certification engine's own verdict for that workload — not a generic refusal."
         badge={`${rows.length} refused`}
@@ -237,7 +237,9 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
               </span>
               <div className="text-right">
                 <div className="num text-base text-spend">{usd(r.monthlySpend, 0)}</div>
-                <p className="text-[11px] text-muted-foreground">per month, unchanged</p>
+                <p className="text-[11px] text-muted-foreground">
+                  a month at the {ctl.activeRange.long} rate, unchanged
+                </p>
               </div>
             </div>
           ))}

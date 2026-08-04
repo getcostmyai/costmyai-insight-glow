@@ -132,7 +132,7 @@ export const REFUSAL_LABEL: Record<string, string> = {
   no_candidate_clears_bar: "quality gap outside the equivalence band",
   no_cheaper_candidate: "already the cheapest model that holds this quality",
   latency_ceiling_unmet: "no equal-quality option met your latency ceiling",
-  saving_below_floor: "saving below the materiality floor",
+  saving_below_floor: "the saving is too small to be worth a switch",
 };
 
 
