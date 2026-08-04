@@ -138,13 +138,18 @@ export function findOversized(
     // Cheapest price point among models that sit at the required tier.
     // Priced through costOfUsage so this level uses the one cost formula every
     // other level uses — a local copy of the arithmetic is how two levels start
-    // quoting different savings for the same pair.
+    // quoting different savings for the same pair. Ties break through
+    // cheaperWins for the same reason the other two levels do: two hosts at an
+    // identical price must resolve by name, not by whichever row the feed
+    // happened to return first, or the same workload recommends a different
+    // vendor on different syncs. That is the Neutrality Charter's determinism
+    // clause, and it was the one level not honouring it.
     let target: { price: PriceRow; cost: number } | null = null;
     for (const m of models) {
       if (m.tier !== required) continue;
       for (const price of byModel.get(m.model_key) ?? []) {
-        const cost = costOfUsage(price, u);
-        if (!target || cost < target.cost) target = { price, cost };
+        const candidate = { price, cost: costOfUsage(price, u) };
+        if (!target || cheaperWins(candidate, target) < 0) target = candidate;
       }
     }
     if (!target || target.cost >= baseline.cost) continue;
