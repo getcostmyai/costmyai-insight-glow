@@ -34,15 +34,28 @@ export interface ForecastInputRow {
   spend: number;
 }
 
+export interface ForecastOptions {
+  /**
+   * Calendar days inside the trailing window that the platform knows it did
+   * not collect (no successful sync run). A hole here is a data-collection
+   * fact, not a spend fact, and the forecast refuses rather than reads it
+   * as quiet traffic.
+   */
+  syncGapDates?: string[];
+}
+
 export interface MonthEndForecast {
   /** Month-to-date actual, complete days only. Known, not estimated. */
   mtdUsd: number;
-  /** Point estimate for the full calendar month. */
-  pointUsd: number;
+  /** Point estimate for the full calendar month. Null when suppressed. */
+  pointUsd: number | null;
   /** Present only when the data does not support a single number. */
   lowUsd: number | null;
   highUsd: number | null;
   isRange: boolean;
+  /** True when no figure may be shown at all, with the reason beside it. */
+  suppressed: boolean;
+  suppressionReason: string | null;
   /** Days still to project, including today. */
   remainingDays: number;
   /** Trailing daily level used for the remaining days, deseasonalised. */
@@ -52,6 +65,11 @@ export interface MonthEndForecast {
   seasonalityApplied: boolean;
   /** Coefficient of variation of the deseasonalised trailing window. */
   cv: number;
+  /** Trailing days that actually carried data, and the ones that did not. */
+  observedLevelDays: number;
+  missingLevelDates: string[];
+  /** Level-window days the sync-health signal reports as not collected. */
+  syncGapDates: string[];
   /** Workloads dropped as retired, and workloads new inside the window. */
   retiredKeys: string[];
   newKeys: string[];
@@ -62,6 +80,8 @@ export interface MonthEndForecast {
 export const FORECAST_RULES = {
   /** Trailing window used as the level estimate. */
   levelDays: 7,
+  /** Trailing days that must actually carry data before anything is projected. */
+  minObservedLevelDays: 5,
   /** Window used to learn day-of-week factors. */
   seasonalityDays: 28,
   /** Apply weekly factors only when the pattern is this pronounced. */
@@ -78,9 +98,10 @@ export const FORECAST_RULES = {
   rangeFloorPct: 0.06,
   /** A workload below this share of trailing spend cannot trigger a break. */
   breakMinShare: 0.05,
-  /** Consecutive silent days that mark a material workload as retired. */
+  /** Consecutive observed silent days that mark a material workload retired. */
   breakSilentDays: 2,
 } as const;
+
 
 const DAY_MS = 86_400_000;
 
