@@ -2001,6 +2001,13 @@ export type Database = {
       is_partner_member: { Args: { _partner_id: string }; Returns: boolean }
       is_partner_owner: { Args: { _partner_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      org_entitled_to: {
+        Args: {
+          _org_id: string
+          _required: Database["public"]["Enums"]["plan_tier"]
+        }
+        Returns: boolean
+      }
       org_has_active_subscription: {
         Args: { _env?: string; _org_id: string }
         Returns: boolean
@@ -2072,6 +2079,10 @@ export type Database = {
       payout_settle: {
         Args: { _payout_id: string; _transfer_id: string }
         Returns: undefined
+      }
+      plan_rank: {
+        Args: { _plan: Database["public"]["Enums"]["plan_tier"] }
+        Returns: number
       }
       set_org_plan: {
         Args: {
