@@ -920,7 +920,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     upgradePlan: nextPlan(plan),
     objective,
     dataState,
+    ingest,
     firstEventAt: (firstEvent.data ?? [])[0]?.bucket_start ?? null,
+
     series,
     totals: {
       spend: round2(totals.spend),
