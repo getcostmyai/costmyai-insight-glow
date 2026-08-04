@@ -81,6 +81,9 @@ export interface MonthEndForecast {
   /** Trailing days that actually carried data, and the ones that did not. */
   observedLevelDays: number;
   missingLevelDates: string[];
+  /** Trailing days dropped for insufficient hourly coverage (partial days). */
+  partialLevelDates: string[];
+
   /** Level-window days the sync-health signal reports as not collected. */
   syncGapDates: string[];
   /** Workloads dropped as retired, and workloads new inside the window. */
