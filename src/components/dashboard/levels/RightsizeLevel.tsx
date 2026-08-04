@@ -222,11 +222,9 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
         <TopSwitchControl ctl={ctl} />
       </LevelHero>
 
-      <UsageSection ctl={ctl} />
-      <TransparencyLists ctl={ctl} />
-      <OversizedSection ctl={ctl} />
-      <ActiveSwitchesSection ctl={ctl} />
-      {/* Next rung: the same gate, applied without waiting for a human. */}
+      {/* Next rung: the same gate, applied without waiting for a human.
+          Sits directly under the hero, matching the cross-sell banner slot
+          the other levels use. */}
       <GovernUpsell
         to={ctl.scope === "demo" ? "/demo/govern" : "/workspace/govern"}
         unlocked={data.govern.unlocked}
@@ -235,6 +233,12 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
         running={data.govern.running}
         period={activeRange.long}
       />
+
+      <UsageSection ctl={ctl} />
+      <TransparencyLists ctl={ctl} />
+      <OversizedSection ctl={ctl} />
+      <ActiveSwitchesSection ctl={ctl} />
+
 
     </>
   );
