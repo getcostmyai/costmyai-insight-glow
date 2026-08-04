@@ -1,4 +1,5 @@
 import {
+  AA_FIELDS,
   FIELD_SPECS,
   resolveLadder,
   separationOfScores,
