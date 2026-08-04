@@ -24,8 +24,42 @@ export const Route = createFileRoute("/api/public/sync/backup-export")({
         }
 
         const { runBackupExport } = await import("@/lib/backup/export.server");
-        const result = await runBackupExport();
-        return Response.json(result, { status: result.ok ? 200 : 500 });
+        const { recordRun } = await import("@/lib/engine/evaluate.server");
+        const started = new Date();
+
+        // Dispatch 88. The export has always written its own detailed row to
+        // backup_export_runs; it now also reports into the one ledger every job
+        // is judged from, so a backup that silently stops firing shows up in the
+        // same place as a collector that does.
+        try {
+          const result = await runBackupExport();
+          const statements = result.statements ?? 0;
+          await recordRun({
+            job: "dr-backup-export",
+            started,
+            outcome: result.ok && statements > 0 ? "ok" : result.ok ? "empty" : "failed",
+            rowsWritten: statements,
+            detail: {
+              destination: result.destination,
+              bytes: result.bytes,
+              countsMatch: result.countsMatch,
+              triggersOk: result.triggersOk,
+            },
+            error: result.error,
+          });
+          return Response.json(result, { status: result.ok ? 200 : 500 });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error("backup export failed", message);
+          await recordRun({
+            job: "dr-backup-export",
+            started,
+            outcome: "failed",
+            rowsWritten: 0,
+            error: message,
+          });
+          return Response.json({ ok: false, error: message }, { status: 500 });
+        }
       },
     },
   },

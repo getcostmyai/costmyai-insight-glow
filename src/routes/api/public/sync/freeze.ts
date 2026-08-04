@@ -32,6 +32,8 @@ export const Route = createFileRoute("/api/public/sync/freeze")({
         const { freezeMonth, previousMonthKey } = await import(
           "@/lib/intelligence/snapshot.server"
         );
+        const { recordRun } = await import("@/lib/engine/evaluate.server");
+        const started = new Date();
         const month = body.month ?? previousMonthKey();
 
         try {
@@ -39,10 +41,31 @@ export const Route = createFileRoute("/api/public/sync/freeze")({
             restate: body.restate === true,
             note: body.note,
           });
+          /*
+           * Dispatch 88. A freeze that finds the month already frozen wrote
+           * nothing on purpose — that is `quiet`, not a hole. Only a first-time
+           * freeze is expected to produce a row.
+           */
+          const wrote = result.action === "already-frozen" ? 0 : 1;
+          await recordRun({
+            job: "freeze-intelligence",
+            started,
+            outcome: wrote > 0 ? "ok" : "quiet",
+            rowsWritten: wrote,
+            detail: { month, restate: body.restate === true },
+          });
           return Response.json(result);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("month freeze failed", message);
+          await recordRun({
+            job: "freeze-intelligence",
+            started,
+            outcome: "failed",
+            rowsWritten: 0,
+            error: message,
+            detail: { month },
+          });
           return Response.json({ error: message, month }, { status: 400 });
         }
       },

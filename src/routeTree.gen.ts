@@ -48,6 +48,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
 import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
@@ -55,6 +56,7 @@ import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
+import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
@@ -263,6 +265,11 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const ApiPublicBuildInfoRoute = ApiPublicBuildInfoRouteImport.update({
+  id: '/api/public/build-info',
+  path: '/api/public/build-info',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWorkspaceRightsizeRoute =
   AuthenticatedWorkspaceRightsizeRouteImport.update({
     id: '/rightsize',
@@ -305,6 +312,11 @@ const AuthenticatedAdminPartnerApplicationsRoute =
     path: '/admin/partner-applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminJobsRoute = AuthenticatedAdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicWidgetIntelligenceRoute =
   ApiPublicWidgetIntelligenceRouteImport.update({
     id: '/api/public/widget/intelligence',
@@ -410,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
+  '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -417,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -466,6 +480,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
+  '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -473,6 +488,7 @@ export interface FileRoutesByTo {
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -527,6 +543,7 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
+  '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -534,6 +551,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -588,6 +606,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
+    | '/admin/jobs'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -595,6 +614,7 @@ export interface FileRouteTypes {
     | '/workspace/compare'
     | '/workspace/govern'
     | '/workspace/rightsize'
+    | '/api/public/build-info'
     | '/workspace/'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -644,6 +664,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/demo'
     | '/intelligence'
+    | '/admin/jobs'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -651,6 +672,7 @@ export interface FileRouteTypes {
     | '/workspace/compare'
     | '/workspace/govern'
     | '/workspace/rightsize'
+    | '/api/public/build-info'
     | '/workspace'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -704,6 +726,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
+    | '/_authenticated/admin/jobs'
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/referrals'
@@ -711,6 +734,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
+    | '/api/public/build-info'
     | '/_authenticated/workspace/'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -752,6 +776,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
+  ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
@@ -1041,6 +1066,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/api/public/build-info': {
+      id: '/api/public/build-info'
+      path: '/api/public/build-info'
+      fullPath: '/api/public/build-info'
+      preLoaderRoute: typeof ApiPublicBuildInfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/workspace/rightsize': {
       id: '/_authenticated/workspace/rightsize'
       path: '/rightsize'
@@ -1088,6 +1120,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/partner-applications'
       fullPath: '/admin/partner-applications'
       preLoaderRoute: typeof AuthenticatedAdminPartnerApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/jobs': {
+      id: '/_authenticated/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AuthenticatedAdminJobsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/widget/intelligence': {
@@ -1205,6 +1244,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
+  AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRoute
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
@@ -1216,6 +1256,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRouteWithChildren,
+  AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRoute,
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
@@ -1283,6 +1324,7 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
+  ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,

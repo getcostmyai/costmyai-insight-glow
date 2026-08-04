@@ -9,7 +9,11 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "audit": "bun scripts/audit/all.ts",
+    "audit:deploy": "bun scripts/audit/stale-deploy.ts",
+    "audit:schema": "bun scripts/audit/schema-filters.ts",
+    "audit:cron": "bun scripts/audit/cron-health.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

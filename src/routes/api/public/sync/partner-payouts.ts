@@ -31,6 +31,8 @@ export const Route = createFileRoute("/api/public/sync/partner-payouts")({
         const { readPayoutQueue, runPayoutForPartner } = await import(
           "@/lib/partners/payouts.server"
         );
+        const { recordRun } = await import("@/lib/engine/evaluate.server");
+        const started = new Date();
 
         try {
           const env = getStripeEnvironment();
@@ -44,17 +46,47 @@ export const Route = createFileRoute("/api/public/sync/partner-payouts")({
           }
 
           const paid = results.filter((r) => r.ok);
+          const paidUsd = Math.round(paid.reduce((s, r) => s + (r.amountUsd ?? 0), 0) * 100) / 100;
+          const skipped = results
+            .filter((r) => !r.ok)
+            .map((r) => ({ partner: r.partnerName, reason: r.reason }));
+
+          /*
+           * Dispatch 88. Paying nobody is only healthy when nobody was owed
+           * enough yet: a month where every partner sits below the $50 floor is
+           * `quiet`, while a partner who was eligible and still got nothing is
+           * `empty` — a real payout that did not happen, not a slow month.
+           */
+          const blocked = skipped.filter((s) => s.reason !== "below_minimum");
+          const outcome =
+            paid.length > 0 ? "ok" : blocked.length > 0 ? "empty" : "quiet";
+
+          await recordRun({
+            job: "partner-payouts",
+            started,
+            outcome,
+            rowsWritten: paid.length,
+            detail: { environment: env, considered: candidates.length, paidUsd, skipped },
+          });
+
           return Response.json({
             environment: env,
             considered: candidates.length,
             paid: paid.length,
-            paidUsd: Math.round(paid.reduce((s, r) => s + (r.amountUsd ?? 0), 0) * 100) / 100,
-            skipped: results.filter((r) => !r.ok).map((r) => ({ partner: r.partnerName, reason: r.reason })),
+            paidUsd,
+            skipped,
             results,
           });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("partner payout run failed", message);
+          await recordRun({
+            job: "partner-payouts",
+            started,
+            outcome: "failed",
+            rowsWritten: 0,
+            error: message,
+          });
           return Response.json({ error: message }, { status: 500 });
         }
       },
