@@ -170,24 +170,8 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                   row={asSwitchRow(row, "host")}
                   period={activeRange.long}
                   rank={i + 1}
-                  pending={busy(key)}
-                  error={errorFor(key)}
-                  ctaHref={ctaHref}
-                  ctaLabel={ctaLabel}
-                  onActivate={
-                    canAct
-                      ? () =>
-                          activate.mutate({
-                            key,
-                            kind: "host_arbitrage",
-                            fromModel: row.fromModel,
-                            fromHost: row.fromHost,
-                            toModel: row.toModel,
-                            toHost: row.toHost,
-                            taskHint: row.taskHint,
-                          })
-                      : undefined
-                  }
+                  discovery
+                  discoveryHref={rightsizeHref}
                 />
               );
             })}
