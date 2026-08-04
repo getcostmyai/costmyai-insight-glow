@@ -211,13 +211,21 @@ export function forecastMonthEnd(
   });
 
   // ---- F. Sync-health interlock ---------------------------------------------
-  // A day the collector never ran is not a quiet day. Refuse rather than
-  // project through a hole we already know about.
-  if (syncGapDates.length > 0) {
+  // A day the collector never ran is not a quiet day. Where that day also
+  // carries no usage, the hole is real and the projection refuses. Where data
+  // landed anyway, the gap is a caveat on the basis, not a reason to refuse.
+  const blindGapDates = syncGapDates.filter((d) => !observed.has(d));
+  if (blindGapDates.length > 0) {
     return suppressedResult(
-      `recent data gap (${syncGapDates.length} day${syncGapDates.length > 1 ? "s" : ""} not collected) — projection unavailable`,
+      `recent data gap (${blindGapDates.length} day${blindGapDates.length > 1 ? "s" : ""} not collected) — projection unavailable`,
     );
   }
+  if (syncGapDates.length > 0) {
+    reasons.push(
+      `${syncGapDates.length} day${syncGapDates.length > 1 ? "s" : ""} in the trailing window had no successful sync run`,
+    );
+  }
+
   if (observedLevelDates.length < FORECAST_RULES.minObservedLevelDays) {
     return suppressedResult(
       `not enough data — only ${observedLevelDates.length} of the last ${FORECAST_RULES.levelDays} days carry usage`,
