@@ -39,6 +39,8 @@ export function SwitchCard({
    */
   discovery?: boolean;
   discoveryHref?: string;
+  /** The public demo is a showcase: the action renders as a label, not a link. */
+  readOnly?: boolean;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
