@@ -97,7 +97,7 @@ export function HeroStat({
         {label}
       </p>
       <div
-        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.85rem,0.95vw,1.15rem)] leading-none"
+        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.8rem,1.05vw,1.25rem)] leading-none"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
         title={value}
       >
@@ -123,7 +123,7 @@ export function HeroStatRow({ title, children }: { title?: string; children: Rea
         </p>
       ) : null}
       {/* Three explicit row tracks so each stat's subgrid shares one baseline. */}
-      <div className="grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {children}
       </div>
 
@@ -164,7 +164,7 @@ export function LevelHero({
           <h1 className="mt-4 text-3xl leading-tight font-semibold sm:text-[2.6rem]">{headline}</h1>
           {sub ? <p className="mt-3 max-w-xl text-sm text-white/70">{sub}</p> : null}
           {stats ? (
-            <div className="mt-8 grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-8 grid grid-rows-[auto_auto_auto] gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {stats}
             </div>
           ) : null}
