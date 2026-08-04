@@ -195,22 +195,19 @@ async function main() {
   // ---- 5. k-anonymity floor: TS constant vs the SQL that enforces it --------
   console.log("\nk-anonymity");
   {
-    const { data } = await db.rpc("pg_get_functiondef_shim" as never).then(
-      () => ({ data: null }),
-      () => ({ data: null }),
+    // The database is the enforcement point; the TypeScript constant only
+    // decides how far to widen a cut before giving up. They must be the same
+    // number, and the only way to know is to ask both.
+    const { data: floor, error } = await db.rpc("benchmark_k_floor");
+    check("database publishes its privacy floor", !error && typeof floor === "number", `${floor}`);
+    check(
+      "app constant equals the floor the database enforces",
+      Number(floor) === K_ANONYMITY_FLOOR,
+      `sql ${floor} vs app ${K_ANONYMITY_FLOOR}`,
     );
-    void data;
-    const sql = await db
-      .from("pg_proc_defs" as never)
-      .select("*")
-      .then(
-        () => null,
-        () => null,
-      );
-    void sql;
-    // The floor is enforced in SQL; the constant is only the app's copy of it.
-    // Proven by behaviour rather than by reading the definition: a cut nobody
-    // can be in must return a count below the floor and no percentiles.
+
+    // And the behaviour, not just the number: a cut nobody can be in must
+    // publish no percentiles at all.
     const { data: cut } = await db.rpc("benchmark_cut", {
       _industry: `__no_such_industry_${Date.now()}`,
       _use_case: null,
@@ -218,8 +215,8 @@ async function main() {
     });
     const row = (cut as { company_count: number; p50_usd: number | null }[] | null)?.[0];
     check("empty cut publishes no percentile", !row || row.p50_usd === null, `count ${row?.company_count ?? 0}`);
-    check("app-side floor is the documented 5", K_ANONYMITY_FLOOR === 5, `${K_ANONYMITY_FLOOR}`);
   }
+
 
   console.log(`\n${failures === 0 ? "All formula checks passed." : `${failures} FAILED`}`);
   process.exit(failures ? 1 : 0);
