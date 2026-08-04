@@ -15,6 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { requirePlan, resolvePlan } from "../billing/guard.server";
 import { writeAccountObjective } from "../dashboard/objective-write";
+import { guardIntegrationDatabase } from "./support/isolation";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
@@ -40,6 +41,9 @@ const admin = createClient(URL, SERVICE, {
   global: { fetch: keyFetch(SERVICE) },
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// Fixtures never persist in the customer database — see support/isolation.ts.
+guardIntegrationDatabase(admin);
 
 const PASSWORD = "Test-Switch-Pass-2026!";
 const stamp = Date.now();

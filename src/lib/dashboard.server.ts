@@ -18,6 +18,8 @@ import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import { forecastMonthEnd, FORECAST_RULES } from "./dashboard/forecast";
 import { syncGapDays } from "./dashboard/sync-health.server";
+import { ingestConnection } from "./dashboard/ingest-health.server";
+
 import { buildComposition } from "./dashboard/composition";
 import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
 
@@ -892,6 +894,14 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     rowsInWindow: split.current.length,
   });
 
+  /**
+   * Whether anything can still reach us. Read separately from the figures
+   * above precisely because it is the one thing the figures cannot say.
+   */
+  const ingest = await ingestConnection(orgId, now);
+
+
+
 
 
   return {
@@ -910,7 +920,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     upgradePlan: nextPlan(plan),
     objective,
     dataState,
+    ingest,
     firstEventAt: (firstEvent.data ?? [])[0]?.bucket_start ?? null,
+
     series,
     totals: {
       spend: round2(totals.spend),

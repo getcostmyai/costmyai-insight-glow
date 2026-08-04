@@ -49,7 +49,10 @@ export function useDashboardController(scope: DashboardScope) {
     data.series,
     data.totals,
     data.generatedAt,
+    // Only accrue while events can actually still arrive.
+    data.ingest.state === "live",
   );
+
   const queryClient = useQueryClient();
 
   /** The demo workspace is read-only by design; only "mine" gets live controls. */

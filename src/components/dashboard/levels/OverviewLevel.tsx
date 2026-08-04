@@ -143,14 +143,30 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       <LevelHero
         eyebrow={
           <>
+            {/* The label follows the connection, never the layout: a pulsing
+                "Live" over a workspace that cannot receive events is the exact
+                lie the disconnection banner exists to prevent. */}
             <span className="inline-flex items-center gap-2">
-              <span className="animate-pulse-dot inline-block size-2 rounded-full bg-[oklch(0.78_0.18_150)]" />
-              Live · streaming from your gateway
+              <span
+                className={`inline-block size-2 rounded-full ${
+                  data.ingest.state === "live"
+                    ? "animate-pulse-dot bg-[oklch(0.78_0.18_150)]"
+                    : "bg-white/40"
+                }`}
+              />
+              {data.ingest.state === "live"
+                ? "Live · streaming from your gateway"
+                : data.ingest.state === "disconnected"
+                  ? "Disconnected · last received data"
+                  : data.ingest.state === "quiet"
+                    ? "Paused · no events arriving"
+                    : "Not connected yet"}
             </span>
             <span className="hidden text-white/35 sm:inline">|</span>
             <RangeToggle range={range} onChange={setRange} dark />
           </>
         }
+
         headline={
           <>
             You left{" "}

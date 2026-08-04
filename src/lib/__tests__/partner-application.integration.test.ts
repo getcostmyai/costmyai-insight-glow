@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { routeApplication } from "@/lib/partner-application";
+import { guardIntegrationDatabase } from "./support/isolation";
 
 const URL = process.env["SUPABASE_URL"]!;
 const PUBLISHABLE = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -31,6 +32,9 @@ function anonClient() {
 const admin = createClient(URL, SERVICE, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// Fixtures never persist in the customer database — see support/isolation.ts.
+guardIntegrationDatabase(admin);
 
 const email = `test-${Date.now()}@integration-test.invalid`;
 const created: string[] = [];
