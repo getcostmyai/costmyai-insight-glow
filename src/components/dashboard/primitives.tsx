@@ -97,8 +97,9 @@ export function HeroStat({
         {label}
       </p>
       <div
-        className="num min-w-0 self-end -tracking-tight whitespace-nowrap tabular-nums text-[clamp(0.95rem,1.1vw,1.5rem)]"
+        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.9rem,1.05vw,1.25rem)] leading-none"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
+        title={value}
       >
         {value}
       </div>
