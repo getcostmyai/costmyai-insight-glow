@@ -109,16 +109,27 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
      * Govern finds nothing of its own — it applies what the three checks above
      * already certified. Counting "opportunities" here would read $0 · 0 by
      * construction, so the card measures what Govern actually did: money it
-     * applied unattended, and how many switches it is running right now.
+     * applied unattended, and how many switches it is running right now. When
+     * nothing has accrued yet the headline is the honest one — the number of
+     * switches it is running — rather than a $0 that reads as broken.
      */
+    const gov = data.govern;
     return {
       meta,
       unlocked,
-      count: data.govern.running,
-      monthly: data.govern.captured,
-      caption: `applied autonomously · ${data.govern.running} running unattended · ${activeRange.long}`,
+      count: gov.running,
+      monthly: gov.captured,
+      valueText:
+        gov.captured > 0 ? usd(gov.captured, 0) : `${gov.running}`,
+      caption:
+        gov.captured > 0
+          ? `applied autonomously · ${gov.running} running unattended · ${activeRange.long}`
+          : gov.running > 0
+            ? `running unattended · no saving accrued yet · ${activeRange.long}`
+            : `nothing running unattended · ${activeRange.long}`,
     };
   });
+
 
 
   return (
