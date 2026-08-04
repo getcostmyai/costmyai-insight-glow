@@ -55,11 +55,19 @@ export function buildScoreLookup(
 ): ScoreLookup {
   const byModelTask = new Map<string, BenchmarkRow>();
   const byTask = new Map<string, number[]>();
+  /*
+   * Models the benchmark feed covers at all, on any certifiable instrument.
+   * The display-only intelligence index is excluded deliberately: it never
+   * certifies anything, so it must not make a model look covered.
+   */
+  const certifiable = new Set<string>(AA_FIELDS);
+  const coveredModels = new Set<string>();
   for (const b of benchmarks) {
     byModelTask.set(`${b.model_key}::${b.task_class}`, b);
     const list = byTask.get(b.task_class) ?? [];
     list.push(b.score);
     byTask.set(b.task_class, list);
+    if (certifiable.has(b.task_class) && b.score > 0) coveredModels.add(b.model_key);
   }
 
   const marginBySuiteTask = new Map<string, number>();
