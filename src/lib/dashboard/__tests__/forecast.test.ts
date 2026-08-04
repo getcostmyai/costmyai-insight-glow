@@ -256,10 +256,10 @@ describe("forecastMonthEnd — missing days are excluded, not zeroed", () => {
   });
 
   it("does not call a workload retired on the strength of missing days", () => {
-    // Two-day hole sits on the most recent days: absence, not evidence.
+    // The whole feed stops for two days: absence, not evidence.
     const rows = history(40, () => 100, "steady|azure|chat")
       .concat(history(40, () => 200, "maybe|openai|batch"))
-      .filter((r) => !(r.key === "maybe|openai|batch" && (r.date === iso(-1) || r.date === iso(-2))));
+      .filter((r) => r.date !== iso(-1) && r.date !== iso(-2));
     const g = forecastMonthEnd(rows, NOW);
     expect(g.retiredKeys).toEqual([]);
   });
