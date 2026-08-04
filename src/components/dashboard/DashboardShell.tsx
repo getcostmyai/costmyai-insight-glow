@@ -205,6 +205,7 @@ function IngestBanner({ ingest }: { ingest: DashboardController["data"]["ingest"
  */
 export function UsageSection({ ctl }: { ctl: DashboardController }) {
   const { data, range, setRange, metric, setMetric, activeRange, live, liveSeries } = ctl;
+  const streaming = data.ingest.state === "live";
 
   return (
     <section className="card-surface p-6 sm:p-7">
@@ -212,10 +213,11 @@ export function UsageSection({ ctl }: { ctl: DashboardController }) {
         <div>
           <p className="eyebrow">Gateway usage · {activeRange.long}</p>
           <div className="mt-3 flex flex-wrap items-baseline gap-x-8 gap-y-2">
-            <Metric value={usd(live.spend)} label="spend" tone="text-spend" live />
-            <Metric value={int(live.requests)} label="requests" live />
-            <Metric value={compact(live.inputTokens)} label="input tok" live />
-            <Metric value={compact(live.outputTokens)} label="output tok" live />
+            {/* The pulse means "arriving", so it follows the connection. */}
+            <Metric value={usd(live.spend)} label="spend" tone="text-spend" live={streaming} />
+            <Metric value={int(live.requests)} label="requests" live={streaming} />
+            <Metric value={compact(live.inputTokens)} label="input tok" live={streaming} />
+            <Metric value={compact(live.outputTokens)} label="output tok" live={streaming} />
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
