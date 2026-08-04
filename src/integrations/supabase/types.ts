@@ -2042,6 +2042,15 @@ export type Database = {
         Args: { _account_id: string; _status: string }
         Returns: string
       }
+      partner_summary: {
+        Args: { _partner_id: string }
+        Returns: {
+          earned_tier: number
+          effective_tier: number
+          lifetime_revenue_usd: number
+          rate_pct: number
+        }[]
+      }
       payout_begin: {
         Args: { _actor?: string; _environment: string; _partner_id: string }
         Returns: Json
