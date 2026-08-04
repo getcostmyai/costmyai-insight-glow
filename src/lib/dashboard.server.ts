@@ -985,6 +985,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       suppressionReason: forecast.suppressionReason,
       observedLevelDays: forecast.observedLevelDays,
       missingLevelDates: forecast.missingLevelDates,
+      partialLevelDates: forecast.partialLevelDates,
+
       syncGapDates: forecast.syncGapDates,
 
       mtdUsd: forecast.mtdUsd,
