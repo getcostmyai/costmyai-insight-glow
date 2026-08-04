@@ -44,6 +44,8 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "signin" | "signup";
 
+const AUTH_NEXT_KEY = "costmyai:auth-next";
+
 function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
@@ -57,12 +59,17 @@ function AuthPage() {
   useEffect(() => {
     // Already signed in (or a session lands from an OAuth round-trip): go to the
     // page the user was actually trying to reach, falling back to the workspace.
-    const dest = next ?? "/workspace";
+    const storedNext = safeNext(window.sessionStorage.getItem(AUTH_NEXT_KEY));
+    const dest = next ?? storedNext ?? "/workspace";
+    const finishSignIn = () => {
+      window.sessionStorage.removeItem(AUTH_NEXT_KEY);
+      navigate({ to: dest, replace: true });
+    };
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate({ to: dest, replace: true });
+      if (session) finishSignIn();
     });
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: dest, replace: true });
+      if (data.session) finishSignIn();
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate, next]);
@@ -98,11 +105,13 @@ function AuthPage() {
   async function google() {
     setError(null);
     try {
-      // Land back on /auth (public, session-aware) — it forwards to /workspace as
-      // soon as the session hydrates, so Google matches the email/password path.
-      const back = next ? `?next=${encodeURIComponent(next)}` : "";
+      // Keep the intended route on this origin. OAuth providers and preview
+      // brokers may normalize callback query strings, but sessionStorage
+      // survives the round-trip and cannot redirect to another origin.
+      if (next) window.sessionStorage.setItem(AUTH_NEXT_KEY, next);
+      else window.sessionStorage.removeItem(AUTH_NEXT_KEY);
       await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth${back}`,
+        redirect_uri: `${window.location.origin}/auth`,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
