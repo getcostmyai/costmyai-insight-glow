@@ -103,6 +103,7 @@ function AuthPage() {
   }
 
   async function google() {
+    setBusy(true);
     setError(null);
     try {
       // Keep the intended route on this origin. OAuth providers and preview
@@ -110,11 +111,22 @@ function AuthPage() {
       // survives the round-trip and cannot redirect to another origin.
       if (next) window.sessionStorage.setItem(AUTH_NEXT_KEY, next);
       else window.sessionStorage.removeItem(AUTH_NEXT_KEY);
-      await lovable.auth.signInWithOAuth("google", {
+      const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/auth`,
+        extraParams: {
+          login_hint: "mail@costmyai.com",
+          prompt: "select_account",
+        },
       });
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError || !data.user) throw userError ?? new Error("Google sign-in did not complete.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -148,9 +160,10 @@ function AuthPage() {
             <button
               type="button"
               onClick={google}
+              disabled={busy}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
             >
-              <GoogleMark />
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
               Continue with Google
             </button>
 
