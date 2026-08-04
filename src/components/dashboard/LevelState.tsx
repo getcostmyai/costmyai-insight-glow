@@ -257,3 +257,55 @@ export function HeroUpsell({
     </a>
   );
 }
+
+/**
+ * Rightsize → Govern. Govern finds nothing of its own, so this nudge is framed
+ * on what autonomy would have done with what Rightsize already found: the
+ * candidates that clear the autonomous gate, and what is already running
+ * unattended. Same visual pattern as the other next-level nudges.
+ */
+export function GovernUpsell({
+  to,
+  unlocked,
+  eligibleCount,
+  eligibleSaving,
+  running,
+  period,
+}: {
+  to: string;
+  unlocked: boolean;
+  eligibleCount: number;
+  eligibleSaving: number;
+  running: number;
+  period: string;
+}) {
+  const meta = PLAN_META["govern"];
+  const headline =
+    eligibleCount > 0
+      ? `${eligibleCount} certified switch${eligibleCount === 1 ? "" : "es"} would apply themselves — worth ${usd(eligibleSaving, 0)} in the ${period}`
+      : running > 0
+        ? `${running} switch${running === 1 ? "" : "es"} already run unattended on this workspace`
+        : "Autonomous switching applies certified switches for you";
+  return (
+    <a
+      href={to}
+      className="card-surface group flex flex-wrap items-center gap-5 border-primary/25 p-5 transition-transform hover:-translate-y-0.5"
+    >
+      <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+        <ShieldCheck className="size-5" />
+      </span>
+      <div className="min-w-60 flex-1">
+        <p className="text-sm font-semibold">{headline}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {meta.label} runs the same gate you approve by hand today, without waiting for you. Every
+          autonomous switch stays reversible, and anything that cannot be proven unattended is
+          always held back for a human.
+        </p>
+      </div>
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+        {unlocked ? `Open ${meta.label}` : `Upgrade to ${meta.label}`}
+        <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </a>
+  );
+}
