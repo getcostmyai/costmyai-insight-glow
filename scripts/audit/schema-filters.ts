@@ -167,13 +167,14 @@ for (const file of files) {
       if (!rule) continue;
       if (rule.tokens.some((t) => chain.includes(t))) continue;
       if (exemptions.some((e) => e.table === table && e.file === rel)) continue;
+      const live = liveGuards.has(`${table}.${column}`);
       findings.push({
         file: rel,
         line,
         table,
         column,
-        severity: REQUIRED[column] ? "required" : "advisory",
-        why: rule.why,
+        severity: REQUIRED[column] && live ? "required" : "advisory",
+        why: live ? rule.why : `${rule.why} (guard dormant today — no such rows exist yet)`,
         snippet: chain.split("\n").slice(0, 3).join(" ").replace(/\s+/g, " ").slice(0, 110),
       });
     }
