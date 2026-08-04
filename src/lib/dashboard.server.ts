@@ -16,7 +16,8 @@ import type {
 } from "./engine/types";
 import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
-import { forecastMonthEnd } from "./dashboard/forecast";
+import { forecastMonthEnd, FORECAST_RULES } from "./dashboard/forecast";
+import { syncGapDays } from "./dashboard/sync-health.server";
 import { buildComposition } from "./dashboard/composition";
 import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
 
