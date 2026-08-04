@@ -73,13 +73,14 @@ export function buildScoreLookup(
   const marginBySuiteTask = new Map<string, number>();
   for (const m of margins) marginBySuiteTask.set(`${m.suite}::${m.task_class}`, m.margin);
 
-  const spread = (instrument: string) => {
-    const list = byTask.get(instrument) ?? [];
-    if (list.length < 2) return 0;
-    return Math.max(...list) - Math.min(...list);
-  };
-
+  // Dispatch 92: `spread` and `separation` are the same measurement and used
+  // to be computed twice, five lines apart, with different null handling. One
+  // implementation now; the only difference left is the honest one — a caller
+  // that needs a number gets 0 where there is nothing to measure, a caller
+  // that needs to know there was nothing to measure gets null.
   const separation = (field: AaField) => separationOfScores(byTask.get(field) ?? []);
+
+  const spread = (instrument: string) => separationOfScores(byTask.get(instrument) ?? []) ?? 0;
 
   return {
     score(modelKey, instrument) {
