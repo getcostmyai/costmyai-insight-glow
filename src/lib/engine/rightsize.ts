@@ -136,7 +136,7 @@ export function findOversized(
       monthlySavingUsd: round2(saving),
       savingPct: round2(((baseline.cost - target.cost) / baseline.cost) * 100),
       basis: "Oversized for the workload",
-      note: `${observed}-tier model producing ${Math.round(s.avgOutputTokens)} output tokens on average at ${s.dispersion.toFixed(2)}x dispersion and ${Math.round(s.cadence)} req/day — that shape is ${required}-tier work.`,
+      note: rightsizeNote(observed, required, s),
       qualityDelta: null,
       marginUsed: null,
       objective: "cost",
