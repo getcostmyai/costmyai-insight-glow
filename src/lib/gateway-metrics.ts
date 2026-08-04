@@ -23,15 +23,27 @@ function noise(seed: number) {
  * (spend per hour over the selected window), so the dashboard behaves like the
  * live stream it is instead of freezing on a stale number. Every server refetch
  * snaps the counters back to measured truth.
+ *
+ * `accruing` is the honesty switch: when the workspace cannot receive events —
+ * revoked token, silent gateway — the counters must sit exactly on the last
+ * measured totals. A counter ticking upward on traffic that is not arriving is
+ * the single most convincing lie this dashboard could tell.
  */
-export function useLiveTotals(range: RangeKey, series: SeriesPoint[], base: Totals, generatedAt: string) {
+export function useLiveTotals(
+  range: RangeKey,
+  series: SeriesPoint[],
+  base: Totals,
+  generatedAt: string,
+  accruing: boolean = true,
+) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     setTick(0);
+    if (!accruing) return;
     const id = setInterval(() => setTick((t) => t + 1), 1800);
     return () => clearInterval(id);
-  }, [range, generatedAt]);
+  }, [range, generatedAt, accruing]);
 
   const perHour = useMemo(() => {
     const hours = rangeHours(range);
@@ -44,7 +56,7 @@ export function useLiveTotals(range: RangeKey, series: SeriesPoint[], base: Tota
   }, [base, range]);
 
   // 1.8s of wall clock is 0.0005 of an hour.
-  const elapsedHours = tick * (1.8 / 3600) * (1 + noise(tick) * 0.4);
+  const elapsedHours = accruing ? tick * (1.8 / 3600) * (1 + noise(tick) * 0.4) : 0;
 
   return {
     series,
@@ -56,6 +68,7 @@ export function useLiveTotals(range: RangeKey, series: SeriesPoint[], base: Tota
     },
   };
 }
+
 
 /** Keeps the previous render's totals while a range refetch is in flight. */
 export function useStableSnapshot<T>(value: T | undefined) {
