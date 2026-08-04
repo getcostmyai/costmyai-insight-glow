@@ -103,11 +103,16 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 accent="oklch(0.86 0.09 265)"
               />
               <HeroStat
-                label="Frozen"
-                value={`${data.frozen}`}
-                sub={data.frozen === 0 ? "all healthy" : "review needed"}
+                label="Frozen switches"
+                value={`${data.frozen} frozen`}
+                sub={
+                  data.frozen === 0
+                    ? "none paused — every running switch is healthy"
+                    : "paused after a regression, waiting for your review"
+                }
                 accent="oklch(0.9 0.03 285)"
               />
+
             </HeroStatRow>
 
             <HeroStatRow title="Govern · what runs without you">
