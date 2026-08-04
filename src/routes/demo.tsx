@@ -1,29 +1,30 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+import { supabase } from "@/integrations/supabase/client";
+import { ROBIN_USER_ID } from "@/lib/access";
 
 /**
- * The public demo workspace. This is the dashboard language — dark hero, live
- * synthetic ecosystem — deliberately kept separate from the light marketing
- * pages that link to it. Each level is a real child route.
+ * The internal demo workspace — owner-only, permanently.
+ *
+ * Client-only because the session lives in browser storage. This gate decides
+ * what renders; the snapshot server function re-checks the bearer token and the
+ * user id itself, so nothing here is load-bearing for privacy.
  */
 export const Route = createFileRoute("/demo")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (data.user.id !== ROBIN_USER_ID) throw redirect({ to: "/" });
+  },
   head: () => ({
     meta: [
-      { title: "Live demo dashboard — CostMyAI" },
-      {
-        name: "description",
-        content:
-          "A live CostMyAI workspace on a real synthetic ecosystem: moving spend and token counts, certified switches, and the money still on the table.",
-      },
-      { property: "og:title", content: "Live demo dashboard — CostMyAI" },
-      {
-        property: "og:description",
-        content:
-          "Watch certified, quality-checked model and host switches cut AI spend on a live workspace.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: "Internal workspace — CostMyAI" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "Private internal workspace." },
     ],
   }),
+
   errorComponent: () => (
     <div className="mx-auto max-w-lg p-16 text-center">
       <h1 className="text-xl font-semibold">Usage data is unavailable</h1>

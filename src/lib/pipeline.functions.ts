@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { requireOwner } from "./owner-middleware";
+
 import { runPipeline } from "./engine/pipeline";
 import type {
   BenchmarkRow,
@@ -11,13 +13,17 @@ import type {
 
 export type PipelineRange = 1 | 7 | 30;
 
+/** Demo-workspace pipeline view — owner-only, same lock as the demo dashboard. */
 export const getPipelineSnapshot = createServerFn({ method: "GET" })
+  .middleware([requireOwner])
   .inputValidator((data: { days?: number } | undefined) => ({
     days: ([1, 7, 30] as number[]).includes(Number(data?.days)) ? Number(data?.days) : 30,
   }))
   .handler(async ({ data }) => {
-    const { createPublicServerClient, DEMO_ORG_ID } = await import("./supabase-public.server");
-    const supabase = createPublicServerClient();
+    const { DEMO_ORG_ID } = await import("./supabase-public.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = supabaseAdmin;
+
 
     const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
 
