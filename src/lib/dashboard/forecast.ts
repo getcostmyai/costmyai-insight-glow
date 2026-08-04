@@ -243,7 +243,8 @@ export function forecastMonthEnd(
       // a day that carries no usage at all inside the trailing window.
       for (const n of [prev, next]) {
         if (gapDays.has(n)) return true;
-        if (!observed.has(n) && utcDayStart(n) >= todayMs - FORECAST_RULES.levelDays * DAY_MS && utcDayStart(n) <= todayMs) {
+        // Today is always "missing" until it finishes; it is not a hole.
+        if (!observed.has(n) && utcDayStart(n) >= todayMs - FORECAST_RULES.levelDays * DAY_MS && utcDayStart(n) < todayMs) {
           return true;
         }
       }
