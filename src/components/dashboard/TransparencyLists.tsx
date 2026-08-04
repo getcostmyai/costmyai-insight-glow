@@ -123,7 +123,7 @@ export function BenchmarkList({
       <SectionTitle
         eyebrow="List B · benchmark saves"
         title="Cheaper model, same measured quality"
-        hint={`Benchmarked against ${data.coverage.evaluations} measured evaluation bands before the swap is offered.`}
+        hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before the swap is offered.`}
         badge={`${usd(total, 0)} · ${activeRange.long} · ${rows.length}`}
         badgeTone="saving"
       />
