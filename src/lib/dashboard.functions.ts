@@ -27,12 +27,23 @@ export const getDashboardSnapshot = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }) => {
     const { buildDashboardSnapshot } = await import("./dashboard.server");
+    const { DEMO_ORG_ID } = await import("./supabase-public.server");
+    // Read with the service client, not the anon one: the demo workspace's
+    // public RLS policies are gone, so this is the only remaining path to it —
+    // and it is only reachable after requireOwner has passed.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { OBJECTIVE_OPTIONS } = await import("./dashboard/objective");
     const selection =
       OBJECTIVE_OPTIONS.find((o) => o.key === data.objective)?.selection ?? { objective: "cost" };
-    return buildDashboardSnapshot({ days: data.days, objective: selection });
+    return buildDashboardSnapshot({
+      days: data.days,
+      objective: selection,
+      orgId: DEMO_ORG_ID,
+      client: supabaseAdmin as never,
+    });
   });
+
 
 
 const snapshotInput = (data: { days?: number; objective?: string } | undefined) => ({
