@@ -150,7 +150,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         <SectionTitle
           eyebrow="List B · benchmark saves"
           title="Cheaper model, same measured quality"
-          hint={`Benchmarked against ${data.coverage.evaluations} measured evaluation bands before we recommend the swap.`}
+          hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before we recommend the swap.`}
           badge={`${rows.length} certified`}
           badgeTone="saving"
           aside={
