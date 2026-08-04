@@ -568,6 +568,36 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       .gte("bucket_start", forecastStart)
       .limit(100_000);
   /**
+   * Hourly coverage, the real signal behind "is this a day or a fragment".
+   * Read from the hour-granularity rollups: distinct hour buckets per day.
+   * The hourly rollups have their own retention horizon, so only days from
+   * the first *complete* hourly day onwards are judged; earlier days keep the
+   * benefit of the doubt instead of being falsely called partial.
+   */
+  const { data: hourRows } =
+    await supabase
+      .from("usage_rollups")
+      .select("bucket_start")
+      .eq("org_id", orgId)
+      .eq("granularity", "hour")
+      .gte("bucket_start", new Date(now - 40 * DAY_MS).toISOString())
+      .limit(100_000);
+  const hoursByDay = new Map<string, Set<string>>();
+  for (const r of hourRows ?? []) {
+    const iso = String(r.bucket_start);
+    const day = iso.slice(0, 10);
+    const hour = iso.slice(11, 13);
+    let s = hoursByDay.get(day);
+    if (!s) hoursByDay.set(day, (s = new Set()));
+    s.add(hour);
+  }
+  const hourCoverage: Record<string, number> = {};
+  for (const [day, hours] of hoursByDay) hourCoverage[day] = hours.size;
+  const firstHourDay = [...hoursByDay.keys()].sort()[0];
+  const coverageReliableFrom = firstHourDay
+    ? new Date(Date.parse(`${firstHourDay}T00:00:00.000Z`) + DAY_MS).toISOString().slice(0, 10)
+    : undefined;
+  /**
    * The interlock: the projection refuses to compute through a day the
    * collectors never ran, read from the same `sync_runs` ledger the platform
    * already uses to prove sync health.
@@ -580,8 +610,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       spend: Number(r.cost_usd),
     })),
     new Date(now),
-    { syncGapDates: forecastSyncGaps },
+    { syncGapDates: forecastSyncGaps, hourCoverage, coverageReliableFrom },
   );
+
 
 
 
