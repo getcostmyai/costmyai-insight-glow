@@ -103,6 +103,30 @@ function currentInstrumentLabel(resolution: LadderResolution): string {
   return resolution.field ? FIELD_SPECS[resolution.field].label : "benchmark";
 }
 
+/**
+ * The sentence a customer reads under a certified model swap.
+ *
+ * Written for someone with no benchmark vocabulary: no suite keys, no "bar",
+ * no "±". When the destination scores LOWER, the note says so first and then
+ * says why it still certifies — the gap is smaller than what this benchmark
+ * can actually resolve. Hiding that would be the credibility risk.
+ */
+export function qualityNote(p: {
+  winnerScore: number;
+  currentScore: number;
+  instrument: string;
+  bar: number;
+  margin: number;
+  latency: string | null;
+}): string {
+  const delta = p.winnerScore - p.currentScore;
+  const head =
+    delta < 0
+      ? `Scores ${p.winnerScore.toFixed(1)} against ${p.currentScore.toFixed(1)} today on the independent ${p.instrument} benchmark — slightly lower, but the ${Math.abs(delta).toFixed(1)}-point gap is inside this benchmark's ±${p.margin.toFixed(1)} measurement precision, so the difference is not statistically real.`
+      : `Scores ${p.winnerScore.toFixed(1)} against ${p.currentScore.toFixed(1)} today on the independent ${p.instrument} benchmark.`;
+  return `${head} It stays above the ${p.bar.toFixed(1)} minimum we require for this workload.${p.latency ? ` ${p.latency}.` : ""}`;
+}
+
 
 export interface EquivalenceResult {
   recommendations: Recommendation[];
