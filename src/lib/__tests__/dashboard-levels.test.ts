@@ -295,6 +295,27 @@ describe("round 4 · per-mechanism hero KPIs", () => {
   it("mechanism figures are window sums, never run-rates", () => {
     const src = read("components/dashboard/levels/RightsizeLevel.tsx");
     expect(src).not.toMatch(/monthlySaving/);
-    expect(src).toContain("r.saving");
+    // The sum itself lives in the shared derivation, not in the page.
+    expect(src).toContain('levelSaving(data, "host_arbitrage")');
+    const figures = read("lib/dashboard/figures.ts");
+    expect(figures).not.toMatch(/monthlySaving/);
+    expect(figures).toContain("r.saving");
+  });
+
+  it("no level page re-derives a shared figure inline", () => {
+    for (const [key, src] of Object.entries(LEVEL_FILES)) {
+      // Per-level saving, the capture ratio and the certification rate are
+      // cross-page quantities: every page must read the one derivation.
+      expect(src, `${key} sums arbitrage rows itself`).not.toMatch(
+        /hostArbitrage\.reduce/,
+      );
+      expect(src, `${key} sums benchmark rows itself`).not.toMatch(/qualityMatched\.reduce/);
+      expect(src, `${key} sums oversized rows itself`).not.toMatch(/oversized\.reduce/);
+      expect(src, `${key} re-derives the capture ratio`).not.toMatch(
+        /savings\.captured\s*\+\s*savings\.available/,
+      );
+      expect(src, `${key} re-derives the certification rate`).not.toMatch(/qualityCertified\s*\//);
+    }
   });
 });
+
