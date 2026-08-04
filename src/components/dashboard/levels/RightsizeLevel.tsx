@@ -12,7 +12,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { SavingsRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
-import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
+import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
@@ -207,6 +207,16 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
       <TransparencyLists ctl={ctl} />
       <OversizedSection ctl={ctl} />
       <ActiveSwitchesSection ctl={ctl} />
+      {/* Next rung: the same gate, applied without waiting for a human. */}
+      <GovernUpsell
+        to={ctl.scope === "demo" ? "/demo/govern" : "/workspace/govern"}
+        unlocked={data.govern.unlocked}
+        eligibleCount={data.govern.eligible.length}
+        eligibleSaving={data.govern.eligibleSaving}
+        running={data.govern.running}
+        period={activeRange.long}
+      />
+
     </>
   );
 }
