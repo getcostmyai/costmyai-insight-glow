@@ -18,6 +18,8 @@ import { relativeAgo } from "./freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import { forecastMonthEnd, FORECAST_RULES } from "./dashboard/forecast";
 import { syncGapDays } from "./dashboard/sync-health.server";
+import { ingestConnection } from "./dashboard/ingest-health.server";
+
 import { buildComposition } from "./dashboard/composition";
 import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
 
