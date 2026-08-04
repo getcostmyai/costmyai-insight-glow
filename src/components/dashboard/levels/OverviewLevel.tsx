@@ -267,7 +267,11 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
 
               <p className="mt-3 text-sm text-muted-foreground">{meta.tagline}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                {unlocked ? "Open" : "See what it found"}
+                {unlocked
+                  ? "Open"
+                  : meta.key === "govern"
+                    ? "See what it would run"
+                    : "See what it found"}
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Link>
