@@ -503,6 +503,7 @@ describe("forecastMonthEnd — sparse workspaces vs truncated collection", () =>
     expect(f.suppressed).toBe(false);
   });
 
+
   it("excludes the first connected day, which starts mid-day", () => {
     const rows = history(6, () => 100);
     const cov: Record<string, number> = {};
