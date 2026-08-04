@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, Loader2, Mail } from "lucide-react";
 
@@ -47,7 +47,6 @@ type Mode = "signin" | "signup";
 const AUTH_NEXT_KEY = "costmyai:auth-next";
 
 function AuthPage() {
-  const navigate = useNavigate();
   const { next } = Route.useSearch();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -57,22 +56,25 @@ function AuthPage() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
-    // Already signed in (or a session lands from an OAuth round-trip): go to the
-    // page the user was actually trying to reach, falling back to the workspace.
-    const storedNext = safeNext(window.sessionStorage.getItem(AUTH_NEXT_KEY));
-    const dest = next ?? storedNext ?? "/workspace";
-    const finishSignIn = () => {
-      window.sessionStorage.removeItem(AUTH_NEXT_KEY);
-      navigate({ to: dest, replace: true });
-    };
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) finishSignIn();
-    });
+    // OAuth can return to this public route after a full-page redirect. Read the
+    // persisted session once, then perform a clean navigation so the protected
+    // route starts with the completed session rather than racing setSession().
+    let alive = true;
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) finishSignIn();
+      if (!alive || !data.session) return;
+      finishSignIn(next);
     });
-    return () => sub.subscription.unsubscribe();
-  }, [navigate, next]);
+    return () => {
+      alive = false;
+    };
+  }, [next]);
+
+  function finishSignIn(routeNext: string | undefined) {
+    const storedNext = safeNext(window.sessionStorage.getItem(AUTH_NEXT_KEY));
+    const destination = routeNext ?? storedNext ?? "/workspace";
+    window.sessionStorage.removeItem(AUTH_NEXT_KEY);
+    window.location.replace(destination);
+  }
 
 
   async function submit(e: React.FormEvent) {
@@ -92,8 +94,10 @@ function AuthPage() {
         // With confirmation on, signUp returns no session — the user is not in yet.
         if (!data.session) setCheckEmail(true);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (!data.user) throw new Error("Sign-in did not return a user.");
+        finishSignIn(next);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign you in.");
@@ -123,6 +127,7 @@ function AuthPage() {
 
       const { data, error: userError } = await supabase.auth.getUser();
       if (userError || !data.user) throw userError ?? new Error("Google sign-in did not complete.");
+      finishSignIn(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     } finally {
