@@ -87,6 +87,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.hostArbitrage.length,
         monthly: levelSaving(data, "host_arbitrage"),
+        valueText: null as string | null,
         caption: null as string | null,
       };
     if (meta.key === "certify")
@@ -95,6 +96,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.qualityMatched.length,
         monthly: levelSaving(data, "quality_match"),
+        valueText: null as string | null,
         caption: null as string | null,
       };
     if (meta.key === "rightsize")
@@ -103,6 +105,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.oversized.length,
         monthly: levelSaving(data, "rightsize"),
+        valueText: null as string | null,
         caption: null as string | null,
       };
     /**
