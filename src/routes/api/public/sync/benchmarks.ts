@@ -35,7 +35,8 @@ export const Route = createFileRoute("/api/public/sync/benchmarks")({
           // can change an equivalence verdict on its own, and nobody should
           // have to open a page for that to be noticed.
           const evaluation = await runEvaluation("benchmark-sync");
-          const rows = Number(report.rows_upserted ?? 0);
+          const rows =
+            report.scoresWritten + report.latenciesWritten + report.marginsWritten.length;
           await recordRun({
             job: "benchmark-sync",
             started,
