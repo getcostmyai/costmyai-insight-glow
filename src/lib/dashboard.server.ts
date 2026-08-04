@@ -122,7 +122,10 @@ export interface NonQualifyingWorkload {
 /** The four-cell certification matrix, in the words a customer reads. */
 export const REFUSAL_LABEL: Record<string, string> = {
   no_baseline_price: "no published price for this endpoint",
-  no_baseline_score: "no valid benchmark instrument for this task type",
+  // Two different facts, and they were sharing one label: this one is about the
+  // MODEL having no measured result, the next is about the TASK having no
+  // instrument that measures it at all.
+  no_baseline_score: "no measured score for this model",
   no_valid_instrument: "no independent instrument measures this task type",
   benchmark_not_discriminating:
     "no model currently differentiates enough on this to certify a switch",
