@@ -48,6 +48,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
 import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
@@ -263,6 +264,11 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const ApiPublicBuildInfoRoute = ApiPublicBuildInfoRouteImport.update({
+  id: '/api/public/build-info',
+  path: '/api/public/build-info',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWorkspaceRightsizeRoute =
   AuthenticatedWorkspaceRightsizeRouteImport.update({
     id: '/rightsize',
@@ -417,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -473,6 +480,7 @@ export interface FileRoutesByTo {
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
+  '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -595,6 +604,7 @@ export interface FileRouteTypes {
     | '/workspace/compare'
     | '/workspace/govern'
     | '/workspace/rightsize'
+    | '/api/public/build-info'
     | '/workspace/'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -651,6 +661,7 @@ export interface FileRouteTypes {
     | '/workspace/compare'
     | '/workspace/govern'
     | '/workspace/rightsize'
+    | '/api/public/build-info'
     | '/workspace'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -711,6 +722,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
+    | '/api/public/build-info'
     | '/_authenticated/workspace/'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -752,6 +764,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
+  ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
@@ -1041,6 +1054,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/api/public/build-info': {
+      id: '/api/public/build-info'
+      path: '/api/public/build-info'
+      fullPath: '/api/public/build-info'
+      preLoaderRoute: typeof ApiPublicBuildInfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/workspace/rightsize': {
       id: '/_authenticated/workspace/rightsize'
       path: '/rightsize'
@@ -1283,6 +1303,7 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
+  ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
