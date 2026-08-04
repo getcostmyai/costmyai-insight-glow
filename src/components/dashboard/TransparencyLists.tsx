@@ -143,8 +143,10 @@ export function BenchmarkList({
                 error={errorFor(key)}
                 ctaHref={ctaHref}
                 ctaLabel={ctaLabel}
+                discovery={discovery}
+                discoveryHref={rightsizeHref}
                 onActivate={
-                  canAct
+                  canAct && !discovery
                     ? () =>
                         activate.mutate({
                           key,
