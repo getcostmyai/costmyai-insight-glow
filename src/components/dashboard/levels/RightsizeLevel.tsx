@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ArrowUpRight, Loader2, Snowflake, TrendingDown, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clock, Loader2, Snowflake, TrendingDown, Zap } from "lucide-react";
 
 import {
   EmptyState,
@@ -15,6 +15,7 @@ import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
+import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
 
 /**
@@ -284,7 +285,13 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           <span className="text-sm text-white/55"> · {ctl.activeRange.long}</span>
         </div>
       </div>
-      {canAct ? (
+      {ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost) ? (
+        /* Same rule as the rows below: state before action. */
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white/85">
+          <Clock className="size-4" />
+          {PENDING_SWITCH_LABEL}
+        </span>
+      ) : canAct ? (
         <button
           type="button"
           disabled={busy(key)}
@@ -382,7 +389,14 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                   <span className="text-xs text-muted-foreground">
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
                   </span>
-                  {canAct ? (
+                  {ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? (
+                    // The right-size switch is running; the traffic is not on
+                    // it yet, so the waste above is still real.
+                    <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-opportunity/40 bg-opportunity/10 px-3.5 py-1.5 text-[11px] font-semibold text-opportunity">
+                      <Clock className="size-3" />
+                      {PENDING_SWITCH_LABEL}
+                    </span>
+                  ) : canAct ? (
                     <button
                       type="button"
                       disabled={busy(rsKey(o))}

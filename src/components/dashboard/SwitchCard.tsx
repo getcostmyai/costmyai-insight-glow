@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clock, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
+import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
 
 /** One certified switch opportunity, ranked by saving. */
@@ -18,6 +19,7 @@ export function SwitchCard({
   discovery = false,
   discoveryHref,
   readOnly = false,
+  pendingTraffic = false,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
@@ -41,6 +43,12 @@ export function SwitchCard({
   discoveryHref?: string;
   /** The public demo is a showcase: the action renders as a label, not a link. */
   readOnly?: boolean;
+  /**
+   * A switch is already running for this pair, but the workload's traffic has
+   * not moved yet, so the spend — and therefore the opportunity — is still on
+   * the rollups. The row states that instead of offering an action.
+   */
+  pendingTraffic?: boolean;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
@@ -86,7 +94,14 @@ export function SwitchCard({
             />
           </div>
         </div>
-        {discovery ? (
+        {pendingTraffic ? (
+          // State, not action: the switch exists, the traffic does not yet.
+          // Ahead of every other branch, because it is the truth about the row.
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-2 text-xs font-medium text-primary">
+            <Clock className="size-3.5" />
+            {PENDING_SWITCH_LABEL}
+          </span>
+        ) : discovery ? (
           <Link
             to={discoveryHref ?? "/pricing"}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"

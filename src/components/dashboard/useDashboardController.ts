@@ -11,6 +11,7 @@ import {
 import type { ChartMetric } from "@/components/dashboard/SpendChart";
 import type { ObjectiveKind } from "@/lib/engine/types";
 import { useLiveTotals } from "@/lib/gateway-metrics";
+import { pendingSwitchIndex } from "@/lib/dashboard/pending-switch";
 import {
   activateOpportunity,
   pauseSwitch,
@@ -143,6 +144,13 @@ export function useDashboardController(scope: DashboardScope) {
    */
   const demoReadOnly = scope === "demo";
 
+  /**
+   * Rows whose switch is already running but whose traffic has not moved yet.
+   * They stay in the lists — the money is still on the table — but they render
+   * their real state instead of an action.
+   */
+  const pending = pendingSwitchIndex(data.activeSwitches);
+
   const errorFor = (key: string) => (actionError?.key === key ? actionError.message : null);
   const busy = (key: string) =>
     (activate.isPending && activate.variables?.key === key) ||
@@ -171,6 +179,7 @@ export function useDashboardController(scope: DashboardScope) {
     ctaLabel,
     rightsizeHref,
     demoReadOnly,
+    pending,
   };
 }
 

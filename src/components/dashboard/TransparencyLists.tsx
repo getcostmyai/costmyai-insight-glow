@@ -1,9 +1,10 @@
-import { ArrowRight, ShieldOff } from "lucide-react";
+import { ArrowRight, Clock, ShieldOff } from "lucide-react";
 
 import { SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
+import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
 
 /**
@@ -73,7 +74,12 @@ export function ArbitrageList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
-
+                pendingTraffic={ctl.pending.pair(
+                  row.fromModel,
+                  row.fromHost,
+                  row.toModel,
+                  row.toHost,
+                )}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery
@@ -147,7 +153,12 @@ export function BenchmarkList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
-
+                pendingTraffic={ctl.pending.pair(
+                  row.fromModel,
+                  row.fromHost,
+                  row.toModel,
+                  row.toHost,
+                )}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery
@@ -207,6 +218,12 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
                   <span className="text-xs text-muted-foreground">no switch offered</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
+                {ctl.pending.from(r.fromModel, r.fromHost) ? (
+                  <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
+                    <Clock className="size-3" />
+                    {PENDING_SWITCH_LABEL}
+                  </p>
+                ) : null}
               </div>
               <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold tracking-wide text-muted-foreground">
                 {r.label}
