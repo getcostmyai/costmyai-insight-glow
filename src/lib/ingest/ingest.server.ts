@@ -6,6 +6,7 @@ import { costOf } from "@/lib/engine/cost";
 import type { PriceRow } from "@/lib/engine/types";
 import { bucketStart, DAY_MS, rollupEvents, type SyntheticEvent } from "@/lib/synthetic/generator";
 
+import { buildModelResolver } from "./resolve";
 import type { IngestEvent } from "./schema";
 import { fetchAllRows } from "@/lib/paginate.server";
 
@@ -141,9 +142,24 @@ async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number
   const priceIndex = new Map(priceRows.map((p) => [`${p.model_key}|${p.host}`, p as PriceRow]));
   const priceFor = (modelKey: string, host: string) => priceIndex.get(`${modelKey}|${host}`);
 
+  /**
+   * Real gateways report provider-native model names. Resolve them to catalog
+   * keys before rolling up, or a customer's traffic is priced at nothing and
+   * shown as nothing. Whatever still does not resolve keeps its own name and is
+   * rolled up unpriced — visible, and honestly marked as having no pricing.
+   */
+  const [catalog, aliases] = await Promise.all([
+    fetchAllRows((f, t) => db.from("model_catalog").select("model_key").eq("is_active", true).range(f, t)),
+    fetchAllRows((f, t) => db.from("model_aliases").select("alias, model_key").range(f, t)),
+  ]);
+  const resolveModel = buildModelResolver(
+    catalog.map((c) => c.model_key),
+    aliases,
+  );
+
   const events: SyntheticEvent[] = (raw ?? []).map((r) => ({
     occurredAt: new Date(r.occurred_at),
-    modelKey: r.model_key,
+    modelKey: resolveModel(r.model_key).key,
     host: r.host,
     taskHint: r.task_hint,
     inputTokens: r.input_tokens,
@@ -154,9 +170,14 @@ async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number
 
   const buckets = [...rollupEvents(events, "hour", priceFor), ...rollupEvents(events, "day", priceFor)];
 
-  // Unpriced traffic is recorded but never given a fabricated cost.
+  /**
+   * Unpriced traffic is recorded but never given a fabricated cost. It used to
+   * be dropped here, which turned "we cannot price this" into "you sent us
+   * nothing" — the customer saw an empty dashboard with no explanation. The
+   * bucket is written with cost 0 and surfaces through the existing coverage
+   * disclosure ("N models excluded from the spend total").
+   */
   const payload = buckets
-    .filter((b) => priceFor(b.modelKey, b.host))
     .map((b) => ({
       org_id: orgId,
       bucket_start: b.bucketStart.toISOString(),
