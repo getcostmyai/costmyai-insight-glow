@@ -103,11 +103,12 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
-              label="Refused"
-              value={`${refused}`}
-              sub="could not be proven equivalent"
+              label="Refused on quality"
+              value={`${refused} candidate${refused === 1 ? "" : "s"}`}
+              sub="cheaper, but not provably equivalent"
               accent="oklch(0.83 0.13 55)"
             />
+
             <HeroStat
               label="Certification rate"
               value={`${Math.round(certifyRate)}%`}
