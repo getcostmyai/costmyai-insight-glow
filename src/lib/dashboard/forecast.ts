@@ -118,6 +118,14 @@ export const FORECAST_RULES = {
   breakSilentDays: 2,
   /** Hours of real collection a day needs before it counts as a full day. */
   minObservedHours: 20,
+  /**
+   * A sparse workload is not a truncated day. A day below the absolute floor
+   * is only called partial when collection itself could have been cut short
+   * (today, the first day, a day beside a collection gap) or when it collapses
+   * below this share of the workspace's own typical covered hours.
+   */
+  partialRelativeFactor: 0.5,
+
   /** Width backstop: a high above this multiple of the point is not a forecast. */
   maxHighToPointRatio: 3,
   /** Width backstop: half-width above this share of the point is not a forecast. */
