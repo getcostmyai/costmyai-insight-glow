@@ -374,6 +374,10 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                       {busy(rsKey(o)) ? <Loader2 className="size-3.5 animate-spin" /> : null}
                       Right-size now
                     </button>
+                  ) : ctl.demoReadOnly ? (
+                    <span className="ml-auto rounded-full border border-opportunity/50 px-3.5 py-1.5 text-xs font-semibold text-opportunity">
+                      Switch
+                    </span>
                   ) : (
                     <Link
                       to={ctaHref}
@@ -383,6 +387,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                       <ArrowUpRight className="size-3" />
                     </Link>
                   )}
+
                 </div>
               ) : null}
               {errorFor(rsKey(o)) ? (
