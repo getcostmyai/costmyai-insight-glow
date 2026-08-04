@@ -107,34 +107,31 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
       const userId = context.userId;
       const email = (context.claims.email as string | undefined) ?? undefined;
 
-      // The customer carries userId so later reads can find it by search; the
-      // subscription carries orgId so the webhook knows which workspace paid.
+      // One provider customer per WORKSPACE, not per person.
+      //
+      // The customer record is the boundary the provider's own hosted pages
+      // respect: a billing-portal session and an invoice list are scoped to a
+      // customer and nothing finer. If one person paying for two workspaces
+      // shared a single customer, the billing page of workspace A would expose
+      // — and be able to cancel — workspace B's subscription. So the search key
+      // is the org id, and reuse by email address is deliberately gone: matching
+      // on an address merges exactly the customers that must stay separate.
       let customerId: string | undefined;
       const found = await stripe.customers.search({
-        query: `metadata['userId']:'${userId}'`,
+        query: `metadata['orgId']:'${data.orgId}'`,
         limit: 1,
       });
       if (found.data.length) {
         customerId = found.data[0]!.id;
-      } else if (email) {
-        const existing = await stripe.customers.list({ email, limit: 1 });
-        if (existing.data.length) {
-          const customer = existing.data[0]!;
-          if (customer.metadata?.["userId"] !== userId) {
-            await stripe.customers.update(customer.id, {
-              metadata: { ...customer.metadata, userId },
-            });
-          }
-          customerId = customer.id;
-        }
       }
       if (!customerId) {
         const created = await stripe.customers.create({
           ...(email && { email }),
-          metadata: { userId },
+          metadata: { userId, orgId: data.orgId },
         });
         customerId = created.id;
       }
+
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: price.id, quantity: 1 }],
