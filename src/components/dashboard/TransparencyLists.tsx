@@ -73,7 +73,12 @@ export function ArbitrageList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
-
+                pendingTraffic={ctl.pending.pair(
+                  row.fromModel,
+                  row.fromHost,
+                  row.toModel,
+                  row.toHost,
+                )}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery
