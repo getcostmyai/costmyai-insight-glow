@@ -48,7 +48,14 @@ export interface MechanismSavings {
   rightsizeCount: number;
   overlapUsd: number;
   overlapCount: number;
+  /** Naive sum of the three mechanisms, before the double count is removed. */
   sum: number;
+  /** sum − overlap. What is still on the table, each workload counted once. */
+  available: number;
+  /** Real dollars already saved by running switches inside the window. */
+  captured: number;
+  /** available + captured. Everything this window identified. */
+  identified: number;
 }
 
 export function mechanismSavings(ctl: DashboardController): MechanismSavings {
@@ -74,18 +81,28 @@ export function mechanismSavings(ctl: DashboardController): MechanismSavings {
     overlapUsd: data.savings.overlapUsd,
     overlapCount: data.savings.overlapCount,
     sum: arbitrage + benchmark + rightsize,
+    available: data.savings.available,
+    captured: data.savings.captured,
+    identified: data.savings.available + data.savings.captured,
   };
 }
 
-/** One sentence that reconciles the three cards with the headline total. */
+/**
+ * The two sentences that reconcile every headline figure on screen:
+ *   arbitrage + benchmark + rightsize − overlap = available
+ *   available + captured                        = identified
+ * Stated in that order so no figure on the page is asserted without its
+ * arithmetic being visible next to it.
+ */
 export function mechanismSentence(m: MechanismSavings): string {
   return `${usd(m.arbitrage, 0)} arbitrage + ${usd(m.benchmark, 0)} benchmark + ${usd(
     m.rightsize,
     0,
   )} rightsize, less ${usd(m.overlapUsd, 0)} counted twice across ${m.overlapCount} shared workload${
     m.overlapCount === 1 ? "" : "s"
-  }.`;
+  }, is ${usd(m.available, 0)} still available; plus ${usd(m.captured, 0)} already captured by switches you are running makes ${usd(m.identified, 0)} identified.`;
 }
+
 
 /** The three mechanism cards, in the same visual pattern Certify uses. */
 export function MechanismStats({ mech }: { mech: MechanismSavings }) {
