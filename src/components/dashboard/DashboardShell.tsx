@@ -105,6 +105,8 @@ export function DashboardShell({
 
         <main className="min-w-0 flex-1 space-y-8">
           {data.dataState === "awaiting_first_event" && <AwaitingFirstEvent />}
+          <IngestBanner ingest={data.ingest} />
+
           {children}
           <p className="pb-6 text-center text-xs text-muted-foreground">
             Savings computed from your tracked traffic and current provider pricing · last read{" "}
