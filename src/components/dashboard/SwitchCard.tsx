@@ -42,6 +42,12 @@ export function SwitchCard({
   discoveryHref?: string;
   /** The public demo is a showcase: the action renders as a label, not a link. */
   readOnly?: boolean;
+  /**
+   * A switch is already running for this pair, but the workload's traffic has
+   * not moved yet, so the spend — and therefore the opportunity — is still on
+   * the rollups. The row states that instead of offering an action.
+   */
+  pendingTraffic?: boolean;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
