@@ -113,7 +113,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStatRow title="Govern · what runs without you">
               <HeroStat
                 label="Running unattended"
-                value={`${govern.running}`}
+                value={`${govern.running} switch${govern.running === 1 ? "" : "es"}`}
                 sub={autonomyOn ? "autonomous mode is on" : "autonomous mode is off"}
                 accent="oklch(0.82 0.16 155)"
               />
