@@ -148,9 +148,10 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Held for you"
                 value={`${govern.refusals.length} switch${govern.refusals.length === 1 ? "" : "es"}`}
-                sub="refused by the autonomous gate"
+                sub="certified across all three mechanisms, held from running unattended — not the same as Certify's quality refusals"
                 accent="oklch(0.83 0.13 55)"
               />
+
               <HeroStat
                 label="Minimum to act"
                 value={usd(govern.policy.minMonthlySavingUsd, 0)}
