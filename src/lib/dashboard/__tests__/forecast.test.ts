@@ -368,3 +368,105 @@ describe("forecastMonthEnd — sync-health interlock", () => {
     expect(f.syncGapDates).toEqual([]);
   });
 });
+
+/* ------- A: a partially collected day is a fragment, not a cheap day ------ */
+
+describe("forecastMonthEnd — partial-day coverage", () => {
+  /** Full coverage everywhere except yesterday, which only got 6 of 24 hours. */
+  const coverage = (partialDay: string, hours = 6): Record<string, number> => {
+    const map: Record<string, number> = {};
+    for (let i = 40; i >= 0; i--) map[iso(-i)] = 24;
+    map[partialDay] = hours;
+    return map;
+  };
+
+  it("excludes a 6-of-24-hour day exactly like a fully absent day", () => {
+    const rows = history(40, (d) => (d === iso(-1) ? 25 : 100));
+    const partial = forecastMonthEnd(rows, NOW, {
+      hourCoverage: coverage(iso(-1)),
+      coverageReliableFrom: iso(-40),
+    });
+    const absent = forecastMonthEnd(
+      rows.filter((r) => r.date !== iso(-1)),
+      NOW,
+    );
+    expect(partial.partialLevelDates).toEqual([iso(-1)]);
+    expect(partial.observedLevelDays).toBe(6);
+    expect(partial.observedLevelDays).toBe(absent.observedLevelDays);
+    expect(partial.dailyLevelUsd).toBeCloseTo(absent.dailyLevelUsd, 6);
+    expect(partial.pointUsd).toBeCloseTo(absent.pointUsd!, 6);
+    expect(partial.cv).toBe(absent.cv);
+    expect(partial.reasons.join(" ")).toMatch(/partially collected day/);
+  });
+
+  it("does not depress the level or invent a downward trend from the fragment", () => {
+    const rows = history(40, (d) => (d === iso(-1) ? 25 : 100));
+    const naive = forecastMonthEnd(rows, NOW);
+    const fixed = forecastMonthEnd(rows, NOW, {
+      hourCoverage: coverage(iso(-1)),
+      coverageReliableFrom: iso(-40),
+    });
+    expect(naive.trendPerDayUsd).toBeLessThan(0);
+    expect(fixed.trendPerDayUsd).toBe(0);
+    expect(fixed.dailyLevelUsd).toBeCloseTo(100, 6);
+    expect(fixed.cv).toBe(0);
+  });
+
+  it("keeps a 20-hour day — the floor is coverage, not perfection", () => {
+    const f = forecastMonthEnd(history(40, () => 100), NOW, {
+      hourCoverage: coverage(iso(-1), FORECAST_RULES.minObservedHours),
+      coverageReliableFrom: iso(-40),
+    });
+    expect(f.partialLevelDates).toEqual([]);
+    expect(f.observedLevelDays).toBe(7);
+  });
+
+  it("does not judge days before the hourly signal's own horizon", () => {
+    // No hourly evidence at all for the older days: unjudged, not partial.
+    const f = forecastMonthEnd(history(40, () => 100), NOW, {
+      hourCoverage: { [iso(-1)]: 24 },
+      coverageReliableFrom: iso(-1),
+    });
+    expect(f.partialLevelDates).toEqual([]);
+    expect(f.observedLevelDays).toBe(7);
+  });
+
+  it("suppresses when dropping partial days puts the window under the floor", () => {
+    const rows = history(40, () => 100).filter(
+      (r) => ![iso(-1), iso(-2)].includes(r.date),
+    );
+    const cov = coverage(iso(-3));
+    const f = forecastMonthEnd(rows, NOW, {
+      hourCoverage: cov,
+      coverageReliableFrom: iso(-40),
+    });
+    expect(f.observedLevelDays).toBe(4);
+    expect(f.suppressed).toBe(true);
+    expect(f.pointUsd).toBeNull();
+    expect(f.suppressionReason).toMatch(/only 4 of the last 7 days/);
+  });
+});
+
+/* ------------------- C: width backstop on the range ---------------------- */
+
+describe("forecastMonthEnd — width backstop", () => {
+  it("suppresses a band whose top is several times its own centre", () => {
+    /**
+     * Enough observed days, coherent direction, but a trailing window so
+     * violent that the interval spans an order of magnitude. Direction checks
+     * pass; the width check is what catches it.
+     */
+    const rows = history(40, (_d, i) => (i % 2 === 0 ? 4000 : 5));
+    const f = forecastMonthEnd(rows, NOW);
+    expect(f.observedLevelDays).toBe(7);
+    expect(f.suppressed).toBe(true);
+    expect(f.pointUsd).toBeNull();
+    expect(f.suppressionReason).toMatch(/recent collection gap — projection unavailable/);
+  });
+
+  it("leaves a normally wide but usable range alone", () => {
+    const f = forecastMonthEnd(history(40, (_d, i) => (i % 3 === 0 ? 130 : 100)), NOW);
+    expect(f.suppressed).toBe(false);
+    expect(f.highUsd!).toBeLessThanOrEqual(f.pointUsd! * FORECAST_RULES.maxHighToPointRatio);
+  });
+});
