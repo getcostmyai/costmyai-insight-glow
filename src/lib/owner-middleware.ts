@@ -1,4 +1,5 @@
 import { createMiddleware } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -21,7 +22,8 @@ export const DEMO_AUTH_BYPASS = false;
  * "not signed in" (401, from requireSupabaseAuth) from "signed in, but not the
  * owner" (403) instead of collapsing both into an opaque 500.
  */
-const requireBearer = createMiddleware({ type: "function" }).server(({ next, request }) => {
+const requireBearer = createMiddleware({ type: "function" }).server(({ next }) => {
+  const request = getRequest();
   // The generated auth middleware throws a plain Error for missing credentials,
   // which surfaces as an opaque 500. Reject unauthenticated callers first so
   // "not signed in" is a real 401 and "signed in, wrong user" a real 403.
