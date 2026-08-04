@@ -87,6 +87,8 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.hostArbitrage.length,
         monthly: levelSaving(data, "host_arbitrage"),
+        valueText: null as string | null,
+        caption: null as string | null,
       };
     if (meta.key === "certify")
       return {
@@ -94,6 +96,8 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.qualityMatched.length,
         monthly: levelSaving(data, "quality_match"),
+        valueText: null as string | null,
+        caption: null as string | null,
       };
     if (meta.key === "rightsize")
       return {
@@ -101,14 +105,35 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.oversized.length,
         monthly: levelSaving(data, "rightsize"),
+        valueText: null as string | null,
+        caption: null as string | null,
       };
+    /**
+     * Govern finds nothing of its own — it applies what the three checks above
+     * already certified. Counting "opportunities" here would read $0 · 0 by
+     * construction, so the card measures what Govern actually did: money it
+     * applied unattended, and how many switches it is running right now. When
+     * nothing has accrued yet the headline is the honest one — the number of
+     * switches it is running — rather than a $0 that reads as broken.
+     */
+    const gov = data.govern;
     return {
       meta,
       unlocked,
-      count: data.govern.eligible.length,
-      monthly: data.govern.eligibleSaving,
+      count: gov.running,
+      monthly: gov.captured,
+      valueText:
+        gov.captured > 0 ? usd(gov.captured, 0) : `${gov.running}`,
+      caption:
+        gov.captured > 0
+          ? `applied autonomously · ${gov.running} running unattended · ${activeRange.long}`
+          : gov.running > 0
+            ? `running unattended · no saving accrued yet · ${activeRange.long}`
+            : `nothing running unattended · ${activeRange.long}`,
     };
   });
+
+
 
   return (
     <>
@@ -230,7 +255,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
           hint="Each level is its own page, with its own evidence. Locked levels still show what they found."
         />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {levelCards.map(({ meta, unlocked, count, monthly }) => (
+          {levelCards.map(({ meta, unlocked, count, monthly, valueText, caption }) => (
             <Link
               key={meta.key}
               to={
@@ -247,14 +272,20 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
               <span
                 className={`num mt-2 text-3xl ${unlocked ? "text-saving" : "text-muted-foreground"}`}
               >
-                {usd(monthly, 0)}
+                {valueText ?? usd(monthly, 0)}
               </span>
               <p className="mt-1 text-xs text-muted-foreground">
-                {count} {count === 1 ? "opportunity" : "opportunities"} · {activeRange.long}
+                {caption ??
+                  `${count} ${count === 1 ? "opportunity" : "opportunities"} · ${activeRange.long}`}
               </p>
+
               <p className="mt-3 text-sm text-muted-foreground">{meta.tagline}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                {unlocked ? "Open" : "See what it found"}
+                {unlocked
+                  ? "Open"
+                  : meta.key === "govern"
+                    ? "See what it would run"
+                    : "See what it found"}
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Link>
