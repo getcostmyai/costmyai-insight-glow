@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ArrowUpRight, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clock, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
+import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
 
 /** One certified switch opportunity, ranked by saving. */
