@@ -479,7 +479,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     latency_scope: (p.latency_scope as "host" | "model" | null) ?? null,
   })) as PriceRow[];
 
-  const result = runPipeline({
+  const rawResult = runPipeline({
     usage,
     prices: priceRows,
     benchmarks: (benchmarks.data ?? []).map((b) => ({ ...b, score: Number(b.score) })) as BenchmarkRow[],
@@ -487,6 +487,30 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     models: (models.data ?? []) as ModelRow[],
     objectives: objectiveRows,
   });
+
+  /**
+   * A workload you have already switched is not still on the table.
+   *
+   * The engine reads raw rollups, so until the gateway's traffic has fully
+   * moved to the new host the old pair keeps appearing and the same workload
+   * gets re-offered as an opportunity while its switch is already running and
+   * accruing captured dollars. That is a real double count between "available"
+   * and "captured", so the source pair of every active switch is removed from
+   * the opportunity lists here, once, before anything is summed or rendered.
+   */
+  const switchedPairs = new Set(
+    (switches.data ?? [])
+      .filter((s) => s.status === "active")
+      .map((s) => `${s.from_model}|${s.from_host}`),
+  );
+  const notAlreadySwitched = (r: Recommendation) =>
+    !switchedPairs.has(`${r.fromModel}|${r.fromHost}`);
+  const result = {
+    ...rawResult,
+    hostArbitrage: rawResult.hostArbitrage.filter(notAlreadySwitched),
+    qualityMatched: rawResult.qualityMatched.filter(notAlreadySwitched),
+    oversized: rawResult.oversized.filter(notAlreadySwitched),
+  };
 
   const toOpportunity = (r: Recommendation): SwitchOpportunity => ({
     fromModel: r.fromModel,
