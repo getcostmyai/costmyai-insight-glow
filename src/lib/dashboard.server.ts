@@ -566,6 +566,12 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       .eq("granularity", "day")
       .gte("bucket_start", forecastStart)
       .limit(100_000);
+  /**
+   * The interlock: the projection refuses to compute through a day the
+   * collectors never ran, read from the same `sync_runs` ledger the platform
+   * already uses to prove sync health.
+   */
+  const forecastSyncGaps = await syncGapDays(supabase, now, FORECAST_RULES.levelDays);
   const forecast = forecastMonthEnd(
     (forecastData ?? []).map((r) => ({
       date: String(r.bucket_start).slice(0, 10),
@@ -573,7 +579,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       spend: Number(r.cost_usd),
     })),
     new Date(now),
+    { syncGapDates: forecastSyncGaps },
   );
+
 
 
 
