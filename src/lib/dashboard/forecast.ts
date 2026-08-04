@@ -42,7 +42,20 @@ export interface ForecastOptions {
    * as quiet traffic.
    */
   syncGapDates?: string[];
+  /**
+   * Distinct hours of real collection per calendar day (YYYY-MM-DD -> 0..24).
+   * A day under `minObservedHours` is a fragment of a day, not a cheap day,
+   * and is dropped exactly like an absent day.
+   */
+  hourCoverage?: Record<string, number>;
+  /**
+   * First calendar day (inclusive) the hourly signal is actually complete for.
+   * Hourly evidence has its own retention horizon; days before it are simply
+   * unjudged rather than falsely called partial.
+   */
+  coverageReliableFrom?: string;
 }
+
 
 export interface MonthEndForecast {
   /** Month-to-date actual, complete days only. Known, not estimated. */
