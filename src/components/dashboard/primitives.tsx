@@ -92,17 +92,18 @@ export function HeroStat({
    * own column instead of bleeding into the neighbouring card.
    */
   return (
-    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pl-4">
+    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-3 pl-4">
       <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
         {label}
       </p>
       <div
-        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.9rem,1.05vw,1.25rem)] leading-none"
+        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.85rem,0.95vw,1.15rem)] leading-none"
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
         title={value}
       >
         {value}
       </div>
+
       <p className="self-start text-[11px] break-words text-white/55">{sub}</p>
     </div>
   );
