@@ -81,14 +81,24 @@ export async function listApiKeys(orgId: string): Promise<ApiKeySummary[]> {
   }));
 }
 
+/**
+ * Dispatch 91. An update that matches no row returns no error, so a key id
+ * belonging to another workspace — or one that does not exist — used to come
+ * back as "revoked". A credential the caller believes is dead but is still
+ * live is the worst possible false success, so the affected row is read back
+ * and its absence is a refusal.
+ */
 export async function revokeApiKey(orgId: string, keyId: string): Promise<void> {
   const db = adminClient();
-  const { error } = await db
+  const { data, error } = await db
     .from("api_keys")
     .update({ revoked_at: new Date().toISOString() })
     .eq("org_id", orgId)
-    .eq("id", keyId);
+    .eq("id", keyId)
+    .select("id")
+    .maybeSingle();
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("That ingest token does not exist in this workspace.");
 }
 
 /**

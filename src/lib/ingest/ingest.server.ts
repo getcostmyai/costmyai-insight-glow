@@ -56,6 +56,10 @@ export async function authenticateApiKey(rawKey: string): Promise<AuthedKey | nu
     const a = Buffer.from(row.key_hash);
     const b = Buffer.from(expected);
     if (a.length === b.length && timingSafeEqual(a, b)) {
+      // Accepted risk (Dispatch 91): last_used_at is a convenience timestamp,
+      // not an authorisation or billing input. A dropped stamp costs a stale
+      // "last used" label and nothing else, and failing ingest over it would
+      // trade a cosmetic loss for a real one.
       await db.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("id", row.id);
       return { orgId: row.org_id, keyId: row.id };
     }

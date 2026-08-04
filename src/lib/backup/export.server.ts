@@ -82,6 +82,9 @@ export async function runBackupExport(): Promise<ExportResult> {
     .insert({ started_at: startedAt.toISOString(), destination: cfg?.host ?? null })
     .select("id")
     .single();
+  // Dispatch 91. Without this row the restore runs unrecorded and the job
+  // ledger reports a schedule that never fired.
+  if (run.error) throw new Error(`could not open a backup run record: ${run.error.message}`);
   const runId = run.data?.id as string | undefined;
 
   const fail = async (error: string): Promise<ExportResult> => {
@@ -127,7 +130,7 @@ export async function runBackupExport(): Promise<ExportResult> {
 
     const finishedAt = new Date();
     if (runId) {
-      await supabaseAdmin
+      const stamp = await supabaseAdmin
         .from("backup_export_runs")
         .update({
           finished_at: finishedAt.toISOString(),
@@ -141,7 +144,14 @@ export async function runBackupExport(): Promise<ExportResult> {
           triggers_ok: triggersOk,
           error: match && triggersOk ? null : "restored copy did not verify",
         })
-        .eq("id", runId);
+        .eq("id", runId)
+        .select("id")
+        .maybeSingle();
+      // Dispatch 91. An unrecorded outcome leaves the run open forever and the
+      // job dashboard showing a restore that never finished.
+      if (stamp.error || !stamp.data) {
+        throw new Error(`could not record the backup outcome: ${stamp.error?.message ?? "run row vanished"}`);
+      }
     }
 
     return {

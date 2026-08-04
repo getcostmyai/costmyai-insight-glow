@@ -145,7 +145,7 @@ export async function setApplicationStatus(
   status: ApplicationStatus,
   note: string | null,
 ) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("partner_applications")
     .update({
       status,
@@ -153,10 +153,13 @@ export async function setApplicationStatus(
       reviewed_by: userId,
       reviewed_at: new Date().toISOString(),
     })
-    .eq("id", id);
-  // RLS refuses the write for anyone who is not a platform admin; zero rows
-  // updated is indistinguishable from "not found" on purpose.
-  if (error) throw new Error("Application not found");
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+  // RLS refuses the write for anyone who is not a platform admin, and an
+  // update that matches nothing returns no error. Dispatch 91: the row is
+  // read back, so "reviewed" on screen means a review was actually recorded.
+  if (error || !data) throw new Error("Application not found");
 }
 
 export type { ActiveClientBucket, StartingSoonBucket };

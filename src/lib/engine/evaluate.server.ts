@@ -337,12 +337,15 @@ async function evaluateOrg(
    * rows carry a fresh computed_at, so the leftovers are exactly the stale ones,
    * and they are retired rather than left standing as a live claim.
    */
-  await supabaseAdmin
+  const retired = await supabaseAdmin
     .from("recommendations")
     .update({ status: "refused" })
     .eq("org_id", org.id)
     .eq("status", "open")
     .lt("computed_at", cycleStart);
+  // Dispatch 91. A dropped retire leaves a claim the engine no longer stands
+  // behind on a customer's screen, so it is never swallowed.
+  if (retired.error) throw new Error(`retiring stale recommendations failed: ${retired.error.message}`);
 }
 
 async function lastAutonomousChange(orgId: string): Promise<Date | null> {
@@ -389,7 +392,7 @@ export interface RunRecord {
 
 /** Records one scheduled run so a silently dead — or silently empty — schedule is visible, not guessed at. */
 export async function recordRun(record: RunRecord): Promise<void> {
-  await supabaseAdmin.from("sync_runs").insert({
+  const { error } = await supabaseAdmin.from("sync_runs").insert({
     job: record.job,
     started_at: record.started.toISOString(),
     finished_at: new Date().toISOString(),
@@ -401,6 +404,11 @@ export async function recordRun(record: RunRecord): Promise<void> {
     detail: (record.detail ?? null) as never,
     error: record.error ?? null,
   } as never);
+  // Dispatch 91. This ledger is what the whole standing audit reads. A run
+  // that fails to record itself is indistinguishable from a schedule that
+  // never fired, which is exactly the 1 August failure one layer up — so the
+  // ledger write is the last thing allowed to fail quietly.
+  if (error) throw new Error(`recording ${record.job} run failed: ${error.message}`);
 }
 
 /** Classify a completed collector run from what it produced against what it expected. */
