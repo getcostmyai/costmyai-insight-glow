@@ -494,12 +494,18 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
               <Snowflake className="size-5 text-frozen" />
             </div>
             <div>
-              <div className="num text-3xl text-frozen">{data.frozen}</div>
+              <div className="num text-3xl text-frozen">
+                {data.frozen}
+                <span className="text-base"> frozen</span>
+              </div>
               <p className="text-xs text-muted-foreground">
-                frozen switches · {data.frozen === 0 ? "all healthy" : "review needed"}
+                {data.frozen === 0
+                  ? "No switch has been paused after a quality or price regression."
+                  : "Paused after a regression — resume or roll back below."}
               </p>
             </div>
           </div>
+
 
           {data.frozenSwitches.map((s) => (
             <div key={s.switchId} className="card-surface p-5">
