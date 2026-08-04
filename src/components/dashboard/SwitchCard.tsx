@@ -104,6 +104,10 @@ export function SwitchCard({
             {pending ? <Loader2 className="size-3.5 animate-spin" /> : null}
             {pending ? "Switching…" : actionLabel}
           </button>
+        ) : readOnly ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-4 py-2 text-sm font-medium text-primary">
+            Switch
+          </span>
         ) : (
           <Link
             to={ctaHref ?? "/auth"}
