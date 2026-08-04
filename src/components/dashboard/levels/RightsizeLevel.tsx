@@ -159,7 +159,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             <span className="text-white/80">left on the table.</span>
           </>
         }
-        sub={`${usd(savings.available, 0)} still available is what is left after the switches you already run: any workload with a live switch is removed from the lists below, and the ${usd(savings.captured, 0)} those switches saved is counted only as captured, never twice. Your plan runs all three mechanisms over the ${activeRange.long} of your own traffic: ${mechanismSentence(mech)} No projections, and each workload counted once. Activating is one click and reversible.`}
+        sub={`${usd(savings.captured, 0)} captured and ${usd(savings.available, 0)} available never overlap: a switch only books savings once its traffic has moved, and once it moves that workload stops appearing as an opportunity. Your plan runs all three mechanisms over the ${activeRange.long} of your own traffic: ${mechanismSentence(mech)} No projections, and each workload counted once. Activating is one click and reversible.`}
         stats={
           <>
             <HeroStat
