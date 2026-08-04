@@ -23,6 +23,7 @@ import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
+import { captureFigures } from "@/lib/dashboard/figures";
 import { compositionSentence } from "@/lib/dashboard/composition";
 import { PLAN_META } from "@/lib/engine/types";
 
@@ -115,7 +116,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Savings captured"
                 value={`${capture.pct}%`}
-                sub={`of ${usd(totalOpportunity, 0)} identified`}
+                sub={`of ${usd(capture.identified, 0)} identified`}
                 accent="oklch(0.86 0.09 265)"
               />
               <HeroStat

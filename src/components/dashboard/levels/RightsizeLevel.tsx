@@ -17,6 +17,7 @@ import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
+import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
 /**
  * Rightsize — everything the earlier levels found, plus oversized models, and
@@ -176,8 +177,8 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
 
             <HeroStat
               label="Savings captured"
-              value={`${Math.round(captureRate * 100)}%`}
-              sub={`of ${usd(totalOpportunity, 0)} identified`}
+              value={`${capture.pct}%`}
+              sub={`of ${usd(capture.identified, 0)} identified`}
               accent="oklch(0.86 0.09 265)"
             />
             <HeroStat
