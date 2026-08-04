@@ -221,7 +221,7 @@ function BillingPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="button"
-            disabled={portal.isPending || current === "compare"}
+            disabled={portal.isPending || current === "compare" || !canManage}
             onClick={() => portal.mutate()}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-muted disabled:opacity-50"
           >
@@ -229,6 +229,7 @@ function BillingPage() {
             Manage payment method & cancellation
             <ExternalLink className="size-3.5" />
           </button>
+
           <Link
             to="/workspace"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
@@ -250,12 +251,17 @@ function BillingPage() {
           <Receipt className="size-4 text-muted-foreground" />
           <p className="text-sm font-semibold">Invoice history</p>
         </div>
-        {invoices.isPending ? (
+        {!canManage ? (
+          <p className="p-6 text-sm text-muted-foreground">
+            Receipts are visible to workspace owners and admins.
+          </p>
+        ) : invoices.isPending ? (
           <p className="p-6 text-sm text-muted-foreground">Loading receipts…</p>
         ) : (invoices.data?.length ?? 0) === 0 ? (
           <p className="p-6 text-sm text-muted-foreground">
             No invoices yet. Receipts appear here the moment the provider issues one.
           </p>
+
         ) : (
           <div className="divide-y divide-border">
             {invoices.data!.map((inv) => (
