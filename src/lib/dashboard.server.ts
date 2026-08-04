@@ -857,7 +857,21 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   });
 
   const autonomousEnabled = Boolean((org.data as { autonomous_enabled?: boolean }).autonomous_enabled);
-  const autonomousRunning = runningSwitches.filter((s) => s.autonomous).length;
+  const autonomousSwitches = runningSwitches.filter((s) => s.autonomous);
+  const autonomousRunning = autonomousSwitches.length;
+  /**
+   * What Govern itself applied, measured the same way every other captured
+   * figure is: real dollars saved inside the window by switches that were
+   * activated unattended. Govern finds nothing of its own, so counting
+   * "opportunities" for it would always read zero.
+   */
+  const autonomousCaptured = capturedInWindow(
+    autonomousSwitches.map((s) => ({
+      saved: s.saved,
+      activeDays: Math.max(1, Math.floor((now - new Date(s.activatedAt).getTime()) / DAY_MS)),
+    })),
+    days,
+  );
 
   const dataState: DataState = deriveDataState({
     hasEverIngested: (firstEvent.data ?? []).length > 0,
