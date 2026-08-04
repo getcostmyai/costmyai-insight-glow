@@ -11,6 +11,7 @@ import {
 import type { ChartMetric } from "@/components/dashboard/SpendChart";
 import type { ObjectiveKind } from "@/lib/engine/types";
 import { useLiveTotals } from "@/lib/gateway-metrics";
+import { pendingSwitchIndex } from "@/lib/dashboard/pending-switch";
 import {
   activateOpportunity,
   pauseSwitch,
