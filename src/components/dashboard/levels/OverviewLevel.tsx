@@ -241,7 +241,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
           hint="Each level is its own page, with its own evidence. Locked levels still show what they found."
         />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {levelCards.map(({ meta, unlocked, count, monthly }) => (
+          {levelCards.map(({ meta, unlocked, count, monthly, caption }) => (
             <Link
               key={meta.key}
               to={
@@ -261,8 +261,10 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
                 {usd(monthly, 0)}
               </span>
               <p className="mt-1 text-xs text-muted-foreground">
-                {count} {count === 1 ? "opportunity" : "opportunities"} · {activeRange.long}
+                {caption ??
+                  `${count} ${count === 1 ? "opportunity" : "opportunities"} · ${activeRange.long}`}
               </p>
+
               <p className="mt-3 text-sm text-muted-foreground">{meta.tagline}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
                 {unlocked ? "Open" : "See what it found"}
