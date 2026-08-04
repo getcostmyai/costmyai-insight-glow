@@ -122,8 +122,7 @@ export const getMyPartner = createServerFn({ method: "GET" })
 
     const partnerId = membership.data.partner_id;
 
-    const [partner, tiers, revenue, earned, effective, referrals, ledger, payoutRuns] =
-      await Promise.all([
+    const [partner, tiers, summary, referrals, ledger, payoutRuns] = await Promise.all([
         supabase
           .from("partners")
           .select(
@@ -135,14 +134,18 @@ export const getMyPartner = createServerFn({ method: "GET" })
           .from("partner_tiers")
           .select("tier, name, min_lifetime_referred_usd, rate_pct")
           .order("tier"),
-        supabase.rpc("partner_lifetime_revenue", { _partner_id: partnerId }),
-        supabase.rpc("partner_earned_tier", { _partner_id: partnerId }),
-        supabase.rpc("partner_effective_tier", { _partner_id: partnerId }),
+        // Revenue and tier come back through one guarded lookup. The underlying
+        // helpers take an arbitrary partner id and carry no membership check of
+        // their own, so they are no longer reachable by a signed-in client at
+        // all: partner_summary returns nothing unless the caller belongs to that
+        // partner account (or is a platform admin).
+        supabase.rpc("partner_summary", { _partner_id: partnerId }).maybeSingle(),
         // Attribution is readable to the partner, but a referred workspace's
         // spend never is. The partner is not a member of those workspaces and
         // cannot read the table at all — this function returns the three facts
         // they are entitled to and nothing else.
         supabase.rpc("partner_referrals", { _partner_id: partnerId }),
+
         supabase
           .from("commission_ledger")
           .select(
@@ -168,9 +171,9 @@ export const getMyPartner = createServerFn({ method: "GET" })
       minLifetimeReferredUsd: Number(t.min_lifetime_referred_usd),
       ratePct: Number(t.rate_pct),
     }));
-    const lifetimeRevenueUsd = Number(revenue.data ?? 0);
-    const effectiveTier = Number(effective.data ?? 0);
-    const earnedTier = Number(earned.data ?? 0);
+    const lifetimeRevenueUsd = Number(summary.data?.lifetime_revenue_usd ?? 0);
+    const effectiveTier = Number(summary.data?.effective_tier ?? 0);
+    const earnedTier = Number(summary.data?.earned_tier ?? 0);
     const current = tierRows.find((t) => t.tier === effectiveTier) ?? tierRows[0];
     const next = tierRows.find((t) => t.tier === earnedTier + 1) ?? null;
 
