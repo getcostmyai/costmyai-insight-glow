@@ -17,23 +17,16 @@ const OBJECTIVES: ObjectiveKind[] = ["cost", "latency", "quality_floor"];
  * so hiding the route in the UI is never what keeps it private.
  */
 export const getDashboardSnapshot = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOwner])
   .inputValidator((data: { days?: number; objective?: string } | undefined) => ({
     days: (([1, 7, 30] as number[]).includes(Number(data?.days)) ? Number(data?.days) : 30) as RangeDays,
     objective: (OBJECTIVES.includes(data?.objective as ObjectiveKind)
       ? data?.objective
       : "cost") as ObjectiveKind,
   }))
-  .handler(async ({ data, context }) => {
-    const { isOwner } = await import("./access");
-    if (!isOwner(context.userId)) {
-      // statusCode makes the global error middleware rethrow instead of
-      // swallowing this into a generic 500 HTML page.
-      throw Object.assign(new Error("Forbidden: this workspace is restricted"), {
-        statusCode: 403,
-      });
-    }
+  .handler(async ({ data }) => {
     const { buildDashboardSnapshot } = await import("./dashboard.server");
+
     const { OBJECTIVE_OPTIONS } = await import("./dashboard/objective");
     const selection =
       OBJECTIVE_OPTIONS.find((o) => o.key === data.objective)?.selection ?? { objective: "cost" };
