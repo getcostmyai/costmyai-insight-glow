@@ -87,6 +87,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.hostArbitrage.length,
         monthly: levelSaving(data, "host_arbitrage"),
+        caption: null as string | null,
       };
     if (meta.key === "certify")
       return {
@@ -94,6 +95,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.qualityMatched.length,
         monthly: levelSaving(data, "quality_match"),
+        caption: null as string | null,
       };
     if (meta.key === "rightsize")
       return {
@@ -101,14 +103,23 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         unlocked,
         count: data.oversized.length,
         monthly: levelSaving(data, "rightsize"),
+        caption: null as string | null,
       };
+    /**
+     * Govern finds nothing of its own — it applies what the three checks above
+     * already certified. Counting "opportunities" here would read $0 · 0 by
+     * construction, so the card measures what Govern actually did: money it
+     * applied unattended, and how many switches it is running right now.
+     */
     return {
       meta,
       unlocked,
-      count: data.govern.eligible.length,
-      monthly: data.govern.eligibleSaving,
+      count: data.govern.running,
+      monthly: data.govern.captured,
+      caption: `applied autonomously · ${data.govern.running} running unattended · ${activeRange.long}`,
     };
   });
+
 
   return (
     <>
