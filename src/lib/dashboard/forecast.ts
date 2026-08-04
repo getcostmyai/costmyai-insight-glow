@@ -301,7 +301,7 @@ export function forecastMonthEnd(
   const factorFor = (iso: string) => (seasonalityApplied ? (factors.get(dow(iso)) ?? 1) : 1);
 
   // ---- 2 + 4. Deseasonalised level and damped, capped trend ------------------
-  const deseasonalised = levelDates.map((d, i) => levelSeries[i]! / (factorFor(d) || 1));
+  const deseasonalised = observedLevelDates.map((d, i) => levelSeries[i]! / (factorFor(d) || 1));
   const level = mean(deseasonalised);
 
   let slope = 0;
@@ -339,17 +339,38 @@ export function forecastMonthEnd(
   let lowUsd: number | null = null;
   let highUsd: number | null = null;
   if (isRange) {
-    // Day-level noise over the remaining days, plus the uncertainty in the
-    // level itself, which does not average out across days.
+    // Two independent error sources: day-to-day noise over the remaining days,
+    // and the uncertainty in the level itself, which does not average out.
+    // Independent errors add in quadrature, not linearly — adding them
+    // linearly assumed perfect correlation and inflated the band by ~40%.
     const dayNoise = noise * Math.sqrt(remainingDays);
     const levelNoise = (noise / Math.sqrt(Math.max(1, deseasonalised.length))) * remainingDays;
-    const sigma = dayNoise + levelNoise;
+    const sigma = Math.sqrt(dayNoise ** 2 + levelNoise ** 2);
     const half = Math.max(FORECAST_RULES.rangeZ * sigma, pointUsd * FORECAST_RULES.rangeFloorPct);
-    lowUsd = Math.max(mtdUsd, pointUsd - half);
+    lowUsd = Math.max(mtdUsd + todaySoFarUsd, pointUsd - half);
     highUsd = pointUsd + half;
     if (cv > FORECAST_RULES.cvRangeThreshold) {
       reasons.push(`daily spend varies too much (cv ${cv.toFixed(2)}) for a single number`);
     }
+  }
+
+  // ---- D. Coherence gate -----------------------------------------------------
+  // A self-inconsistent figure is worse than no figure. The month cannot close
+  // below what has already been spent, and the bounds must bracket the point.
+  const floor = mtdUsd + todaySoFarUsd;
+  const incoherent =
+    !Number.isFinite(pointUsd) ||
+    pointUsd < floor - 0.01 ||
+    (isRange &&
+      (lowUsd === null ||
+        highUsd === null ||
+        lowUsd > pointUsd + 0.01 ||
+        highUsd < pointUsd - 0.01 ||
+        lowUsd < floor - 0.01));
+  if (incoherent) {
+    return suppressedResult(
+      "not enough data for a coherent projection — the trailing window disagrees with what is already spent",
+    );
   }
 
   return {
@@ -358,13 +379,19 @@ export function forecastMonthEnd(
     lowUsd: lowUsd === null ? null : round2(lowUsd),
     highUsd: highUsd === null ? null : round2(highUsd),
     isRange,
+    suppressed: false,
+    suppressionReason: null,
     remainingDays,
     dailyLevelUsd: round2(level),
     trendPerDayUsd: round2(trendPerDay),
     seasonalityApplied,
     cv: Math.round(cv * 1000) / 1000,
+    observedLevelDays: observedLevelDates.length,
+    missingLevelDates,
+    syncGapDates,
     retiredKeys,
     newKeys,
     reasons,
   };
 }
+
