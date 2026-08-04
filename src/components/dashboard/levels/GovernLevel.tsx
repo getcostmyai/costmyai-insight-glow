@@ -147,7 +147,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
 
               <HeroStat
                 label="Held for you"
-                value={`${govern.refusals.length}`}
+                value={`${govern.refusals.length} switch${govern.refusals.length === 1 ? "" : "es"}`}
                 sub="refused by the autonomous gate"
                 accent="oklch(0.83 0.13 55)"
               />
