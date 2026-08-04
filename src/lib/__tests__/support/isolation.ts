@@ -36,7 +36,7 @@ interface AdminLike {
   auth: {
     admin: {
       listUsers: (opts: { page: number; perPage: number }) => Promise<{
-        data: { users: Array<{ id: string; email?: string | null }> };
+        data: { users: Array<{ id: string; email?: string | null; created_at?: string }> };
         error: unknown;
       }>;
       deleteUser: (id: string) => Promise<{ error: unknown }>;
@@ -59,7 +59,17 @@ export const totalResidue = (r: SweepResult) =>
  * Remove everything the integration suite is capable of leaving behind, and
  * report what it removed. Safe to call when there is nothing to do.
  */
-export async function sweepTestResidue(admin: AdminLike): Promise<SweepResult> {
+export async function sweepTestResidue(
+  admin: AdminLike,
+  /**
+   * Only touch residue older than this. Vitest runs test files in parallel, so
+   * an unconditional sweep would delete a sibling file's live fixtures
+   * mid-test. Thirty minutes is longer than any file here takes and far
+   * shorter than "still in production next week".
+   */
+  olderThanMs: number = 30 * 60_000,
+): Promise<SweepResult> {
+  const cutoff = new Date(Date.now() - olderThanMs).toISOString();
   const result: SweepResult = { users: 0, organizations: 0, partnerApplications: 0, partners: 0 };
 
   // 1. Test accounts, found by their reserved email domain.
@@ -67,15 +77,19 @@ export async function sweepTestResidue(admin: AdminLike): Promise<SweepResult> {
   for (let page = 1; page <= 20; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error || !data?.users?.length) break;
-    for (const u of data.users) {
-      if ((u.email ?? "").endsWith(`@${TEST_EMAIL_DOMAIN}`)) testUsers.push(u.id);
+    for (const u of data.users as Array<{ id: string; email?: string | null; created_at?: string }>) {
+      const stale = !u.created_at || u.created_at < cutoff;
+      if (stale && (u.email ?? "").endsWith(`@${TEST_EMAIL_DOMAIN}`)) testUsers.push(u.id);
     }
     if (data.users.length < 1000) break;
   }
 
   // 2. Their workspaces, plus any workspace whose name carries a test stamp —
   //    a run killed before its org was registered still leaves the name behind.
-  const { data: orgs } = await admin.from("organizations").select("id, name, created_by");
+  const { data: orgs } = await admin
+    .from("organizations")
+    .select("id, name, created_by")
+    .lt("created_at", cutoff);
   const doomed = (orgs ?? [])
     .filter(
       (o: { id: string; name: string; created_by: string | null }) =>
@@ -91,10 +105,10 @@ export async function sweepTestResidue(admin: AdminLike): Promise<SweepResult> {
   }
 
   const like = `%@${TEST_EMAIL_DOMAIN}`;
-  const apps = await admin.from("partner_applications").delete().like("email", like).select("id");
+  const apps = await admin.from("partner_applications").delete().like("email", like).lt("created_at", cutoff).select("id");
   result.partnerApplications = (apps.data ?? []).length;
 
-  const partners = await admin.from("partners").delete().like("contact_email", like).select("id");
+  const partners = await admin.from("partners").delete().like("contact_email", like).lt("created_at", cutoff).select("id");
   result.partners = (partners.data ?? []).length;
 
   for (const id of testUsers) {
