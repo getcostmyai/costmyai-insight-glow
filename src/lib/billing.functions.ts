@@ -236,6 +236,12 @@ export interface InvoiceRow {
  * We deliberately do not mirror invoices into our own tables: the provider is
  * the record of what was charged, and a stale copy of a receipt is worse than
  * no copy at all.
+ *
+ * Two narrowings, both deliberate. Managers only: a receipt carries the legal
+ * entity, the billing address and the VAT id, which is not ordinary-member
+ * information. And the list is filtered to this workspace's own subscription
+ * rather than everything on the customer, so even a customer record that
+ * predates the per-workspace split cannot spill another workspace's receipts.
  */
 export const listWorkspaceInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -244,9 +250,11 @@ export const listWorkspaceInvoices = createServerFn({ method: "POST" })
     return { orgId: data.orgId, environment: validEnv(data.environment) };
   })
   .handler(async ({ data, context }): Promise<InvoiceRow[]> => {
+    await assertManager(context.supabase, data.orgId);
+
     const { data: sub } = await context.supabase
       .from("subscriptions")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, stripe_subscription_id")
       .eq("org_id", data.orgId)
       .eq("environment", data.environment)
       .order("created_at", { ascending: false })
@@ -259,8 +267,12 @@ export const listWorkspaceInvoices = createServerFn({ method: "POST" })
       const stripe = createStripeClient(data.environment);
       const list = await stripe.invoices.list({
         customer: sub.stripe_customer_id as string,
+        ...(sub.stripe_subscription_id && {
+          subscription: sub.stripe_subscription_id as string,
+        }),
         limit: 24,
       });
+
       return list.data.map((i) => ({
         id: i.id ?? "",
         number: i.number ?? null,
