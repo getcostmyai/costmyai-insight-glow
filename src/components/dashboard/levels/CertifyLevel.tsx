@@ -75,7 +75,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             </span>
           </>
         }
-        sub={`Measured against ${data.coverage.evaluations} evaluation bands. A switch we cannot prove against an independent third-party benchmark is refused — ${refused} ${refused === 1 ? "was" : "were"} refused on your traffic.`}
+        sub={`Measured against ${data.coverage.evaluations} independent benchmark tests. A switch we cannot prove against an independent third-party benchmark is refused — ${refused} ${refused === 1 ? "was" : "were"} refused on your traffic.`}
         stats={
           <>
             <HeroStat
