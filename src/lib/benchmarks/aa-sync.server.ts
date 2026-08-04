@@ -127,14 +127,16 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
   if (retireError) throw retireError;
 
   // Every run is recorded, successful or not, so a customer can always see when
-  // the numbers behind a recommendation were last measured.
-  await supabase.from("pricing_snapshots").insert({
+  // the numbers behind a recommendation were last measured. Dispatch 91: that
+  // promise is only kept if the record actually lands.
+  const provenance = await supabase.from("pricing_snapshots").insert({
     feed: AA_FEED,
     status: "ok",
     rows_upserted: result.scores.length + result.margins.length + hostRowsWithLatency,
     is_fixture: false,
     synced_at: syncedAt,
   });
+  if (provenance.error) throw new Error(`recording the benchmark run failed: ${provenance.error.message}`);
 
   return {
     runId,
