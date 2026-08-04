@@ -380,6 +380,81 @@ describe("objectives — Certify entitlement, written through RLS", () => {
   }, 30_000);
 });
 
+/**
+ * Dispatch 89. The same shape of gap as apply_switch/set_switch_state:
+ * role verified, entitlement assumed. These paths are reachable straight
+ * through PostgREST with a manager's own token, so the entitlement has to
+ * hold in the database, not only in the server function above it.
+ */
+describe("entitlement gate at the database layer — a manager who is not paying", () => {
+  it("refuses an objective written directly by a free workspace", async () => {
+    const { error } = await owner.client.from("objectives").insert({
+      org_id: freeOrg,
+      objective: "cost",
+    });
+    expect(error).not.toBeNull();
+  }, 30_000);
+
+  it("refuses a routing rule written directly by a free workspace", async () => {
+    const { error } = await owner.client.from("routing_rules").insert({
+      org_id: freeOrg,
+      from_model: "gpt-5.5",
+      from_host: "openai",
+      to_model: "gpt-5.5",
+      to_host: "azure",
+      source: "manual",
+      state: "active",
+      basis: "same model, cheaper host",
+    });
+    expect(error).not.toBeNull();
+  }, 30_000);
+
+  it("refuses an autonomous routing rule from a Rightsize workspace", async () => {
+    await grantPaidPlan(paidOrg, "rightsize");
+    const { error } = await owner.client.from("routing_rules").insert({
+      org_id: paidOrg,
+      from_model: "gpt-5.5",
+      from_host: "openai",
+      to_model: "gpt-5.5",
+      to_host: "azure",
+      source: "autonomous",
+      state: "active",
+      basis: "same model, cheaper host",
+    });
+    expect(error).not.toBeNull();
+  }, 30_000);
+
+  it("refuses a manager raising their own plan through the workspace row", async () => {
+    const { error } = await owner.client
+      .from("organizations")
+      .update({ plan: "govern" })
+      .eq("id", freeOrg);
+    expect(error).not.toBeNull();
+
+    const after = await admin.from("organizations").select("plan").eq("id", freeOrg).single();
+    expect(after.data?.plan).toBe("compare");
+  }, 30_000);
+
+  it("refuses autonomous mode until the workspace is entitled to Govern", async () => {
+    await grantPaidPlan(paidOrg, "rightsize");
+    const refused = await owner.client
+      .from("organizations")
+      .update({ autonomous_enabled: true })
+      .eq("id", paidOrg);
+    expect(refused.error).not.toBeNull();
+
+    await grantPaidPlan(paidOrg, "govern");
+    const allowed = await owner.client
+      .from("organizations")
+      .update({ autonomous_enabled: true })
+      .eq("id", paidOrg)
+      .select("autonomous_enabled")
+      .maybeSingle();
+    expect(allowed.error).toBeNull();
+    expect(allowed.data?.autonomous_enabled).toBe(true);
+  }, 30_000);
+});
+
 describe("cleanup", () => {
   it("leaves no test rows behind", async () => {
     for (const id of orgIds) await admin.from("organizations").delete().eq("id", id);
