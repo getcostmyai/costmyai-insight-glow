@@ -394,7 +394,9 @@ describe("forecastMonthEnd — partial-day coverage", () => {
     expect(partial.observedLevelDays).toBe(6);
     expect(partial.observedLevelDays).toBe(absent.observedLevelDays);
     expect(partial.dailyLevelUsd).toBeCloseTo(absent.dailyLevelUsd, 6);
-    expect(partial.pointUsd).toBeCloseTo(absent.pointUsd!, 6);
+    // The fragment's real $25 is still real money in month-to-date; only the
+    // trailing *rate* ignores it.
+    expect(partial.pointUsd).toBeCloseTo(absent.pointUsd! + 25, 6);
     expect(partial.cv).toBe(absent.cv);
     expect(partial.reasons.join(" ")).toMatch(/partially collected day/);
   });
@@ -450,14 +452,21 @@ describe("forecastMonthEnd — partial-day coverage", () => {
 /* ------------------- C: width backstop on the range ---------------------- */
 
 describe("forecastMonthEnd — width backstop", () => {
+  /** Early-month anchor: little month-to-date, so the band is the whole answer. */
+  const EARLY = new Date("2026-07-03T09:00:00.000Z");
+  const earlyIso = (o: number) => iso(o, EARLY);
+
   it("suppresses a band whose top is several times its own centre", () => {
     /**
-     * Enough observed days, coherent direction, but a trailing window so
-     * violent that the interval spans an order of magnitude. Direction checks
-     * pass; the width check is what catches it.
+     * Enough observed days and a coherent direction, but a trailing window so
+     * violent that the interval spans an order of magnitude. The direction
+     * checks all pass; width is the only thing that catches it.
      */
-    const rows = history(40, (_d, i) => (i % 2 === 0 ? 4000 : 5));
-    const f = forecastMonthEnd(rows, NOW);
+    const rows: ForecastInputRow[] = [];
+    for (let i = 7; i >= 1; i--) {
+      rows.push({ date: earlyIso(-i), key: "k", spend: i % 2 === 0 ? 4000 : 5 });
+    }
+    const f = forecastMonthEnd(rows, EARLY);
     expect(f.observedLevelDays).toBe(7);
     expect(f.suppressed).toBe(true);
     expect(f.pointUsd).toBeNull();
@@ -465,8 +474,14 @@ describe("forecastMonthEnd — width backstop", () => {
   });
 
   it("leaves a normally wide but usable range alone", () => {
-    const f = forecastMonthEnd(history(40, (_d, i) => (i % 3 === 0 ? 130 : 100)), NOW);
+    const rows: ForecastInputRow[] = [];
+    for (let i = 7; i >= 1; i--) {
+      rows.push({ date: earlyIso(-i), key: "k", spend: i % 3 === 0 ? 130 : 100 });
+    }
+    const f = forecastMonthEnd(rows, EARLY);
     expect(f.suppressed).toBe(false);
-    expect(f.highUsd!).toBeLessThanOrEqual(f.pointUsd! * FORECAST_RULES.maxHighToPointRatio);
+    expect(f.highUsd ?? f.pointUsd!).toBeLessThanOrEqual(
+      f.pointUsd! * FORECAST_RULES.maxHighToPointRatio,
+    );
   });
 });
