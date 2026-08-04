@@ -228,7 +228,7 @@ export function forecastMonthEnd(
 
   if (observedLevelDates.length < FORECAST_RULES.minObservedLevelDays) {
     return suppressedResult(
-      `not enough data — only ${observedLevelDates.length} of the last ${FORECAST_RULES.levelDays} days carry usage`,
+      `not enough data — only ${observedLevelDates.length} of the last ${FORECAST_RULES.levelDays} days carry a full day of usage`,
     );
   }
   if (missingLevelDates.length > 0) {
@@ -236,6 +236,12 @@ export function forecastMonthEnd(
       `${missingLevelDates.length} day${missingLevelDates.length > 1 ? "s" : ""} without data excluded from the trailing rate`,
     );
   }
+  if (partialLevelDates.length > 0) {
+    reasons.push(
+      `${partialLevelDates.length} partially collected day${partialLevelDates.length > 1 ? "s" : ""} (under ${FORECAST_RULES.minObservedHours}h of 24) excluded from the trailing rate`,
+    );
+  }
+
 
   // ---- 6. Structural breaks -------------------------------------------------
   const windowTotal = observedLevelDates.reduce((s, d) => s + (daily.get(d) ?? 0), 0);
