@@ -182,7 +182,7 @@ describe("round 3 spec", () => {
   it("item 4 · Certify and Rightsize render lists A, B and C", () => {
     expect(LISTS).toContain("List A · arbitrage saves");
     expect(LISTS).toContain("List B · benchmark saves");
-    expect(LISTS).toContain("List C · non-qualifying");
+    expect(LISTS).toContain("List C · nothing worth switching");
     expect(LEVEL_FILES.rightsize).toContain("<TransparencyLists ctl={ctl} />");
     expect(LEVEL_FILES.certify).toContain("<ArbitrageList ctl={ctl} />");
     expect(LEVEL_FILES.certify).toContain("List B · benchmark saves");
