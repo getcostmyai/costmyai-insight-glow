@@ -949,6 +949,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       lowUsd: forecast.lowUsd,
       highUsd: forecast.highUsd,
       isRange: forecast.isRange,
+      /** No figure at all when the data cannot support a coherent one. */
+      suppressed: forecast.suppressed,
+      suppressionReason: forecast.suppressionReason,
+      observedLevelDays: forecast.observedLevelDays,
+      missingLevelDates: forecast.missingLevelDates,
+      syncGapDates: forecast.syncGapDates,
+
       mtdUsd: forecast.mtdUsd,
       remainingDays: forecast.remainingDays,
       dailyLevelUsd: forecast.dailyLevelUsd,
