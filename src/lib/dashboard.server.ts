@@ -572,7 +572,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    * collectors never ran, read from the same `sync_runs` ledger the platform
    * already uses to prove sync health.
    */
-  const forecastSyncGaps = await syncGapDays(supabase, now, FORECAST_RULES.levelDays);
+  const forecastSyncGaps = await syncGapDays(now, FORECAST_RULES.levelDays);
   const forecast = forecastMonthEnd(
     (forecastData ?? []).map((r) => ({
       date: String(r.bucket_start).slice(0, 10),
