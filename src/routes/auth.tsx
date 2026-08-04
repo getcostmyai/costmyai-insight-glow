@@ -6,10 +6,22 @@ import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
+/** Only same-origin app paths may be used as a post-sign-in destination. */
+function safeNext(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  if (value.startsWith("/auth")) return null;
+  return value;
+}
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    next: safeNext(search.next) ?? undefined,
+  }),
   // Renders on the server like every other route: all session reads live in
   // effects, so there is nothing here that differs between server and client.
   // `ssr: false` used to short-circuit that and produced a hydration mismatch.
+
   head: () => ({
     meta: [
       { title: "Sign in — CostMyAI" },
@@ -34,6 +46,7 @@ type Mode = "signin" | "signup";
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,15 +55,18 @@ function AuthPage() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
-    // Already signed in (or a session lands from an OAuth round-trip): go through.
+    // Already signed in (or a session lands from an OAuth round-trip): go to the
+    // page the user was actually trying to reach, falling back to the workspace.
+    const dest = next ?? "/workspace";
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate({ to: "/workspace", replace: true });
+      if (session) navigate({ to: dest, replace: true });
     });
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/workspace", replace: true });
+      if (data.session) navigate({ to: dest, replace: true });
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, next]);
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,7 +77,9 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth` },
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`,
+          },
         });
         if (error) throw error;
         // With confirmation on, signUp returns no session — the user is not in yet.
@@ -82,8 +100,9 @@ function AuthPage() {
     try {
       // Land back on /auth (public, session-aware) — it forwards to /workspace as
       // soon as the session hydrates, so Google matches the email/password path.
+      const back = next ? `?next=${encodeURIComponent(next)}` : "";
       await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
+        redirect_uri: `${window.location.origin}/auth${back}`,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
