@@ -276,6 +276,12 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           {busy(key) ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
           {busy(key) ? "Switching…" : "Switch now"}
         </button>
+      ) : ctl.demoReadOnly ? (
+        /* The demo is a showcase, not a console: the action reads as a label. */
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white/80">
+          <Zap className="size-4" />
+          Switch
+        </span>
       ) : (
         <Link
           to={ctaHref}
@@ -285,6 +291,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           <ArrowUpRight className="size-4" />
         </Link>
       )}
+
       {errorFor(key) ? (
         <p className="w-full text-[11px] text-[oklch(0.8_0.15_25)]">{errorFor(key)}</p>
       ) : null}
