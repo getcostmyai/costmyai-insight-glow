@@ -1984,6 +1984,7 @@ export type Database = {
           p75_usd: number
         }[]
       }
+      benchmark_k_floor: { Args: never; Returns: number }
       clawback_commission: {
         Args: { _environment?: string; _invoice_id: string; _reason: string }
         Returns: Json
