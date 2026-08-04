@@ -169,6 +169,8 @@ export function useDashboardController(scope: DashboardScope) {
     errorFor,
     ctaHref,
     ctaLabel,
+    rightsizeHref,
+    demoReadOnly,
   };
 }
 
