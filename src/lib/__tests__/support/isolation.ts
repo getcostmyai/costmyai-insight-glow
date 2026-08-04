@@ -129,13 +129,14 @@ export function guardIntegrationDatabase(admin: AdminLike): void {
   }, 120_000);
 
   afterAll(async () => {
+    // A second pass with the same age window: harmless while siblings are
+    // still running, and it catches anything a long file aged past the cutoff
+    // mid-run. Same-run residue is caught by the next run's pre-sweep and by
+    // `bun run audit:tests`, which sweeps with a much shorter window.
     const left = await sweepTestResidue(admin);
     if (totalResidue(left) > 0) {
       // Loud on purpose: the previous failure mode was silence.
-      console.warn(
-        `[test-isolation] swept residue left by this file: ${JSON.stringify(left)} — ` +
-          `its own cleanup did not complete.`,
-      );
+      console.warn(`[test-isolation] swept stale residue: ${JSON.stringify(left)}`);
     }
   }, 120_000);
 }

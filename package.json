@@ -14,7 +14,8 @@
     "audit:deploy": "bun scripts/audit/stale-deploy.ts",
     "audit:schema": "bun scripts/audit/schema-filters.ts",
     "audit:cron": "bun scripts/audit/cron-health.ts",
-    "audit:formulas": "bun scripts/audit/formulas.ts"
+    "audit:formulas": "bun scripts/audit/formulas.ts",
+    "audit:tests": "bun scripts/audit/test-isolation.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
