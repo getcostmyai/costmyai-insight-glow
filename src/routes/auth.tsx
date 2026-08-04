@@ -15,7 +15,6 @@ function safeNext(value: unknown): string | null {
 }
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
     next: safeNext(search.next) ?? undefined,
   }),
