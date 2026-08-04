@@ -36,7 +36,10 @@ async function rawSpend(days: 1 | 7 | 30) {
   return (data ?? []).reduce((s, r) => s + Number(r.cost_usd), 0);
 }
 
-const snapshot = (days: 1 | 7 | 30) => buildDashboardSnapshot({ days, orgId: DEMO_ORG });
+// The demo workspace is owner-only now: no anon policy can read it, so the
+// golden read runs through the service client, exactly as the server fn does.
+const snapshot = (days: 1 | 7 | 30) =>
+  buildDashboardSnapshot({ days, orgId: DEMO_ORG, client: admin as never });
 
 describe("period windows are real sums of real rows", () => {
   it("reports exactly the spend the rollup rows contain, on every window", async () => {
