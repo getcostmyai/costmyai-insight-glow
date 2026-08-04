@@ -101,15 +101,16 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Active saving"
                 value={usd(savings.captured, 0)}
-                sub={`${data.activeSwitches.length + data.switchesOutsideWindow} switches rerouting traffic`}
+                sub={`saved by ${data.activeSwitches.length + data.switchesOutsideWindow} switches already running`}
                 accent="oklch(0.82 0.16 155)"
               />
               <HeroStat
                 label="Available to activate"
                 value={usd(savings.available, 0)}
-                sub={`${savings.certifiedCount} certified switches`}
+                sub={`waiting on ${savings.certifiedCount} not-yet-switched workload${savings.certifiedCount === 1 ? "" : "s"} — one certified switch each`}
                 accent="oklch(0.83 0.11 195)"
               />
+
               <MechanismStats mech={mech} />
 
               <HeroStat
