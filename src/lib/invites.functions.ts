@@ -146,14 +146,22 @@ export const revokeInvite = createServerFn({ method: "POST" })
     return { inviteId: data.inviteId };
   })
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
+    // RLS ("Managers revoke invites") already means a non-manager's update
+    // matches no row — but an update that matches nothing returns no error, so
+    // the caller would be told the invitation was revoked when it was not.
+    // Asking for the affected row back turns that silent no-op into a refusal.
+    const { data: row, error } = await context.supabase
       .from("org_invites")
       .update({ revoked_at: new Date().toISOString() })
       .eq("id", data.inviteId)
-      .is("accepted_at", null);
+      .is("accepted_at", null)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!row) throw new Error("That invitation is no longer open, or is not yours to revoke.");
     return { ok: true };
   });
+
 
 /** Open invitations addressed to the signed-in user's own email. */
 export const listMyInvites = createServerFn({ method: "GET" })
