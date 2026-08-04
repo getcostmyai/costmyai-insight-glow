@@ -328,10 +328,11 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         <SectionTitle
           eyebrow="Refusal is the feature"
           title="Held back for a human"
-          hint="These were found, priced, and then deliberately not applied unattended."
+          hint="Cheaper-host, quality-matched and oversized candidates alike: found, priced, certified, and then deliberately not applied unattended. Certify's refusal count is a different set — those never cleared the quality bar in the first place."
           badge={`${govern.refusals.length} held`}
           badgeTone="opportunity"
         />
+
         {govern.refusals.length === 0 ? (
           <div className="card-surface p-6 text-sm text-muted-foreground">
             Nothing was held back this run.
