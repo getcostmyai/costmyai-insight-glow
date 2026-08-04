@@ -24,6 +24,26 @@ function validEnv(value: unknown): Env {
   return value;
 }
 
+/**
+ * Authority over a workspace is asked of the database, never taken from the
+ * request. The browser names a workspace; whether the caller may act on its
+ * billing is re-derived from their own session by `is_org_manager`.
+ */
+async function assertManager(
+  supabase: {
+    rpc: (
+      fn: "is_org_manager",
+      args: { _org_id: string },
+    ) => PromiseLike<{ data: unknown; error: unknown }>;
+  },
+  orgId: string,
+) {
+  const { data, error } = await supabase.rpc("is_org_manager", { _org_id: orgId });
+  if (error) throw error;
+  if (data !== true) throw new Error("Only a workspace owner or admin can manage billing.");
+}
+
+
 export interface WorkspaceBilling {
   orgId: string;
   recordedPlan: PlanTier;
@@ -32,6 +52,12 @@ export interface WorkspaceBilling {
   status: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  /**
+   * Whether this caller may act on billing. Answered by the database, not by
+   * the browser: the page uses it to hide controls it would be refused anyway,
+   * never as the thing that does the refusing.
+   */
+  canManage: boolean;
 }
 
 export const getWorkspaceBilling = createServerFn({ method: "POST" })
@@ -42,7 +68,10 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<WorkspaceBilling> => {
     const { loadPlanState } = await import("./billing/guard.server");
-    const state = await loadPlanState(context.supabase, data.orgId, data.environment);
+    const [state, manager] = await Promise.all([
+      loadPlanState(context.supabase, data.orgId, data.environment),
+      context.supabase.rpc("is_org_manager", { _org_id: data.orgId }),
+    ]);
     return {
       orgId: data.orgId,
       recordedPlan: state.plan,
@@ -50,7 +79,9 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
       status: state.subscription?.status ?? null,
       currentPeriodEnd: state.subscription?.currentPeriodEnd ?? null,
       cancelAtPeriodEnd: state.subscription?.cancelAtPeriodEnd ?? false,
+      canManage: manager.data === true,
     };
+
   });
 
 type CheckoutResult = { clientSecret: string } | { error: string };
@@ -107,34 +138,31 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
       const userId = context.userId;
       const email = (context.claims.email as string | undefined) ?? undefined;
 
-      // The customer carries userId so later reads can find it by search; the
-      // subscription carries orgId so the webhook knows which workspace paid.
+      // One provider customer per WORKSPACE, not per person.
+      //
+      // The customer record is the boundary the provider's own hosted pages
+      // respect: a billing-portal session and an invoice list are scoped to a
+      // customer and nothing finer. If one person paying for two workspaces
+      // shared a single customer, the billing page of workspace A would expose
+      // — and be able to cancel — workspace B's subscription. So the search key
+      // is the org id, and reuse by email address is deliberately gone: matching
+      // on an address merges exactly the customers that must stay separate.
       let customerId: string | undefined;
       const found = await stripe.customers.search({
-        query: `metadata['userId']:'${userId}'`,
+        query: `metadata['orgId']:'${data.orgId}'`,
         limit: 1,
       });
       if (found.data.length) {
         customerId = found.data[0]!.id;
-      } else if (email) {
-        const existing = await stripe.customers.list({ email, limit: 1 });
-        if (existing.data.length) {
-          const customer = existing.data[0]!;
-          if (customer.metadata?.["userId"] !== userId) {
-            await stripe.customers.update(customer.id, {
-              metadata: { ...customer.metadata, userId },
-            });
-          }
-          customerId = customer.id;
-        }
       }
       if (!customerId) {
         const created = await stripe.customers.create({
           ...(email && { email }),
-          metadata: { userId },
+          metadata: { userId, orgId: data.orgId },
         });
         customerId = created.id;
       }
+
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: price.id, quantity: 1 }],
@@ -171,6 +199,12 @@ export const createBillingPortal = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PortalResult> => {
     const { createStripeClient, getStripeErrorMessage } = await import("./stripe.server");
 
+    // The portal can cancel the subscription and change the card on file, so
+    // membership is not enough. RLS on `subscriptions` stops another tenant
+    // outright; this stops an ordinary member of this workspace from ending
+    // the plan their owner is paying for.
+    await assertManager(context.supabase, data.orgId);
+
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("stripe_customer_id")
@@ -180,6 +214,7 @@ export const createBillingPortal = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (!sub?.stripe_customer_id) throw new Error("This workspace has no subscription yet.");
+
 
     try {
       const stripe = createStripeClient(data.environment);
@@ -212,6 +247,12 @@ export interface InvoiceRow {
  * We deliberately do not mirror invoices into our own tables: the provider is
  * the record of what was charged, and a stale copy of a receipt is worse than
  * no copy at all.
+ *
+ * Two narrowings, both deliberate. Managers only: a receipt carries the legal
+ * entity, the billing address and the VAT id, which is not ordinary-member
+ * information. And the list is filtered to this workspace's own subscription
+ * rather than everything on the customer, so even a customer record that
+ * predates the per-workspace split cannot spill another workspace's receipts.
  */
 export const listWorkspaceInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -220,9 +261,11 @@ export const listWorkspaceInvoices = createServerFn({ method: "POST" })
     return { orgId: data.orgId, environment: validEnv(data.environment) };
   })
   .handler(async ({ data, context }): Promise<InvoiceRow[]> => {
+    await assertManager(context.supabase, data.orgId);
+
     const { data: sub } = await context.supabase
       .from("subscriptions")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, stripe_subscription_id")
       .eq("org_id", data.orgId)
       .eq("environment", data.environment)
       .order("created_at", { ascending: false })
@@ -235,8 +278,12 @@ export const listWorkspaceInvoices = createServerFn({ method: "POST" })
       const stripe = createStripeClient(data.environment);
       const list = await stripe.invoices.list({
         customer: sub.stripe_customer_id as string,
+        ...(sub.stripe_subscription_id && {
+          subscription: sub.stripe_subscription_id as string,
+        }),
         limit: 24,
       });
+
       return list.data.map((i) => ({
         id: i.id ?? "",
         number: i.number ?? null,

@@ -89,6 +89,10 @@ describe("new public pages", () => {
 
   it("the partner page reads its ladder from the database", () => {
     expect(PARTNERS).toMatch(/partnerLadderQuery/);
-    expect(PARTNERS).toMatch(/ladder\.tiers\.map/);
+    // The rungs must be rendered from the loaded ladder, never from a literal
+    // table in the page. Allow the value to be destructured on the way there.
+    expect(PARTNERS).toMatch(/(ladder\.tiers|=\s*ladder\.tiers|tiers)\.map\(/);
+    expect(PARTNERS).not.toMatch(/ratePct:\s*\d/);
   });
+
 });
