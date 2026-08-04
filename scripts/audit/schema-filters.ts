@@ -78,13 +78,44 @@ for (const [table, column] of rows) {
   tableColumns.set(table, [...(tableColumns.get(table) ?? []), column]);
 }
 
-/** Every source file that could hold a query. */
+/**
+ * Is the guard live or dormant?
+ *
+ * A missing `is_fixture` filter on a table that has never held a fixture row is
+ * a latent bug, not a live one, and reporting it at the same volume as a live
+ * leak is how a checker gets ignored. So severity is measured, not assumed: the
+ * checker counts the rows the filter would actually exclude today. Zero such
+ * rows makes the finding advisory; one makes every unfiltered query required
+ * reading, automatically, the day the first row lands.
+ */
+const DANGEROUS_PREDICATE: Record<string, string> = {
+  is_active: "is_active is false",
+  is_fixture: "is_fixture is true",
+  is_synthetic: "is_synthetic is true",
+  revoked_at: "revoked_at is not null",
+};
+
+const liveGuards = new Set<string>();
+for (const [table, columns] of tableColumns) {
+  for (const column of columns) {
+    const predicate = DANGEROUS_PREDICATE[column];
+    if (!predicate) continue;
+    const [[count] = ["0"]] = psql(
+      `select count(*) from public.${table} where ${predicate}`,
+    );
+    if (Number(count ?? 0) > 0) liveGuards.add(`${table}.${column}`);
+  }
+}
+
+/** Every source file that could hold a query. Tests are excluded: they read back rows they just wrote. */
 function sources(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
-    if (entry === "node_modules" || entry === "dist" || entry.startsWith(".")) continue;
+    if (entry === "node_modules" || entry === "dist" || entry === "__tests__") continue;
+    if (entry.startsWith(".")) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) sources(full, acc);
-    else if (/\.(ts|tsx)$/.test(entry) && entry !== "types.ts") acc.push(full);
+    else if (/\.(ts|tsx)$/.test(entry) && entry !== "types.ts" && !/\.test\.tsx?$/.test(entry))
+      acc.push(full);
   }
   return acc;
 }
