@@ -93,7 +93,14 @@ export function SwitchCard({
             />
           </div>
         </div>
-        {discovery ? (
+        {pendingTraffic ? (
+          // State, not action: the switch exists, the traffic does not yet.
+          // Ahead of every other branch, because it is the truth about the row.
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-2 text-xs font-medium text-primary">
+            <Clock className="size-3.5" />
+            {PENDING_SWITCH_LABEL}
+          </span>
+        ) : discovery ? (
           <Link
             to={discoveryHref ?? "/pricing"}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
