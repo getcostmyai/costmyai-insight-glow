@@ -160,19 +160,30 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.85 0.1 300)"
             />
             <HeroStat
-              label={forecast.isRange ? "Projected month-end · range" : "Projected month-end"}
+              label={
+                forecast.suppressed
+                  ? "Projected month-end · unavailable"
+                  : forecast.isRange
+                    ? "Projected month-end · range"
+                    : "Projected month-end"
+              }
               value={
-                forecast.isRange && forecast.lowUsd !== null && forecast.highUsd !== null
-                  ? `${usd(forecast.lowUsd, 0)}–${usd(forecast.highUsd, 0)}`
-                  : usd(forecast.monthEndUsd, 0)
+                forecast.suppressed || forecast.monthEndUsd === null
+                  ? "—"
+                  : forecast.isRange && forecast.lowUsd !== null && forecast.highUsd !== null
+                    ? `${usd(forecast.lowUsd, 0)}–${usd(forecast.highUsd, 0)}`
+                    : usd(forecast.monthEndUsd, 0)
               }
               sub={
-                forecast.reasons.length > 0
-                  ? forecast.reasons[0]
-                  : `${usd(forecast.mtdUsd, 0)} so far + ${forecast.remainingDays} day${forecast.remainingDays === 1 ? "" : "s"} at your 7-day rate`
+                forecast.suppressed
+                  ? (forecast.suppressionReason ?? "not enough data to project")
+                  : forecast.reasons.length > 0
+                    ? forecast.reasons[0]
+                    : `${usd(forecast.mtdUsd, 0)} so far + ${forecast.remainingDays} day${forecast.remainingDays === 1 ? "" : "s"} at your 7-day rate`
               }
               accent="oklch(0.9 0.03 285)"
             />
+
             <HeroStat
               label="Blended cost / 1M tok"
               value={usd(costPerMillion)}
