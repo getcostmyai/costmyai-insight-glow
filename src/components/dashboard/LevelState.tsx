@@ -289,21 +289,36 @@ export function GovernUpsell({
   return (
     <a
       href={to}
-      className="card-surface group flex flex-wrap items-center gap-5 border-primary/25 p-5 transition-transform hover:-translate-y-0.5"
+      className="group relative flex flex-wrap items-center gap-6 overflow-hidden rounded-3xl border border-primary/30 bg-primary-soft/60 p-6 transition-transform hover:-translate-y-0.5 sm:p-7"
     >
-      <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-        <ShieldCheck className="size-5" />
+      <div
+        className="pointer-events-none absolute -top-20 -right-10 size-72 rounded-full opacity-30 blur-3xl"
+        style={{ background: "var(--gradient-saving)" }}
+      />
+      <span className="relative flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-glow)]">
+        <ShieldCheck className="size-6" />
       </span>
-      <div className="min-w-60 flex-1">
-        <p className="text-sm font-semibold">{headline}</p>
+      <div className="relative min-w-60 flex-1">
+        <p className="eyebrow text-primary">Ready to run unattended · {meta.label}</p>
+        {eligibleCount > 0 ? (
+          <p className="num mt-1 text-3xl text-saving sm:text-4xl">
+            {usd(eligibleSaving, 0)}
+            <span className="text-base text-muted-foreground"> · {period}</span>
+          </p>
+        ) : (
+          <p className="mt-1 text-lg font-semibold">{headline}</p>
+        )}
         <p className="mt-1 text-sm text-muted-foreground">
+          {eligibleCount > 0
+            ? `across ${eligibleCount} certified switch${eligibleCount === 1 ? "" : "es"} that clear the autonomous gate. `
+            : ""}
           {meta.label} runs the same gate you approve by hand today, without waiting for you. Every
-          autonomous switch stays reversible, and anything that cannot be proven unattended is
-          always held back for a human.
+          autonomous switch stays reversible, and anything that cannot be proven unattended is held
+          back for a human.
         </p>
       </div>
-      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-        {unlocked ? `Open ${meta.label}` : `Upgrade to ${meta.label}`}
+      <span className="relative inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
+        {unlocked ? `Open ${meta.label}` : `Unlock ${meta.label}`}
         <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5" />
       </span>
     </a>
