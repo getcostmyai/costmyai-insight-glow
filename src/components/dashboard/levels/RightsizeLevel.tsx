@@ -285,7 +285,13 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           <span className="text-sm text-white/55"> · {ctl.activeRange.long}</span>
         </div>
       </div>
-      {canAct ? (
+      {ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost) ? (
+        /* Same rule as the rows below: state before action. */
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white/85">
+          <Clock className="size-4" />
+          {PENDING_SWITCH_LABEL}
+        </span>
+      ) : canAct ? (
         <button
           type="button"
           disabled={busy(key)}
