@@ -164,7 +164,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <HeroStat
               label={`Spend · ${activeRange.long}`}
-              value={usd(live.spend)}
+              value={usd(live.spend, 0)}
               sub="through the hosts you use today"
               accent="oklch(0.85 0.1 300)"
             />
@@ -172,15 +172,16 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label={`Captured · ${activeRange.long}`}
               value={usd(savings.captured, 0)}
-              sub={`${data.activeSwitches.length + data.switchesOutsideWindow} switches rerouting traffic`}
+              sub={`saved by ${data.activeSwitches.length + data.switchesOutsideWindow} switches already running`}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
               label={`Available · ${activeRange.long}`}
               value={usd(savings.available, 0)}
-              sub={`${savings.certifiedCount} certified switches`}
+              sub={`waiting on ${savings.certifiedCount} not-yet-switched workload${savings.certifiedCount === 1 ? "" : "s"} — one certified switch each`}
               accent="oklch(0.83 0.11 195)"
             />
+
             <HeroStat
               label="Savings captured"
               value={`${Math.round(captureRate * 100)}%`}
