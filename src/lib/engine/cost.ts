@@ -56,6 +56,21 @@ export function cheaperWins(
 }
 
 /**
+ * THE savings-percentage function.
+ *
+ * Dispatch 92: this existed three times — once in each level — as the same
+ * expression written out longhand against three differently-named baselines.
+ * They agreed, but nothing made them agree, which is precisely the shape of
+ * bug that put two different separation formulas in this system. One
+ * definition now, and the divide-by-zero guard exists once rather than
+ * nowhere: a workload whose current cost is zero has no percentage to state.
+ */
+export function savingPctOf(baselineCost: number, targetCost: number): number {
+  if (!(baselineCost > 0)) return 0;
+  return round2(((baselineCost - targetCost) / baselineCost) * 100);
+}
+
+/**
  * Display rounding for a savings percentage. One decimal, and never a bare
  * "100%": a switch that removes 99.97% of a workload's cost is still not free,
  * and rounding it to a flat 100 reads as a bug even when the arithmetic is right.

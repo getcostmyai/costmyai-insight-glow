@@ -1,6 +1,7 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { SEPARATION_FACTOR } from "@/lib/engine/equivalence";
+import { separationOfScores } from "@/lib/benchmarks/task-ladder";
 
 /**
  * Market intelligence read model.
@@ -334,7 +335,9 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     if (scored.length < 2) continue;
 
     const scores = scored.map((s) => s.score);
-    const spread = Math.max(...scores) - Math.min(...scores);
+    // Same measurement as every other separation figure in the system, so
+    // it comes from the same function rather than being re-typed here.
+    const spread = separationOfScores(scores) ?? 0;
     saturation.push({
       taskClass: m.task_class,
       suite: m.suite,

@@ -8,7 +8,7 @@ import {
 } from "@/lib/benchmarks/task-ladder";
 
 import { arbitrageBaseline, MIN_MONTHLY_SAVING_USD, sortRecommendations } from "./arbitrage";
-import { cheaperWins, costOfUsage, indexPrices, round2, toMonthly } from "./cost";
+import { cheaperWins, costOfUsage, indexPrices, round2, savingPctOf, toMonthly } from "./cost";
 import { expectedLatency, latencyNote, type LatencyEstimate } from "./latency";
 import {
   DEFAULT_OBJECTIVE,
@@ -73,13 +73,14 @@ export function buildScoreLookup(
   const marginBySuiteTask = new Map<string, number>();
   for (const m of margins) marginBySuiteTask.set(`${m.suite}::${m.task_class}`, m.margin);
 
-  const spread = (instrument: string) => {
-    const list = byTask.get(instrument) ?? [];
-    if (list.length < 2) return 0;
-    return Math.max(...list) - Math.min(...list);
-  };
-
+  // Dispatch 92: `spread` and `separation` are the same measurement and used
+  // to be computed twice, five lines apart, with different null handling. One
+  // implementation now; the only difference left is the honest one — a caller
+  // that needs a number gets 0 where there is nothing to measure, a caller
+  // that needs to know there was nothing to measure gets null.
   const separation = (field: AaField) => separationOfScores(byTask.get(field) ?? []);
+
+  const spread = (instrument: string) => separationOfScores(byTask.get(instrument) ?? []) ?? 0;
 
   return {
     score(modelKey, instrument) {
@@ -316,7 +317,7 @@ export function findQualityMatches(
       savingUsd: round2(rawSaving),
       windowDays: u.days,
       monthlySavingUsd: round2(saving),
-      savingPct: round2(((baseline.cost - winner.cost) / baseline.cost) * 100),
+      savingPct: savingPctOf(baseline.cost, winner.cost),
       basis: "Quality-matched cheaper model",
       /*
        * Plain language on purpose. A reader must never see a lower number

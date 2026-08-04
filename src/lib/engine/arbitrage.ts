@@ -1,4 +1,4 @@
-import { cheaperWins, costOfUsage, indexPrices, round2, toMonthly } from "./cost";
+import { cheaperWins, costOfUsage, indexPrices, round2, savingPctOf, toMonthly } from "./cost";
 import { KIND_MIN_PLAN, type PriceRow, type Recommendation, type UsageAggregate } from "./types";
 
 /** Below this monthly figure a switch is not worth a customer's attention. */
@@ -59,7 +59,7 @@ export function findHostArbitrage(usage: UsageAggregate[], prices: PriceRow[]): 
       savingUsd: round2(rawSaving),
       windowDays: u.days,
       monthlySavingUsd: round2(saving),
-      savingPct: round2(((currentCost - best.cost) / currentCost) * 100),
+      savingPct: savingPctOf(currentCost, best.cost),
       basis: "Same model, cheaper host",
       note: "Identical weights, identical output — only the provider changes.",
       qualityDelta: 0,

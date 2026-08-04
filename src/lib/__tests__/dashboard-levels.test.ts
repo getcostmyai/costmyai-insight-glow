@@ -170,7 +170,7 @@ describe("round 3 spec", () => {
       "Savings captured",
       "Frozen",
       "Running unattended",
-      "Eligible now",
+      "New candidates eligible",
       "Held for you",
       "Minimum to act",
       "Cooldown",
@@ -184,7 +184,9 @@ describe("round 3 spec", () => {
     expect(LISTS).toContain("List B · benchmark saves");
     expect(LISTS).toContain("List C · nothing worth switching");
     expect(LEVEL_FILES.rightsize).toContain("<TransparencyLists ctl={ctl} />");
-    expect(LEVEL_FILES.certify).toContain("<ArbitrageList ctl={ctl} />");
+    // Certify renders it in discovery mode; the prop is allowed to vary, the
+    // component being on the page is what this test is about.
+    expect(LEVEL_FILES.certify).toMatch(/<ArbitrageList ctl=\{ctl\}/);
     expect(LEVEL_FILES.certify).toContain("List B · benchmark saves");
     expect(LEVEL_FILES.certify).toContain("<NonQualifyingList ctl={ctl} />");
   });
@@ -277,7 +279,7 @@ describe("round 4 · per-mechanism hero KPIs", () => {
     );
     // and keeps its own second row
     expect((LEVEL_FILES.govern.match(/<HeroStatRow/g) ?? []).length).toBe(2);
-    for (const label of ["Running unattended", "Eligible now", "Held for you", "Cooldown"]) {
+    for (const label of ["Running unattended", "New candidates eligible", "Held for you", "Cooldown"]) {
       expect(LEVEL_FILES.govern, label).toContain(label);
     }
   });

@@ -13,6 +13,7 @@ const CHECKS = [
   { name: "stale deploy", file: "scripts/audit/stale-deploy.ts" },
   { name: "schema filters", file: "scripts/audit/schema-filters.ts" },
   { name: "cron health", file: "scripts/audit/cron-health.ts" },
+  { name: "formulas", file: "scripts/audit/formulas.ts" },
 ];
 
 const failed: string[] = [];
