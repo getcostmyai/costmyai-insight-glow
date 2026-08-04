@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ArrowUpRight, Loader2, Snowflake, TrendingDown, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clock, Loader2, Snowflake, TrendingDown, Zap } from "lucide-react";
 
 import {
   EmptyState,
