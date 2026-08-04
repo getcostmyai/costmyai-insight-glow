@@ -201,7 +201,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
       <NonQualifyingList ctl={ctl} />
 
       <section className="card-surface p-6">
-        <p className="eyebrow">Why some switches never appear</p>
+        <p className="eyebrow">Why some candidates are refused</p>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           {refused} candidate{refused === 1 ? "" : "s"} on your own traffic cleared on price and
           were still refused, because the measured quality gap fell outside the equivalence band for
