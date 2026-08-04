@@ -171,9 +171,9 @@ export const getMyPartner = createServerFn({ method: "GET" })
       minLifetimeReferredUsd: Number(t.min_lifetime_referred_usd),
       ratePct: Number(t.rate_pct),
     }));
-    const lifetimeRevenueUsd = Number(revenue.data ?? 0);
-    const effectiveTier = Number(effective.data ?? 0);
-    const earnedTier = Number(earned.data ?? 0);
+    const lifetimeRevenueUsd = Number(summary.data?.lifetime_revenue_usd ?? 0);
+    const effectiveTier = Number(summary.data?.effective_tier ?? 0);
+    const earnedTier = Number(summary.data?.earned_tier ?? 0);
     const current = tierRows.find((t) => t.tier === effectiveTier) ?? tierRows[0];
     const next = tierRows.find((t) => t.tier === earnedTier + 1) ?? null;
 
