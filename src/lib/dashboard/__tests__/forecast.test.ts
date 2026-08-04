@@ -65,13 +65,13 @@ describe("forecastMonthEnd — shape 2: weekly seasonality", () => {
   it("projects each remaining day at its own day-of-week rate", () => {
     // Jul 16-31 2026: 12 weekdays, 4 weekend days.
     const expectedRemaining = 12 * 120 + 4 * 40;
-    expect(f.pointUsd - f.mtdUsd).toBeCloseTo(expectedRemaining, 0);
+    expect(f.pointUsd! - f.mtdUsd).toBeCloseTo(expectedRemaining, 0);
   });
 
   it("beats a flat trailing-rate extrapolation on the same data", () => {
     const flat = f.mtdUsd + f.remainingDays * (7 * 120 - 2 * 80) / 7; // naive 7-day mean
     const truth = f.mtdUsd + 12 * 120 + 4 * 40;
-    expect(Math.abs(f.pointUsd - truth)).toBeLessThan(Math.abs(flat - truth));
+    expect(Math.abs(f.pointUsd! - truth)).toBeLessThan(Math.abs(flat - truth));
   });
 
   it("does not report a range purely because of a known weekly pattern", () => {
@@ -94,8 +94,8 @@ describe("forecastMonthEnd — shape 3: spiky workload", () => {
   });
 
   it("brackets the point estimate and never dips below money already spent", () => {
-    expect(f.lowUsd!).toBeLessThanOrEqual(f.pointUsd);
-    expect(f.highUsd!).toBeGreaterThanOrEqual(f.pointUsd);
+    expect(f.lowUsd!).toBeLessThanOrEqual(f.pointUsd!);
+    expect(f.highUsd!).toBeGreaterThanOrEqual(f.pointUsd!);
     expect(f.lowUsd!).toBeGreaterThanOrEqual(f.mtdUsd);
   });
 
