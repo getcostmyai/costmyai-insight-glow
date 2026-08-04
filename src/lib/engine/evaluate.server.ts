@@ -337,12 +337,15 @@ async function evaluateOrg(
    * rows carry a fresh computed_at, so the leftovers are exactly the stale ones,
    * and they are retired rather than left standing as a live claim.
    */
-  await supabaseAdmin
+  const retired = await supabaseAdmin
     .from("recommendations")
     .update({ status: "refused" })
     .eq("org_id", org.id)
     .eq("status", "open")
     .lt("computed_at", cycleStart);
+  // Dispatch 91. A dropped retire leaves a claim the engine no longer stands
+  // behind on a customer's screen, so it is never swallowed.
+  if (retired.error) throw new Error(`retiring stale recommendations failed: ${retired.error.message}`);
 }
 
 async function lastAutonomousChange(orgId: string): Promise<Date | null> {
