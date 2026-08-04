@@ -42,7 +42,20 @@ export interface ForecastOptions {
    * as quiet traffic.
    */
   syncGapDates?: string[];
+  /**
+   * Distinct hours of real collection per calendar day (YYYY-MM-DD -> 0..24).
+   * A day under `minObservedHours` is a fragment of a day, not a cheap day,
+   * and is dropped exactly like an absent day.
+   */
+  hourCoverage?: Record<string, number>;
+  /**
+   * First calendar day (inclusive) the hourly signal is actually complete for.
+   * Hourly evidence has its own retention horizon; days before it are simply
+   * unjudged rather than falsely called partial.
+   */
+  coverageReliableFrom?: string;
 }
+
 
 export interface MonthEndForecast {
   /** Month-to-date actual, complete days only. Known, not estimated. */
@@ -68,6 +81,9 @@ export interface MonthEndForecast {
   /** Trailing days that actually carried data, and the ones that did not. */
   observedLevelDays: number;
   missingLevelDates: string[];
+  /** Trailing days dropped for insufficient hourly coverage (partial days). */
+  partialLevelDates: string[];
+
   /** Level-window days the sync-health signal reports as not collected. */
   syncGapDates: string[];
   /** Workloads dropped as retired, and workloads new inside the window. */
@@ -100,7 +116,14 @@ export const FORECAST_RULES = {
   breakMinShare: 0.05,
   /** Consecutive observed silent days that mark a material workload retired. */
   breakSilentDays: 2,
+  /** Hours of real collection a day needs before it counts as a full day. */
+  minObservedHours: 20,
+  /** Width backstop: a high above this multiple of the point is not a forecast. */
+  maxHighToPointRatio: 3,
+  /** Width backstop: half-width above this share of the point is not a forecast. */
+  maxHalfWidthPct: 0.6,
 } as const;
+
 
 
 const DAY_MS = 86_400_000;
@@ -167,6 +190,27 @@ export function forecastMonthEnd(
     k.set(d, (k.get(d) ?? 0) + r.spend);
   }
 
+  // ---- A. Partial-day contamination -----------------------------------------
+  // A day with six hours of collection is not a cheap day, it is a fragment of
+  // a day. Counted as a full day it drags the level down, invents a downward
+  // trend and inflates sigma. Where an hourly coverage signal exists and is
+  // trustworthy for that day, a day under the coverage floor is removed from
+  // `observed` entirely — the exact same path a fully absent day takes.
+  const partialDays = new Set<string>();
+  const coverage = options.hourCoverage;
+  if (coverage) {
+    const from = options.coverageReliableFrom ?? null;
+    for (const d of [...observed]) {
+      if (from && d < from) continue;
+      const hours = coverage[d] ?? 0;
+      if (hours < FORECAST_RULES.minObservedHours) {
+        partialDays.add(d);
+        observed.delete(d);
+      }
+    }
+  }
+
+
   // ---- 1. Month-to-date actual: complete days only, never re-estimated ------
   let mtdUsd = 0;
   for (const [d, v] of daily) {
@@ -184,7 +228,8 @@ export function forecastMonthEnd(
   }
 
   const observedLevelDates = levelDates.filter((d) => observed.has(d));
-  const missingLevelDates = levelDates.filter((d) => !observed.has(d));
+  const missingLevelDates = levelDates.filter((d) => !observed.has(d) && !partialDays.has(d));
+  const partialLevelDates = levelDates.filter((d) => partialDays.has(d));
   const gapSet = new Set(options.syncGapDates ?? []);
   const syncGapDates = levelDates.filter((d) => gapSet.has(d));
 
@@ -204,11 +249,13 @@ export function forecastMonthEnd(
     cv: 0,
     observedLevelDays: observedLevelDates.length,
     missingLevelDates,
+    partialLevelDates,
     syncGapDates,
     retiredKeys: [],
     newKeys: [],
     reasons: [reason],
   });
+
 
   // ---- F. Sync-health interlock ---------------------------------------------
   // A day the collector never ran is not a quiet day. Where that day also
@@ -228,7 +275,7 @@ export function forecastMonthEnd(
 
   if (observedLevelDates.length < FORECAST_RULES.minObservedLevelDays) {
     return suppressedResult(
-      `not enough data — only ${observedLevelDates.length} of the last ${FORECAST_RULES.levelDays} days carry usage`,
+      `not enough data — only ${observedLevelDates.length} of the last ${FORECAST_RULES.levelDays} days carry a full day of usage`,
     );
   }
   if (missingLevelDates.length > 0) {
@@ -236,6 +283,12 @@ export function forecastMonthEnd(
       `${missingLevelDates.length} day${missingLevelDates.length > 1 ? "s" : ""} without data excluded from the trailing rate`,
     );
   }
+  if (partialLevelDates.length > 0) {
+    reasons.push(
+      `${partialLevelDates.length} partially collected day${partialLevelDates.length > 1 ? "s" : ""} (under ${FORECAST_RULES.minObservedHours}h of 24) excluded from the trailing rate`,
+    );
+  }
+
 
   // ---- 6. Structural breaks -------------------------------------------------
   const windowTotal = observedLevelDates.reduce((s, d) => s + (daily.get(d) ?? 0), 0);
@@ -381,6 +434,20 @@ export function forecastMonthEnd(
     );
   }
 
+  // ---- C. Width backstop ------------------------------------------------------
+  // Defence in depth for the data-quality failure mode nobody anticipated. A
+  // band whose top is several times its own centre is not a forecast, however
+  // it was arrived at, and no coherence check on direction alone will catch it.
+  if (isRange && highUsd !== null && lowUsd !== null && pointUsd > 0) {
+    const half = Math.max(highUsd - pointUsd, pointUsd - lowUsd);
+    const tooWide =
+      highUsd > pointUsd * FORECAST_RULES.maxHighToPointRatio ||
+      half > pointUsd * FORECAST_RULES.maxHalfWidthPct;
+    if (tooWide) {
+      return suppressedResult("recent collection gap — projection unavailable");
+    }
+  }
+
   return {
     mtdUsd: round2(mtdUsd),
     pointUsd: round2(pointUsd),
@@ -395,6 +462,8 @@ export function forecastMonthEnd(
     seasonalityApplied,
     cv: Math.round(cv * 1000) / 1000,
     observedLevelDays: observedLevelDates.length,
+    partialLevelDates,
+
     missingLevelDates,
     syncGapDates,
     retiredKeys,
