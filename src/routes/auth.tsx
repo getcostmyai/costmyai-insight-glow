@@ -77,7 +77,9 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth` },
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`,
+          },
         });
         if (error) throw error;
         // With confirmation on, signUp returns no session — the user is not in yet.
@@ -98,8 +100,9 @@ function AuthPage() {
     try {
       // Land back on /auth (public, session-aware) — it forwards to /workspace as
       // soon as the session hydrates, so Google matches the email/password path.
+      const back = next ? `?next=${encodeURIComponent(next)}` : "";
       await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
+        redirect_uri: `${window.location.origin}/auth${back}`,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
