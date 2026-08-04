@@ -434,6 +434,20 @@ export function forecastMonthEnd(
     );
   }
 
+  // ---- C. Width backstop ------------------------------------------------------
+  // Defence in depth for the data-quality failure mode nobody anticipated. A
+  // band whose top is several times its own centre is not a forecast, however
+  // it was arrived at, and no coherence check on direction alone will catch it.
+  if (isRange && highUsd !== null && lowUsd !== null && pointUsd > 0) {
+    const half = Math.max(highUsd - pointUsd, pointUsd - lowUsd);
+    const tooWide =
+      highUsd > pointUsd * FORECAST_RULES.maxHighToPointRatio ||
+      half > pointUsd * FORECAST_RULES.maxHalfWidthPct;
+    if (tooWide) {
+      return suppressedResult("recent collection gap — projection unavailable");
+    }
+  }
+
   return {
     mtdUsd: round2(mtdUsd),
     pointUsd: round2(pointUsd),
@@ -448,6 +462,8 @@ export function forecastMonthEnd(
     seasonalityApplied,
     cv: Math.round(cv * 1000) / 1000,
     observedLevelDays: observedLevelDates.length,
+    partialLevelDates,
+
     missingLevelDates,
     syncGapDates,
     retiredKeys,
