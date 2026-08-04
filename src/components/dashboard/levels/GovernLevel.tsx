@@ -101,15 +101,16 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Active saving"
                 value={usd(savings.captured, 0)}
-                sub={`${data.activeSwitches.length + data.switchesOutsideWindow} switches rerouting traffic`}
+                sub={`saved by ${data.activeSwitches.length + data.switchesOutsideWindow} switches already running`}
                 accent="oklch(0.82 0.16 155)"
               />
               <HeroStat
                 label="Available to activate"
                 value={usd(savings.available, 0)}
-                sub={`${savings.certifiedCount} certified switches`}
+                sub={`waiting on ${savings.certifiedCount} not-yet-switched workload${savings.certifiedCount === 1 ? "" : "s"} — one certified switch each`}
                 accent="oklch(0.83 0.11 195)"
               />
+
               <MechanismStats mech={mech} />
 
               <HeroStat
@@ -148,9 +149,10 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Held for you"
                 value={`${govern.refusals.length} switch${govern.refusals.length === 1 ? "" : "es"}`}
-                sub="refused by the autonomous gate"
+                sub="certified across all three mechanisms, held from running unattended — not the same as Certify's quality refusals"
                 accent="oklch(0.83 0.13 55)"
               />
+
               <HeroStat
                 label="Minimum to act"
                 value={usd(govern.policy.minMonthlySavingUsd, 0)}
@@ -327,10 +329,11 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         <SectionTitle
           eyebrow="Refusal is the feature"
           title="Held back for a human"
-          hint="These were found, priced, and then deliberately not applied unattended."
+          hint="Cheaper-host, quality-matched and oversized candidates alike: found, priced, certified, and then deliberately not applied unattended. Certify's refusal count is a different set — those never cleared the quality bar in the first place."
           badge={`${govern.refusals.length} held`}
           badgeTone="opportunity"
         />
+
         {govern.refusals.length === 0 ? (
           <div className="card-surface p-6 text-sm text-muted-foreground">
             Nothing was held back this run.

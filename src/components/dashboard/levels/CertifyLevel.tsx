@@ -103,11 +103,12 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
-              label="Refused"
-              value={`${refused}`}
-              sub="could not be proven equivalent"
+              label="Refused on quality"
+              value={`${refused} candidate${refused === 1 ? "" : "s"}`}
+              sub="cheaper, but not provably equivalent"
               accent="oklch(0.83 0.13 55)"
             />
+
             <HeroStat
               label="Certification rate"
               value={`${Math.round(certifyRate)}%`}
@@ -208,7 +209,15 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           that task class. We would rather show you a smaller number we can defend than a larger one
           we cannot.
         </p>
+        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+          This is a different count from Govern&rsquo;s &ldquo;held for you&rdquo;. Refused here
+          means the quality claim itself could not be proven. Held on Govern means the switch is
+          already certified and only the decision to run it without a human is being withheld, so
+          Govern also weighs cheaper-host and oversized candidates that never went through a
+          benchmark at all.
+        </p>
       </section>
+
 
     </>
   );
