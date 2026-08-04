@@ -1,23 +1,15 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-
-import { supabase } from "@/integrations/supabase/client";
-import { ROBIN_USER_ID } from "@/lib/access";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 
 /**
- * The internal demo workspace — owner-only, permanently.
+ * The internal demo workspace.
  *
- * Client-only because the session lives in browser storage. This gate decides
- * what renders; the snapshot server function re-checks the bearer token and the
- * user id itself, so nothing here is load-bearing for privacy.
+ * TEMPORARY: the owner-only sign-in gate is switched off while auth is broken
+ * and a live client demo is running. Restore the `beforeLoad` owner check (and
+ * `DEMO_AUTH_BYPASS = false` in src/lib/owner-middleware.ts) afterwards.
  */
 export const Route = createFileRoute("/demo")({
   ssr: false,
-  beforeLoad: async ({ location }) => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user)
-      throw redirect({ to: "/auth", search: { next: location.href } });
-    if (data.user.id !== ROBIN_USER_ID) throw redirect({ to: "/" });
-  },
+
   head: () => ({
     meta: [
       { title: "Internal workspace — CostMyAI" },
