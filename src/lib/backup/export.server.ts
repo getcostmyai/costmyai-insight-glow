@@ -82,6 +82,9 @@ export async function runBackupExport(): Promise<ExportResult> {
     .insert({ started_at: startedAt.toISOString(), destination: cfg?.host ?? null })
     .select("id")
     .single();
+  // Dispatch 91. Without this row the restore runs unrecorded and the job
+  // ledger reports a schedule that never fired.
+  if (run.error) throw new Error(`could not open a backup run record: ${run.error.message}`);
   const runId = run.data?.id as string | undefined;
 
   const fail = async (error: string): Promise<ExportResult> => {
