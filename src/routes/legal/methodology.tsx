@@ -44,7 +44,7 @@ const SECTIONS = [
   },
   {
     title: "Refusals",
-    body: "When nothing clears, you get the refusal and its reason: no baseline price, no baseline score, benchmark not discriminating, nothing cheaper clearing the bar, latency ceiling unmet, or saving below the materiality floor. Refusals are a product surface, not an error state.",
+    body: "When nothing clears, you get the refusal and its reason: no baseline price, no baseline score, benchmark not discriminating, nothing cheaper clearing the bar, latency ceiling unmet, or a saving too small to be worth a switch. Refusals are a product surface, not an error state.",
   },
   {
     title: "Freshness",
