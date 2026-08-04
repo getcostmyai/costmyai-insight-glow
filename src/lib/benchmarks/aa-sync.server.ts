@@ -50,9 +50,23 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
   const runId = `aa-${new Date().toISOString()}`;
   const syncedAt = new Date().toISOString();
 
+  /*
+   * Active catalogue rows only.
+   *
+   * The ambiguity guard in transformAaPayload drops BOTH keys when two resolve
+   * to one AA slug. Retired seed rows from the first import are un-namespaced
+   * duplicates of live keys ("gpt-5.5" beside "openai/gpt-5.5"), so including
+   * them made every one of those live, priced, in-use models look ambiguous and
+   * silently stripped its benchmark scores — which then surfaced to customers
+   * as "no score for X" refusals on models the feed scores perfectly well.
+   * Retired rows carry no active prices and no usage, so they can never be the
+   * key a score belongs to. The guard itself is untouched: two ACTIVE keys
+   * colliding are still both dropped.
+   */
   const { data: catalog, error: catalogError } = await supabase
     .from("model_catalog")
-    .select("model_key");
+    .select("model_key")
+    .eq("is_active", true);
   if (catalogError) throw catalogError;
 
   const result = transformAaPayload(

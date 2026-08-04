@@ -74,6 +74,39 @@ export function requiredTierFor(u: UsageAggregate): ModelTier {
   return "economy";
 }
 
+/** Plain-English names for the tiers, for copy a first-time reader can parse. */
+const TIER_WORD: Record<ModelTier, string> = {
+  economy: "budget",
+  standard: "mid-range",
+  frontier: "top-end",
+};
+
+/**
+ * The card copy, in plain language.
+ *
+ * The three observed facts stay — average reply length, how much that length
+ * varies, and how often the workload runs — but they are stated as what a
+ * reader can picture rather than as statistics. "Dispersion 1.60x" means the
+ * long replies are only 1.6 times the typical one, which is the actual point:
+ * the work is repetitive, so a cheaper model covers it.
+ */
+export function rightsizeNote(
+  observed: ModelTier,
+  required: ModelTier,
+  s: WorkloadShape,
+): string {
+  const varies =
+    s.dispersion < 1.6
+      ? `and reply length hardly varies (the longest run about ${s.dispersion.toFixed(1)}x the typical one)`
+      : `and reply length varies moderately (the longest run about ${s.dispersion.toFixed(1)}x the typical one)`;
+  return (
+    `This workload replies with about ${Math.round(s.avgOutputTokens)} tokens on average, runs ` +
+    `${Math.round(s.cadence).toLocaleString("en-US")} times a day, ${varies}. ` +
+    `That is routine, repeatable work — a cheaper ${TIER_WORD[required]} model handles it, ` +
+    `and you are currently paying ${TIER_WORD[observed]} prices for it.`
+  );
+}
+
 /**
  * Level 3 — Rightsize.
  *
@@ -136,7 +169,7 @@ export function findOversized(
       monthlySavingUsd: round2(saving),
       savingPct: round2(((baseline.cost - target.cost) / baseline.cost) * 100),
       basis: "Oversized for the workload",
-      note: `${observed}-tier model producing ${Math.round(s.avgOutputTokens)} output tokens on average at ${s.dispersion.toFixed(2)}x dispersion and ${Math.round(s.cadence)} req/day — that shape is ${required}-tier work.`,
+      note: rightsizeNote(observed, required, s),
       qualityDelta: null,
       marginUsed: null,
       objective: "cost",

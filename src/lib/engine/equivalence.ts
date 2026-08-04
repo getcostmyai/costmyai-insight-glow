@@ -1,4 +1,5 @@
 import {
+  AA_FIELDS,
   FIELD_SPECS,
   resolveLadder,
   separationOfScores,
@@ -41,6 +42,8 @@ export interface ScoreLookup {
   margin(suite: string, instrument: string): number;
   spread(instrument: string): number;
   separation(field: AaField): number | null;
+  /** True when the model carries at least one certifiable instrument score. */
+  covered(modelKey: string): boolean;
   /** Walk the ranked ladder for a product task and say which instrument certifies it. */
   instrument(taskHint: string): LadderResolution;
 }
@@ -52,11 +55,19 @@ export function buildScoreLookup(
 ): ScoreLookup {
   const byModelTask = new Map<string, BenchmarkRow>();
   const byTask = new Map<string, number[]>();
+  /*
+   * Models the benchmark feed covers at all, on any certifiable instrument.
+   * The display-only intelligence index is excluded deliberately: it never
+   * certifies anything, so it must not make a model look covered.
+   */
+  const certifiable = new Set<string>(AA_FIELDS);
+  const coveredModels = new Set<string>();
   for (const b of benchmarks) {
     byModelTask.set(`${b.model_key}::${b.task_class}`, b);
     const list = byTask.get(b.task_class) ?? [];
     list.push(b.score);
     byTask.set(b.task_class, list);
+    if (certifiable.has(b.task_class) && b.score > 0) coveredModels.add(b.model_key);
   }
 
   const marginBySuiteTask = new Map<string, number>();
@@ -80,6 +91,7 @@ export function buildScoreLookup(
     },
     spread,
     separation,
+    covered: (modelKey) => coveredModels.has(modelKey),
     instrument(taskHint) {
       return resolveLadder(taskHint, separation);
     },
@@ -150,10 +162,18 @@ export function findQualityMatches(
 
     const currentScore = lookup.score(u.model_key, instrument);
     if (!currentScore) {
+      /*
+       * Two different facts, previously reported as one. Either the model is
+       * absent from the independent benchmark feed entirely, or it is measured
+       * but not on the instrument this task needs. A reader who sees the first
+       * phrased as the second reasonably concludes our coverage check is broken.
+       */
       refuse(
         u,
         "no_baseline_score",
-        `No ${currentInstrumentLabel(resolution)} score for ${u.model_key}.`,
+        lookup.covered(u.model_key)
+          ? `${u.model_key} is measured by the independent benchmark feed, but not on ${currentInstrumentLabel(resolution)} — the evaluation this kind of work has to be judged on.`
+          : `${u.model_key} is not covered by the independent benchmark feed yet, so there is no measured score to certify a switch against.`,
       );
       continue;
     }

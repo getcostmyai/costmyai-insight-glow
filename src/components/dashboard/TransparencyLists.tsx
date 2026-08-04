@@ -4,7 +4,7 @@ import { SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
-import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
+
 import { usd } from "@/lib/dashboard-data";
 
 /**
@@ -219,9 +219,16 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
                 {ctl.pending.from(r.fromModel, r.fromHost) ? (
+                  /*
+                   * The generic pending label reads as a contradiction here:
+                   * this row already says "no switch offered", meaning the
+                   * certification engine found nothing. A switch from a
+                   * different mechanism can still be running on the same
+                   * workload, so the sentence has to name that difference.
+                   */
                   <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
                     <Clock className="size-3" />
-                    {PENDING_SWITCH_LABEL}
+                    A switch from another mechanism is already running here — traffic not yet moved
                   </p>
                 ) : null}
               </div>
