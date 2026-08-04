@@ -56,6 +56,7 @@ import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
+import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
@@ -311,6 +312,11 @@ const AuthenticatedAdminPartnerApplicationsRoute =
     path: '/admin/partner-applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminJobsRoute = AuthenticatedAdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicWidgetIntelligenceRoute =
   ApiPublicWidgetIntelligenceRouteImport.update({
     id: '/api/public/widget/intelligence',
@@ -416,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
+  '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -473,6 +480,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
+  '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
+  '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -597,6 +606,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
+    | '/admin/jobs'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -654,6 +664,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/demo'
     | '/intelligence'
+    | '/admin/jobs'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/demo/'
     | '/intelligence/'
+    | '/_authenticated/admin/jobs'
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/referrals'
@@ -1110,6 +1122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPartnerApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/jobs': {
+      id: '/_authenticated/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AuthenticatedAdminJobsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/widget/intelligence': {
       id: '/api/public/widget/intelligence'
       path: '/api/public/widget/intelligence'
@@ -1225,6 +1244,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
+  AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRoute
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
@@ -1236,6 +1256,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRouteWithChildren,
+  AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRoute,
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
