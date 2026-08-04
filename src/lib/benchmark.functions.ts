@@ -133,7 +133,7 @@ export const saveBenchmarkAnswers = createServerFn({ method: "POST" })
       useCase: existing.use_case as never,
     });
 
-    const { error } = await context.supabase
+    const { data: saved, error } = await context.supabase
       .from("org_profiles")
       .update({
         revenue_band: data.revenueBand,
@@ -145,8 +145,14 @@ export const saveBenchmarkAnswers = createServerFn({ method: "POST" })
         quality_flag: verdict.flag,
         benchmark_prompt_dismissed_at: new Date().toISOString(),
       })
-      .eq("org_id", orgId);
+      .eq("org_id", orgId)
+      .select("org_id")
+      .maybeSingle();
     if (error) throw error;
+    // Dispatch 91. These answers place the workspace in a benchmark bucket
+    // other companies read. A no-op that reported success would quietly leave
+    // it in the old bucket while the screen showed the new answers.
+    if (!saved) throw new Error("Those answers could not be saved to this workspace.");
 
     const state = await stateFor(context.supabase, orgId);
     return { ...state, warning: verdict.warning };
