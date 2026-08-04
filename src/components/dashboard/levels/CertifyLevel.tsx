@@ -37,12 +37,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
     live,
     objective,
     chooseObjective,
-    canAct,
-    activate,
-    busy,
     errorFor,
-    ctaHref,
-    ctaLabel,
+    rightsizeHref,
     scope,
   } = ctl;
   const level = data.levels.quality_match;

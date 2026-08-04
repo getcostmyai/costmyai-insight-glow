@@ -34,12 +34,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
     setRange,
     activeRange,
     live,
-    canAct,
-    activate,
-    busy,
-    errorFor,
-    ctaHref,
-    ctaLabel,
+    rightsizeHref,
     scope,
   } = ctl;
   const level = data.levels.host_arbitrage;
