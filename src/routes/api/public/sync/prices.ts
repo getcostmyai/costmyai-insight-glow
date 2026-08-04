@@ -25,24 +25,41 @@ export const Route = createFileRoute("/api/public/sync/prices")({
         const { syncOpenRouterPricing, recordPriceSyncFailure } = await import(
           "@/lib/pricing/sync.server"
         );
-        const { runEvaluation, recordRun } = await import("@/lib/engine/evaluate.server");
+        const { runEvaluation, recordRun, classifyRun } = await import(
+          "@/lib/engine/evaluate.server"
+        );
         const started = new Date();
         try {
           const report = await syncOpenRouterPricing();
           // Chained, not scheduled separately: a price that moved is only worth
           // syncing if the verdict it changes is recomputed in the same window.
           const evaluation = await runEvaluation("pricing-sync");
-          await recordRun("pricing-sync", started, true, { sync: report, evaluation });
+          const rows = report.priceRowsWritten + report.modelsImported;
+          await recordRun({
+            job: "pricing-sync",
+            started,
+            // The catalogue always has rows to write. Zero is never quiet here.
+            outcome: classifyRun(rows, true),
+            rowsWritten: rows,
+            detail: { sync: report, evaluation },
+          });
           return Response.json({ ...report, evaluation });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("pricing sync failed", message);
           await recordPriceSyncFailure(message);
-          await recordRun("pricing-sync", started, false, null, message);
+          await recordRun({
+            job: "pricing-sync",
+            started,
+            outcome: "failed",
+            rowsWritten: 0,
+            error: message,
+          });
           // Fail loudly and leave the previous prices in place. A stale price
           // that says it is stale is honest; a guessed one is not.
           return Response.json({ error: message }, { status: 502 });
         }
+
       },
     },
   },
