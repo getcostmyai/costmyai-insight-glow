@@ -52,6 +52,12 @@ export interface WorkspaceBilling {
   status: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  /**
+   * Whether this caller may act on billing. Answered by the database, not by
+   * the browser: the page uses it to hide controls it would be refused anyway,
+   * never as the thing that does the refusing.
+   */
+  canManage: boolean;
 }
 
 export const getWorkspaceBilling = createServerFn({ method: "POST" })
@@ -62,7 +68,10 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<WorkspaceBilling> => {
     const { loadPlanState } = await import("./billing/guard.server");
-    const state = await loadPlanState(context.supabase, data.orgId, data.environment);
+    const [state, manager] = await Promise.all([
+      loadPlanState(context.supabase, data.orgId, data.environment),
+      context.supabase.rpc("is_org_manager", { _org_id: data.orgId }),
+    ]);
     return {
       orgId: data.orgId,
       recordedPlan: state.plan,
@@ -70,7 +79,9 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
       status: state.subscription?.status ?? null,
       currentPeriodEnd: state.subscription?.currentPeriodEnd ?? null,
       cancelAtPeriodEnd: state.subscription?.cancelAtPeriodEnd ?? false,
+      canManage: manager.data === true,
     };
+
   });
 
 type CheckoutResult = { clientSecret: string } | { error: string };
