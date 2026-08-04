@@ -30,15 +30,45 @@ export const Route = createFileRoute("/api/public/synthetic/tick")({
         }
 
         const { runSyntheticTick } = await import("@/lib/synthetic/tick.server");
+        const { recordRun, classifyRun } = await import("@/lib/engine/evaluate.server");
+        const started = new Date();
         try {
           const origin = new URL(request.url).origin;
           const report = await runSyntheticTick(origin);
+          /*
+           * Dispatch 65. This collector is the one that produces usage rows,
+           * and until now it wrote nothing at all to the run ledger — which is
+           * why 1 August 2026 looked healthy on 413 pricing runs while not a
+           * single usage row landed. It now records its own outcome, measured
+           * on rows, not on the fact that the handler returned.
+           *
+           * `duplicates` count as rows present: a replayed slice means ingest
+           * already holds that data, which is observation, not a hole. Only a
+           * tick that generated events and got neither accepted nor duplicate
+           * back is "empty" — expected data that did not land.
+           */
+          const present = report.accepted + report.duplicates;
+          await recordRun({
+            job: "usage-tick",
+            started,
+            outcome: classifyRun(present, report.generated > 0),
+            rowsWritten: present,
+            detail: report,
+          });
           return Response.json(report);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("synthetic tick failed", message);
+          await recordRun({
+            job: "usage-tick",
+            started,
+            outcome: "failed",
+            rowsWritten: 0,
+            error: message,
+          });
           return Response.json({ error: message }, { status: 502 });
         }
+
       },
     },
   },
