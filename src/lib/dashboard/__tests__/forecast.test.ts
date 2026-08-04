@@ -111,14 +111,14 @@ describe("forecastMonthEnd — trend handling", () => {
     const f = forecastMonthEnd(history(40, (_d, i) => 60 + i * 4), NOW);
     expect(f.trendPerDayUsd).toBeGreaterThan(0);
     const raw = f.mtdUsd + f.remainingDays * (f.dailyLevelUsd + 4 * f.remainingDays);
-    expect(f.pointUsd).toBeLessThan(raw);
-    expect(f.pointUsd).toBeGreaterThan(f.mtdUsd + f.remainingDays * f.dailyLevelUsd);
+    expect(f.pointUsd!).toBeLessThan(raw);
+    expect(f.pointUsd!).toBeGreaterThan(f.mtdUsd + f.remainingDays * f.dailyLevelUsd);
   });
 
   it("follows a decline without projecting negative spend", () => {
     const f = forecastMonthEnd(history(40, (_d, i) => Math.max(0, 200 - i * 5)), NOW);
     expect(f.trendPerDayUsd).toBeLessThan(0);
-    expect(f.pointUsd).toBeGreaterThanOrEqual(f.mtdUsd);
+    expect(f.pointUsd!).toBeGreaterThanOrEqual(f.mtdUsd);
   });
 });
 
@@ -144,7 +144,7 @@ describe("forecastMonthEnd — shape 4a: structural break, retired workload", ()
   it("excludes it from the remaining days instead of billing it forward", () => {
     // Level should collapse to the surviving $100/day workload.
     expect(f.dailyLevelUsd).toBeCloseTo(100, 0);
-    expect(f.pointUsd).toBeLessThan(flatRate - 2000);
+    expect(f.pointUsd!).toBeLessThan(flatRate - 2000);
   });
 
   it("shows an honest range instead of the confidently-wrong number", () => {
@@ -196,11 +196,13 @@ describe("forecastMonthEnd — shape 4b: newly appeared workload", () => {
 });
 
 describe("forecastMonthEnd — guards", () => {
-  it("returns a zeroed forecast for an empty workspace", () => {
+  it("suppresses rather than projecting zero for an empty workspace", () => {
     const f = forecastMonthEnd([], NOW);
     expect(f.mtdUsd).toBe(0);
-    expect(f.pointUsd).toBe(0);
-    expect(f.isRange).toBe(false);
+    expect(f.suppressed).toBe(true);
+    expect(f.pointUsd).toBeNull();
+    expect(f.observedLevelDays).toBe(0);
+    expect(f.suppressionReason).toMatch(/not enough data/);
   });
 
   it("never projects days that have already happened", () => {
