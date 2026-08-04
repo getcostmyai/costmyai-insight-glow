@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireOwner } from "./owner-middleware";
 
 import type { ObjectiveKind } from "./engine/types";
 import type { DashboardSnapshot, RangeDays } from "./dashboard.server";
