@@ -91,6 +91,7 @@ export function buildScoreLookup(
     },
     spread,
     separation,
+    covered: (modelKey) => coveredModels.has(modelKey),
     instrument(taskHint) {
       return resolveLadder(taskHint, separation);
     },
