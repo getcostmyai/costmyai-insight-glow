@@ -479,6 +479,17 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     latency_scope: (p.latency_scope as "host" | "model" | null) ?? null,
   })) as PriceRow[];
 
+  /**
+   * The engine runs over observed traffic only, and that is what keeps
+   * "available" and "captured" from ever counting the same dollar twice.
+   *
+   * A switch accrues `saved_usd` only once the gateway's traffic has actually
+   * moved to the new pair — and the moment it moves, the old model|host pair
+   * stops appearing in the rollups, so the engine can no longer offer it as an
+   * opportunity. While traffic is still on the old pair the switch has saved
+   * nothing yet, so the opportunity is genuinely still outstanding. The two
+   * figures are therefore disjoint by construction, not by a filter.
+   */
   const result = runPipeline({
     usage,
     prices: priceRows,

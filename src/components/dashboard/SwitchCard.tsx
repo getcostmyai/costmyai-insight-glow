@@ -17,6 +17,7 @@ export function SwitchCard({
   period,
   discovery = false,
   discoveryHref,
+  readOnly = false,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
@@ -38,6 +39,8 @@ export function SwitchCard({
    */
   discovery?: boolean;
   discoveryHref?: string;
+  /** The public demo is a showcase: the action renders as a label, not a link. */
+  readOnly?: boolean;
 }) {
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
@@ -101,6 +104,10 @@ export function SwitchCard({
             {pending ? <Loader2 className="size-3.5 animate-spin" /> : null}
             {pending ? "Switching…" : actionLabel}
           </button>
+        ) : readOnly ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-4 py-2 text-sm font-medium text-primary">
+            Switch
+          </span>
         ) : (
           <Link
             to={ctaHref ?? "/auth"}

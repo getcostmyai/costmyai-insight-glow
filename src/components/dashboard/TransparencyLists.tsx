@@ -73,6 +73,8 @@ export function ArbitrageList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
+
+                readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery
                     ? () =>
@@ -145,6 +147,8 @@ export function BenchmarkList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
+
+                readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery
                     ? () =>
