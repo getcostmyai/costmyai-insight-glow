@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "table": "host_prices",
+    "file": "src/lib/ingest/ingest.server.ts",
+    "reason": "Builds a model|host price index used to price usage events that already happened. A host delisted today still priced yesterday's traffic, so excluding is_active=false here would silently leave real usage unpriced. Reviewed Dispatch 88."
+  },
+  {
+    "table": "host_prices",
+    "file": "src/lib/synthetic/tick.server.ts",
+    "reason": "Same price index, same reason: the demo prices historical slices against the price that applied, not against today's listing. Reviewed Dispatch 88."
+  },
+  {
+    "table": "model_catalog",
+    "file": "src/lib/pricing/sync.server.ts",
+    "reason": "The sync itself must see every model key it has ever written, including delisted ones, to decide what is genuinely new. Filtering to active would re-report old models as new on every run. Reviewed Dispatch 88."
+  },
+  {
+    "table": "organizations",
+    "file": "src/lib/partners.functions.ts",
+    "reason": "Reads referral attribution for one workspace by primary key through the caller's RLS-scoped client. There is no cross-tenant surface to contaminate. Reviewed Dispatch 88."
+  }
+]
