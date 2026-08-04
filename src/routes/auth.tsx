@@ -15,13 +15,10 @@ function safeNext(value: unknown): string | null {
 }
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
     next: safeNext(search.next) ?? undefined,
   }),
-  // Renders on the server like every other route: all session reads live in
-  // effects, so there is nothing here that differs between server and client.
-  // `ssr: false` used to short-circuit that and produced a hydration mismatch.
-
   head: () => ({
     meta: [
       { title: "Sign in — CostMyAI" },
