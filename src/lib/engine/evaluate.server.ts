@@ -357,20 +357,55 @@ async function lastAutonomousChange(orgId: string): Promise<Date | null> {
   return data?.created_at ? new Date(data.created_at) : null;
 }
 
-/** Records one scheduled run so a silently dead schedule is visible, not guessed at. */
-export async function recordRun(
-  job: string,
-  started: Date,
-  ok: boolean,
-  detail: unknown,
-  error?: string,
-): Promise<void> {
-  await supabaseAdmin.from("sync_runs").insert({
-    job,
-    started_at: started.toISOString(),
-    finished_at: new Date().toISOString(),
-    ok,
-    detail: (detail ?? null) as never,
-    error: error ?? null,
-  });
+/**
+ * The outcome of one scheduled run, as the ledger records it.
+ *
+ * Before Dispatch 65 the ledger held a single boolean, and that boolean only
+ * ever meant "the handler did not throw". A collector that answered 200 and
+ * wrote nothing was indistinguishable from one that wrote a full day of data —
+ * which is exactly how 1 August 2026 passed as healthy. The outcome below
+ * separates the three states that actually matter:
+ *
+ *   ok     — the run completed and wrote rows.
+ *   empty  — the run completed, data was expected, and nothing was written.
+ *   quiet  — the run completed and there was genuinely nothing to write.
+ *   failed — the run errored.
+ *
+ * `quiet` is the only zero-row state that counts as observed. It requires the
+ * collector to say so explicitly; a collector that cannot tell the difference
+ * must report `empty`, never `quiet`.
+ */
+export type RunOutcome = "ok" | "empty" | "quiet" | "failed";
+
+export interface RunRecord {
+  job: string;
+  started: Date;
+  outcome: RunOutcome;
+  /** Rows this run actually wrote. Required — "unknown" is not an answer. */
+  rowsWritten: number;
+  detail?: unknown;
+  error?: string;
 }
+
+/** Records one scheduled run so a silently dead — or silently empty — schedule is visible, not guessed at. */
+export async function recordRun(record: RunRecord): Promise<void> {
+  await supabaseAdmin.from("sync_runs").insert({
+    job: record.job,
+    started_at: record.started.toISOString(),
+    finished_at: new Date().toISOString(),
+    // `ok` is kept for the existing dashboards, but it is no longer the
+    // health signal: it now means "did not error", which is all it ever meant.
+    ok: record.outcome !== "failed",
+    outcome: record.outcome,
+    rows_written: record.rowsWritten,
+    detail: (record.detail ?? null) as never,
+    error: record.error ?? null,
+  } as never);
+}
+
+/** Classify a completed collector run from what it produced against what it expected. */
+export function classifyRun(rowsWritten: number, rowsExpected: boolean): RunOutcome {
+  if (rowsWritten > 0) return "ok";
+  return rowsExpected ? "empty" : "quiet";
+}
+

@@ -25,7 +25,9 @@ export const Route = createFileRoute("/api/public/sync/benchmarks")({
         const { syncArtificialAnalysis, recordSyncFailure } = await import(
           "@/lib/benchmarks/aa-sync.server"
         );
-        const { runEvaluation, recordRun } = await import("@/lib/engine/evaluate.server");
+        const { runEvaluation, recordRun, classifyRun } = await import(
+          "@/lib/engine/evaluate.server"
+        );
         const started = new Date();
         try {
           const report = await syncArtificialAnalysis();
@@ -33,17 +35,35 @@ export const Route = createFileRoute("/api/public/sync/benchmarks")({
           // can change an equivalence verdict on its own, and nobody should
           // have to open a page for that to be noticed.
           const evaluation = await runEvaluation("benchmark-sync");
-          await recordRun("benchmark-sync", started, true, { sync: report, evaluation });
+          const rows =
+            report.scoresWritten + report.latenciesWritten + report.marginsWritten.length;
+          await recordRun({
+            job: "benchmark-sync",
+            started,
+            // A benchmark sync that upserts nothing is never a quiet day: the
+            // feed always carries scores. Zero rows means the run produced
+            // nothing it should have produced.
+            outcome: classifyRun(rows, true),
+            rowsWritten: rows,
+            detail: { sync: report, evaluation },
+          });
           return Response.json({ ...report, evaluation });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("benchmark sync failed", message);
           await recordSyncFailure(message);
-          await recordRun("benchmark-sync", started, false, null, message);
+          await recordRun({
+            job: "benchmark-sync",
+            started,
+            outcome: "failed",
+            rowsWritten: 0,
+            error: message,
+          });
           // Fail loudly and leave the previous measurement in place; a stale
           // measured margin is honest, a guessed one is not.
           return Response.json({ error: message }, { status: 502 });
         }
+
       },
     },
   },
