@@ -63,14 +63,30 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
           </>
         }
         headline={
-          <>
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(govern.eligibleSaving)}</span>{" "}
-            <span className="text-white/80">
-              in the {activeRange.long} could have applied itself.
-            </span>
-          </>
+          /* Two different sets, never one number: switches already running
+             unattended, and new candidates not yet acted on. When there are no
+             new candidates left, saying "$0 could have applied itself" next to
+             live autonomous switches reads as a contradiction, so the headline
+             leads with whichever set is real. */
+          govern.eligible.length === 0 && govern.running > 0 ? (
+            <>
+              <span className="num text-[oklch(0.83_0.11_195)]">
+                {govern.running} switch{govern.running === 1 ? "" : "es"}
+              </span>{" "}
+              <span className="text-white/80">
+                already run unattended. No new candidate is waiting.
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="num text-[oklch(0.83_0.11_195)]">{usd(govern.eligibleSaving)}</span>{" "}
+              <span className="text-white/80">
+                in new candidates in the {activeRange.long} could apply itself.
+              </span>
+            </>
+          )
         }
-        sub={`All three mechanisms run on your traffic: ${mechanismSentence(mech)} ${govern.eligible.length} certified switch${govern.eligible.length === 1 ? "" : "es"} clear the autonomous gate. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
+        sub={`All three mechanisms run on your traffic: ${mechanismSentence(mech)} ${govern.running} switch${govern.running === 1 ? " is" : "es are"} already running unattended from earlier autonomous runs; separately, ${govern.eligible.length} newly certified switch${govern.eligible.length === 1 ? "" : "es"} not yet acted on clear the autonomous gate. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended.`}
         stats={
           /* Two bands: everything Rightsize shows, then what autonomy adds.
              Govern is Rightsize plus autonomy, so it must never show less. */
@@ -123,11 +139,12 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 accent="oklch(0.82 0.16 155)"
               />
               <HeroStat
-                label="Eligible now"
-                value={`${govern.eligible.length}`}
-                sub={`${usd(govern.eligibleSaving, 0)} · ${activeRange.long}`}
+                label="New candidates eligible"
+                value={`${govern.eligible.length} switch${govern.eligible.length === 1 ? "" : "es"}`}
+                sub={`not yet acted on · ${usd(govern.eligibleSaving, 0)} · ${activeRange.long}`}
                 accent="oklch(0.83 0.11 195)"
               />
+
               <HeroStat
                 label="Held for you"
                 value={`${govern.refusals.length}`}
