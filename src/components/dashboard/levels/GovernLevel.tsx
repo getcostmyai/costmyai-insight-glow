@@ -284,7 +284,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         <SectionTitle
           eyebrow="Would run without you"
           title="Cleared by the autonomous gate"
-          hint="Certified, above the materiality floor, and outside the cooldown window."
+          hint="Certified, saving enough money to be worth acting on, and outside the waiting period between changes."
           badge={`${usd(govern.eligibleSaving, 0)} · ${activeRange.long}`}
           badgeTone="saving"
         />
