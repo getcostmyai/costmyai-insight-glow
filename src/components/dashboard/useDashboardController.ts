@@ -131,6 +131,17 @@ export function useDashboardController(scope: DashboardScope) {
   /** Read-only demo: the row still needs a real destination, not a dead label. */
   const ctaHref = session.signedIn ? "/workspace" : "/auth";
   const ctaLabel = session.signedIn ? "Activate in your workspace" : "Sign in to activate";
+  /**
+   * Where a discovery level (Compare, Certify) routes the intent to switch.
+   * Those levels never execute — Rightsize and Govern do — so their rows link
+   * to the level that owns the action instead of offering a dead activate CTA.
+   */
+  const rightsizeHref = scope === "demo" ? "/demo/rightsize" : "/workspace/rightsize";
+  /**
+   * The public demo is a showcase, not a console: an action surface renders as
+   * a plain label there rather than a button that leads somewhere else.
+   */
+  const demoReadOnly = scope === "demo";
 
   const errorFor = (key: string) => (actionError?.key === key ? actionError.message : null);
   const busy = (key: string) =>
