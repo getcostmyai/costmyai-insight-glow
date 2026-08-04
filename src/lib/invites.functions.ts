@@ -195,7 +195,7 @@ export const acceptInvite = createServerFn({ method: "POST" })
 
     // Keep the profile in step with the account so the workspace can show who
     // just joined.
-    await supabase.from("profiles").upsert(
+    const profileWrite = await supabase.from("profiles").upsert(
       {
         id: userId,
         email: (claims.email as string | undefined) ?? null,
@@ -203,6 +203,9 @@ export const acceptInvite = createServerFn({ method: "POST" })
       },
       { onConflict: "id" },
     );
+    // Dispatch 91. The workspace that just accepted this person shows them by
+    // this row; joining without one makes them an anonymous member.
+    if (profileWrite.error) throw new Error(profileWrite.error.message);
 
     const { data: orgId, error } = await supabase.rpc("accept_invite", {
       _invite_id: data.inviteId,
