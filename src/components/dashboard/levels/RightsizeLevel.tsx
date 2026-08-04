@@ -164,7 +164,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <HeroStat
               label={`Spend · ${activeRange.long}`}
-              value={usd(live.spend, 0)}
+              value={usd(live.spend)}
               sub="through the hosts you use today"
               accent="oklch(0.85 0.1 300)"
             />
