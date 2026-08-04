@@ -217,6 +217,12 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
                   <span className="text-xs text-muted-foreground">no switch offered</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
+                {ctl.pending.from(r.fromModel, r.fromHost) ? (
+                  <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary">
+                    <Clock className="size-3" />
+                    {PENDING_SWITCH_LABEL}
+                  </p>
+                ) : null}
               </div>
               <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold tracking-wide text-muted-foreground">
                 {r.label}
