@@ -83,7 +83,15 @@ export function SwitchCard({
             />
           </div>
         </div>
-        {onActivate ? (
+        {discovery ? (
+          <Link
+            to={discoveryHref ?? "/pricing"}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          >
+            Certified — switch via Rightsize
+            <ArrowUpRight className="size-3.5" />
+          </Link>
+        ) : onActivate ? (
           <button
             type="button"
             onClick={onActivate}
