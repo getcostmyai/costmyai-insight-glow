@@ -170,7 +170,7 @@ describe("round 3 spec", () => {
       "Savings captured",
       "Frozen",
       "Running unattended",
-      "Eligible now",
+      "New candidates eligible",
       "Held for you",
       "Minimum to act",
       "Cooldown",
