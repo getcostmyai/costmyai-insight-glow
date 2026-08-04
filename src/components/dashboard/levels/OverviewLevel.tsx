@@ -123,7 +123,9 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       count: gov.running,
       monthly: gov.captured,
       valueText:
-        gov.captured > 0 ? usd(gov.captured, 0) : `${gov.running}`,
+        gov.captured > 0
+          ? usd(gov.captured, 0)
+          : `${gov.running} switch${gov.running === 1 ? "" : "es"}`,
       caption:
         gov.captured > 0
           ? `applied autonomously · ${gov.running} running unattended · ${activeRange.long}`
@@ -223,7 +225,7 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
             />
             <HeroStat
               label="Running unattended"
-              value={`${data.govern.running}`}
+              value={`${data.govern.running} switch${data.govern.running === 1 ? "" : "es"}`}
               sub={
                 data.govern.unlocked && data.govern.enabled
                   ? "autonomous switching is on"
