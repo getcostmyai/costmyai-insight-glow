@@ -73,13 +73,18 @@ function BillingPage() {
       sessionId && q.state.data?.effectivePlan === "compare" ? 2_000 : false,
   });
 
+  // Receipts carry the legal entity, billing address and VAT id, so the server
+  // refuses them to ordinary members. Don't send a request that will be refused.
+  const canManage = billing.data?.canManage ?? false;
+
   const invoices = useQuery({
     queryKey: ["workspace-invoices", org?.id],
-    enabled: Boolean(org?.id),
+    enabled: Boolean(org?.id) && canManage,
     queryFn: () =>
       listWorkspaceInvoices({ data: { orgId: org!.id, environment: getStripeEnvironment() } }),
     staleTime: 60_000,
   });
+
 
   const portal = useMutation({
     mutationFn: () =>
