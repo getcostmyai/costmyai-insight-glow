@@ -389,7 +389,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                   <span className="text-xs text-muted-foreground">
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
                   </span>
-                  {ctl.pending.pair(o.model, o.hostKey, o.toModel!, o.hostKey) ? (
+                  {ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? (
                     // The right-size switch is running; the traffic is not on
                     // it yet, so the waste above is still real.
                     <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-opportunity/40 bg-opportunity/10 px-3.5 py-1.5 text-[11px] font-semibold text-opportunity">
