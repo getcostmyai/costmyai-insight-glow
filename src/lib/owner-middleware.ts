@@ -21,11 +21,23 @@ export const DEMO_AUTH_BYPASS = false;
  * "not signed in" (401, from requireSupabaseAuth) from "signed in, but not the
  * owner" (403) instead of collapsing both into an opaque 500.
  */
+const requireBearer = createMiddleware({ type: "function" }).server(({ next, request }) => {
+  // The generated auth middleware throws a plain Error for missing credentials,
+  // which surfaces as an opaque 500. Reject unauthenticated callers first so
+  // "not signed in" is a real 401 and "signed in, wrong user" a real 403.
+  const header = request?.headers.get("authorization") ?? "";
+  if (!header.toLowerCase().startsWith("bearer ")) {
+    throw new Response("Unauthorized", { status: 401 });
+  }
+  return next();
+});
+
 export const requireOwner = createMiddleware({ type: "function" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireBearer, requireSupabaseAuth])
   .server(async ({ next, context }) => {
     if (!isOwner(context.userId)) {
       throw new Response("Forbidden: this workspace is restricted", { status: 403 });
     }
     return next();
   });
+
