@@ -143,6 +143,59 @@ function AwaitingFirstEvent() {
 }
 
 /**
+ * The disconnection notice.
+ *
+ * Shown above everything else, because it changes what every number below it
+ * means. "Disconnected" is a hard fact — the workspace holds no token that
+ * would authenticate a push, so nothing can arrive until one is issued. "No
+ * events for Xh" is softer and says exactly that, without pretending to know
+ * whose side the silence is on.
+ */
+function IngestBanner({ ingest }: { ingest: DashboardController["data"]["ingest"] }) {
+  if (ingest.state === "live" || ingest.state === "never") return null;
+
+  const disconnected = ingest.state === "disconnected";
+  const since = ingest.lastEventAt ? relativeAgo(ingest.lastEventAt) : "never";
+  const hours = Math.round(ingest.hoursSinceLastEvent ?? 0);
+
+  return (
+    <section
+      className={`flex flex-wrap items-center gap-5 rounded-2xl border p-6 ${
+        disconnected ? "border-destructive/40 bg-destructive/5" : "border-border bg-muted/40"
+      }`}
+      role="status"
+    >
+      <span
+        className={`flex size-11 items-center justify-center rounded-2xl ${
+          disconnected ? "bg-destructive/10 text-destructive" : "bg-foreground/5 text-muted-foreground"
+        }`}
+      >
+        {disconnected ? <PlugZap className="size-5" /> : <Clock className="size-5" />}
+      </span>
+      <div className="min-w-60 flex-1">
+        <p
+          className={`text-sm font-semibold ${disconnected ? "text-destructive" : "text-foreground"}`}
+        >
+          {disconnected ? "Gateway disconnected" : `No events for ${hours}h`}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground" suppressHydrationWarning>
+          {disconnected
+            ? `This workspace has no active ingest token, so nothing can reach us. Everything below is history as of ${since} — it is not live, and the counters have stopped.`
+            : `The last event we received arrived ${since}. Figures below still cover the selected window, but they are not moving.`}
+        </p>
+      </div>
+      <Link
+        to="/settings"
+        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
+      >
+        {disconnected ? "Issue a new token" : "Check your connection"}
+      </Link>
+    </section>
+  );
+}
+
+
+/**
  * Spend, requests and tokens over the selected window. Shown on Overview and
  * Compare, where the question is "what am I actually spending?" — the deeper
  * levels are about individual switches and do not repeat it.
