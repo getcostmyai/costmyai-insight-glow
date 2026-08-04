@@ -237,7 +237,9 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
               </span>
               <div className="text-right">
                 <div className="num text-base text-spend">{usd(r.monthlySpend, 0)}</div>
-                <p className="text-[11px] text-muted-foreground">per month, unchanged</p>
+                <p className="text-[11px] text-muted-foreground">
+                  a month at the {ctl.activeRange.long} rate, unchanged
+                </p>
               </div>
             </div>
           ))}
