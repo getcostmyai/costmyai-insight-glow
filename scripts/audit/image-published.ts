@@ -86,7 +86,7 @@ const { registry, repository } = split(CONTAINER_DEFAULTS.image);
  * tag is checked too: `v1` moving without an immutable `vX.Y.Z` behind it
  * leaves no way to say which build a customer is actually running.
  */
-const PINNED = process.env["CONNECTOR_RELEASE_TAG"] ?? "v1.0.0";
+const PINNED = process.env["CONNECTOR_RELEASE_TAG"] ?? "v1.0.1";
 
 const results = [
   await probe(registry, repository, CONTAINER_DEFAULTS.tag),
