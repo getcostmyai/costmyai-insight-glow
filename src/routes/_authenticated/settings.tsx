@@ -4,7 +4,12 @@ import { useState } from "react";
 import { Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
 
 import { AccountShell } from "@/components/dashboard/AccountShell";
-import { CONTAINER_DEFAULTS, dockerRunSnippet } from "@/lib/ingest/contract";
+import {
+  BACKFILL_LOOKBACK_DAYS,
+  CONTAINER_DEFAULTS,
+  dockerRunSnippet,
+  ROLLING_WINDOW_DAYS,
+} from "@/lib/ingest/contract";
 
 import {
   createIngestToken,
