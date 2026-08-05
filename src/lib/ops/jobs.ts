@@ -78,7 +78,30 @@ export const JOB_REGISTRY: JobSpec[] = [
     maxIntervalMinutes: 60 * 24 * 35,
     what: "Freezes the closing month's public intelligence figures, append-only.",
   },
+  {
+    job: SHAPE_WATCH_JOB,
+    label: "Unrecognised response shapes",
+    cronName: "—",
+    schedule: "on event",
+    // Never judged on cadence: see `eventDriven`. Kept large so a stray read
+    // of this field by an older caller cannot invent a staleness alert.
+    maxIntervalMinutes: Number.MAX_SAFE_INTEGER,
+    eventDriven: true,
+    what: "Reports a provider response envelope the connector could not read, and a provider appearing on the pricing feed with no known shape.",
+    quietMeans: "Every shape seen so far is one of the five the connector parses.",
+  },
 ];
+
+/**
+ * The one job name the shape watch writes under. Ingest and the pricing sync
+ * both report here rather than each inventing a channel, so the board shows
+ * one line for "a shape we do not understand turned up".
+ */
+export const SHAPE_WATCH_JOB = "shape-watch";
+
+/** How long a reported shape stays an open alert on the board. */
+export const SHAPE_WATCH_WINDOW_MINUTES = 7 * 24 * 60;
+
 
 export type JobVerdict = "healthy" | "stale" | "failing" | "empty" | "never-run";
 
