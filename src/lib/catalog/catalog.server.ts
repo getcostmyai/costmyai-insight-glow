@@ -136,8 +136,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       context_window: m.context_window,
       modality: m.modality,
       hosts,
-      cheapestInput: hosts.length ? hosts[0].input : null,
-      cheapestOutput: hosts.length ? Math.min(...hosts.map((h) => h.output)) : null,
+      cheapestInput: realHosts.length ? realHosts[0].input : null,
+      cheapestOutput: realHosts.length ? Math.min(...realHosts.map((h) => h.output)) : null,
+
       scores,
       ...named,
       intelligence: publishedIndex ? publishedIndex.score : null,
@@ -152,7 +153,11 @@ export async function readCatalog(): Promise<CatalogPayload> {
   return {
     rows,
     vendors: [...new Set(rows.map((r) => r.vendor))].sort((a, b) => a.localeCompare(b)),
-    providers: [...new Set(prices.map((p) => p.host_label))].sort((a, b) => a.localeCompare(b)),
+    // "Serving providers" means companies serving weights — real endpoints only.
+    providers: [...new Set(prices.filter(isRealEndpoint).map((p) => p.host_label))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+
     live: Boolean(snapshot.data?.synced_at),
   };
 }
