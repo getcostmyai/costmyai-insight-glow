@@ -138,9 +138,40 @@ export function judgeJob(spec: JobSpec, runs: JobRunSummary[], nowMs: number): J
 
   const base = { ...spec, lastRunAt, minutesSince, recent };
 
+  /**
+   * A watch is the inverse of a schedule: it writes only when something is
+   * wrong, so silence is the healthy answer and staleness is meaningless. An
+   * alert stays open for a week, long enough that nobody misses one raised on
+   * a Friday, then clears itself rather than staying red forever.
+   */
+  if (spec.eventDriven) {
+    const open = recent.filter(
+      (r) =>
+        r.outcome !== "quiet" &&
+        (nowMs - Date.parse(r.startedAt)) / MIN_MS <= SHAPE_WATCH_WINDOW_MINUTES,
+    );
+    if (open.length === 0) {
+      return {
+        ...base,
+        verdict: "healthy",
+        reason: lastRunAt
+          ? `Nothing reported in the last ${formatAgo(SHAPE_WATCH_WINDOW_MINUTES)}. ${spec.quietMeans ?? ""}`.trim()
+          : (spec.quietMeans ?? "Nothing reported."),
+      };
+    }
+    return {
+      ...base,
+      verdict: "failing",
+      reason: `${open.length} report${open.length === 1 ? "" : "s"} in the last ${formatAgo(
+        SHAPE_WATCH_WINDOW_MINUTES,
+      )}: ${String(open[0]?.error ?? "no detail").slice(0, 200)}`,
+    };
+  }
+
   if (!last || minutesSince === null) {
     return { ...base, verdict: "never-run", reason: "This job has never reported a run." };
   }
+
   if (minutesSince > spec.maxIntervalMinutes) {
     return {
       ...base,
