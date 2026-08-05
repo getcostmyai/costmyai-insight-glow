@@ -58,6 +58,7 @@ Envelopes, not models — so every model a provider ships is covered the day it 
 | Google               | Gemini `generateContent`, Vertex AI                                           |
 | Cohere               | `meta.billed_units`                                                           |
 | Bedrock Converse     | camelCase `inputTokens` / `outputTokens`                                      |
+| Tencent Hunyuan      | PascalCase `Usage.PromptTokens` / `CompletionTokens` (TC3)                    |
 
 Streaming is supported for all of them, without buffering the response. Anything else
 is still forwarded untouched and reported honestly as `parse_status: "unparsed"` rather
@@ -97,3 +98,72 @@ does not retroactively create yesterday's per-model breakdown, and the dashboard
 Both are versioned (`{"v": 1, ...}`), batched, and idempotent. Paths, port, image name
 and env var names come from one shared config constant, asserted against the live routes
 and against the dashboard's quickstart in CI.
+
+## Publishing the image (maintainers)
+
+The reference customers paste — `ghcr.io/costmyai/gateway:v1` — is generated from
+`CONTAINER_DEFAULTS` in `src/lib/ingest/contract.ts`. Publishing does not change any
+code; it makes that existing reference resolve. `bun run audit` fails until it does.
+
+**Registry:** GitHub Container Registry, under the CostMyAI GitHub org. Anonymous pull
+must work — a customer running `docker run` has no CostMyAI credentials at that point.
+
+**Tags, all three from one build:**
+
+| Tag       | Purpose                                                              |
+| --------- | -------------------------------------------------------------------- |
+| `v1.0.0`  | immutable release, matches `packages/gateway-container/package.json` |
+| `v1`      | moving pointer — the tag the quickstart names                        |
+| `sha-...` | the exact commit the image was built from                            |
+
+Run from a clean checkout of the commit being released, at the repository root:
+
+```bash
+# 0. Confirm you are releasing what you think you are.
+git status --porcelain            # must be empty
+git rev-parse --short HEAD
+
+VERSION=v1.0.0
+SHA=sha-$(git rev-parse --short HEAD)
+IMAGE=ghcr.io/costmyai/gateway
+
+# 1. Build from the real current source. Context is the repository root: the
+#    container compiles src/lib/ingest/contract.ts into itself.
+docker build -f packages/gateway-container/Dockerfile \
+  -t $IMAGE:$VERSION -t $IMAGE:v1 -t $IMAGE:$SHA .
+
+# 2. Log in. Credential: a GitHub personal access token (classic) belonging to
+#    an account with write access to the costmyai org, with scopes
+#    write:packages and read:packages. A fine-grained token does not work for
+#    GHCR. Never a password.
+echo $GHCR_TOKEN | docker login ghcr.io -u <github-username> --password-stdin
+
+# 3. Push all three tags.
+docker push $IMAGE:$VERSION
+docker push $IMAGE:v1
+docker push $IMAGE:$SHA
+
+# 4. Make the package public — required, and NOT done by the push.
+#    github.com/orgs/costmyai/packages -> gateway -> Package settings ->
+#    Change visibility -> Public.
+```
+
+**Verify it is genuinely public**, not just sitting in your local cache. Either on a
+second machine, or locally after evicting the local copy:
+
+```bash
+docker logout ghcr.io
+docker image rm $IMAGE:v1 $IMAGE:$VERSION $IMAGE:$SHA
+docker pull ghcr.io/costmyai/gateway:v1
+docker run --rm ghcr.io/costmyai/gateway:v1 --version 2>/dev/null || true
+```
+
+A pull that succeeds while logged out is the only proof that a stranger can run the
+quickstart. Then, from the repo:
+
+```bash
+bun scripts/audit/image-published.ts
+```
+
+which asks the registry anonymously for both `v1` and the pinned release tag, and is
+part of `bun run audit`.
