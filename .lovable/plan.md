@@ -1,69 +1,55 @@
-# CostMyAI — build order (v6, final)
+# Dispatch 99+100 — Spec review against the real codebase, then the build plan
 
-## Design scope — two visual languages, scoped by page type
+Review first, as asked. Everything below was read in the current tree, not assumed.
 
-**Dashboard** (Overview, Compare, Certify, Rightsize, Govern, Settings, Workspace): current build preserved **exactly** — dark hero card, existing palette and tokens, captured ring, card styling, layout, typography. No changes.
+## A. Real findings — things the spec gets wrong, misses, or collides with
 
-**Marketing / front-facing** (front page, pricing, about, blog, docs, legal): light, Apple-style, spacious. **Not** the dark-hero dashboard style. Built from the real brand gradient values, defined once and reused — never redefined per page:
+**1. `task_hint` has no "unknown" and cannot get one without a contract change. (blocking)**
+`src/lib/ingest/schema.ts` types it `z.enum(["generation","code","classification"])`, required, on a `.strict()` object. So today a real connector has exactly three choices, all of them a guess: label every real request "generation", refuse to send, or 422. The spec's "default to unknown and rely on the honest-refusal path" is not currently possible. Everything that consumes the label (Certify's discrimination gate, k-anonymity cohorts, the "Overpowered for the task" cards, `usage_rollups`' unique key which includes `task_hint`, `switches.functions.ts` matching) was only ever exercised on seeded data where the label was authored by `src/lib/synthetic/workloads.ts`. There is no classifier anywhere in the codebase. Adding `"unknown"` touches the ingest schema, the rollup key, the recommendation matchers and the UI copy — it is its own stage, before the connector can send a single honest event.
 
-```css
---gradient-brand: linear-gradient(135deg,#6366f1 0%,#7c3aed 55%,#9333ea 100%);
---gradient-brand-soft: linear-gradient(135deg,rgba(99,102,241,.82) 0%,rgba(124,58,237,.82) 100%);
---wash-hero: radial-gradient(ellipse 130% 100% at 50% 0%,rgba(123,97,255,.17) 0%,rgba(255,255,255,0) 90%);
---wash-section: radial-gradient(ellipse 120% 80% at 50% 0%,rgba(123,97,255,.13) 0%,rgba(255,255,255,0) 85%);
---texture-dots: radial-gradient(circle,hsl(var(--muted-foreground)/.09) 1px,transparent 1px); /* 26px pitch */
-```
+**2. The "we backfill the previous 30 days on connect" promise cannot be kept by billing-poll. (blocking, honesty)**
+`src/lib/dashboard/onboarding.ts:50` promises 30 days of *history*. `billing-poll.ts` + `backfill.ts` only produce **invoice totals per provider-month** — no per-model, per-host, per-task events, so no chart, no comparison, no switch. Real per-request history can only come from the unbuilt `costmyai replay` CLI in README §5. Stage 1 as written ("a freshly connected container actually produces 30 days of real history") is not achievable via billing poll. Pick one: build the replay CLI, or reword the promise to "reconciled invoice totals for the last 30 days; per-request history starts now".
 
-One `.btn-gradient` utility on `--gradient-brand` for every CTA button and solid-fill CTA block; `--wash-hero` behind hero sections, `--wash-section` behind secondary ones; `--gradient-brand-soft` for the heavier card state; dots optional for depth.
+**3. `InvoiceReader` has zero implementations.** `billing-poll.ts` takes an interface; nothing anywhere implements it for OpenAI, Anthropic or Google. Stage 1's "wire and test billing-poll" is really "write three real billing-API clients, each with its own credential shape, pagination and currency handling". Not a wiring job.
 
-**Both languages:** the CostMyAI wordmark with "My" in brand purple, and the hard no-serif-numerals rule.
+**4. There is nowhere to put "unparsed".** The ingest event schema is `.strict()` — any extra field is a 422 by design (that strictness is the credential guarantee). So Stage 2's "flag as unparsed rather than dropping" requires an additive optional field on the v1 contract (e.g. `parse_status: "parsed" | "tokens_only" | "unparsed"`). Without it the only signal is `0/0` tokens, which is indistinguishable from a real empty response and from unpriced traffic.
 
-**No serif numerals — hard constraint, everywhere.** Every dollar figure, token count, percentage and date renders sans-serif or a tabular-numeral mono face, regardless of the page's headline/body font. Enforced by a check over number-rendering components run in CI, not left to review.
+**5. Quickstart contradiction is worse than "port and image name".** `src/routes/_authenticated/settings.tsx:249` says `COSTMYAI_ENDPOINT`, port `8080`, image `costmyai/gateway:latest`, no volume. `packages/gateway-container/README.md` says `COSTMYAI_BASE_URL`, port `8787`, `ghcr.io/costmyai/gateway:latest`, with a spool volume. `loadConfig()` reads `COSTMYAI_BASE_URL` — so the settings page, the thing a real customer copies, is the wrong one. Constants must live in `src/lib/ingest/contract.ts` (UI imports app code; the container already mirrors from there) — not the other way round.
 
-**Zero-credentials:** schema invariant enforced by a test that fails on any credential-shaped column. No server-side provider key, no `openai-billing-fetcher.ts`, no `OPENAI_ADMIN_KEY`. Billing reconciliation is customer-push only.
+**6. `packages/gateway-container` is not a package and its imports escape it.** `config.ts` imports `../../../src/lib/ingest/contract`. That file is dependency-free and alias-free, so it works — but only if the Docker build context is the repo root. There are no workspaces in the root `package.json`. Decide now: repo-root build context with a copied contract file, or a genuine bun workspace.
 
-**Deliberately deferred:** cross-tenant admin/oversight panel (managing orgs across tenants, manual plan-entitlement adjustment). Not in Phases 1–8 beyond Phase 7's partner-tier override tooling; scoped separately when needed. Recorded as a decision, not a gap.
+**7. New connector tests must live under `src/`, or the audit cannot see them.** `scripts/audit/test-isolation.ts` walks `src` only, matching `*.integration.test.ts`. A test under `packages/` is invisible to the guard check — exactly the class of mistake Dispatch 94 exists to prevent. Precedent already exists: `src/lib/ingest/__tests__/ingest.test.ts` imports container code from `src`.
 
-### Phase 1 — Schema, benchmark sync, engine *(starts now)*
-Migrations first: full model incl. `benchmark_margins`, `pricing_snapshots`, billing captures/reconciliations, `routing_rules` (no credential column), `plan_entitlements`, `objectives`, `is_synthetic` on every tenant-scoped table, GRANTs and RLS throughout.
+**8. `idempotency_key` should be mandatory for the connector.** The upsert uses `onConflict: "org_id,idempotency_key"` while the schema makes the key optional. Null keys do not dedupe reliably. The connector must always mint one per request, or spool retries over a flaky network (Stage 0's explicit concern) can double-count.
 
-Then the **live Artificial Analysis sync** (24h) — real sync only, no manual-entry path; fixture-backed for dev/test until access lands, never surfaced as product data.
+**9. `rebuildRollups` is a heavy synchronous job on the ingest request path.** Every accepted batch re-reads up to 500 pages of events plus the whole price table and rewrites hour+day buckets. It has only ever run against the internal synthetic tick. Real concurrent customer traffic at 1000 events/batch will hit Worker CPU limits. The public ingest routes also have no rate limiting or abuse protection.
 
-Then the **engine**: one shared cost function (C3) and four separately-tested checks — arbitrage with deterministic tie-break; equivalence picking the **cheapest model clearing the bar**, bar from the stored per-benchmark margin not a hardcoded 1.0 (C1, C2), discrimination/Goodhart as real code; **rightsize as a first-class check** (observed shape only, computed for every org on every plan to power the upsell teaser); autonomous gate overlapping the equivalent band (C5). **Objective selection (Clause 07)**: cost default, latency and quality-floor as real alternatives, per-workload overriding account-wide.
+**10. `PROVIDER_HOSTS` covers 11 providers, not 71.** Host attribution for the other 60 falls through to "keeps its own name, unpriced". Honest, but it means most real customers see unpriced traffic on day one. Stage 5's shape enumeration should produce the host map at the same time.
 
-*Tests:* C1 tie + alphabetical fallback; C2 boundary both directions; each objective winning differently on one fixture; rightsize matrix incl. correct-size negatives; autonomous gate + cooldown; credential-column schema test.
+**11. Stage 6 cannot be completed from this environment.** No Docker, no GHCR credentials. Image build/publish and the "pullable from a machine that didn't build it" proof need Robin's registry credentials and a CI runner. The audit wiring can be built here; the publish cannot.
 
-### Phase 2 — Synthetic ecosystem *(parallel once schema lands)*
-Live pricing from day one; benchmarks on fixtures until access arrives, since the generator produces **traffic, never verdicts**. $15–20k/month solved backwards per model against live pricing and re-solved on price change; concentrated power-law distribution; **no showcase floor**; drift posted through the same public ingest endpoint a real customer uses every 30–120s; workload-set evolution on ~week ramps; `is_synthetic` isolation via RLS predicate and write-side guard; external demo gated behind a flag until live sync is on.
+**12. Reuse, don't invent:** `src/lib/ops/jobs.ts` + `src/routes/_authenticated/admin/jobs.tsx` already exist for internal signals — Stage 5's alerting belongs there. `src/lib/pricing/sync.server.ts` already computes `modelsNew` per run — the new-provider hook attaches there, not in a new sync.
 
-**Visibly live numbers:** tokens in/out, requests and spend all move within a minute or two — real rate underneath, honest interpolation between ~10s refreshes reconciling to the true value, precision chosen so movement shows, counters freeze if the generator stops. Tested at t=0/t=90s per counter, plus reconciliation and freeze tests.
+**Agreed as specified, no changes:** key-injection decision, no-retry rule, byte-identical error passthrough, bounded spool, v1 contract marker (already present), concurrency, timeouts, scope boundary, SIGTERM flush, true streaming, and the metadata-only privacy boundary.
 
-### Phase 3A — Ingestion hardening *(built)*
-`/api/public/v1/events` and `/api/public/v1/billing`: hashed org-scoped tokens, Zod rejecting any prompt/content field, idempotent, batched, rollups, versioned payload contract.
+## B. Revised build plan
 
-### Phase 3B — Verification Engine + customer onboarding *(server contract, backfill planner, container billing-poll/queue and quickstart built; container repoint of the existing proxy + npm/image publish outstanding; token UI lands with the Phase 4/5 settings surface)*
-Existing `packages/gateway` / `gateway-container` **repointed, not rebuilt** — local execution-key resolution, pass-through proxy and token counting preserved; endpoint paths read from one config constant; auth switched to the new ingest token; audit-flagged code dropped on the way through. Ships `@costmyai/engine` (npm) and the container image, dashboard-generated ingest token (shown once, hashed, rotatable, last-seen), **offline-safe local queueing so a CostMyAI outage never affects customer inference**, and a quickstart verified by executing it verbatim in a clean environment.
+**Stage 0 — Decisions + the task_hint prerequisite**
+Written decisions doc in the package. Locked recommendation: **pass-through** — the customer's app keeps sending its own key, the proxy never holds one (matches zero-credentials; the injection variant makes the container a credential store).
+Then land `task_hint: "unknown"`: ingest schema, rollup key, recommendation matchers, and UI copy that refuses to rank an unknown-task cohort rather than guessing. Classification stays a coarse label derived from endpoint path and model family only — never response or prompt content — and defaults to `unknown`.
 
-**First-connection 30-day backfill (brief §1, data sources).** The container's `billing-poll.ts` keeps per-provider connection state. On the *first* poll after a provider is connected it uses a **30-day lookback** instead of the standard rolling window, so a new customer sees a real reconciled month on day one instead of watching it accumulate — the same principle the synthetic demo gets from its historical seed. Every subsequent poll reverts to the rolling window. The backfilled periods push through the same `/api/public/v1/billing` contract, are idempotent per `(org, provider, period_start, period_end)` so a re-run or reconnect cannot double-count, and reconciliation runs over the backfilled months as soon as they land. Where a provider caps invoice history below 30 days, the shortfall is surfaced as a coverage note rather than silently truncated. Same rule for the metadata side: a customer who has usage history available from an existing gateway log may replay up to 30 days through `/api/public/v1/events`; idempotency keys make the replay safe.
+**Stage 0b — Contract additions (v1, additive):** optional `parse_status`, mandatory-in-practice `idempotency_key`, shared `CONTAINER_DEFAULTS` (port, env names, image ref) in `contract.ts`, asserted against the settings page and README in CI the way `INGEST_PATHS` already is.
 
-*Tests:* clean-container quickstart run; network-partition drain test; payload capture asserting no prompt content; **configured-paths-match-live-routes test**; rotated-token error clarity; **first-poll-uses-30d / second-poll-uses-rolling-window assertion**; **double-run backfill asserted to produce exactly one capture per provider-period**; short-history provider asserted to yield a coverage note, not a silent gap.
+**Stage 1 — Real package:** `package.json`, `Dockerfile`, `src/index.ts` wiring `loadConfig` + `UpstreamQueue`, SIGTERM flush, health endpoint. Backfill scope decided per finding 2; if replay is chosen it ships here as `costmyai replay`.
 
+**Stage 2 — Generic proxy:** one configurable upstream per instance, verbatim forward, streamed passthrough, no retries, timeout, credential-safe logging proven by a deliberate failure. Parsers for OpenAI-compatible, Anthropic, Gemini — non-streaming and each one's real streaming terminator — plus `parse_status` for anything else.
 
-### Phase 4 — Dashboard rewired *(dashboard design untouched)*
-Real queries and live engine output behind the existing components; locked rungs show real previews incl. the rightsize teaser; objective selector surfaced; "waiting for first event" state wired to 3B. *Tests:* period toggle headline vs direct engine call, **and every list asserted to filter by period** (11-day-old rule present at 30d, absent at 7d, per list); visual regression asserting hero/ring/cards unchanged.
+**Stage 3 — Disk-backed spool** with size and age bounds and oldest-first eviction, written at request-completion time.
 
-### Phase 5 — Accounts, plans, gating
-Auth, org invites, Stripe, one server-side `requirePlan(tier)`, `LAUNCH_FREE_UNTIL` single-sourced (C7).
+**Stage 4 — One reconciled quickstart** from the shared constants, settings page and README both generated from them.
 
-### Phase 6 — Switching
-Manual switch writing `routing_rules` the engine polls; measured before/after. Then Govern: policy editor, autonomous writer, kill switch, rollback, full audit.
+**Stage 5 — Tests by shape + alerting:** enumerate real response shapes across the 71 tracked providers from their live docs and report the real count and mapping; one E2E per shape plus a second provider on an already-proven shape; all of it under `src/**/*.integration.test.ts` with `guardIntegrationDatabase`. Unparsed shapes raise an ops job signal; the pricing sync flags genuinely new providers for a one-time shape check, proven on a real sync run.
 
-### Phase 7 — Partner / affiliate program
-`partners`, `partner_users` with own auth surface and RLS boundary, `partner_tiers` ($5K/$10K/$40K/$130K → 15/20/25/30/35%), `referred_by_partner_id`, `commission_ledger` with lifetime semantics and payout status; partner dashboard; admin tier assignment with audited override. Movable to directly after Phase 5.
+**Stage 6 — Publish + audit:** add `audit:connector` to `scripts/audit/all.ts` (container build + E2E). Image publish handed to Robin with exact commands, since this environment has neither Docker nor registry credentials.
 
-### Phase 8 — Marketing surface + copy
-Marketing pages built in the light Apple-style language above on the shared gradient tokens; freshness sourced live from `pricing_snapshots.synced_at` (C6); resolver docs corrected (C4); C8 dead re-check and `hosts[0]` assumption removed; pricing and legal. *Tests:* no-serif-numeral check across marketing components; CTA audit asserting every CTA resolves to `.btn-gradient`.
-
-**Not built:** Analyzer CSV page or route, server-side provider billing fetch, manual benchmark entry, compatibility shims for retired ingest paths, cross-tenant admin panel (deferred, above).
-
-**Needed from you:** Artificial Analysis API access (key + tier) when convenient — nothing else blocks Phase 1.
+Reporting stage by stage with real proof at each, as asked.
