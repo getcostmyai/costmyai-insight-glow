@@ -27,6 +27,28 @@ export interface ShapeWatchReport {
 }
 
 /**
+ * Is this report being raised by the integration suite rather than by real
+ * traffic?
+ *
+ * Dispatch 112. The alerts this watch writes are real rows on the ops board,
+ * and the integration suite raises them on purpose — a fixture that declares
+ * `cohere` a brand-new provider, an event carrying `no-such-model-at-all`.
+ * Every shape-watch alert on the board over a full week turned out to be one
+ * of those. A board that is permanently red for reasons nobody caused is a
+ * board nobody reads, which is the failure mode this watch exists to prevent.
+ *
+ * So test-raised reports are stamped at the moment they are written, and the
+ * isolation sweep removes them by that stamp. Vitest sets VITEST in the
+ * process it runs; production never does. Reports that arrive over HTTP are
+ * written by the app server, which has no such variable — those are attributed
+ * by workspace instead (see the `orgId` the ingest caller passes).
+ */
+function testAttribution(): { testRun: true } | Record<string, never> {
+  const inTest = process.env["VITEST"] === "true" || process.env["COSTMYAI_TEST_RUN"] === "1";
+  return inTest ? { testRun: true } : {};
+}
+
+/**
  * Record one report. Deliberately best-effort: a watch that could not write
  * its warning must never take down the ingest path it is watching, and the
  * failure is logged where the server logs are read.
@@ -34,6 +56,12 @@ export interface ShapeWatchReport {
 export async function reportUnrecognisedShape(report: ShapeWatchReport): Promise<boolean> {
   try {
     const { recordRun } = await import("@/lib/engine/evaluate.server");
+    const base =
+      report.detail && typeof report.detail === "object" && !Array.isArray(report.detail)
+        ? (report.detail as Record<string, unknown>)
+        : report.detail === undefined || report.detail === null
+          ? {}
+          : { detail: report.detail };
     await recordRun({
       job: SHAPE_WATCH_JOB,
       started: new Date(),
@@ -43,8 +71,9 @@ export async function reportUnrecognisedShape(report: ShapeWatchReport): Promise
       outcome: "failed",
       rowsWritten: report.count,
       error: `[${report.source}] ${report.summary}`,
-      detail: report.detail ?? null,
+      detail: { ...base, ...testAttribution() },
     });
+
     return true;
   } catch (err) {
     console.error("shape watch could not record a report", err);
