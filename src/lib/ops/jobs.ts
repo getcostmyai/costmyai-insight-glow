@@ -17,7 +17,27 @@ export interface JobSpec {
   /** Longest gap between runs that is still normal, including tolerance. */
   maxIntervalMinutes: number;
   what: string;
+  /**
+   * A watch, not a schedule: it only writes a row when it has something to
+   * report. Silence is the healthy state, so it is never judged stale, and a
+   * single reported row is the alert. Used for the unrecognised-shape watch,
+   * which fires from ingest and from the pricing feed rather than from cron.
+   */
+  eventDriven?: boolean;
+  /** What silence means, printed when an event-driven watch has nothing to say. */
+  quietMeans?: string;
 }
+
+
+/**
+ * The one job name the shape watch writes under. Ingest and the pricing sync
+ * both report here rather than each inventing a channel, so the board shows
+ * one line for "a shape we do not understand turned up".
+ */
+export const SHAPE_WATCH_JOB = "shape-watch";
+
+/** How long a reported shape stays an open alert on the board. */
+export const SHAPE_WATCH_WINDOW_MINUTES = 7 * 24 * 60;
 
 export const JOB_REGISTRY: JobSpec[] = [
   {
@@ -68,7 +88,20 @@ export const JOB_REGISTRY: JobSpec[] = [
     maxIntervalMinutes: 60 * 24 * 35,
     what: "Freezes the closing month's public intelligence figures, append-only.",
   },
+  {
+    job: SHAPE_WATCH_JOB,
+    label: "Unrecognised response shapes",
+    cronName: "—",
+    schedule: "on event",
+    // Never judged on cadence: see `eventDriven`. Kept large so a stray read
+    // of this field by an older caller cannot invent a staleness alert.
+    maxIntervalMinutes: Number.MAX_SAFE_INTEGER,
+    eventDriven: true,
+    what: "Reports a provider response envelope the connector could not read, and a provider appearing on the pricing feed with no known shape.",
+    quietMeans: "Every shape seen so far is one of the six the connector parses.",
+  },
 ];
+
 
 export type JobVerdict = "healthy" | "stale" | "failing" | "empty" | "never-run";
 
@@ -105,9 +138,40 @@ export function judgeJob(spec: JobSpec, runs: JobRunSummary[], nowMs: number): J
 
   const base = { ...spec, lastRunAt, minutesSince, recent };
 
+  /**
+   * A watch is the inverse of a schedule: it writes only when something is
+   * wrong, so silence is the healthy answer and staleness is meaningless. An
+   * alert stays open for a week, long enough that nobody misses one raised on
+   * a Friday, then clears itself rather than staying red forever.
+   */
+  if (spec.eventDriven) {
+    const open = recent.filter(
+      (r) =>
+        r.outcome !== "quiet" &&
+        (nowMs - Date.parse(r.startedAt)) / MIN_MS <= SHAPE_WATCH_WINDOW_MINUTES,
+    );
+    if (open.length === 0) {
+      return {
+        ...base,
+        verdict: "healthy",
+        reason: lastRunAt
+          ? `Nothing reported in the last ${formatAgo(SHAPE_WATCH_WINDOW_MINUTES)}. ${spec.quietMeans ?? ""}`.trim()
+          : (spec.quietMeans ?? "Nothing reported."),
+      };
+    }
+    return {
+      ...base,
+      verdict: "failing",
+      reason: `${open.length} report${open.length === 1 ? "" : "s"} in the last ${formatAgo(
+        SHAPE_WATCH_WINDOW_MINUTES,
+      )}: ${String(open[0]?.error ?? "no detail").slice(0, 200)}`,
+    };
+  }
+
   if (!last || minutesSince === null) {
     return { ...base, verdict: "never-run", reason: "This job has never reported a run." };
   }
+
   if (minutesSince > spec.maxIntervalMinutes) {
     return {
       ...base,

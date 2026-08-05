@@ -108,8 +108,39 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
   const accepted = inserted?.length ?? 0;
   const bucketsRebuilt = accepted > 0 ? await rebuildRollups(orgId, rows.map((r) => new Date(r.occurred_at))) : 0;
 
+  // Dispatch 104. An envelope the connector could not read is metered as zero
+  // and looks, from the dashboard, exactly like traffic that did not happen.
+  // It raises a report on the jobs board instead of passing silently.
+  await watchUnparsedShapes(rows);
+
+
   return { accepted, duplicates: rows.length - accepted, bucketsRebuilt };
 }
+
+/**
+ * Raise one report per batch that carried an envelope the connector could not
+ * read. Per batch, not per event: a customer running a genuinely new provider
+ * would otherwise fill the ledger with the same finding thousands of times.
+ */
+async function watchUnparsedShapes(
+  rows: Array<{ parse_status: string; model_key: string; host: string }>,
+): Promise<void> {
+  const unparsed = rows.filter((r) => r.parse_status === "unparsed");
+  if (unparsed.length === 0) return;
+
+  const pairs = [...new Set(unparsed.map((r) => `${r.model_key}@${r.host}`))].sort();
+  const { reportUnrecognisedShape } = await import("@/lib/ops/shape-watch.server");
+  await reportUnrecognisedShape({
+    source: "ingest",
+    count: unparsed.length,
+    summary: `${unparsed.length} event${unparsed.length === 1 ? "" : "s"} arrived with an unreadable response envelope: ${pairs
+      .slice(0, 5)
+      .join(", ")}${pairs.length > 5 ? ` and ${pairs.length - 5} more` : ""}`,
+    detail: { pairs, events: unparsed.length },
+  });
+}
+
+
 
 /**
  * Re-derive every hour and day bucket the new events touched, straight from the
