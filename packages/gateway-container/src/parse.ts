@@ -49,9 +49,11 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 /**
- * The real distinct shapes across the tracked providers. Ordered most specific
- * first; `heuristic` is the "we found counters we recognise in an envelope we
- * don't" tier, which reports `tokens_only` rather than pretending to be sure.
+ * The real distinct shapes across the tracked providers, enumerated against the
+ * live catalog in Dispatch 104: openai, anthropic, gemini, cohere, bedrock and
+ * tencent. Ordered most specific first; `heuristic` is the "we found counters
+ * we recognise in an envelope we don't" tier, which reports `tokens_only`
+ * rather than pretending to be sure.
  */
 export function readUsage(payload: unknown): UsageReading {
   const root = asRecord(payload);
