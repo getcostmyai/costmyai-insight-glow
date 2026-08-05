@@ -118,7 +118,7 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
   // Dispatch 104. An envelope the connector could not read is metered as zero
   // and looks, from the dashboard, exactly like traffic that did not happen.
   // It raises a report on the jobs board instead of passing silently.
-  await watchUnparsedShapes(rows);
+  await watchUnparsedShapes(orgId, rows);
 
 
   return { accepted, duplicates: rows.length - accepted, bucketsRebuilt };
@@ -128,8 +128,15 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
  * Raise one report per batch that carried an envelope the connector could not
  * read. Per batch, not per event: a customer running a genuinely new provider
  * would otherwise fill the ledger with the same finding thousands of times.
+ *
+ * The workspace is recorded with the finding. It is the answer to the first
+ * question anyone asks of an alert ("whose traffic?"), and it is also what
+ * lets the isolation sweep tell a real alert from one the integration suite
+ * raised: an alert about a workspace that no longer exists is residue by
+ * definition (Dispatch 112).
  */
 async function watchUnparsedShapes(
+  orgId: string,
   rows: Array<{ parse_status: string; model_key: string; host: string }>,
 ): Promise<void> {
   const unparsed = rows.filter((r) => r.parse_status === "unparsed");
@@ -143,9 +150,10 @@ async function watchUnparsedShapes(
     summary: `${unparsed.length} event${unparsed.length === 1 ? "" : "s"} arrived with an unreadable response envelope: ${pairs
       .slice(0, 5)
       .join(", ")}${pairs.length > 5 ? ` and ${pairs.length - 5} more` : ""}`,
-    detail: { pairs, events: unparsed.length },
+    detail: { pairs, events: unparsed.length, orgId },
   });
 }
+
 
 
 

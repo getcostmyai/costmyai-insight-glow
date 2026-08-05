@@ -50,10 +50,76 @@ export interface SweepResult {
   organizations: number;
   partnerApplications: number;
   partners: number;
+  /** Ops-board alerts the suite raised on purpose (Dispatch 112). */
+  syncRunAlerts: number;
 }
 
 export const totalResidue = (r: SweepResult) =>
-  r.users + r.organizations + r.partnerApplications + r.partners;
+  r.users + r.organizations + r.partnerApplications + r.partners + r.syncRunAlerts;
+
+/** The one job the integration suite is able to write rows to. */
+const SHAPE_WATCH_JOB = "shape-watch";
+
+/**
+ * Remove the ops-board alerts the integration suite raised, and nothing else.
+ *
+ * Two kinds, matched two different ways, because they are written by two
+ * different processes:
+ *
+ *   1. In-process reports (a fixture feed declaring `cohere` a new provider)
+ *    carry `detail.testRun`, stamped by the watch itself because Vitest set
+ *    VITEST in the process that called it.
+ *   2. Reports raised over HTTP are written by the app server, which has no
+ *    such variable. Those carry `detail.orgId`, and the ones belonging to a
+ *    workspace that no longer exists are residue by definition — a real
+ *    customer's alert always has a real customer behind it.
+ *
+ * Deliberately narrow: a shape-watch alert with a live workspace behind it and
+ * no test stamp is real signal, and is never touched.
+ */
+async function sweepAlertResidue(admin: AdminLike, cutoff: string): Promise<number> {
+  let removed = 0;
+
+  // 1. Stamped by the watch. A stamped row is provably ours, so it gets a much
+  //    shorter gate than the generic sweep window: long enough that a sibling
+  //    test file asserting on the row it just wrote is not robbed mid-run,
+  //    short enough that the ops board is not left red for half an hour after
+  //    a suite finishes. Never looser than the caller's own window.
+  const STAMPED_GRACE_MS = 2 * 60_000;
+  const stampedCutoff = new Date(Date.now() - STAMPED_GRACE_MS).toISOString();
+  const stamped = await admin
+    .from("sync_runs")
+    .delete()
+    .eq("job", SHAPE_WATCH_JOB)
+    .eq("detail->>testRun", "true")
+    .lt("started_at", stampedCutoff > cutoff ? stampedCutoff : cutoff)
+    .select("id");
+  removed += (stamped.data ?? []).length;
+
+
+  // 2. Alerts about a workspace that is gone. No age gate needed: the org was
+  //    already deleted, so the alert can no longer be about live traffic.
+  const { data: alerts } = await admin
+    .from("sync_runs")
+    .select("id, detail")
+    .eq("job", SHAPE_WATCH_JOB)
+    .not("detail->>orgId", "is", null);
+
+  const rows = (alerts ?? []) as Array<{ id: string; detail: { orgId?: string } | null }>;
+  const orgIds = [...new Set(rows.map((r) => r.detail?.orgId).filter((v): v is string => !!v))];
+  if (orgIds.length) {
+    const { data: live } = await admin.from("organizations").select("id").in("id", orgIds);
+    const alive = new Set((live ?? []).map((o: { id: string }) => o.id));
+    const orphaned = rows.filter((r) => r.detail?.orgId && !alive.has(r.detail.orgId)).map((r) => r.id);
+    if (orphaned.length) {
+      const gone = await admin.from("sync_runs").delete().in("id", orphaned).select("id");
+      removed += (gone.data ?? []).length;
+    }
+  }
+
+  return removed;
+}
+
 
 /**
  * Remove everything the integration suite is capable of leaving behind, and
@@ -70,7 +136,14 @@ export async function sweepTestResidue(
   olderThanMs: number = 30 * 60_000,
 ): Promise<SweepResult> {
   const cutoff = new Date(Date.now() - olderThanMs).toISOString();
-  const result: SweepResult = { users: 0, organizations: 0, partnerApplications: 0, partners: 0 };
+  const result: SweepResult = {
+    users: 0,
+    organizations: 0,
+    partnerApplications: 0,
+    partners: 0,
+    syncRunAlerts: 0,
+  };
+
 
   // 1. Test accounts, found by their reserved email domain.
   const testUsers: string[] = [];
@@ -116,8 +189,13 @@ export async function sweepTestResidue(
     if (!error) result.users += 1;
   }
 
+  // Last, deliberately: the orphan rule reads which workspaces still exist, so
+  // it has to run after this sweep has finished deleting them.
+  result.syncRunAlerts = await sweepAlertResidue(admin, cutoff);
+
   return result;
 }
+
 
 /**
  * Call once at module scope in every `*.integration.test.ts`, right after the
