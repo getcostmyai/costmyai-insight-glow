@@ -274,7 +274,8 @@ export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: Rep
         size="xl"
         value={data.liveHosts}
         label="Providers tracked"
-        sub="Distinct hosts with at least one live price."
+        sub="Distinct real providers with at least one live price. Aggregator listings are excluded."
+
         cardId="kpi-providers"
         ctx={ctx}
       />
@@ -488,8 +489,9 @@ function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: Report
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">
                       {s.cheapestHost} → {s.dearestHost} · {s.hosts} provider
-                      {s.hosts === 1 ? "" : "s"}
+                      {s.hosts === 1 ? "" : "s"} · per MTok in
                     </p>
+
                   </div>
                   <div className="flex items-center gap-3 sm:justify-end">
                     <div className="text-left sm:text-right">

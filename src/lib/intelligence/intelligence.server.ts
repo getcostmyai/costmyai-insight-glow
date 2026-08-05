@@ -335,12 +335,17 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
   hostCounts.sort((a, b) => a - b);
 
   // ---- Quality per dollar: cheapest model clearing its measured band ----------
+  // Dispatch 116: priced off REAL endpoints only, exactly like the spread
+  // section above. The aggregate listing is one pseudo-host that carries the
+  // cheapest input price for 150 of 306 models, so pricing off `prices` could
+  // publish "cheapest listing at <aggregator>" — a price no provider serves.
   const cheapestPrice = new Map<string, { price: number; label: string }>();
-  for (const p of prices) {
+  for (const p of realEndpoints) {
     const input = Number(p.input_usd_per_mtok);
     const seen = cheapestPrice.get(p.model_key);
     if (!seen || input < seen.price) cheapestPrice.set(p.model_key, { price: input, label: p.host_label });
   }
+
 
   const bandWinners: BandWinner[] = [];
   const saturation: SaturationRow[] = [];
@@ -350,8 +355,15 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     const margin = Number(m.margin);
     const scored = benchmarks
       .filter((b) => b.suite === m.suite && b.task_class === m.task_class)
-      .map((b) => ({ modelKey: b.model_key, score: Number(b.score) }));
+      .map((b) => ({ modelKey: b.model_key, score: Number(b.score) }))
+      // Dispatch 116: a stored 0.000 is the sync's "not measured on this
+      // instrument" sentinel, not a result. The engine refuses on it
+      // (equivalence.ts:211); this page used to count it, which widened the
+      // published lcr separation to 75.67 across "126 models" when the real
+      // measured figures are 74.00 across 120.
+      .filter((s) => s.score > 0);
     if (scored.length < 2) continue;
+
 
     const scores = scored.map((s) => s.score);
     // Same measurement as every other separation figure in the system, so
@@ -402,7 +414,11 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     }),
     trackingSince: oldestRes.data?.observed_at ?? null,
     liveModels: activeModels.length,
-    liveHosts: new Set(prices.map((p) => p.host)).size,
+    // "Providers tracked" must mean providers. The OpenRouter aggregate
+    // listing is one pseudo-host, not a company serving weights, so counting
+    // it published 71 where 70 real providers exist (Dispatch 116).
+    liveHosts: new Set(realEndpoints.map((p) => p.host)).size,
+
     changesTotal: moves.length,
     increases: increases.length,
     decreases: decreases.length,
