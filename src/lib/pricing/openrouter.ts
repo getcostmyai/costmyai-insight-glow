@@ -346,11 +346,10 @@ export function diffPrice(next: PriceEntry, prev: StoredPrice | undefined): Pric
 
   if (!moved) return prev.is_active ? null : { ...base, change_kind: "relisted", prev_input_usd_per_mtok: prev.input_usd_per_mtok, prev_output_usd_per_mtok: prev.output_usd_per_mtok, pct_change: 0 };
 
-  // Blended, because a change that raises input and cuts output has no single
-  // direction otherwise. Direction is taken from the blended movement.
+  // One definition, shared with every reader — see blendedPctChange above.
   const prevBlended = prev.input_usd_per_mtok + prev.output_usd_per_mtok;
   const nextBlended = next.input_usd_per_mtok + next.output_usd_per_mtok;
-  const pct = prevBlended > 0 ? Math.round(((nextBlended - prevBlended) / prevBlended) * 10000) / 100 : null;
+  const pct = blendedPctChange(next, prev);
 
   return {
     ...base,
