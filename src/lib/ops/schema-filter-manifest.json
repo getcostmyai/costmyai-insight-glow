@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-05T21:52:42.503Z",
+  "generatedAt": "2026-08-05T22:13:16.986Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -70,7 +70,7 @@
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 51,
+      "line": 61,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -79,23 +79,21 @@
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 58,
+      "line": 68,
       "table": "host_prices",
-      "filters": [
-        "is_active"
-      ],
-      "snippet": ".from(\"host_prices\") .select( \"model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms,"
+      "filters": [],
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host_label, price_source, input_usd_per_mtok, output_usd_per_mtok, m"
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 68,
+      "line": 79,
       "table": "benchmarks",
       "filters": [],
       "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score, measured_at\") .order(\"measured_at\", { ascend"
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 75,
+      "line": 86,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -488,7 +486,7 @@
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 235,
+      "line": 237,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -497,7 +495,7 @@
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 241,
+      "line": 243,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -506,14 +504,14 @@
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 264,
+      "line": 266,
       "table": "benchmarks",
       "filters": [],
       "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t), ), supabase.from(\"benchmark_mar"
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 266,
+      "line": 268,
       "table": "benchmark_margins",
       "filters": [],
       "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\"), ])"
@@ -568,27 +566,25 @@
     },
     {
       "file": "src/lib/marketing.server.ts",
-      "line": 46,
+      "line": 54,
       "table": "model_catalog",
       "filters": [
-        "is_active",
-        "status"
+        "is_active"
       ],
       "snippet": ".from(\"model_catalog\").select(\"model_key\", { count: \"exact\", head: true }).eq(\"is_active\", true), fetchAllRows"
     },
     {
       "file": "src/lib/marketing.server.ts",
-      "line": 48,
+      "line": 57,
       "table": "host_prices",
       "filters": [
-        "is_active",
-        "status"
+        "is_active"
       ],
-      "snippet": ".from(\"host_prices\").select(\"host, host_label\").eq(\"is_active\", true).range(f, t), ).then((data) => ({ data })"
+      "snippet": ".from(\"host_prices\") .select(\"host, host_label, price_source\") .eq(\"is_active\", true)"
     },
     {
       "file": "src/lib/marketing.server.ts",
-      "line": 51,
+      "line": 64,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -751,7 +747,7 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 93,
+      "line": 95,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -760,21 +756,21 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 140,
+      "line": 142,
       "table": "model_catalog",
       "filters": [],
       "snippet": ".from(\"model_catalog\").select(\"model_key\")"
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 157,
+      "line": 159,
       "table": "host_prices",
       "filters": [],
       "snippet": ".from(\"host_prices\").select(\"host\").range(f, t), )"
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 190,
+      "line": 192,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -783,7 +779,7 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 464,
+      "line": 466,
       "table": "host_prices",
       "filters": [
         "is_active"

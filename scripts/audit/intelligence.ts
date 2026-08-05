@@ -366,8 +366,50 @@ async function main() {
     );
   }
 
+  // ---- 4b. Cross-surface: every page that states a provider count ----------
+  // Dispatch 117. The count was fixed on this page while the homepage, the
+  // marquee, the about page and /models each kept their own copy of "distinct
+  // host_labels", so the front door still published 71. One canonical counter
+  // now; this proves all four surfaces read it.
+  console.log("\ncross-surface provider count");
+  {
+    const { readMarketingStats } = await import("../../src/lib/marketing.server");
+    const { readCatalog } = await import("../../src/lib/catalog/catalog.server");
+    const { countRealProviders } = await import("../../src/lib/pricing/aggregate");
+    const canonical = countRealProviders(prices);
+    const [marketing, catalog] = await Promise.all([readMarketingStats(), readCatalog()]);
+
+    check("canonical count excludes the aggregate listing", canonical === page.liveHosts, `${canonical}`);
+    check(
+      "homepage / marquee / about state the canonical count",
+      marketing.providerCount === canonical,
+      `homepage ${marketing.providerCount}`,
+    );
+    check(
+      "the marquee lists only companies that serve weights",
+      marketing.providers.length === canonical,
+      `${marketing.providers.length} logos`,
+    );
+    check(
+      "/models 'serving providers' states the canonical count",
+      catalog.providers.length === canonical,
+      `models ${catalog.providers.length}`,
+    );
+    check(
+      "/models prices each model off a real provider, never the aggregator",
+      catalog.rows.every(
+        (r) =>
+          r.cheapestInput === null ||
+          r.cheapestInput ===
+            Math.min(...r.hosts.filter((h) => !h.aggregate).map((h) => h.input)),
+      ),
+      `${catalog.rows.length} models`,
+    );
+  }
+
   // ---- 5. Redistribution surfaces: widget and share cards -------------------
   console.log("\nredistribution");
+
   {
     const stats = buildWidgetStats(page, null);
     const up = stats.find((s) => s.id === "top-increase");

@@ -39,12 +39,21 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "name", label: "A–Z" },
 ];
 
-/** Percent gap between the dearest and cheapest verified host for one model. */
+/** Providers serving this model — the aggregate listing is not one of them. */
+const servingHosts = (row: CatalogRow) => row.hosts.filter((h) => !h.aggregate);
+
+/**
+ * Percent gap between the dearest and cheapest verified provider for one model.
+ * Provider-to-provider only: quoting the aggregate listing as one end of the
+ * gap would price a switch nobody can make (Dispatch 117).
+ */
 function hostSpread(row: CatalogRow): number | null {
-  if (row.hosts.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
-  const max = Math.max(...row.hosts.map((h) => h.input));
+  const serving = servingHosts(row);
+  if (serving.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
+  const max = Math.max(...serving.map((h) => h.input));
   return ((max - row.cheapestInput) / row.cheapestInput) * 100;
 }
+
 
 function ModelsPage() {
   const { data } = useSuspenseQuery(catalogQuery());
@@ -67,7 +76,7 @@ function Hero({ data }: { data: CatalogPayload }) {
     return {
       models: data.rows.length,
       // Models sold by more than one verified host — every one of these is a live price race.
-      contested: data.rows.filter((r) => r.hosts.length > 1).length,
+      contested: data.rows.filter((r) => servingHosts(r).length > 1).length,
       providers: data.providers.length,
       topSpread,
     };
@@ -267,9 +276,11 @@ function modalityLabel(modality: string): string {
 function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
   const [open, setOpen] = useState(false);
   const spread = hostSpread(row);
-  const cheapest = row.hosts.length
-    ? row.hosts.reduce((best, h) => (h.input < best.input ? h : best))
+  const serving = servingHosts(row);
+  const cheapest = serving.length
+    ? serving.reduce((best, h) => (h.input < best.input ? h : best))
     : null;
+
 
   return (
     <Reveal delay={Math.min(index, 8) * 45} className="border-t border-border">
@@ -378,7 +389,15 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
                       return (
                         <li key={h.host_label} className="border-t border-border py-3">
                           <div className="flex items-baseline justify-between gap-4">
-                            <span className="truncate text-sm font-medium">{h.host_label}</span>
+                            <span className="truncate text-sm font-medium">
+                              {h.host_label}
+                              {h.aggregate ? (
+                                <span className="ml-2 text-[0.65rem] uppercase tracking-[0.14em] text-muted-foreground">
+                                  aggregator
+                                </span>
+                              ) : null}
+                            </span>
+
                             <span className="num shrink-0 text-sm">
                               ${h.input.toFixed(2)}
                               <span className="text-muted-foreground"> / ${h.output.toFixed(2)}</span>

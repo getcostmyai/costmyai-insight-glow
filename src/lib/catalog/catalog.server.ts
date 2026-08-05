@@ -1,6 +1,8 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { AA_INTELLIGENCE_SUITE } from "@/lib/benchmarks/aa-catalog";
+import { isRealEndpoint } from "@/lib/pricing/aggregate";
+
 
 
 export interface CatalogRow {
@@ -12,9 +14,17 @@ export interface CatalogRow {
   context_window: number | null;
   /** e.g. "text+image->text" — straight from the catalog, never inferred. */
   modality: string;
-  hosts: { host_label: string; input: number; output: number }[];
+  /**
+   * Every purchasable listing for this model, cheapest first. `aggregate: true`
+   * marks the OpenRouter aggregate listing — still a real way to buy the model,
+   * but not a company serving weights, so provider counts and provider-to-
+   * provider spreads exclude it (Dispatch 117).
+   */
+  hosts: { host_label: string; input: number; output: number; aggregate: boolean }[];
+  /** Cheapest REAL provider price. Aggregate listings never set this. */
   cheapestInput: number | null;
   cheapestOutput: number | null;
+
   scores: { task_class: string; suite: string; score: number }[];
   /** Named benchmark columns. null = no score on record for this model. */
   gpqa: number | null;
@@ -57,8 +67,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       supabase
         .from("host_prices")
         .select(
-          "model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
+          "model_key, host_label, price_source, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
         )
+
         .eq("is_active", true)
         .range(f, t),
     ),
@@ -88,8 +99,11 @@ export async function readCatalog(): Promise<CatalogPayload> {
         host_label: p.host_label,
         input: Number(p.input_usd_per_mtok),
         output: Number(p.output_usd_per_mtok),
+        aggregate: !isRealEndpoint(p),
       }))
       .sort((a, b) => a.input - b.input || a.host_label.localeCompare(b.host_label));
+    const realHosts = hosts.filter((h) => !h.aggregate);
+
 
     const scores = benchmarks
       .filter((b) => b.model_key === m.model_key)
@@ -122,8 +136,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       context_window: m.context_window,
       modality: m.modality,
       hosts,
-      cheapestInput: hosts.length ? hosts[0].input : null,
-      cheapestOutput: hosts.length ? Math.min(...hosts.map((h) => h.output)) : null,
+      cheapestInput: realHosts.length ? realHosts[0].input : null,
+      cheapestOutput: realHosts.length ? Math.min(...realHosts.map((h) => h.output)) : null,
+
       scores,
       ...named,
       intelligence: publishedIndex ? publishedIndex.score : null,
@@ -138,7 +153,11 @@ export async function readCatalog(): Promise<CatalogPayload> {
   return {
     rows,
     vendors: [...new Set(rows.map((r) => r.vendor))].sort((a, b) => a.localeCompare(b)),
-    providers: [...new Set(prices.map((p) => p.host_label))].sort((a, b) => a.localeCompare(b)),
+    // "Serving providers" means companies serving weights — real endpoints only.
+    providers: [...new Set(prices.filter(isRealEndpoint).map((p) => p.host_label))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+
     live: Boolean(snapshot.data?.synced_at),
   };
 }
