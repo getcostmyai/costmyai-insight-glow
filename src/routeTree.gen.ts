@@ -61,6 +61,7 @@ import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/pu
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
+import { Route as ApiPublicSyncReprocessRouteImport } from './routes/api/public/sync/reprocess'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
 import { Route as ApiPublicSyncPartnerPayoutsRouteImport } from './routes/api/public/sync/partner-payouts'
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
@@ -338,6 +339,11 @@ const ApiPublicSyntheticTickRoute = ApiPublicSyntheticTickRouteImport.update({
   path: '/api/public/synthetic/tick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncReprocessRoute = ApiPublicSyncReprocessRouteImport.update({
+  id: '/api/public/sync/reprocess',
+  path: '/api/public/sync/reprocess',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncPricesRoute = ApiPublicSyncPricesRouteImport.update({
   id: '/api/public/sync/prices',
   path: '/api/public/sync/prices',
@@ -439,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -497,6 +504,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -560,6 +568,7 @@ export interface FileRoutesById {
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
+  '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -623,6 +632,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/freeze'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
+    | '/api/public/sync/reprocess'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -681,6 +691,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/freeze'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
+    | '/api/public/sync/reprocess'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -743,6 +754,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/freeze'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
+    | '/api/public/sync/reprocess'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -784,6 +796,7 @@ export interface RootRouteChildren {
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
   ApiPublicSyncPartnerPayoutsRoute: typeof ApiPublicSyncPartnerPayoutsRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
+  ApiPublicSyncReprocessRoute: typeof ApiPublicSyncReprocessRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
@@ -1157,6 +1170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyntheticTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/reprocess': {
+      id: '/api/public/sync/reprocess'
+      path: '/api/public/sync/reprocess'
+      fullPath: '/api/public/sync/reprocess'
+      preLoaderRoute: typeof ApiPublicSyncReprocessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/prices': {
       id: '/api/public/sync/prices'
       path: '/api/public/sync/prices'
@@ -1332,6 +1352,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
   ApiPublicSyncPartnerPayoutsRoute: ApiPublicSyncPartnerPayoutsRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
+  ApiPublicSyncReprocessRoute: ApiPublicSyncReprocessRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
@@ -1341,13 +1362,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

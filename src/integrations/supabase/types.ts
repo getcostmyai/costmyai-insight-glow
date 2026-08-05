@@ -1716,6 +1716,7 @@ export type Database = {
       usage_events: {
         Row: {
           created_at: string
+          envelope_skeleton: Json | null
           host: string
           id: number
           idempotency_key: string | null
@@ -1727,11 +1728,14 @@ export type Database = {
           org_id: string
           output_tokens: number
           parse_status: string
+          parser_revision: number | null
+          reparsed_at: string | null
           status: string
           task_hint: string
         }
         Insert: {
           created_at?: string
+          envelope_skeleton?: Json | null
           host: string
           id?: number
           idempotency_key?: string | null
@@ -1743,11 +1747,14 @@ export type Database = {
           org_id: string
           output_tokens?: number
           parse_status?: string
+          parser_revision?: number | null
+          reparsed_at?: string | null
           status?: string
           task_hint?: string
         }
         Update: {
           created_at?: string
+          envelope_skeleton?: Json | null
           host?: string
           id?: number
           idempotency_key?: string | null
@@ -1759,6 +1766,8 @@ export type Database = {
           org_id?: string
           output_tokens?: number
           parse_status?: string
+          parser_revision?: number | null
+          reparsed_at?: string | null
           status?: string
           task_hint?: string
         }

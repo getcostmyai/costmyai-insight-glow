@@ -8,6 +8,7 @@ import {
   TASK_HINTS,
   UNKNOWN_TASK_HINT,
 } from "./contract";
+import { isContentFree } from "../../../packages/gateway-container/src/skeleton";
 
 /**
  * The ingest contract.
@@ -42,6 +43,24 @@ export const ingestEventSchema = z
      * `parsed`, exactly as it behaved before the field existed.
      */
     parse_status: z.enum(PARSE_STATUSES).default("parsed"),
+    /**
+     * A content-free structural skeleton of a response envelope the connector
+     * could not read cleanly (Dispatch 106) — keys and numbers only, every
+     * string value erased at the source. Retained so a parser shipped later
+     * can re-read the event instead of leaving it permanently degraded.
+     *
+     * The content-free property is re-checked HERE, not trusted: a modified or
+     * third-party container that puts a string in this field gets a 422, the
+     * same answer a prompt field would get. That is what keeps "we cannot
+     * store your content" true for a field whose whole purpose is to store
+     * something about a response.
+     */
+    envelope_skeleton: z
+      .unknown()
+      .refine((v) => v === undefined || v === null || isContentFree(v), {
+        message: "envelope_skeleton must contain no string values",
+      })
+      .optional(),
     /** Caller-supplied de-duplication key; a retried push must not double-count. */
     idempotency_key: z.string().min(1).max(200).optional(),
   })

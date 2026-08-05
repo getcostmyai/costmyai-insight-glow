@@ -89,6 +89,14 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Freezes the closing month's public intelligence figures, append-only.",
   },
   {
+    job: "parser-reprocess",
+    label: "Retroactive reprocessing",
+    cronName: "costmyai-parser-reprocess",
+    schedule: "40 * * * *",
+    maxIntervalMinutes: 180,
+    what: "Re-reads events metered by an older response parser when a new shape parser ships, and rebuilds the rollups they touched.",
+  },
+  {
     job: SHAPE_WATCH_JOB,
     label: "Unrecognised response shapes",
     cronName: "—",

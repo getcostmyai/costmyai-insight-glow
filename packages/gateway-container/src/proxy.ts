@@ -69,6 +69,13 @@ export interface ProxyEvent {
   latency_ms: number;
   status: "ok" | "error";
   parse_status: "parsed" | "tokens_only" | "unparsed";
+  /**
+   * Dispatch 106. Set only when the envelope could not be read cleanly: a
+   * content-free structural skeleton (numbers and keys, every string erased)
+   * so a parser shipped later can re-read the event retroactively. Absent on
+   * every clean read, which is the overwhelming majority of traffic.
+   */
+  envelope_skeleton?: unknown;
   idempotency_key: string;
 }
 
@@ -242,6 +249,9 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     parse_status: args.reading?.parseStatus ?? "unparsed",
     idempotency_key: args.uuid(),
   };
+  if (event.parse_status !== "parsed" && args.reading?.skeleton) {
+    event.envelope_skeleton = args.reading.skeleton;
+  }
   deps.queue.enqueue({ kind: "events", body: { events: [event] } });
 }
 

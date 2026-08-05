@@ -1,4 +1,18 @@
 import type { ParseStatus } from "./config.js";
+import { envelopeSkeleton } from "./skeleton.js";
+
+/**
+ * Bumped whenever a parser is added or an existing one changes behaviour.
+ *
+ * Dispatch 106: the app compares this against the revision it last reprocessed
+ * under. A deploy that changes it triggers one retroactive sweep over the
+ * events that were metered degraded, so a shape learned in month three repairs
+ * the traffic recorded in month one instead of leaving it permanently wrong.
+ *
+ *  1 — five shapes (openai, anthropic, gemini, cohere, bedrock)
+ *  2 — Dispatch 104: tencent added, wrapper envelopes unwrapped (Cloudflare)
+ */
+export const PARSER_REVISION = 2;
 
 /**
  * Response-envelope parsing.
@@ -28,6 +42,12 @@ export interface UsageReading {
   model: string | null;
   shape: ShapeId;
   parseStatus: ParseStatus;
+  /**
+   * Present only when the read was NOT clean: a content-free structural
+   * skeleton of the envelope (see skeleton.ts), retained so a future parser
+   * can re-read what this one could not. Never set on a `parsed` reading.
+   */
+  skeleton?: unknown;
 }
 
 const EMPTY: UsageReading = {
@@ -171,9 +191,16 @@ export function readUsage(payload: unknown): UsageReading {
   // by name. Reported honestly as tokens_only so the team can add a real
   // parser — the customer's spend is not silently wrong in the meantime.
   const found = scanForCounters(root);
-  if (found) return { ...found, model, shape: "heuristic", parseStatus: "tokens_only" };
+  if (found)
+    return {
+      ...found,
+      model,
+      shape: "heuristic",
+      parseStatus: "tokens_only",
+      skeleton: envelopeSkeleton(root),
+    };
 
-  return { ...EMPTY, model };
+  return { ...EMPTY, model, skeleton: envelopeSkeleton(root) };
 }
 
 const INPUT_KEYS = [
@@ -254,9 +281,13 @@ export class StreamUsageCollector {
   finish(): UsageReading {
     let best: UsageReading | null = null;
     let model: string | null = null;
+    let skeleton: unknown = null;
     for (const object of jsonObjectsIn(this.head + "\n" + this.tail)) {
       const reading = readUsage(object);
       if (reading.model && !model) model = reading.model;
+      // Keep the last skeleton offered: in a stream the usage frame is the one
+      // at the end, so a later frame is the more useful thing to re-read.
+      if (reading.skeleton) skeleton = reading.skeleton;
       if (reading.parseStatus === "unparsed") continue;
       if (!best) {
         best = reading;
@@ -272,8 +303,9 @@ export class StreamUsageCollector {
         shape: best.shape === "heuristic" ? reading.shape : best.shape,
       };
     }
-    if (!best) return { ...EMPTY, model };
-    return { ...best, model: best.model ?? model };
+    if (!best) return { ...EMPTY, model, skeleton };
+    if (best.parseStatus === "parsed") return { ...best, model: best.model ?? model, skeleton: undefined };
+    return { ...best, model: best.model ?? model, skeleton: best.skeleton ?? skeleton };
   }
 }
 
