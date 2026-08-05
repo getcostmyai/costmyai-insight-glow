@@ -80,16 +80,22 @@ const SHAPE_WATCH_JOB = "shape-watch";
 async function sweepAlertResidue(admin: AdminLike, cutoff: string): Promise<number> {
   let removed = 0;
 
-  // 1. Stamped by the watch. Age-gated like every other sweep, so a sibling
-  //    test file asserting on the row it just wrote is not robbed mid-run.
+  // 1. Stamped by the watch. A stamped row is provably ours, so it gets a much
+  //    shorter gate than the generic sweep window: long enough that a sibling
+  //    test file asserting on the row it just wrote is not robbed mid-run,
+  //    short enough that the ops board is not left red for half an hour after
+  //    a suite finishes. Never looser than the caller's own window.
+  const STAMPED_GRACE_MS = 2 * 60_000;
+  const stampedCutoff = new Date(Date.now() - STAMPED_GRACE_MS).toISOString();
   const stamped = await admin
     .from("sync_runs")
     .delete()
     .eq("job", SHAPE_WATCH_JOB)
     .eq("detail->>testRun", "true")
-    .lt("started_at", cutoff)
+    .lt("started_at", stampedCutoff > cutoff ? stampedCutoff : cutoff)
     .select("id");
   removed += (stamped.data ?? []).length;
+
 
   // 2. Alerts about a workspace that is gone. No age gate needed: the org was
   //    already deleted, so the alert can no longer be about live traffic.
