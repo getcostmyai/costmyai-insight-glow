@@ -17,7 +17,17 @@ export interface JobSpec {
   /** Longest gap between runs that is still normal, including tolerance. */
   maxIntervalMinutes: number;
   what: string;
+  /**
+   * A watch, not a schedule: it only writes a row when it has something to
+   * report. Silence is the healthy state, so it is never judged stale, and a
+   * single reported row is the alert. Used for the unrecognised-shape watch,
+   * which fires from ingest and from the pricing feed rather than from cron.
+   */
+  eventDriven?: boolean;
+  /** What silence means, printed when an event-driven watch has nothing to say. */
+  quietMeans?: string;
 }
+
 
 export const JOB_REGISTRY: JobSpec[] = [
   {
