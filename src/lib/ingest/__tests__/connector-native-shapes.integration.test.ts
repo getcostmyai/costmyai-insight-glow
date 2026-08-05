@@ -126,7 +126,13 @@ describe("the Google native envelope, from generativelanguage.googleapis.com", (
     );
 
     const body = (await response.json()) as {
-      usageMetadata: { promptTokenCount: number; candidatesTokenCount?: number; totalTokenCount: number };
+      usageMetadata: {
+        promptTokenCount: number;
+        candidatesTokenCount?: number;
+        thoughtsTokenCount?: number;
+        totalTokenCount: number;
+      };
+
       modelVersion: string;
     };
     expect(response.status).toBe(200);
