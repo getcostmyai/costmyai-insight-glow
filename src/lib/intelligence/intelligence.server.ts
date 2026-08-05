@@ -247,7 +247,7 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
       supabase
         .from("price_history")
         .select(
-          "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, observed_at",
+          "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, pct_change, observed_at",
         )
         .gte("observed_at", monthStart.toISOString())
         .lt("observed_at", monthEnd.toISOString())
