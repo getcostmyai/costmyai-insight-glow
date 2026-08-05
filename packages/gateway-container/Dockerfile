@@ -4,7 +4,7 @@
 # mirrors its endpoint contract from src/lib/ingest/contract.ts so a renamed
 # route cannot silently drift away from the thing that calls it.
 #
-#   docker build -f packages/gateway-container/Dockerfile -t ghcr.io/costmyai/gateway:v1.0.0 -t ghcr.io/costmyai/gateway:v1 .
+#   docker build -f packages/gateway-container/Dockerfile -t ghcr.io/getcostmyai/gateway:v1.0.0 -t ghcr.io/getcostmyai/gateway:v1 .
 FROM node:22-alpine AS build
 WORKDIR /build
 COPY packages/gateway-container/package.json packages/gateway-container/tsconfig.json ./packages/gateway-container/
