@@ -33,9 +33,17 @@ export interface PriceMove {
   outputPrev: number | null;
   outputPct: number | null;
   /**
-   * Signed % move used for ranking only: the input side when it moved, otherwise
-   * the output side. Some rows reprice output only — ranking must not silently
-   * drop them (that is what made 11 + 23 fail to equal 36).
+   * The headline signed % move: the ledger's own `pct_change`, which is blended
+   * across input and output (see {@link blendedPctChange}).
+   *
+   * Dispatch 114: this used to be re-derived here, input side first. A row that
+   * took input 0.400 -> 0.980 while output fell 4.00 -> 3.95 published +145.0%
+   * against a ledger that said +12.05%. Direction came from `change_kind` and
+   * magnitude from a different formula, so the two could disagree by
+   * construction. They now come from the same row and cannot.
+   *
+   * `inputPct` / `outputPct` remain as the supplementary detail lines, so a
+   * split move stays visible — it is just no longer the headline.
    */
   pct: number;
   observedAt: string;
@@ -50,6 +58,7 @@ export interface PriceHistoryRow {
   output_usd_per_mtok: number | string | null;
   prev_input_usd_per_mtok: number | string | null;
   prev_output_usd_per_mtok: number | string | null;
+  pct_change: number | string | null;
   observed_at: string;
 }
 
