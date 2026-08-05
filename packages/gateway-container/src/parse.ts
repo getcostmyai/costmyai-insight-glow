@@ -230,6 +230,14 @@ const OUTPUT_KEYS = [
   "CompletionTokens",
   "OutputTokens",
 ];
+/**
+ * Reasoning tokens are BILLED AS OUTPUT but reported separately by every vendor
+ * that exposes them, and they are routinely far larger than the visible answer
+ * (Dispatch 109 saw 67 thinking tokens behind 1 answer token on a real call).
+ * They are added to the output count, never counted as their own thing.
+ */
+const REASONING_KEYS = ["thoughtsTokenCount", "reasoning_tokens", "reasoningTokens"];
+
 
 /** Bounded-depth walk for known counter names. Never looks at string content. */
 function scanForCounters(
