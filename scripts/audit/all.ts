@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * The standing audit — all three checks, one command.
+ * The standing audit — every check, one command.
  *
  * Run before every deploy. Each check is independent and reports on its own;
  * the runner only aggregates exit codes so a single red check fails the run.
@@ -15,6 +15,7 @@ const CHECKS = [
   { name: "cron health", file: "scripts/audit/cron-health.ts" },
   { name: "formulas", file: "scripts/audit/formulas.ts" },
   { name: "test isolation", file: "scripts/audit/test-isolation.ts" },
+  { name: "connector image published", file: "scripts/audit/image-published.ts" },
 ];
 
 const failed: string[] = [];
@@ -25,5 +26,5 @@ for (const check of CHECKS) {
 }
 
 console.log("\n=== summary ===");
-console.log(failed.length ? `FAILED: ${failed.join(", ")}` : "All three checks passed.");
+console.log(failed.length ? `FAILED: ${failed.join(", ")}` : "Every check passed.");
 process.exit(failed.length ? 1 : 0);
