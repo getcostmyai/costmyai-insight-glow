@@ -39,6 +39,14 @@ export const AGGREGATE_HOST_LABEL = "OpenRouter";
  * 3-minute cadence. Prices move on the scale of weeks, not minutes — this is
  * comfortably faster than the market it tracks.
  */
+export interface NewProviderCheck {
+  host: string;
+  hostLabel: string;
+  /** The envelope shape we believe this provider speaks, when we know it. */
+  shape: string | null;
+  known: boolean;
+}
+
 export const ENDPOINT_SWEEP_SIZE = 40;
 
 /** A run older than this is assumed dead, not still working. */
@@ -49,6 +57,8 @@ export interface PriceSyncReport {
   fetchedModels: number;
   modelsImported: number;
   modelsNew: number;
+  /** Hosts seen on the feed for the first time this run, with their shape verdict. */
+  providersNew: NewProviderCheck[];
   endpointsSwept: number;
   priceRowsWritten: number;
   changesRecorded: { new: number; increase: number; decrease: number; delisted: number; relisted: number };
@@ -234,6 +244,7 @@ export async function syncOpenRouterPricing(): Promise<PriceSyncReport | { skipp
       fetchedModels: models.length,
       modelsImported: entries.length,
       modelsNew,
+      providersNew,
       endpointsSwept,
       priceRowsWritten: incoming.length,
       changesRecorded: tally,
@@ -469,4 +480,56 @@ export async function recordPriceSyncFailure(message: string): Promise<void> {
   } catch (err) {
     console.error("could not record pricing sync failure", err);
   }
+}
+
+/**
+ * The one-time shape check for a provider we have never priced before
+ * (Dispatch 104).
+ *
+ * Hung off the existing "what is new this run" read rather than a second sync:
+ * the pricing feed is already the first place a new provider shows up, days or
+ * weeks before any customer's traffic reaches it. A provider whose response
+ * envelope is not one of the five the connector parses is reported to the jobs
+ * board while there is still time to write a parser, instead of being
+ * discovered as a workspace whose spend reads zero.
+ */
+async function checkNewProviders(
+  endpointPrices: PriceEntry[],
+  knownHosts: Set<string>,
+): Promise<NewProviderCheck[]> {
+  const { shapeForHost } = await import("@/lib/ingest/provider-shapes");
+  const seen = new Set<string>();
+  const fresh: NewProviderCheck[] = [];
+  for (const price of endpointPrices) {
+    const host = price.host;
+    if (!host || knownHosts.has(host) || seen.has(host)) continue;
+    seen.add(host);
+    const known = shapeForHost(host);
+    fresh.push({
+      host,
+      hostLabel: price.host_label ?? host,
+      shape: known?.shape ?? null,
+      known: known !== null,
+    });
+  }
+  if (fresh.length === 0) return fresh;
+
+  const unmapped = fresh.filter((f) => !f.known);
+  const { reportUnrecognisedShape } = await import("@/lib/ops/shape-watch.server");
+  await reportUnrecognisedShape({
+    source: "pricing-feed",
+    count: fresh.length,
+    summary:
+      unmapped.length > 0
+        ? `${unmapped.length} new provider${unmapped.length === 1 ? "" : "s"} on the feed with no known response shape: ${unmapped
+            .map((f) => f.host)
+            .slice(0, 8)
+            .join(", ")}`
+        : `${fresh.length} new provider${fresh.length === 1 ? "" : "s"} on the feed, all on shapes the connector already parses: ${fresh
+            .map((f) => `${f.host} (${f.shape})`)
+            .slice(0, 8)
+            .join(", ")}`,
+    detail: { providers: fresh },
+  });
+  return fresh;
 }
