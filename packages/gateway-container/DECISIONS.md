@@ -90,3 +90,26 @@ side treats an unknown cohort as uncertifiable — the ladder in
 `src/lib/benchmarks/task-ladder.ts` refuses rather than borrowing an unrelated
 instrument. A wrong label would silently corrupt Certify and the benchmark
 cohorts; `unknown` costs a recommendation and lies about nothing.
+
+## 13. The envelope skeleton: content-free, and the only thing retained
+
+Dispatch 106 needed something the connector had deliberately never kept: enough
+of a response to re-read it later, when a parser it did not have at the time
+ships. Retaining the body was never an option — the Charter is the product.
+
+So a degraded reading (`tokens_only` or `unparsed`, never a clean `parsed` one)
+carries an `envelope_skeleton`: the response's **structure and its numbers**,
+with every string value erased. Keys survive because the parsers key off them;
+numbers survive because they are the counters; string content cannot survive
+because `envelopeSkeleton()` replaces every string with `null` before anything
+leaves the process. It is bounded (depth 8, 400 nodes, 64 keys and 32 array
+entries per level) so a pathological envelope cannot become a payload.
+
+`isContentFree()` is the same predicate on both sides: the connector asserts it
+before sending, and the ingest schema re-asserts it on arrival and rejects the
+whole batch if a string ever appears. Neither side trusts the other.
+
+The consequence is that a parser shipped in month six repairs traffic from month
+one — `parse_status` is corrected, the rollups are rebuilt from the corrected
+events, and the customer's history stops under-reporting. What can never be
+recovered from a skeleton is what was never in it, and that is the point.
