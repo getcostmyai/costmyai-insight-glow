@@ -18,6 +18,7 @@ export type ShapeId =
   | "gemini"
   | "cohere"
   | "bedrock"
+  | "tencent"
   | "heuristic"
   | "unknown";
 
@@ -95,6 +96,30 @@ export function readUsage(payload: unknown): UsageReading {
     }
   }
 
+  // 6. Tencent Hunyuan's TC3 envelope: PascalCase counters under `Usage`.
+  //    Found by the Dispatch 104 enumeration — the one provider in the live
+  //    catalog whose native shape none of the first five parsers could read.
+  const tencent = asRecord(root["Usage"]) ?? asRecord(asRecord(root["Response"])?.["Usage"]);
+  if (tencent) {
+    const pt = num(tencent["PromptTokens"]);
+    const ct = num(tencent["CompletionTokens"]);
+    if (pt !== null || ct !== null) {
+      const response = asRecord(root["Response"]);
+      return {
+        inputTokens: pt ?? 0,
+        outputTokens: ct ?? 0,
+        model:
+          typeof root["Model"] === "string"
+            ? (root["Model"] as string)
+            : typeof response?.["Model"] === "string"
+              ? (response["Model"] as string)
+              : model,
+        shape: "tencent",
+        parseStatus: "parsed",
+      };
+    }
+  }
+
   // 3. Google / Gemini native (generateContent and Vertex).
   const meta = asRecord(root["usageMetadata"]);
   if (meta) {
@@ -130,6 +155,16 @@ export function readUsage(payload: unknown): UsageReading {
     }
   }
 
+  // Wrapper envelopes: Cloudflare Workers AI returns { success, result: { ... } }
+  // with the real payload one level down. Unwrap once and re-read, so the
+  // reading is reported as the shape it actually is rather than as a guess.
+  for (const key of ["result", "Response", "data", "output"]) {
+    const inner = asRecord(root[key]);
+    if (!inner) continue;
+    const nested = readUsage(inner);
+    if (nested.parseStatus === "parsed") return { ...nested, model: nested.model ?? model };
+  }
+
   // Last resort: an unrecognised envelope that still carries counters we know
   // by name. Reported honestly as tokens_only so the team can add a real
   // parser — the customer's spend is not silently wrong in the meantime.
@@ -139,7 +174,15 @@ export function readUsage(payload: unknown): UsageReading {
   return { ...EMPTY, model };
 }
 
-const INPUT_KEYS = ["prompt_tokens", "input_tokens", "inputTokens", "promptTokenCount", "prompt_eval_count"];
+const INPUT_KEYS = [
+  "prompt_tokens",
+  "input_tokens",
+  "inputTokens",
+  "promptTokenCount",
+  "prompt_eval_count",
+  "PromptTokens",
+  "InputTokens",
+];
 const OUTPUT_KEYS = [
   "completion_tokens",
   "output_tokens",
@@ -147,6 +190,8 @@ const OUTPUT_KEYS = [
   "candidatesTokenCount",
   "eval_count",
   "generation_tokens",
+  "CompletionTokens",
+  "OutputTokens",
 ];
 
 /** Bounded-depth walk for known counter names. Never looks at string content. */
