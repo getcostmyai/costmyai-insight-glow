@@ -389,7 +389,15 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
                       return (
                         <li key={h.host_label} className="border-t border-border py-3">
                           <div className="flex items-baseline justify-between gap-4">
-                            <span className="truncate text-sm font-medium">{h.host_label}</span>
+                            <span className="truncate text-sm font-medium">
+                              {h.host_label}
+                              {h.aggregate ? (
+                                <span className="ml-2 text-[0.65rem] uppercase tracking-[0.14em] text-muted-foreground">
+                                  aggregator
+                                </span>
+                              ) : null}
+                            </span>
+
                             <span className="num shrink-0 text-sm">
                               ${h.input.toFixed(2)}
                               <span className="text-muted-foreground"> / ${h.output.toFixed(2)}</span>
