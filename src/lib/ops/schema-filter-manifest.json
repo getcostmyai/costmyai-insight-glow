@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-05T19:14:05.217Z",
+  "generatedAt": "2026-08-05T21:52:42.503Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -440,7 +440,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 169,
+      "line": 177,
       "table": "usage_events",
       "filters": [
         "org_id",
@@ -450,7 +450,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 181,
+      "line": 189,
       "table": "host_prices",
       "filters": [
         "is_fixture"
@@ -459,7 +459,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 196,
+      "line": 204,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -488,7 +488,7 @@
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 216,
+      "line": 235,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -497,7 +497,7 @@
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 222,
+      "line": 241,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -506,14 +506,14 @@
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 245,
+      "line": 264,
       "table": "benchmarks",
       "filters": [],
       "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t), ), supabase.from(\"benchmark_mar"
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
-      "line": 247,
+      "line": 266,
       "table": "benchmark_margins",
       "filters": [],
       "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\"), ])"

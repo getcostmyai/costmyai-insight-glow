@@ -2,6 +2,7 @@ import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { SEPARATION_FACTOR } from "@/lib/engine/equivalence";
 import { separationOfScores } from "@/lib/benchmarks/task-ladder";
+import { blendedPctChange } from "@/lib/pricing/openrouter";
 
 /**
  * Market intelligence read model.
@@ -33,9 +34,17 @@ export interface PriceMove {
   outputPrev: number | null;
   outputPct: number | null;
   /**
-   * Signed % move used for ranking only: the input side when it moved, otherwise
-   * the output side. Some rows reprice output only — ranking must not silently
-   * drop them (that is what made 11 + 23 fail to equal 36).
+   * The headline signed % move: the ledger's own `pct_change`, which is blended
+   * across input and output (see {@link blendedPctChange}).
+   *
+   * Dispatch 114: this used to be re-derived here, input side first. A row that
+   * took input 0.400 -> 0.980 while output fell 4.00 -> 3.95 published +145.0%
+   * against a ledger that said +12.05%. Direction came from `change_kind` and
+   * magnitude from a different formula, so the two could disagree by
+   * construction. They now come from the same row and cannot.
+   *
+   * `inputPct` / `outputPct` remain as the supplementary detail lines, so a
+   * split move stays visible — it is just no longer the headline.
    */
   pct: number;
   observedAt: string;
@@ -50,6 +59,7 @@ export interface PriceHistoryRow {
   output_usd_per_mtok: number | string | null;
   prev_input_usd_per_mtok: number | string | null;
   prev_output_usd_per_mtok: number | string | null;
+  pct_change: number | string | null;
   observed_at: string;
 }
 
@@ -149,8 +159,11 @@ const num = (v: unknown): number | null => (v == null ? null : Number(v));
  * "Total moves" therefore means increases + decreases and nothing else; new
  * listings are counted separately and are NEVER folded into that total.
  *
- * Direction comes from the ledger's own `change_kind`, never re-derived from the
- * input side alone — a row that reprices output only still has a direction.
+ * Direction AND magnitude both come from the ledger row: `change_kind` and
+ * `pct_change`, written together by `diffPrice` at sync time. Nothing about a
+ * move is re-derived here. `pct_change` is only recomputed when a legacy row
+ * stored none, and then through the same exported blended definition rather
+ * than a second formula.
  */
 export function summarizeMoves(
   rows: PriceHistoryRow[],
@@ -168,8 +181,14 @@ export function summarizeMoves(
       const inputPrev = num(h.prev_input_usd_per_mtok);
       const outputNow = num(h.output_usd_per_mtok);
       const outputPrev = num(h.prev_output_usd_per_mtok);
-      const inputPct = pct(inputNow, inputPrev);
-      const outputPct = pct(outputNow, outputPrev);
+      const ledgerPct = num(h.pct_change);
+      const fallback =
+        inputNow != null && outputNow != null && inputPrev != null && outputPrev != null
+          ? blendedPctChange(
+              { input_usd_per_mtok: inputNow, output_usd_per_mtok: outputNow },
+              { input_usd_per_mtok: inputPrev, output_usd_per_mtok: outputPrev },
+            )
+          : null;
       return {
         modelKey: h.model_key,
         host: h.host,
@@ -177,11 +196,11 @@ export function summarizeMoves(
         kind: h.change_kind as "increase" | "decrease",
         inputNow,
         inputPrev,
-        inputPct,
+        inputPct: pct(inputNow, inputPrev),
         outputNow,
         outputPrev,
-        outputPct,
-        pct: inputPct != null && inputPct !== 0 ? inputPct : (outputPct ?? 0),
+        outputPct: pct(outputNow, outputPrev),
+        pct: ledgerPct ?? fallback ?? 0,
         observedAt: h.observed_at,
       };
     });
@@ -228,7 +247,7 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
       supabase
         .from("price_history")
         .select(
-          "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, observed_at",
+          "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, pct_change, observed_at",
         )
         .gte("observed_at", monthStart.toISOString())
         .lt("observed_at", monthEnd.toISOString())

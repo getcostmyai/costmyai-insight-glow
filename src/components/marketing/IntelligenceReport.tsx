@@ -164,11 +164,16 @@ function MoveList({
                   <p className={`num text-2xl font-semibold tabular-nums tracking-tight ${accent}`}>
                     {signedPct(r.pct)}
                   </p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                    blended
+                  </p>
                   <p className="mt-1 text-xs tabular-nums text-muted-foreground">
                     {r.inputPrev != null ? usd(r.inputPrev) : "—"} →{" "}
-                    {r.inputNow != null ? usd(r.inputNow) : "—"} in ·{" "}
+                    {r.inputNow != null ? usd(r.inputNow) : "—"} in
+                    {r.inputPct != null ? ` (${signedPct(r.inputPct)})` : ""} ·{" "}
                     {r.outputPrev != null ? usd(r.outputPrev) : "—"} →{" "}
                     {r.outputNow != null ? usd(r.outputNow) : "—"} out
+                    {r.outputPct != null ? ` (${signedPct(r.outputPct)})` : ""}
                   </p>
                 </div>
                 <ShareCardButton

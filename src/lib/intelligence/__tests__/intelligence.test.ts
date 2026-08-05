@@ -14,6 +14,7 @@ const row = (o: Partial<PriceHistoryRow>): PriceHistoryRow => ({
   output_usd_per_mtok: 4,
   prev_input_usd_per_mtok: 1,
   prev_output_usd_per_mtok: 2,
+  pct_change: null,
   observed_at: "2026-08-01T00:00:00.000Z",
   ...o,
 });
@@ -60,7 +61,7 @@ describe("intelligence price-move reconciliation", () => {
     expect(s.moves.length).toBe(s.increases.length + s.decreases.length);
   });
 
-  it("ranks output-only moves by their output percentage", () => {
+  it("still ranks an output-only move, blended across both sides", () => {
     const s = summarizeMoves(
       [
         row({
@@ -69,11 +70,56 @@ describe("intelligence price-move reconciliation", () => {
           prev_input_usd_per_mtok: 1,
           output_usd_per_mtok: 3,
           prev_output_usd_per_mtok: 1,
+          pct_change: 100,
         }),
       ],
       new Map(),
     );
-    expect(s.moves[0].pct).toBeCloseTo(200);
+    // 2 -> 4 blended. The output side alone moved +200%, but the bill moved +100%.
+    expect(s.moves[0].pct).toBeCloseTo(100);
+    expect(s.moves[0].outputPct).toBeCloseTo(200);
+    expect(s.moves[0].inputPct).toBe(0);
+  });
+
+  it("publishes the ledger's blended pct, never the input side alone", () => {
+    // The real qwen/qwen3-vl-235b-a22b-thinking row (Dispatch 114): input more
+    // than doubled while output fell. Input-first said +145.0%; the bill moved
+    // +12.05%, and that is what the ledger stored.
+    const s = summarizeMoves(
+      [
+        row({
+          model_key: "qwen/qwen3-vl-235b-a22b-thinking",
+          host: "openrouter",
+          change_kind: "increase",
+          prev_input_usd_per_mtok: 0.4,
+          input_usd_per_mtok: 0.98,
+          prev_output_usd_per_mtok: 4,
+          output_usd_per_mtok: 3.95,
+          pct_change: 12.05,
+        }),
+      ],
+      new Map(),
+    );
+    expect(s.moves[0].pct).toBe(12.05);
+    expect(s.moves[0].inputPct).toBeCloseTo(145);
+    expect(s.moves[0].outputPct).toBeCloseTo(-1.25);
+  });
+
+  it("falls back to the same blended definition when a legacy row stored no pct", () => {
+    const s = summarizeMoves(
+      [
+        row({
+          change_kind: "increase",
+          prev_input_usd_per_mtok: 0.4,
+          input_usd_per_mtok: 0.98,
+          prev_output_usd_per_mtok: 4,
+          output_usd_per_mtok: 3.95,
+          pct_change: null,
+        }),
+      ],
+      new Map(),
+    );
+    expect(s.moves[0].pct).toBe(12.05);
   });
 
   it("takes direction from the ledger, never from one price side", () => {
