@@ -248,11 +248,47 @@ live("a provider error", () => {
     expect(rows![0]!.input_tokens).toBe(0);
   }, 120_000);
 
-  it("logs the failure without a credential anywhere in the output", () => {
-    expect(logLines.length).toBeGreaterThan(0);
-    const all = logLines.join("\n");
+  it("logs a deliberately broken push without a credential anywhere in the output", async () => {
+    // A second container, pointed at a CostMyAI that is not there. A real
+    // completion goes through it (real provider, real credential header), and
+    // the metadata push then fails for real and is logged for real.
+    const port = PORT + 1;
+    const broken = createGateway(
+      loadConfig({
+        COSTMYAI_INGEST_TOKEN: "cma_live_broken_token_value",
+        COSTMYAI_UPSTREAM_URL: PROVIDER_URL,
+        COSTMYAI_BASE_URL: "http://127.0.0.1:9",
+        COSTMYAI_SPOOL_DIR: mkdtempSync(join(tmpdir(), "costmyai-broken-")),
+        COSTMYAI_PORT: String(port),
+        COSTMYAI_FLUSH_INTERVAL_MS: "600000",
+      }),
+    );
+    await new Promise<void>((resolve) => broken.server.listen(port, resolve));
+    const before = logLines.length;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "Lovable-API-Key": PROVIDER_KEY! },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [{ role: "user", content: "Reply with the single word: pong" }],
+          max_tokens: 16,
+        }),
+      });
+      expect(res.status).toBe(200);
+      await broken.flush();
+    } finally {
+      await broken.shutdown("SIGTERM");
+    }
+
+    const emitted = logLines.slice(before);
+    // A real failure was really logged.
+    expect(emitted.join("\n")).toContain("upstream flush incomplete");
+    const all = emitted.join("\n");
     expect(all).not.toContain(PROVIDER_KEY);
+    expect(all).not.toContain("cma_live_broken_token_value");
     expect(all.toLowerCase()).not.toContain("lovable-api-key");
     expect(all.toLowerCase()).not.toContain("authorization");
-  });
+    console.info("--- container log under deliberate failure ---\n" + all);
+  }, 120_000);
 });
