@@ -1726,6 +1726,7 @@ export type Database = {
           occurred_at: string
           org_id: string
           output_tokens: number
+          parse_status: string
           status: string
           task_hint: string
         }
@@ -1741,6 +1742,7 @@ export type Database = {
           occurred_at?: string
           org_id: string
           output_tokens?: number
+          parse_status?: string
           status?: string
           task_hint?: string
         }
@@ -1756,6 +1758,7 @@ export type Database = {
           occurred_at?: string
           org_id?: string
           output_tokens?: number
+          parse_status?: string
           status?: string
           task_hint?: string
         }

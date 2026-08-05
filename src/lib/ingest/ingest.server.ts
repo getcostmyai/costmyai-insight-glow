@@ -91,6 +91,11 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
     output_tokens: e.status === "error" ? 0 : e.output_tokens,
     latency_ms: e.latency_ms ?? null,
     status: e.status,
+    // Provenance of the counts above: read off the provider's envelope,
+    // estimated by the connector, or unavailable. Validated at the edge since
+    // Dispatch 99 but silently dropped here until Dispatch 102 — an estimate
+    // that reaches the dashboard has to be able to say it is one.
+    parse_status: e.parse_status,
     idempotency_key: e.idempotency_key ?? null,
   }));
 

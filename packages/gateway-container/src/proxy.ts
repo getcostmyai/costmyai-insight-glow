@@ -145,7 +145,14 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
 
   const outHeaders = new Headers();
   response.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) outHeaders.set(key, value);
+    const name = key.toLowerCase();
+    if (HOP_BY_HOP.has(name)) return;
+    // The HTTP client already decoded the body, so the provider's own
+    // `content-encoding` no longer describes the bytes we are about to send.
+    // Forwarding it verbatim makes the caller try to gunzip plaintext and fail
+    // with `incorrect header check` — found against a real provider, Dispatch 102.
+    if (name === "content-encoding" || name === "content-length") return;
+    outHeaders.set(key, value);
   });
 
   const status = response.status >= 400 ? "error" : "ok";
