@@ -19,8 +19,14 @@ import { countRealProviders, isRealEndpoint } from "@/lib/pricing/aggregate";
 export interface MarketingStats {
   /** Models with at least one catalog entry. */
   modelCount: number;
-  /** Distinct providers we hold a verified price for. */
+  /**
+   * Distinct REAL providers we hold a verified live price for. The OpenRouter
+   * aggregate listing is a purchasable option, not a company serving weights,
+   * so it is excluded here exactly as it is on the Intelligence page — both
+   * surfaces now count through `countRealProviders` (Dispatch 117).
+   */
   providerCount: number;
+
   /**
    * Real price moves (up or down) we caught between two of our own syncs during
    * the current calendar month (UTC). The counter resets on the 1st of each
@@ -47,8 +53,13 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
   const [models, prices, snapshot, changes, firstObservation] = await Promise.all([
     supabase.from("model_catalog").select("model_key", { count: "exact", head: true }).eq("is_active", true),
     fetchAllRows((f, t) =>
-      supabase.from("host_prices").select("host, host_label").eq("is_active", true).range(f, t),
+      supabase
+        .from("host_prices")
+        .select("host, host_label, price_source")
+        .eq("is_active", true)
+        .range(f, t),
     ).then((data) => ({ data })),
+
     supabase
       .from("pricing_snapshots")
       .select("synced_at, status")
