@@ -1,6 +1,8 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { AA_INTELLIGENCE_SUITE } from "@/lib/benchmarks/aa-catalog";
+import { isRealEndpoint } from "@/lib/pricing/aggregate";
+
 
 
 export interface CatalogRow {
@@ -12,9 +14,17 @@ export interface CatalogRow {
   context_window: number | null;
   /** e.g. "text+image->text" — straight from the catalog, never inferred. */
   modality: string;
-  hosts: { host_label: string; input: number; output: number }[];
+  /**
+   * Every purchasable listing for this model, cheapest first. `aggregate: true`
+   * marks the OpenRouter aggregate listing — still a real way to buy the model,
+   * but not a company serving weights, so provider counts and provider-to-
+   * provider spreads exclude it (Dispatch 117).
+   */
+  hosts: { host_label: string; input: number; output: number; aggregate: boolean }[];
+  /** Cheapest REAL provider price. Aggregate listings never set this. */
   cheapestInput: number | null;
   cheapestOutput: number | null;
+
   scores: { task_class: string; suite: string; score: number }[];
   /** Named benchmark columns. null = no score on record for this model. */
   gpqa: number | null;
