@@ -118,7 +118,7 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
   // Dispatch 104. An envelope the connector could not read is metered as zero
   // and looks, from the dashboard, exactly like traffic that did not happen.
   // It raises a report on the jobs board instead of passing silently.
-  await watchUnparsedShapes(rows);
+  await watchUnparsedShapes(orgId, rows);
 
 
   return { accepted, duplicates: rows.length - accepted, bucketsRebuilt };
