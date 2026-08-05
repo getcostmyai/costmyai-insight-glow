@@ -3,24 +3,20 @@
   "version": "1.0.0",
   "private": false,
   "type": "module",
-  "description": "CostMyAI metadata connector \u2014 a pass-through proxy that reports usage metadata and never sees your provider key.",
+  "description": "CostMyAI metadata connector — a pass-through proxy that reports usage metadata and never sees your provider key.",
   "bin": {
     "costmyai": "./dist/packages/gateway-container/src/index.js"
   },
   "main": "./dist/packages/gateway-container/src/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "node dist/packages/gateway-container/src/index.js",
     "dev": "node --experimental-strip-types src/index.ts"
   },
   "engines": {
     "node": ">=22"
   },
-  "files": [
-    "dist",
-    "README.md",
-    "DECISIONS.md"
-  ],
+  "files": ["dist", "README.md", "DECISIONS.md"],
   "devDependencies": {
     "@types/node": "^22.15.0",
     "typescript": "5.9.2"
