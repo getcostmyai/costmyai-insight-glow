@@ -489,8 +489,9 @@ function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: Report
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">
                       {s.cheapestHost} → {s.dearestHost} · {s.hosts} provider
-                      {s.hosts === 1 ? "" : "s"}
+                      {s.hosts === 1 ? "" : "s"} · per MTok in
                     </p>
+
                   </div>
                   <div className="flex items-center gap-3 sm:justify-end">
                     <div className="text-left sm:text-right">
