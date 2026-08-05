@@ -247,11 +247,13 @@ function scanForCounters(
   if (depth > 4) return null;
   let input: number | null = null;
   let output: number | null = null;
+  let reasoning: number | null = null;
   for (const [key, value] of Object.entries(root)) {
     if (input === null && INPUT_KEYS.includes(key)) input = num(value);
     if (output === null && OUTPUT_KEYS.includes(key)) output = num(value);
+    if (reasoning === null && REASONING_KEYS.includes(key)) reasoning = num(value);
     const child = asRecord(value);
-    if (child && (input === null || output === null)) {
+    if (child && (input === null || output === null || reasoning === null)) {
       const nested = scanForCounters(child, depth + 1);
       if (nested) {
         input = input ?? nested.inputTokens;
@@ -260,8 +262,9 @@ function scanForCounters(
     }
   }
   if (input === null && output === null) return null;
-  return { inputTokens: input ?? 0, outputTokens: output ?? 0 };
+  return { inputTokens: input ?? 0, outputTokens: (output ?? 0) + (reasoning ?? 0) };
 }
+
 
 /**
  * Streaming.
