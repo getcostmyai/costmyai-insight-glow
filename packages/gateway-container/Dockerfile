@@ -10,9 +10,13 @@ WORKDIR /build
 COPY packages/gateway-container/package.json packages/gateway-container/tsconfig.json ./packages/gateway-container/
 COPY packages/gateway-container/src ./packages/gateway-container/src
 COPY src/lib/ingest/contract.ts src/lib/ingest/backfill.ts ./src/lib/ingest/
-RUN npm i -g typescript@5.9.2 \
-  && cd packages/gateway-container \
-  && tsc -p tsconfig.json
+# The compiler and Node's type definitions are devDependencies of the package,
+# so the image build gets the exact same versions the repo pins. Without
+# @types/node here, tsc fails with TS2688 "Cannot find type definition file for 'node'".
+RUN cd packages/gateway-container \
+  && npm install --no-audit --no-fund \
+  && npx tsc -p tsconfig.json \
+  && rm -rf node_modules
 
 FROM node:22-alpine
 WORKDIR /app
