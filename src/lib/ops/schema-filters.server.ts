@@ -20,6 +20,7 @@ import exemptions from "./schema-filter-exemptions.json";
 import manifest from "./schema-filter-manifest.json";
 import {
   DANGEROUS_PREDICATE,
+  STATE_PREDICATES,
   MANIFEST_VERSION,
   evaluateManifest,
   type Evaluation,
@@ -44,7 +45,7 @@ export async function runSchemaFilterCheck(): Promise<SchemaFilterRunResult> {
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin.rpc("schema_filter_state" as never, {
-    _predicates: DANGEROUS_PREDICATE,
+    _predicates: STATE_PREDICATES,
   } as never);
   if (error) throw error;
 
@@ -61,7 +62,9 @@ export async function runSchemaFilterCheck(): Promise<SchemaFilterRunResult> {
   const result = evaluateManifest({
     manifest: typed,
     tableColumns,
-    liveGuards: new Set(state.live ?? []),
+    // Advisory predicates are only there to enumerate columns; a live guard is
+    // only ever one of the four that can promote a finding.
+    liveGuards: new Set((state.live ?? []).filter((g) => g.split(".")[1]! in DANGEROUS_PREDICATE)),
     exemptions: exemptions as Exemption[],
   });
 

@@ -57,6 +57,22 @@ export const DANGEROUS_PREDICATE: Record<string, string> = {
   revoked_at: "revoked_at is not null",
 };
 
+/**
+ * Advisory columns have no "dangerous" state — their correct filter is
+ * query-specific — but the state query still needs a predicate per column to
+ * enumerate the tables that carry them. These never promote a finding.
+ */
+export const ADVISORY_PREDICATE: Record<string, string> = {
+  status: "status is null",
+  superseded_at: "superseded_at is not null",
+};
+
+/** Every watched column, with the predicate the state query uses to enumerate it. */
+export const STATE_PREDICATES: Record<string, string> = {
+  ...DANGEROUS_PREDICATE,
+  ...ADVISORY_PREDICATE,
+};
+
 export const WATCHED_COLUMNS = [...Object.keys(REQUIRED), ...Object.keys(ADVISORY)];
 
 /** Every token any rule accepts — what the source scan records per query. */
