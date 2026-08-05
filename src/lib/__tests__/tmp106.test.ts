@@ -1,6 +1,6 @@
 import { it, expect } from "vitest";
 import { ingestEventSchema } from "@/lib/ingest/schema";
-import { envelopeSkeleton, isContentFree } from "../../packages/gateway-container/src/skeleton";
+import { envelopeSkeleton, isContentFree } from "../../../packages/gateway-container/src/skeleton";
 it("x", () => {
   const sk = envelopeSkeleton({ error: { message: "model not found", type: "invalid_request", code: 422 }, request_id: "abc" });
   console.log(JSON.stringify(sk), isContentFree(sk));
