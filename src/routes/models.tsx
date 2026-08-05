@@ -76,7 +76,7 @@ function Hero({ data }: { data: CatalogPayload }) {
     return {
       models: data.rows.length,
       // Models sold by more than one verified host — every one of these is a live price race.
-      contested: data.rows.filter((r) => r.hosts.length > 1).length,
+      contested: data.rows.filter((r) => servingHosts(r).length > 1).length,
       providers: data.providers.length,
       topSpread,
     };
@@ -276,9 +276,11 @@ function modalityLabel(modality: string): string {
 function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
   const [open, setOpen] = useState(false);
   const spread = hostSpread(row);
-  const cheapest = row.hosts.length
-    ? row.hosts.reduce((best, h) => (h.input < best.input ? h : best))
+  const serving = servingHosts(row);
+  const cheapest = serving.length
+    ? serving.reduce((best, h) => (h.input < best.input ? h : best))
     : null;
+
 
   return (
     <Reveal delay={Math.min(index, 8) * 45} className="border-t border-border">
