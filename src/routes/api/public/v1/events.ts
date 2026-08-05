@@ -40,6 +40,7 @@ export const Route = createFileRoute("/api/public/v1/events")({
 
         const parsed = ingestBatchSchema.safeParse(body);
         if (!parsed.success) {
+          console.error("TMP422", JSON.stringify(parsed.error.issues.slice(0, 5)));
           return Response.json(
             { error: "Invalid payload", detail: parsed.error.issues.slice(0, 5) },
             { status: 422 },
