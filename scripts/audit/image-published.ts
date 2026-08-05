@@ -130,13 +130,14 @@ if (!results[1]!.ok) {
  * and imports the real entrypoint graph out of the real published filesystem.
  */
 async function bootCheck(tag: string): Promise<{ ok: boolean; detail: string }> {
-  const { mkdtempSync, rmSync, existsSync, writeFileSync } = await import("node:fs");
+  const { mkdtempSync, mkdirSync, rmSync, existsSync, writeFileSync } = await import("node:fs");
   const { execFileSync } = await import("node:child_process");
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
 
   const work = mkdtempSync(join(tmpdir(), "costmyai-boot-"));
   const rootfs = join(work, "rootfs");
+  mkdirSync(rootfs, { recursive: true });
   try {
     const tokenRes = await fetch(
       `https://${registry}/token?scope=${encodeURIComponent(`repository:${repository}:pull`)}&service=${registry}`,
@@ -192,8 +193,6 @@ async function bootCheck(tag: string): Promise<{ ok: boolean; detail: string }> 
 if (process.env["AUDIT_SKIP_BOOT"] === "1") {
   console.log("\nboot check skipped (AUDIT_SKIP_BOOT=1) — pullability alone was verified.");
 } else {
-  const { mkdirSync } = await import("node:fs");
-  void mkdirSync;
   const boot = await bootCheck(CONTAINER_DEFAULTS.tag);
   console.log(`\n${boot.ok ? "BOOTS     " : "BROKEN    "} ${quickstart.ref}`);
   console.log(`           ${boot.detail}`);
