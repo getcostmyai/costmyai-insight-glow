@@ -2,7 +2,7 @@ import {
   BACKFILL_LOOKBACK_DAYS,
   captureIdempotencyKey,
   ROLLING_WINDOW_DAYS,
-} from "./contract";
+} from "./contract.js";
 
 /**
  * First-connection backfill planning (brief §1, data sources).
