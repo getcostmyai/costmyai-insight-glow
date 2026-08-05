@@ -47,7 +47,7 @@ export function classifyTask(path: string, model: string | null): TaskHint {
 // Dispatch 103. With only `/` here, every native Google call was forwarded
 // correctly and then silently never metered.
 const IN_SCOPE =
-  /[/:](chat\/completions|completions|responses|messages|generateContent|streamGenerateContent|countTokens|converse|invoke|embeddings|embed|rerank|moderations|generate|chat)\b/i;
+  /[/:](chat\/completions|completions|responses|messages|generateContent|streamGenerateContent|converse|invoke|embeddings|embed|rerank|moderations|generate|chat)\b/i;
 const OUT_OF_SCOPE = /\/(batches|fine_tuning|fine-tunes|files|assistants|threads|vector_stores|uploads|realtime)\b/i;
 
 export function isInScope(path: string): boolean {
