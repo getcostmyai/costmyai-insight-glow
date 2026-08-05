@@ -14,6 +14,8 @@ const CHECKS = [
   { name: "schema filters", file: "scripts/audit/schema-filters.ts" },
   { name: "cron health", file: "scripts/audit/cron-health.ts" },
   { name: "formulas", file: "scripts/audit/formulas.ts" },
+  { name: "intelligence page", file: "scripts/audit/intelligence.ts" },
+
   { name: "test isolation", file: "scripts/audit/test-isolation.ts" },
   { name: "connector image published", file: "scripts/audit/image-published.ts" },
 ];

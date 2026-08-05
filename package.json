@@ -16,6 +16,8 @@
     "audit:schema:emit": "bun scripts/audit/schema-filters.ts --emit",
     "audit:cron": "bun scripts/audit/cron-health.ts",
     "audit:formulas": "bun scripts/audit/formulas.ts",
+    "audit:intelligence": "bun scripts/audit/intelligence.ts",
+
     "audit:tests": "bun scripts/audit/test-isolation.ts"
   },
   "dependencies": {
