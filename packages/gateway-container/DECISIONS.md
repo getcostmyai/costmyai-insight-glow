@@ -1,0 +1,92 @@
+# Decisions locked before the connector was written (Dispatch 99+100, Stage 0)
+
+These are guarantees, not preferences. Each one is enforced somewhere in `src/`
+and proven by a test in `src/lib/ingest/__tests__/connector.test.ts`.
+
+## 1. Key injection: pass-through, never injection
+
+**Decided: pass-through.** Your application keeps sending its own provider key
+exactly as it does today. The container copies the `Authorization` header (and
+`x-api-key`, `api-key`, and every other header) to the provider byte for byte
+and never reads, stores, rewrites or logs it.
+
+The rejected alternative — the container holding a provider key in its own env
+and injecting it — would turn a metadata relay into a credential store. That
+contradicts the zero-credentials promise the whole product rests on, and it
+would mean a compromised container leaks a live provider key.
+
+Practical consequence: your code changes one line, the base URL. Nothing else.
+
+## 2. Credentials never appear in any output
+
+No log line, error message, health payload or upstream body ever contains a
+credential. `redactHeaders()` drops every credential-bearing header before any
+diagnostic touches it, and error paths use the same redaction as success paths.
+Proven by deliberately failing a request carrying a key and asserting the key
+string appears nowhere in captured output.
+
+## 3. The proxied AI call is never retried
+
+Not on timeout, not on 5xx, not on a dropped socket. A retried completion can
+double-execute on the provider's side and bill the customer twice. Metadata
+delivery to CostMyAI retries freely — it is idempotent and costs nothing.
+
+## 4. Errors pass through byte-identically
+
+A provider's 429, 400 or 401 reaches the caller with the provider's own status,
+headers and body. The proxy adds nothing and reshapes nothing.
+
+## 5. The spool is bounded
+
+Disk-backed, capped by item count and by age (default 10,000 items / 7 days),
+oldest-first eviction. A long CostMyAI outage costs you the oldest metadata,
+never your disk.
+
+## 6. The contract is versioned
+
+Every payload carries `{"v": 1}`. An unknown version is refused loudly by the
+server; an old container that never learned a newly added optional field keeps
+working unchanged. New fields on v1 are additive and optional, always.
+
+## 7. Concurrency
+
+Node's HTTP server handles requests concurrently; nothing in the request path
+takes a lock, awaits the upstream queue, or serialises on the spool. Proven with
+a concurrent-load test, not sequential calls.
+
+## 8. Timeouts
+
+`COSTMYAI_UPSTREAM_TIMEOUT_MS` (default 120s) bounds the wait for response
+headers. On expiry the caller gets a `504` naming the timeout — never a hang,
+and never a retry.
+
+## 9. Scope boundary
+
+This connector proxies real-time request/response inference (chat, completions,
+messages, generateContent), streaming or not. **Out of scope:** batch APIs,
+fine-tuning, file upload, assistants/threads polling, and websocket realtime.
+Those paths are still forwarded verbatim — the proxy never breaks them — but no
+metadata is derived and the event is reported `parse_status: "unparsed"` rather
+than guessed at.
+
+## 10. Graceful shutdown
+
+On SIGTERM/SIGINT the server stops accepting, drains in-flight requests, flushes
+the spool to disk, attempts one final upstream drain, then exits.
+
+## 11. True streaming
+
+Response bytes are piped through as they arrive. Usage extraction reads a
+bounded head window and a bounded tail window of the stream (16 KB each) — the
+only two places any provider puts usage — so a 200 MB response costs 32 KB of
+memory, not 200 MB.
+
+## 12. Task classification: coarse, structural, defaults to unknown
+
+`classifyTask()` reads **the request path and the model name only**. It never
+reads, inspects, forwards or derives anything from prompt or response content.
+Anything it cannot place structurally is reported as `unknown`, and the server
+side treats an unknown cohort as uncertifiable — the ladder in
+`src/lib/benchmarks/task-ladder.ts` refuses rather than borrowing an unrelated
+instrument. A wrong label would silently corrupt Certify and the benchmark
+cohorts; `unknown` costs a recommendation and lies about nothing.

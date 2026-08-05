@@ -3,8 +3,8 @@ import {
   planBillingPoll,
   type BillingPeriod,
   type ProviderConnectionState,
-} from "../../../src/lib/ingest/backfill";
-import type { UpstreamQueue } from "./queue";
+} from "../../../src/lib/ingest/backfill.js";
+import type { UpstreamQueue } from "./queue.js";
 
 /**
  * Provider billing poll — runs in the customer's container, with the customer's
