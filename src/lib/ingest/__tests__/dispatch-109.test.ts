@@ -52,3 +52,41 @@ describe("the heuristic fallback", () => {
     expect(reading.outputTokens).toBe(42);
   });
 });
+
+/**
+ * Dispatch 109 sweep — Cohere v2.
+ *
+ * The parser only knew Cohere's v1 Chat envelope (`meta.billed_units`). The
+ * current v2 Chat API reports the identical objects under `usage`, and a real
+ * v2 response fell through to the heuristic tier: right numbers, but reported
+ * `tokens_only` and shape `heuristic`, which understates confidence and feeds
+ * the unrecognised-shape watch with a shape we already handle.
+ */
+describe("Cohere: both API versions", () => {
+  it("reads the v2 Chat envelope as cohere, parsed", () => {
+    const reading = readUsage({
+      id: "x",
+      message: { role: "assistant", content: [{ type: "text", text: "apple" }] },
+      finish_reason: "COMPLETE",
+      usage: {
+        billed_units: { input_tokens: 9, output_tokens: 3 },
+        tokens: { input_tokens: 212, output_tokens: 3 },
+      },
+    });
+    expect(reading.shape).toBe("cohere");
+    expect(reading.parseStatus).toBe("parsed");
+    expect(reading.inputTokens).toBe(9); // billed units, not raw tokens
+    expect(reading.outputTokens).toBe(3);
+  });
+
+  it("still reads the v1 Chat envelope unchanged", () => {
+    const reading = readUsage({
+      text: "apple",
+      meta: { billed_units: { input_tokens: 7, output_tokens: 2 } },
+    });
+    expect(reading.shape).toBe("cohere");
+    expect(reading.parseStatus).toBe("parsed");
+    expect(reading.inputTokens).toBe(7);
+    expect(reading.outputTokens).toBe(2);
+  });
+});
