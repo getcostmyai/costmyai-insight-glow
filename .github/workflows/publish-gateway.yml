@@ -1,0 +1,64 @@
+# Publishes the CostMyAI gateway container image to GHCR.
+#
+# Manual only (workflow_dispatch): publishing an image customers paste into a
+# `docker run` is a release decision, not something every push should do.
+#
+# Auth is the built-in GITHUB_TOKEN — no PAT, no secret to rotate. It is scoped
+# to this repository and granted `packages: write` below.
+name: Publish gateway container
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Immutable release tag (must match packages/gateway-container/package.json)"
+        required: true
+        default: "v1.0.0"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out the exact commit being released
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Same three tags as the manual procedure: an immutable release tag, the
+      # moving `v1` the quickstart names, and the commit the build came from.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          # Context is the repository root: the Dockerfile compiles
+          # src/lib/ingest/contract.ts into the image.
+          context: .
+          file: packages/gateway-container/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/getcostmyai/gateway:${{ inputs.version }}
+            ghcr.io/getcostmyai/gateway:v1
+            ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Say what was published
+        run: |
+          echo "Pushed:"
+          echo "  ghcr.io/getcostmyai/gateway:${{ inputs.version }}"
+          echo "  ghcr.io/getcostmyai/gateway:v1"
+          echo "  ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}"
+          echo ""
+          echo "A newly created GHCR package is PRIVATE by default."
+          echo "Flip it to Public once: github.com/orgs/getcostmyai/packages -> gateway"
+          echo "  -> Package settings -> Change visibility -> Public"
