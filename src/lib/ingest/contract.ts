@@ -55,7 +55,7 @@ export type ParseStatus = (typeof PARSE_STATUSES)[number];
  * port and the image, and the copy a real customer pastes was the wrong one.
  */
 export const CONTAINER_DEFAULTS = {
-  image: "ghcr.io/costmyai/gateway",
+  image: "ghcr.io/getcostmyai/gateway",
   tag: "v1",
   port: 8787,
   spoolDir: "/var/lib/costmyai/spool",
