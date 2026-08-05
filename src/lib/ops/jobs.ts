@@ -97,6 +97,15 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Re-reads events metered by an older response parser when a new shape parser ships, and rebuilds the rollups they touched.",
   },
   {
+    job: "schema-filters",
+    label: "Schema-filter check",
+    cronName: "costmyai-schema-filters",
+    schedule: "10 4 * * *",
+    maxIntervalMinutes: 60 * 30,
+    what: "Re-checks every read query against the lifecycle and tenancy columns the database actually carries today, and promotes a finding the moment a dormant guard goes live.",
+  },
+  {
+
     job: SHAPE_WATCH_JOB,
     label: "Unrecognised response shapes",
     cronName: "—",

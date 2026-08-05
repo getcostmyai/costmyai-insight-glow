@@ -2097,6 +2097,7 @@ export type Database = {
         Args: { _plan: Database["public"]["Enums"]["plan_tier"] }
         Returns: number
       }
+      schema_filter_state: { Args: { _predicates: Json }; Returns: Json }
       set_org_plan: {
         Args: {
           _org_id: string
