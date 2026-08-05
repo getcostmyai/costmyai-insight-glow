@@ -148,17 +148,25 @@ export function readUsage(payload: unknown): UsageReading {
     const pt = num(meta["promptTokenCount"]);
     const ct = num(meta["candidatesTokenCount"]);
     const total = num(meta["totalTokenCount"]);
+    // Dispatch 109, found on a real thinking-model call: Google bills reasoning
+    // tokens as output but reports them OUTSIDE candidatesTokenCount. A real
+    // response came back with candidates=1 and thoughts=67 — reading candidates
+    // alone under-counted the billed output by 68x, which silently understates
+    // cost and breaks reconciliation against the invoice.
+    const thoughts = num(meta["thoughtsTokenCount"]);
     if (pt !== null || ct !== null || total !== null) {
       const input = pt ?? 0;
+      const generated = ct !== null || thoughts !== null ? (ct ?? 0) + (thoughts ?? 0) : null;
       return {
         inputTokens: input,
-        outputTokens: ct ?? (total !== null ? Math.max(0, total - input) : 0),
+        outputTokens: generated ?? (total !== null ? Math.max(0, total - input) : 0),
         model: typeof root["modelVersion"] === "string" ? (root["modelVersion"] as string) : model,
         shape: "gemini",
         parseStatus: "parsed",
       };
     }
   }
+
 
   // 4. Cohere native: meta.billed_units / meta.tokens.
   const cohereMeta = asRecord(root["meta"]);
@@ -222,6 +230,14 @@ const OUTPUT_KEYS = [
   "CompletionTokens",
   "OutputTokens",
 ];
+/**
+ * Reasoning tokens are BILLED AS OUTPUT but reported separately by every vendor
+ * that exposes them, and they are routinely far larger than the visible answer
+ * (Dispatch 109 saw 67 thinking tokens behind 1 answer token on a real call).
+ * They are added to the output count, never counted as their own thing.
+ */
+const REASONING_KEYS = ["thoughtsTokenCount", "reasoning_tokens", "reasoningTokens"];
+
 
 /** Bounded-depth walk for known counter names. Never looks at string content. */
 function scanForCounters(
@@ -231,11 +247,13 @@ function scanForCounters(
   if (depth > 4) return null;
   let input: number | null = null;
   let output: number | null = null;
+  let reasoning: number | null = null;
   for (const [key, value] of Object.entries(root)) {
     if (input === null && INPUT_KEYS.includes(key)) input = num(value);
     if (output === null && OUTPUT_KEYS.includes(key)) output = num(value);
+    if (reasoning === null && REASONING_KEYS.includes(key)) reasoning = num(value);
     const child = asRecord(value);
-    if (child && (input === null || output === null)) {
+    if (child && (input === null || output === null || reasoning === null)) {
       const nested = scanForCounters(child, depth + 1);
       if (nested) {
         input = input ?? nested.inputTokens;
@@ -244,8 +262,9 @@ function scanForCounters(
     }
   }
   if (input === null && output === null) return null;
-  return { inputTokens: input ?? 0, outputTokens: output ?? 0 };
+  return { inputTokens: input ?? 0, outputTokens: (output ?? 0) + (reasoning ?? 0) };
 }
+
 
 /**
  * Streaming.

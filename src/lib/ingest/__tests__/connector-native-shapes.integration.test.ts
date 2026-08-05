@@ -126,7 +126,13 @@ describe("the Google native envelope, from generativelanguage.googleapis.com", (
     );
 
     const body = (await response.json()) as {
-      usageMetadata: { promptTokenCount: number; candidatesTokenCount?: number; totalTokenCount: number };
+      usageMetadata: {
+        promptTokenCount: number;
+        candidatesTokenCount?: number;
+        thoughtsTokenCount?: number;
+        totalTokenCount: number;
+      };
+
       modelVersion: string;
     };
     expect(response.status).toBe(200);
@@ -138,10 +144,14 @@ describe("the Google native envelope, from generativelanguage.googleapis.com", (
     expect(event.host).toBe("generativelanguage.googleapis.com");
     expect(event.status).toBe("ok");
     expect(event.input_tokens).toBe(body.usageMetadata.promptTokenCount);
+    // Billed output = the answer PLUS the reasoning Google charges for but
+    // reports separately (Dispatch 109 — this assertion previously encoded the
+    // under-count: a real call returned candidates=1 against thoughts=81).
     expect(event.output_tokens).toBe(
-      body.usageMetadata.candidatesTokenCount ??
+      (body.usageMetadata.candidatesTokenCount ?? 0) + (body.usageMetadata.thoughtsTokenCount ?? 0) ||
         body.usageMetadata.totalTokenCount - body.usageMetadata.promptTokenCount,
     );
+
     expect(JSON.stringify(event)).not.toContain(GEMINI_KEY!);
   }, 60_000);
 });
