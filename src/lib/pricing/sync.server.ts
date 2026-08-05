@@ -198,6 +198,11 @@ export async function syncOpenRouterPricing(): Promise<PriceSyncReport | { skipp
       }
     }
 
+    // A provider that appears on the feed for the first time, checked once,
+    // against the table of envelopes the connector actually parses.
+    const providersNew = await checkNewProviders(endpointPrices, knownHosts);
+
+
     // Mark swept models as seen so the rotation advances even when a model has
     // no usable endpoints, otherwise the sweep would stall on it forever.
     for (const batch of chunk((sweepTargets ?? []).map((t) => t.model_key), 200)) {
