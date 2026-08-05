@@ -14,6 +14,7 @@ const row = (o: Partial<PriceHistoryRow>): PriceHistoryRow => ({
   output_usd_per_mtok: 4,
   prev_input_usd_per_mtok: 1,
   prev_output_usd_per_mtok: 2,
+  pct_change: null,
   observed_at: "2026-08-01T00:00:00.000Z",
   ...o,
 });
