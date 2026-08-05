@@ -67,8 +67,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       supabase
         .from("host_prices")
         .select(
-          "model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
+          "model_key, host_label, price_source, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms, output_tps",
         )
+
         .eq("is_active", true)
         .range(f, t),
     ),
@@ -98,8 +99,11 @@ export async function readCatalog(): Promise<CatalogPayload> {
         host_label: p.host_label,
         input: Number(p.input_usd_per_mtok),
         output: Number(p.output_usd_per_mtok),
+        aggregate: !isRealEndpoint(p),
       }))
       .sort((a, b) => a.input - b.input || a.host_label.localeCompare(b.host_label));
+    const realHosts = hosts.filter((h) => !h.aggregate);
+
 
     const scores = benchmarks
       .filter((b) => b.model_key === m.model_key)
