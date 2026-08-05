@@ -493,7 +493,7 @@ export async function recordPriceSyncFailure(message: string): Promise<void> {
  * board while there is still time to write a parser, instead of being
  * discovered as a workspace whose spend reads zero.
  */
-async function checkNewProviders(
+export async function checkNewProviders(
   endpointPrices: PriceEntry[],
   knownHosts: Set<string>,
 ): Promise<NewProviderCheck[]> {
