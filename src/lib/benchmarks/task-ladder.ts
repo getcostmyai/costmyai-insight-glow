@@ -166,6 +166,16 @@ export function resolveLadder(
   separationOf: (field: AaField) => number | null,
 ): LadderResolution {
   const normalized = normalizeTask(task);
+  if (task.trim().toLowerCase() === UNLABELLED_TASK) {
+    return {
+      field: null,
+      rung: -1,
+      tried: [],
+      refusal: "no_valid_instrument",
+      detail:
+        "This traffic arrived without a task label — the connector reads only the endpoint and the model name, never your prompts — so there is no instrument to certify a quality-equivalent switch against. Cheaper-host switches on the same model are unaffected.",
+    };
+  }
   if (!normalized || TASK_LADDERS[normalized].length === 0) {
     return {
       field: null,
@@ -175,6 +185,7 @@ export function resolveLadder(
       detail: `No independent evaluation currently measures ${task.replaceAll("_", " ")} work, so no switch on it can be certified.`,
     };
   }
+
 
   const tried = TASK_LADDERS[normalized].map((field) => {
     const separation = separationOf(field);
