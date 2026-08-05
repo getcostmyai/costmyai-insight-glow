@@ -158,8 +158,11 @@ const num = (v: unknown): number | null => (v == null ? null : Number(v));
  * "Total moves" therefore means increases + decreases and nothing else; new
  * listings are counted separately and are NEVER folded into that total.
  *
- * Direction comes from the ledger's own `change_kind`, never re-derived from the
- * input side alone — a row that reprices output only still has a direction.
+ * Direction AND magnitude both come from the ledger row: `change_kind` and
+ * `pct_change`, written together by `diffPrice` at sync time. Nothing about a
+ * move is re-derived here. `pct_change` is only recomputed when a legacy row
+ * stored none, and then through the same exported blended definition rather
+ * than a second formula.
  */
 export function summarizeMoves(
   rows: PriceHistoryRow[],
@@ -177,8 +180,14 @@ export function summarizeMoves(
       const inputPrev = num(h.prev_input_usd_per_mtok);
       const outputNow = num(h.output_usd_per_mtok);
       const outputPrev = num(h.prev_output_usd_per_mtok);
-      const inputPct = pct(inputNow, inputPrev);
-      const outputPct = pct(outputNow, outputPrev);
+      const ledgerPct = num(h.pct_change);
+      const fallback =
+        inputNow != null && outputNow != null && inputPrev != null && outputPrev != null
+          ? blendedPctChange(
+              { input_usd_per_mtok: inputNow, output_usd_per_mtok: outputNow },
+              { input_usd_per_mtok: inputPrev, output_usd_per_mtok: outputPrev },
+            )
+          : null;
       return {
         modelKey: h.model_key,
         host: h.host,
@@ -186,11 +195,11 @@ export function summarizeMoves(
         kind: h.change_kind as "increase" | "decrease",
         inputNow,
         inputPrev,
-        inputPct,
+        inputPct: pct(inputNow, inputPrev),
         outputNow,
         outputPrev,
-        outputPct,
-        pct: inputPct != null && inputPct !== 0 ? inputPct : (outputPct ?? 0),
+        outputPct: pct(outputNow, outputPrev),
+        pct: ledgerPct ?? fallback ?? 0,
         observedAt: h.observed_at,
       };
     });
