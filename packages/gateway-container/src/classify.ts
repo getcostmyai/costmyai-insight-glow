@@ -41,7 +41,13 @@ export function classifyTask(path: string, model: string | null): TaskHint {
  * Out-of-scope paths (batch, fine-tuning, files, assistants) are still
  * forwarded verbatim; they just report no derived usage.
  */
-const IN_SCOPE = /\/(chat\/completions|completions|responses|messages|generateContent|streamGenerateContent|converse|invoke|embeddings|embed|rerank|moderations|generate|chat)\b/i;
+// Google's native routes name the method after a COLON
+// (`/v1beta/models/gemini-flash-latest:generateContent`), not a slash, so the
+// separator class has to admit both — found against real Gemini traffic,
+// Dispatch 103. With only `/` here, every native Google call was forwarded
+// correctly and then silently never metered.
+const IN_SCOPE =
+  /[/:](chat\/completions|completions|responses|messages|generateContent|streamGenerateContent|countTokens|converse|invoke|embeddings|embed|rerank|moderations|generate|chat)\b/i;
 const OUT_OF_SCOPE = /\/(batches|fine_tuning|fine-tunes|files|assistants|threads|vector_stores|uploads|realtime)\b/i;
 
 export function isInScope(path: string): boolean {
