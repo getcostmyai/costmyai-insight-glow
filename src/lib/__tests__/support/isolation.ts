@@ -183,8 +183,13 @@ export async function sweepTestResidue(
     if (!error) result.users += 1;
   }
 
+  // Last, deliberately: the orphan rule reads which workspaces still exist, so
+  // it has to run after this sweep has finished deleting them.
+  result.syncRunAlerts = await sweepAlertResidue(admin, cutoff);
+
   return result;
 }
+
 
 /**
  * Call once at module scope in every `*.integration.test.ts`, right after the
