@@ -116,7 +116,23 @@ must work — a customer running `docker run` has no CostMyAI credentials at tha
 | `v1`      | moving pointer — the tag the quickstart names                        |
 | `sha-...` | the exact commit the image was built from                            |
 
+### Preferred: publish from GitHub Actions (no local Docker)
+
+`.github/workflows/publish-gateway.yml` builds and pushes all three tags on GitHub's
+runners, authenticating with the built-in `GITHUB_TOKEN` — no PAT, no local Docker.
+
+1. GitHub → **Actions** → **Publish gateway container** → **Run workflow**.
+2. Leave `version` at `v1.0.0` (or set the release tag being cut) → **Run workflow**.
+3. When it goes green, flip the package to public **once**:
+   github.com/orgs/getcostmyai/packages → `gateway` → Package settings →
+   Change visibility → **Public**. A GHCR package created by a workflow is
+   **private by default** — pushing does not make it pullable by strangers.
+4. Back in the repo: `bun scripts/audit/image-published.ts`.
+
+### Alternative: publish from a local Docker daemon
+
 Run from a clean checkout of the commit being released, at the repository root:
+
 
 ```bash
 # 0. Confirm you are releasing what you think you are.
