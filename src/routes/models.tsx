@@ -39,12 +39,21 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "name", label: "A–Z" },
 ];
 
-/** Percent gap between the dearest and cheapest verified host for one model. */
+/** Providers serving this model — the aggregate listing is not one of them. */
+const servingHosts = (row: CatalogRow) => row.hosts.filter((h) => !h.aggregate);
+
+/**
+ * Percent gap between the dearest and cheapest verified provider for one model.
+ * Provider-to-provider only: quoting the aggregate listing as one end of the
+ * gap would price a switch nobody can make (Dispatch 117).
+ */
 function hostSpread(row: CatalogRow): number | null {
-  if (row.hosts.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
-  const max = Math.max(...row.hosts.map((h) => h.input));
+  const serving = servingHosts(row);
+  if (serving.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
+  const max = Math.max(...serving.map((h) => h.input));
   return ((max - row.cheapestInput) / row.cheapestInput) * 100;
 }
+
 
 function ModelsPage() {
   const { data } = useSuspenseQuery(catalogQuery());
