@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { INGEST_API_VERSION, MAX_CAPTURES_PER_BATCH, MAX_EVENTS_PER_BATCH } from "./contract";
+import {
+  INGEST_API_VERSION,
+  MAX_CAPTURES_PER_BATCH,
+  MAX_EVENTS_PER_BATCH,
+  PARSE_STATUSES,
+  TASK_HINTS,
+  UNKNOWN_TASK_HINT,
+} from "./contract";
 
 /**
  * The ingest contract.
@@ -20,15 +27,26 @@ export const ingestEventSchema = z
     occurred_at: z.string().datetime({ offset: true }).optional(),
     model_key: z.string().min(1).max(120),
     host: z.string().min(1).max(120),
-    task_hint: z.enum(["generation", "code", "classification"]),
+    /**
+     * Optional, defaulting to `unknown`: real traffic arrives unlabelled and a
+     * fabricated label would be worse than an honest refusal downstream.
+     */
+    task_hint: z.enum(TASK_HINTS).default(UNKNOWN_TASK_HINT),
     input_tokens: z.number().int().min(0).max(10_000_000),
     output_tokens: z.number().int().min(0).max(10_000_000),
     latency_ms: z.number().int().min(0).max(3_600_000).nullable().optional(),
     status: z.enum(["ok", "error"]).default("ok"),
+    /**
+     * How completely the connector could read the provider's response envelope.
+     * Additive on v1: an older container that never sends it is treated as
+     * `parsed`, exactly as it behaved before the field existed.
+     */
+    parse_status: z.enum(PARSE_STATUSES).default("parsed"),
     /** Caller-supplied de-duplication key; a retried push must not double-count. */
     idempotency_key: z.string().min(1).max(200).optional(),
   })
   .strict();
+
 
 /** Payload version. Present on every batch; unknown versions are refused. */
 const versionField = z.literal(INGEST_API_VERSION).default(INGEST_API_VERSION);

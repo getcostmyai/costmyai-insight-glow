@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
 
 import { AccountShell } from "@/components/dashboard/AccountShell";
+import { CONTAINER_DEFAULTS, dockerRunSnippet } from "@/lib/ingest/contract";
 
 import {
   createIngestToken,
@@ -242,22 +243,29 @@ function Quickstart({ token }: { token: string | null }) {
     <section className="mt-8 rounded-2xl border border-border bg-card p-6">
       <h2 className="text-sm font-semibold">Quickstart</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Point the Verification Engine at your workspace and restart it.
+        One container per provider. Your provider key stays in your own environment — the
+        connector copies your <span className="font-mono">Authorization</span> header through
+        untouched and never reads or stores it.
       </p>
+      {/*
+        Rendered from CONTAINER_DEFAULTS, the same constant the package README and the
+        container itself read. This snippet and the docs used to disagree on the env var
+        name, the port and the image tag, and the copy a real customer pasted was the
+        wrong one.
+      */}
       <pre className="mt-4 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed">
-        {`docker run -d \\
-  -e COSTMYAI_INGEST_TOKEN=${shown} \\
-  -e COSTMYAI_ENDPOINT=https://costmyai.com \\
-  -p 8080:8080 costmyai/gateway:latest`}
+        {dockerRunSnippet(shown)}
       </pre>
       <p className="mt-3 text-xs text-muted-foreground">
-        Then send your provider traffic through <span className="font-mono">localhost:8080</span>.
-        Events queue locally if we're unreachable, so a CostMyAI outage never touches your
-        inference.
+        Then point your SDK at{" "}
+        <span className="font-mono">http://localhost:{CONTAINER_DEFAULTS.port}/v1</span> instead of
+        the provider. Events queue locally if we're unreachable, so a CostMyAI outage never touches
+        your inference.
       </p>
     </section>
   );
 }
+
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (

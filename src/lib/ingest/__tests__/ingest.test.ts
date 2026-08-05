@@ -17,7 +17,7 @@ import {
   ROLLING_WINDOW_DAYS,
 } from "@/lib/ingest/contract";
 import { billingBatchSchema, ingestBatchSchema } from "@/lib/ingest/schema";
-import { INGEST_PATHS as CONTAINER_PATHS, INGEST_API_VERSION as CONTAINER_VERSION } from "../../../../packages/gateway-container/src/config";
+import { INGEST_PATHS as CONTAINER_PATHS, INGEST_API_VERSION as CONTAINER_VERSION, loadConfig } from "../../../../packages/gateway-container/src/config";
 import { pollProvider, type InvoiceReader } from "../../../../packages/gateway-container/src/billing-poll";
 import { UpstreamQueue } from "../../../../packages/gateway-container/src/queue";
 import { verdictFor } from "@/lib/ingest/billing.server";
@@ -161,7 +161,7 @@ function reader(historyDays?: number | null): InvoiceReader {
 
 function queueFor(sink: unknown[]): UpstreamQueue {
   const q = new UpstreamQueue(
-    { baseUrl: "https://app.costmyai.com", ingestToken: "cma_live_test", spoolDir: "/tmp", flushIntervalMs: 1 },
+    containerConfig("cma_live_test"),
     (async () => new Response("{}", { status: 200 })) as unknown as typeof fetch,
   );
   const originalEnqueue = q.enqueue.bind(q);
@@ -219,7 +219,7 @@ describe("offline-safe queue", () => {
     let online = false;
     const seen: string[] = [];
     const queue = new UpstreamQueue(
-      { baseUrl: "https://app.costmyai.com", ingestToken: "cma_live_test", spoolDir: "/tmp", flushIntervalMs: 1 },
+      containerConfig("cma_live_test"),
       (async (url: string) => {
         if (!online) throw new Error("ECONNREFUSED");
         seen.push(String(url));
@@ -244,7 +244,7 @@ describe("offline-safe queue", () => {
 
   it("explains a rotated token instead of dropping traffic", async () => {
     const queue = new UpstreamQueue(
-      { baseUrl: "https://app.costmyai.com", ingestToken: "cma_live_old", spoolDir: "/tmp", flushIntervalMs: 1 },
+      containerConfig("cma_live_old"),
       (async () => new Response("Unauthorized", { status: 401 })) as unknown as typeof fetch,
     );
     queue.enqueue({ kind: "events", body: { events: [validEvent] } });
@@ -293,3 +293,14 @@ describe("billing poll cadence", () => {
     expect(perProvider).toEqual([]);
   });
 });
+
+/** One container config for the tests, built by the real loader. */
+function containerConfig(token: string) {
+  return loadConfig({
+    COSTMYAI_INGEST_TOKEN: token,
+    COSTMYAI_BASE_URL: "https://app.costmyai.com",
+    COSTMYAI_UPSTREAM_URL: "https://api.openai.com",
+    COSTMYAI_SPOOL_DIR: "/tmp",
+    COSTMYAI_FLUSH_INTERVAL_MS: "1",
+  });
+}
