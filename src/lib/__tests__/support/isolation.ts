@@ -130,7 +130,14 @@ export async function sweepTestResidue(
   olderThanMs: number = 30 * 60_000,
 ): Promise<SweepResult> {
   const cutoff = new Date(Date.now() - olderThanMs).toISOString();
-  const result: SweepResult = { users: 0, organizations: 0, partnerApplications: 0, partners: 0 };
+  const result: SweepResult = {
+    users: 0,
+    organizations: 0,
+    partnerApplications: 0,
+    partners: 0,
+    syncRunAlerts: 0,
+  };
+
 
   // 1. Test accounts, found by their reserved email domain.
   const testUsers: string[] = [];
