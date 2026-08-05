@@ -86,6 +86,18 @@ async function completion(body: unknown, init: { model?: string } = {}) {
 
 const live = PROVIDER_KEY ? describe : describe.skip;
 
+/**
+ * Metering runs off the request path by design, so a test has to wait for the
+ * meter to finish reading the tee'd stream before flushing. Production waits
+ * for nothing: the caller already has their bytes.
+ */
+async function flushMetered(expected: number): Promise<void> {
+  for (let i = 0; i < 100 && gateway.queue.size < expected; i++) {
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  await gateway.flush();
+}
+
 beforeAll(async () => {
   if (!PROVIDER_KEY) return;
   const email = `live-provider-${stamp}@costmyai-test.dev`;
@@ -152,7 +164,7 @@ live("a real completion through the container", () => {
     expect(payload.usage.prompt_tokens).toBeGreaterThan(0);
 
     // 2. Metadata pushed to the real app, into a real workspace.
-    await gateway.flush();
+    await flushMetered(1);
     const { data: rows } = await admin
       .from("usage_events")
       .select("model_key, host, input_tokens, output_tokens, status, parse_status, task_hint, latency_ms")
@@ -204,7 +216,7 @@ live("concurrency", () => {
     expect(peak).toBe(N);
 
     // And every one of them was metered exactly once, under its own key.
-    await gateway.flush();
+    await flushMetered(N);
     const { data: rows } = await admin
       .from("usage_events")
       .select("idempotency_key")
@@ -235,10 +247,14 @@ live("a provider error", () => {
 
     expect(throughContainer.status).toBe(direct.status);
     expect(direct.status).toBeGreaterThanOrEqual(400);
-    expect(throughContainer.text).toBe(directText);
+    // Byte-identical apart from the provider's own per-request id, which is
+    // different for two different requests no matter who sent them.
+    const stripId = (t: string) => t.replace(/"request_id":"[^"]*"/g, '"request_id":"<id>"');
+    expect(stripId(throughContainer.text)).toBe(stripId(directText));
+    expect(throughContainer.text.length).toBe(directText.length);
 
     // The failure is still metered, as an error, with no invented tokens.
-    await gateway.flush();
+    await flushMetered(1);
     const { data: rows } = await admin
       .from("usage_events")
       .select("status, input_tokens, output_tokens, parse_status")
