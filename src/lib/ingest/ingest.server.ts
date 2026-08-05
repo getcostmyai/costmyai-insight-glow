@@ -7,6 +7,7 @@ import type { PriceRow } from "@/lib/engine/types";
 import { bucketStart, DAY_MS, rollupEvents, type SyntheticEvent } from "@/lib/synthetic/generator";
 
 import { buildModelResolver } from "./resolve";
+import { buildHostResolver } from "./resolve-host";
 import type { IngestEvent } from "./schema";
 import { fetchAllRows } from "@/lib/paginate.server";
 
@@ -157,16 +158,30 @@ async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number
     aliases,
   );
 
-  const events: SyntheticEvent[] = (raw ?? []).map((r) => ({
-    occurredAt: new Date(r.occurred_at),
-    modelKey: resolveModel(r.model_key).key,
-    host: r.host,
-    taskHint: r.task_hint,
-    inputTokens: r.input_tokens,
-    outputTokens: r.output_tokens,
-    latencyMs: r.latency_ms ?? 0,
-    status: r.status === "error" ? "error" : "ok",
-  }));
+  /**
+   * Dispatch 96 — the same treatment for hosts. A gateway that reports
+   * `api.openai.com` is talking about the host we price as `openai`; an
+   * ambiguous or unknown hostname keeps its own name and stays unpriced
+   * rather than being attributed to a provider on a guess.
+   */
+  const resolveHost = buildHostResolver(
+    priceRows.map((p) => p.host),
+    { pricedPairs: new Set(priceIndex.keys()) },
+  );
+
+  const events: SyntheticEvent[] = (raw ?? []).map((r) => {
+    const modelKey = resolveModel(r.model_key).key;
+    return {
+      occurredAt: new Date(r.occurred_at),
+      modelKey,
+      host: resolveHost(r.host, modelKey).key,
+      taskHint: r.task_hint,
+      inputTokens: r.input_tokens,
+      outputTokens: r.output_tokens,
+      latencyMs: r.latency_ms ?? 0,
+      status: r.status === "error" ? "error" : "ok",
+    };
+  });
 
   const buckets = [...rollupEvents(events, "hour", priceFor), ...rollupEvents(events, "day", priceFor)];
 
