@@ -244,6 +244,77 @@ async function main() {
     }
   }
 
+  // ---- 7. price moves: page magnitude vs the ledger's own pct_change -------
+  // Dispatch 114. The Intelligence page carried a second, input-first
+  // derivation of "how much did this price move", which disagreed with the
+  // ledger by construction. The page now reads pct_change; this proves it, on
+  // every real move row, rather than trusting the code read.
+  console.log("\nprice moves");
+  {
+    const { data: history } = await db
+      .from("price_history")
+      .select(
+        "model_key, host, change_kind, input_usd_per_mtok, output_usd_per_mtok, prev_input_usd_per_mtok, prev_output_usd_per_mtok, pct_change, observed_at",
+      )
+      .in("change_kind", ["increase", "decrease"])
+      .order("observed_at", { ascending: false })
+      .limit(5000);
+
+    const rows = (history ?? []) as unknown as PriceHistoryRow[];
+    if (rows.length === 0) {
+      console.log("  n/a   no recorded price moves yet");
+    } else {
+      const { moves } = summarizeMoves(rows, new Map());
+      const byKey = new Map(
+        rows.map((r) => [`${r.model_key}|${r.host}|${r.observed_at}`, r] as const),
+      );
+
+      const drifted = moves.filter((m) => {
+        const ledger = byKey.get(`${m.modelKey}|${m.host}|${m.observedAt}`)?.pct_change;
+        return ledger != null && !near(m.pct, Number(ledger), 0.005);
+      });
+      check(
+        "page pct equals the ledger's pct_change on every move",
+        drifted.length === 0,
+        drifted.length
+          ? `${drifted[0].modelKey}@${drifted[0].host} page ${drifted[0].pct} vs ledger ${byKey.get(`${drifted[0].modelKey}|${drifted[0].host}|${drifted[0].observedAt}`)?.pct_change}`
+          : `${moves.length} moves`,
+      );
+
+      // And the stored value itself is the blended definition, not one side.
+      const badLedger = rows.filter((r) => {
+        const expected = blendedPctChange(
+          {
+            input_usd_per_mtok: Number(r.input_usd_per_mtok),
+            output_usd_per_mtok: Number(r.output_usd_per_mtok),
+          },
+          {
+            input_usd_per_mtok: Number(r.prev_input_usd_per_mtok),
+            output_usd_per_mtok: Number(r.prev_output_usd_per_mtok),
+          },
+        );
+        return r.pct_change != null && expected != null && !near(Number(r.pct_change), expected, 0.005);
+      });
+      check(
+        "stored pct_change is blended across input and output",
+        badLedger.length === 0,
+        `${rows.length} ledger rows`,
+      );
+
+      // Direction and magnitude come from the same row, so they cannot disagree.
+      const contradictory = moves.filter(
+        (m) => (m.kind === "increase" && m.pct < 0) || (m.kind === "decrease" && m.pct > 0),
+      );
+      check(
+        "direction and magnitude agree on every move",
+        contradictory.length === 0,
+        `${moves.length} moves`,
+      );
+    }
+  }
+
+
+
 
   console.log(`\n${failures === 0 ? "All formula checks passed." : `${failures} FAILED`}`);
   process.exit(failures ? 1 : 0);
