@@ -98,12 +98,14 @@ function toWebRequest(req: IncomingMessage, url: URL): Request {
   }
   const method = req.method ?? "GET";
   const hasBody = method !== "GET" && method !== "HEAD";
+  // `duplex: "half"` is required by Node/undici for a streamed request body and
+  // is absent from the DOM RequestInit type this repo typechecks against.
   return new Request(url.toString(), {
     method,
     headers,
     body: hasBody ? (Readable.toWeb(req) as ReadableStream<Uint8Array>) : undefined,
     duplex: "half",
-  });
+  } as RequestInit & { duplex: "half" });
 }
 
 const isEntrypoint = process.argv[1]?.includes("index");
