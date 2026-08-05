@@ -2,6 +2,7 @@ import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { SEPARATION_FACTOR } from "@/lib/engine/equivalence";
 import { separationOfScores } from "@/lib/benchmarks/task-ladder";
+import { blendedPctChange } from "@/lib/pricing/openrouter";
 
 /**
  * Market intelligence read model.
