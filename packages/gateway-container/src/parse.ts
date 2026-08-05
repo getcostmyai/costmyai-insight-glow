@@ -168,9 +168,15 @@ export function readUsage(payload: unknown): UsageReading {
   }
 
 
-  // 4. Cohere native: meta.billed_units / meta.tokens.
-  const cohereMeta = asRecord(root["meta"]);
+  // 4. Cohere native. v1 Chat put the counters under `meta`; v2 Chat — the
+  //    current API — puts the same two objects under `usage`. Dispatch 109
+  //    caught the v2 envelope falling through to the heuristic tier: the token
+  //    numbers were right, but the read was reported `tokens_only`, which
+  //    understates confidence and feeds the unrecognised-shape watch with a
+  //    shape we do in fact handle. Both locations, one branch.
+  const cohereMeta = asRecord(root["meta"]) ?? usage;
   const billed = asRecord(cohereMeta?.["billed_units"]) ?? asRecord(cohereMeta?.["tokens"]);
+
   if (billed) {
     const it = num(billed["input_tokens"]);
     const ot = num(billed["output_tokens"]);
