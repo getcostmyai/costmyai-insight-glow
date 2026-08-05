@@ -24,7 +24,7 @@ import { fetchAllRows } from "@/lib/paginate.server";
  * how a dashboard starts lying.
  */
 
-function adminClient() {
+export function adminClient() {
   return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -96,6 +96,13 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
     // Dispatch 99 but silently dropped here until Dispatch 102 — an estimate
     // that reaches the dashboard has to be able to say it is one.
     parse_status: e.parse_status,
+    /**
+     * Dispatch 106. A degraded read keeps a content-free skeleton of the
+     * envelope so a parser shipped later can re-read it; a clean read keeps
+     * nothing, because there is nothing left to learn about it.
+     */
+    envelope_skeleton:
+      e.parse_status === "parsed" ? null : ((e.envelope_skeleton ?? null) as never),
     idempotency_key: e.idempotency_key ?? null,
   }));
 
@@ -147,7 +154,7 @@ async function watchUnparsedShapes(
  * stored events. Same `rollupEvents` the seed and the tests use, so an
  * ingested hour and a seeded hour are computed by identical code.
  */
-async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number> {
+export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number> {
   const db = adminClient();
   const min = new Date(Math.min(...timestamps.map((t) => t.getTime())));
   const max = new Date(Math.max(...timestamps.map((t) => t.getTime())));
