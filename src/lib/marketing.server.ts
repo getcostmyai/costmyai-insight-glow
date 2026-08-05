@@ -84,13 +84,17 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
   ]);
 
   const priceRows = prices.data ?? [];
-  const providers = [...new Set(priceRows.map((p) => p.host_label))].sort((a, b) =>
-    a.localeCompare(b),
+  // The marquee names providers, so it lists real endpoints only — an
+  // aggregator logo in a row of companies that serve weights is a false claim
+  // about who serves what.
+  const providers = [...new Set(priceRows.filter(isRealEndpoint).map((p) => p.host_label))].sort(
+    (a, b) => a.localeCompare(b),
   );
 
   return {
     modelCount: models.count ?? 0,
-    providerCount: providers.length,
+    providerCount: countRealProviders(priceRows),
+
     priceChangesTracked: changes.count ?? 0,
     trackingSince: firstObservation.data?.observed_at ?? null,
     providers,
