@@ -26,6 +26,11 @@ import type { PriceRow, UsageAggregate } from "../../src/lib/engine/types";
 import { aggregateSavings, capturedInWindow } from "../../src/lib/dashboard/savings";
 import { K_ANONYMITY_FLOOR } from "../../src/lib/benchmark/k-anonymity";
 import { separationOfScores } from "../../src/lib/benchmarks/task-ladder";
+import {
+  summarizeMoves,
+  type PriceHistoryRow,
+} from "../../src/lib/intelligence/intelligence.server";
+import { blendedPctChange } from "../../src/lib/pricing/openrouter";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
