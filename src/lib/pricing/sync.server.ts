@@ -144,11 +144,20 @@ export async function syncOpenRouterPricing(): Promise<PriceSyncReport | { skipp
     // Dispatch 104. The same "what is new this run" read, one level up: a host
     // we have never priced before is a provider nobody has ever inspected, and
     // its response envelope is an open question until someone answers it.
+    //
+    // Dispatch 110. Deliberately unfiltered on is_active, for the same reason
+    // the model_catalog read above is: this asks "have we ever seen this host",
+    // not "does this host sell anything today". A provider that was delisted
+    // and later relisted had its envelope classified the first time round, so
+    // filtering to active rows would re-raise a solved parser task on every
+    // return. No price from this read is ever quoted — it produces a set of
+    // host names for the parser jobs board and nothing else.
     const { fetchAllRows } = await import("@/lib/paginate.server");
     const existingHostRows = await fetchAllRows((f, t) =>
       supabase.from("host_prices").select("host").range(f, t),
     );
     const knownHosts = new Set(existingHostRows.map((r) => String(r.host)));
+
 
 
     await upsertCatalog(supabase, entries, syncedAt);
