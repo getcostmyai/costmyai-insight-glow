@@ -9,7 +9,7 @@ FROM node:22-alpine AS build
 WORKDIR /build
 COPY packages/gateway-container/package.json packages/gateway-container/tsconfig.json ./packages/gateway-container/
 COPY packages/gateway-container/src ./packages/gateway-container/src
-COPY src/lib/ingest/contract.ts ./src/lib/ingest/contract.ts
+COPY src/lib/ingest/contract.ts src/lib/ingest/backfill.ts ./src/lib/ingest/
 RUN npm i -g typescript@5.9.2 \
   && cd packages/gateway-container \
   && tsc -p tsconfig.json

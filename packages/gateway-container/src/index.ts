@@ -102,7 +102,6 @@ function toWebRequest(req: IncomingMessage, url: URL): Request {
     method,
     headers,
     body: hasBody ? (Readable.toWeb(req) as ReadableStream<Uint8Array>) : undefined,
-    // @ts-expect-error Node requires duplex for a streamed request body.
     duplex: "half",
   });
 }

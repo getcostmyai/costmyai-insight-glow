@@ -110,7 +110,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
     response = await fetchImpl(target.toString(), {
       method: request.method,
       headers,
-      body: bodyBytes as BodyInit | undefined,
+      body: bodyBytes as unknown as undefined,
       signal: controller.signal,
       redirect: "manual",
     });
