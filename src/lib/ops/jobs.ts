@@ -98,7 +98,7 @@ export const JOB_REGISTRY: JobSpec[] = [
     maxIntervalMinutes: Number.MAX_SAFE_INTEGER,
     eventDriven: true,
     what: "Reports a provider response envelope the connector could not read, and a provider appearing on the pricing feed with no known shape.",
-    quietMeans: "Every shape seen so far is one of the five the connector parses.",
+    quietMeans: "Every shape seen so far is one of the six the connector parses.",
   },
 ];
 

@@ -136,6 +136,6 @@ describe("the unrecognised-shape watch, end to end", () => {
     // Silence is the normal state for a watch, and a stale watch is not a fault.
     const health = judgeJob(spec, [], Date.now());
     expect(health.verdict).toBe("healthy");
-    expect(health.reason).toContain("five");
+    expect(health.reason).toContain("six the connector parses");
   });
 });
