@@ -29,6 +29,16 @@ export interface JobSpec {
 }
 
 
+/**
+ * The one job name the shape watch writes under. Ingest and the pricing sync
+ * both report here rather than each inventing a channel, so the board shows
+ * one line for "a shape we do not understand turned up".
+ */
+export const SHAPE_WATCH_JOB = "shape-watch";
+
+/** How long a reported shape stays an open alert on the board. */
+export const SHAPE_WATCH_WINDOW_MINUTES = 7 * 24 * 60;
+
 export const JOB_REGISTRY: JobSpec[] = [
   {
     job: "usage-tick",
@@ -91,16 +101,6 @@ export const JOB_REGISTRY: JobSpec[] = [
     quietMeans: "Every shape seen so far is one of the five the connector parses.",
   },
 ];
-
-/**
- * The one job name the shape watch writes under. Ingest and the pricing sync
- * both report here rather than each inventing a channel, so the board shows
- * one line for "a shape we do not understand turned up".
- */
-export const SHAPE_WATCH_JOB = "shape-watch";
-
-/** How long a reported shape stays an open alert on the board. */
-export const SHAPE_WATCH_WINDOW_MINUTES = 7 * 24 * 60;
 
 
 export type JobVerdict = "healthy" | "stale" | "failing" | "empty" | "never-run";
