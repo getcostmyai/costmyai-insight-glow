@@ -43,9 +43,10 @@ describe("Gemini native: reasoning tokens", () => {
 
 describe("the heuristic fallback", () => {
   it("adds reasoning tokens to output in an envelope it does not recognise", () => {
-    const reading = readUsage({ some_vendor: { usage: { input_tokens: 5, output_tokens: 2, reasoning_tokens: 40 } } }),
-      "vendor/model",
-    );
+    const reading = readUsage({
+      some_vendor: { usage: { input_tokens: 5, output_tokens: 2, reasoning_tokens: 40 } },
+    });
+
     expect(reading.parseStatus).toBe("tokens_only");
     expect(reading.inputTokens).toBe(5);
     expect(reading.outputTokens).toBe(42);
