@@ -1,0 +1,848 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-05T19:14:05.217Z",
+  "queries": [
+    {
+      "file": "src/lib/benchmark.functions.ts",
+      "line": 68,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"id\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/benchmark/benchmark.server.ts",
+      "line": 97,
+      "table": "usage_rollups",
+      "filters": [
+        "is_synthetic",
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"cost_usd\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/benchmarks/aa-sync.server.ts",
+      "line": 67,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key\") .eq(\"is_active\", true)"
+    },
+    {
+      "file": "src/lib/billing.functions.ts",
+      "line": 209,
+      "table": "subscriptions",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"stripe_customer_id\") .eq(\"org_id\", data.orgId)"
+    },
+    {
+      "file": "src/lib/billing.functions.ts",
+      "line": 267,
+      "table": "subscriptions",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"stripe_customer_id, stripe_subscription_id\") .eq(\"org_id\", data.orgId)"
+    },
+    {
+      "file": "src/lib/billing/guard.server.ts",
+      "line": 23,
+      "table": "organizations",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"organizations\").select(\"plan\").eq(\"id\", orgId).maybeSingle(), supabase .from(\"subscriptions\")"
+    },
+    {
+      "file": "src/lib/billing/guard.server.ts",
+      "line": 25,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"plan, status, current_period_end, cancel_at_period_end\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/catalog/catalog.server.ts",
+      "line": 51,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier, is_reasoning, context_window, modality\""
+    },
+    {
+      "file": "src/lib/catalog/catalog.server.ts",
+      "line": 58,
+      "table": "host_prices",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host_label, input_usd_per_mtok, output_usd_per_mtok, median_ttft_ms,"
+    },
+    {
+      "file": "src/lib/catalog/catalog.server.ts",
+      "line": 68,
+      "table": "benchmarks",
+      "filters": [],
+      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score, measured_at\") .order(\"measured_at\", { ascend"
+    },
+    {
+      "file": "src/lib/catalog/catalog.server.ts",
+      "line": 75,
+      "table": "pricing_snapshots",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"status\", \"ok\")"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 328,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select( \"bucket_start, model_key, host, task_hint, requests, input_tokens, output_toke"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 340,
+      "table": "host_prices",
+      "filters": [
+        "is_active",
+        "is_fixture"
+      ],
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 352,
+      "table": "benchmarks",
+      "filters": [
+        "is_active",
+        "is_fixture",
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 358,
+      "table": "benchmark_margins",
+      "filters": [
+        "is_active",
+        "is_fixture",
+        "is_synthetic",
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"benchmark_margins\") .select(\"suite, task_class, margin, method, synced_at, source_run_id\") .eq(\"is_fixt"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 363,
+      "table": "model_catalog",
+      "filters": [
+        "is_active",
+        "is_synthetic",
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier\") .eq(\"is_active\", true)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 369,
+      "table": "switches",
+      "filters": [
+        "is_synthetic",
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"switches\") .select( \"id, from_model, from_host, to_model, to_host, basis, badge, autonomous, status, ac"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 376,
+      "table": "organizations",
+      "filters": [
+        "is_synthetic",
+        "org_id"
+      ],
+      "snippet": ".from(\"organizations\") .select(\"name, plan, is_synthetic, autonomous_enabled\") .eq(\"id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 383,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"bucket_start\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 389,
+      "table": "objectives",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"objectives\") .select(\"model_key, host, task_hint, objective, quality_floor_score, max_latency_ms\") .eq("
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 395,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"plan, status, current_period_end, cancel_at_period_end\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 406,
+      "table": "pricing_snapshots",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"status\", \"ok\")"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 580,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"bucket_start, model_key, host, task_hint, cost_usd\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 595,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"bucket_start\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 693,
+      "table": "billing_captures",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"billing_captures\") .select(\"id, provider, period_start, period_end\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 701,
+      "table": "billing_reconciliations",
+      "filters": [
+        "superseded_at"
+      ],
+      "snippet": ".from(\"billing_reconciliations\") .select(\"capture_id, estimated_usd, invoiced_usd, delta_pct, verdict\") .in("
+    },
+    {
+      "file": "src/lib/dashboard/ingest-health.server.ts",
+      "line": 19,
+      "table": "usage_events",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"usage_events\") .select(\"occurred_at\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard/ingest-health.server.ts",
+      "line": 25,
+      "table": "api_keys",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"api_keys\").select(\"revoked_at\").eq(\"org_id\", orgId), ])"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 91,
+      "table": "organizations",
+      "filters": [
+        "is_active",
+        "is_fixture",
+        "is_synthetic"
+      ],
+      "snippet": ".from(\"organizations\").select(\"id, plan, is_synthetic, autonomous_enabled\"), fetchAllRows((from, to) => supaba"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 94,
+      "table": "host_prices",
+      "filters": [
+        "is_active",
+        "is_fixture"
+      ],
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 106,
+      "table": "benchmarks",
+      "filters": [
+        "is_active",
+        "is_fixture"
+      ],
+      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false)"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 113,
+      "table": "benchmark_margins",
+      "filters": [
+        "is_active",
+        "is_fixture"
+      ],
+      "snippet": ".from(\"benchmark_margins\") .select(\"suite, task_class, margin, method, synced_at, source_run_id\") .eq(\"is_fixt"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 120,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier\") .eq(\"is_active\", true)"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 193,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, "
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 204,
+      "table": "objectives",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"objectives\") .select(\"model_key, host, task_hint, objective, quality_floor_score, max_latency_ms\") .eq("
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 208,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"plan, status, current_period_end, cancel_at_period_end\") .eq(\"org_id\", org.id)"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 353,
+      "table": "switch_events",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"switch_events\") .select(\"created_at\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/estimator/estimate.server.ts",
+      "line": 15,
+      "table": "host_prices",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_a"
+    },
+    {
+      "file": "src/lib/estimator/estimate.server.ts",
+      "line": 22,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier\") .eq(\"is_active\", true)"
+    },
+    {
+      "file": "src/lib/estimator/estimate.server.ts",
+      "line": 28,
+      "table": "benchmarks",
+      "filters": [],
+      "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t), ), fetchAllRows((f, t) =>"
+    },
+    {
+      "file": "src/lib/estimator/estimate.server.ts",
+      "line": 31,
+      "table": "benchmark_margins",
+      "filters": [],
+      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\").range(f, t), ), ])"
+    },
+    {
+      "file": "src/lib/estimator/options.server.ts",
+      "line": 22,
+      "table": "host_prices",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"host_prices\").select(\"model_key, host, host_label\").eq(\"is_active\", true).range(f, t), ), fetchAllRows("
+    },
+    {
+      "file": "src/lib/estimator/options.server.ts",
+      "line": 25,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\").select(\"model_key, display_name\").eq(\"is_active\", true).range(f, t), ), ])"
+    },
+    {
+      "file": "src/lib/ingest/billing.server.ts",
+      "line": 93,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"host, cost_usd\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/ingest/billing.server.ts",
+      "line": 148,
+      "table": "billing_reconciliations",
+      "filters": [
+        "superseded_at"
+      ],
+      "snippet": ".from(\"billing_reconciliations\") .select(\"id, estimated_usd, invoiced_usd, verdict, note\") .eq(\"capture_id\", r"
+    },
+    {
+      "file": "src/lib/ingest/ingest.server.ts",
+      "line": 51,
+      "table": "api_keys",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"api_keys\") .select(\"id, org_id, key_hash, revoked_at\") .eq(\"key_prefix\", prefix)"
+    },
+    {
+      "file": "src/lib/ingest/ingest.server.ts",
+      "line": 169,
+      "table": "usage_events",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"usage_events\") .select(\"occurred_at, model_key, host, task_hint, input_tokens, output_tokens, latency_m"
+    },
+    {
+      "file": "src/lib/ingest/ingest.server.ts",
+      "line": 181,
+      "table": "host_prices",
+      "filters": [
+        "is_fixture"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_f"
+    },
+    {
+      "file": "src/lib/ingest/ingest.server.ts",
+      "line": 196,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\").select(\"model_key\").eq(\"is_active\", true).range(f, t)), fetchAllRows((f, t) => db.from("
+    },
+    {
+      "file": "src/lib/ingest/keys.server.ts",
+      "line": 69,
+      "table": "api_keys",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"api_keys\") .select(\"id, name, key_prefix, created_at, last_used_at, revoked_at\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/ingest/reprocess.server.ts",
+      "line": 129,
+      "table": "usage_events",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"usage_events\") .select(\"id, org_id, occurred_at, status, parse_status, input_tokens, output_tokens, env"
+    },
+    {
+      "file": "src/lib/intelligence/intelligence.server.ts",
+      "line": 216,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, is_active, first_seen_at\") .range(f, t),"
+    },
+    {
+      "file": "src/lib/intelligence/intelligence.server.ts",
+      "line": 222,
+      "table": "host_prices",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, price_sour"
+    },
+    {
+      "file": "src/lib/intelligence/intelligence.server.ts",
+      "line": 245,
+      "table": "benchmarks",
+      "filters": [],
+      "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t), ), supabase.from(\"benchmark_mar"
+    },
+    {
+      "file": "src/lib/intelligence/intelligence.server.ts",
+      "line": 247,
+      "table": "benchmark_margins",
+      "filters": [],
+      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\"), ])"
+    },
+    {
+      "file": "src/lib/intelligence/snapshot.server.ts",
+      "line": 82,
+      "table": "monthly_kpi_snapshot",
+      "filters": [
+        "superseded_at"
+      ],
+      "snippet": ".from(\"monthly_kpi_snapshot\") .select(\"id, month, payload, frozen_at, supersedes_id, superseded_at, note\") .eq"
+    },
+    {
+      "file": "src/lib/intelligence/snapshot.server.ts",
+      "line": 96,
+      "table": "monthly_kpi_snapshot",
+      "filters": [
+        "superseded_at"
+      ],
+      "snippet": ".from(\"monthly_kpi_snapshot\") .select(\"month, frozen_at, superseded_at\") .is(\"superseded_at\", null)"
+    },
+    {
+      "file": "src/lib/invites.functions.ts",
+      "line": 99,
+      "table": "org_invites",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"org_invites\") .select(\"id, email, role, expires_at, created_at, accepted_at, revoked_at\") .eq(\"org_id\","
+    },
+    {
+      "file": "src/lib/invites.functions.ts",
+      "line": 171,
+      "table": "org_invites",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"org_invites\") .select(\"id, org_id, role, expires_at, organizations(name)\") .is(\"accepted_at\", null)"
+    },
+    {
+      "file": "src/lib/keys.functions.ts",
+      "line": 62,
+      "table": "api_keys",
+      "filters": [
+        "org_id",
+        "revoked_at"
+      ],
+      "snippet": ".from(\"api_keys\") .select(\"id, name, key_prefix, created_at, last_used_at, revoked_at\") .eq(\"org_id\", data.org"
+    },
+    {
+      "file": "src/lib/marketing.server.ts",
+      "line": 46,
+      "table": "model_catalog",
+      "filters": [
+        "is_active",
+        "status"
+      ],
+      "snippet": ".from(\"model_catalog\").select(\"model_key\", { count: \"exact\", head: true }).eq(\"is_active\", true), fetchAllRows"
+    },
+    {
+      "file": "src/lib/marketing.server.ts",
+      "line": 48,
+      "table": "host_prices",
+      "filters": [
+        "is_active",
+        "status"
+      ],
+      "snippet": ".from(\"host_prices\").select(\"host, host_label\").eq(\"is_active\", true).range(f, t), ).then((data) => ({ data })"
+    },
+    {
+      "file": "src/lib/marketing.server.ts",
+      "line": 51,
+      "table": "pricing_snapshots",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at, status\") .eq(\"status\", \"ok\")"
+    },
+    {
+      "file": "src/lib/partner-application.server.ts",
+      "line": 52,
+      "table": "partner_applications",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partner_applications\") .select(\"id\") .eq(\"email\", contact.email)"
+    },
+    {
+      "file": "src/lib/partner-application.server.ts",
+      "line": 114,
+      "table": "partner_applications",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partner_applications\") .select( \"id, first_name, last_name, email, phone, company, active_clients_bucke"
+    },
+    {
+      "file": "src/lib/partners.functions.ts",
+      "line": 127,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select( \"id, name, referral_code, contact_email, status, tier_override, stripe_connect_acco"
+    },
+    {
+      "file": "src/lib/partners.functions.ts",
+      "line": 150,
+      "table": "commission_ledger",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"commission_ledger\") .select( \"id, org_id, invoice_id, period_start, period_end, revenue_usd, rate_pct, "
+    },
+    {
+      "file": "src/lib/partners.functions.ts",
+      "line": 158,
+      "table": "partner_payouts",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partner_payouts\") .select( \"id, amount_usd, amount_payout_currency, payout_currency, fx_rate, fx_detail"
+    },
+    {
+      "file": "src/lib/partners.functions.ts",
+      "line": 293,
+      "table": "organizations",
+      "filters": [],
+      "snippet": ".from(\"organizations\") .select(\"referred_by_partner_id, referred_at\") .eq(\"id\", data.orgId)"
+    },
+    {
+      "file": "src/lib/partners.functions.ts",
+      "line": 445,
+      "table": "organizations",
+      "filters": [
+        "is_synthetic",
+        "status"
+      ],
+      "snippet": ".from(\"organizations\") .select(\"id, referred_by_partner_id, created_at\") .eq(\"is_synthetic\", false),"
+    },
+    {
+      "file": "src/lib/partners.functions.ts",
+      "line": 448,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\").select(\"id, name, referral_code, status\"), ])"
+    },
+    {
+      "file": "src/lib/partners/payouts.server.ts",
+      "line": 51,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select( \"id, name, contact_email, status, stripe_connect_account_id, stripe_connect_status,"
+    },
+    {
+      "file": "src/lib/partners/payouts.server.ts",
+      "line": 312,
+      "table": "commission_ledger",
+      "filters": [],
+      "snippet": ".from(\"commission_ledger\") .select(\"invoice_id, commission_usd\") .eq(\"payout_id\", payoutId)"
+    },
+    {
+      "file": "src/lib/partners/payouts.server.ts",
+      "line": 337,
+      "table": "commission_ledger",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"commission_ledger\") .select(\"partner_id, commission_usd, status, payout_id, environment\") .eq(\"environm"
+    },
+    {
+      "file": "src/lib/partners/payouts.server.ts",
+      "line": 354,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select(\"id, name, status, stripe_connect_status, stripe_connect_account_id\") .in(\"id\", [..."
+    },
+    {
+      "file": "src/lib/pipeline.functions.ts",
+      "line": 32,
+      "table": "usage_rollups",
+      "filters": [
+        "is_active",
+        "is_fixture",
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, "
+    },
+    {
+      "file": "src/lib/pipeline.functions.ts",
+      "line": 40,
+      "table": "host_prices",
+      "filters": [
+        "is_active",
+        "is_fixture"
+      ],
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
+    },
+    {
+      "file": "src/lib/pipeline.functions.ts",
+      "line": 48,
+      "table": "benchmarks",
+      "filters": [
+        "is_fixture"
+      ],
+      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false),"
+    },
+    {
+      "file": "src/lib/pipeline.functions.ts",
+      "line": 52,
+      "table": "benchmark_margins",
+      "filters": [
+        "is_fixture"
+      ],
+      "snippet": ".from(\"benchmark_margins\") .select(\"suite, task_class, margin, method, synced_at, source_run_id\") .eq(\"is_fixt"
+    },
+    {
+      "file": "src/lib/pipeline.functions.ts",
+      "line": 56,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\").select(\"model_key, display_name, vendor, tier\").eq(\"is_active\", true), ])"
+    },
+    {
+      "file": "src/lib/pricing/sync.server.ts",
+      "line": 93,
+      "table": "pricing_snapshots",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at, finished_at, status\") .eq(\"feed\", PRICING_FEED)"
+    },
+    {
+      "file": "src/lib/pricing/sync.server.ts",
+      "line": 140,
+      "table": "model_catalog",
+      "filters": [],
+      "snippet": ".from(\"model_catalog\").select(\"model_key\")"
+    },
+    {
+      "file": "src/lib/pricing/sync.server.ts",
+      "line": 157,
+      "table": "host_prices",
+      "filters": [],
+      "snippet": ".from(\"host_prices\").select(\"host\").range(f, t), )"
+    },
+    {
+      "file": "src/lib/pricing/sync.server.ts",
+      "line": 190,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\") .select(\"model_key\") .eq(\"source\", OPENROUTER_SOURCE)"
+    },
+    {
+      "file": "src/lib/pricing/sync.server.ts",
+      "line": 464,
+      "table": "host_prices",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"id, model_key, host, region, price_source, input_usd_per_mtok, output_usd_per_mt"
+    },
+    {
+      "file": "src/lib/synthetic/tick.server.ts",
+      "line": 46,
+      "table": "organizations",
+      "filters": [
+        "is_synthetic"
+      ],
+      "snippet": ".from(\"organizations\") .select(\"id\") .eq(\"is_synthetic\", true)"
+    },
+    {
+      "file": "src/lib/synthetic/tick.server.ts",
+      "line": 57,
+      "table": "usage_events",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_events\") .select(\"occurred_at\") .eq(\"org_id\", org.id)"
+    },
+    {
+      "file": "src/lib/synthetic/tick.server.ts",
+      "line": 80,
+      "table": "host_prices",
+      "filters": [
+        "is_fixture"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_f"
+    },
+    {
+      "file": "src/lib/workspace.functions.ts",
+      "line": 33,
+      "table": "organizations",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"organizations\").select(\"id, name, slug, plan\").order(\"created_at\"), supabase.from(\"user_roles\").select("
+    },
+    {
+      "file": "src/routes/api/public/payments/webhook.ts",
+      "line": 147,
+      "table": "subscriptions",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"org_id\") .eq(\"stripe_subscription_id\", subscriptionId)"
+    },
+    {
+      "file": "src/routes/r.$code.ts",
+      "line": 36,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select(\"referral_code\") .ilike(\"referral_code\", code)"
+    }
+  ]
+}
