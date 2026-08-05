@@ -4,7 +4,12 @@ import { useState } from "react";
 import { Check, Copy, KeyRound, Loader2, Plus, RotateCw, X } from "lucide-react";
 
 import { AccountShell } from "@/components/dashboard/AccountShell";
-import { CONTAINER_DEFAULTS, dockerRunSnippet } from "@/lib/ingest/contract";
+import {
+  BACKFILL_LOOKBACK_DAYS,
+  CONTAINER_DEFAULTS,
+  dockerRunSnippet,
+  ROLLING_WINDOW_DAYS,
+} from "@/lib/ingest/contract";
 
 import {
   createIngestToken,
@@ -261,6 +266,24 @@ function Quickstart({ token }: { token: string | null }) {
         <span className="font-mono">http://localhost:{CONTAINER_DEFAULTS.port}/v1</span> instead of
         the provider. Events queue locally if we're unreachable, so a CostMyAI outage never touches
         your inference.
+      </p>
+      {/*
+        The backfill promise, rendered from the same constants the poll planner
+        reads (src/lib/ingest/backfill.ts) and the package README quotes. It used
+        to be a sentence typed into the docs only, which is how a promise and the
+        code behind it drift apart.
+      */}
+      <p className="mt-3 text-xs text-muted-foreground">
+        <span className="font-semibold text-foreground">Billing reconciliation, day one.</span> The
+        first poll after you connect a provider looks back{" "}
+        <span className="font-mono">{BACKFILL_LOOKBACK_DAYS}</span> days, so you see a real
+        reconciled month immediately instead of waiting for one to accumulate. Every poll after that
+        re-reads only the last <span className="font-mono">{ROLLING_WINDOW_DAYS}</span> days, because
+        invoices settle late but settled invoices don't change. Captures are idempotent, so a
+        restart, a reconnect or a re-run cannot double-count a month. If a provider exposes less
+        history than that, the shortfall appears as a coverage note rather than a silently short
+        window. This reconciles invoice totals only — connecting today does not retroactively create
+        yesterday's per-model breakdown.
       </p>
     </section>
   );
