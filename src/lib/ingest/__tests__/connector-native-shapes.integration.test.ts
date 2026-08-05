@@ -114,12 +114,12 @@ describe("the Google native envelope, from generativelanguage.googleapis.com", (
   it.skipIf(!GEMINI_KEY)("is parsed off a real generateContent response", async () => {
     const { events, queue, config } = harness("https://generativelanguage.googleapis.com");
     const response = await handleProxy(
-      new Request("http://localhost/v1beta/models/gemini-2.5-flash:generateContent", {
+      new Request("http://localhost/v1beta/models/gemini-flash-latest:generateContent", {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": GEMINI_KEY! },
         body: JSON.stringify({
           contents: [{ parts: [{ text: "Reply with the single word: ok" }] }],
-          generationConfig: { maxOutputTokens: 16 },
+          generationConfig: { maxOutputTokens: 256 },
         }),
       }),
       { config, queue },
