@@ -414,7 +414,11 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     }),
     trackingSince: oldestRes.data?.observed_at ?? null,
     liveModels: activeModels.length,
-    liveHosts: new Set(prices.map((p) => p.host)).size,
+    // "Providers tracked" must mean providers. The OpenRouter aggregate
+    // listing is one pseudo-host, not a company serving weights, so counting
+    // it published 71 where 70 real providers exist (Dispatch 116).
+    liveHosts: new Set(realEndpoints.map((p) => p.host)).size,
+
     changesTotal: moves.length,
     increases: increases.length,
     decreases: decreases.length,
