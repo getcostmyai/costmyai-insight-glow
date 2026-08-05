@@ -1,4 +1,4 @@
-import { INGEST_API_VERSION, INGEST_PATHS, type ContainerConfig } from "./config";
+import { INGEST_API_VERSION, INGEST_PATHS, type ContainerConfig } from "./config.js";
 
 /**
  * Offline-safe upstream queue.

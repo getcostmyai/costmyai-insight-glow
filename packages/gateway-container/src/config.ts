@@ -22,10 +22,10 @@ export {
   ROLLING_WINDOW_DAYS,
   TASK_HINTS,
   UNKNOWN_TASK_HINT,
-} from "../../../src/lib/ingest/contract";
-export type { ParseStatus, TaskHint } from "../../../src/lib/ingest/contract";
+} from "../../../src/lib/ingest/contract.js";
+export type { ParseStatus, TaskHint } from "../../../src/lib/ingest/contract.js";
 
-import { CONTAINER_DEFAULTS } from "../../../src/lib/ingest/contract";
+import { CONTAINER_DEFAULTS } from "../../../src/lib/ingest/contract.js";
 
 export interface ContainerConfig {
   /** Where CostMyAI lives. Overridable for self-hosted or staging targets. */

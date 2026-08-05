@@ -1,4 +1,4 @@
-import type { ParseStatus } from "./config";
+import type { ParseStatus } from "./config.js";
 
 /**
  * Response-envelope parsing.

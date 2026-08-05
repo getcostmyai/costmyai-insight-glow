@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { QueueItem } from "./queue";
+import type { QueueItem } from "./queue.js";
 
 /**
  * Disk-backed spool.

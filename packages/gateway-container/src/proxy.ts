@@ -1,7 +1,7 @@
-import { classifyTask, isInScope } from "./classify";
-import type { ContainerConfig } from "./config";
-import { readUsage, StreamUsageCollector, type UsageReading } from "./parse";
-import type { UpstreamQueue } from "./queue";
+import { classifyTask, isInScope } from "./classify.js";
+import type { ContainerConfig } from "./config.js";
+import { readUsage, StreamUsageCollector, type UsageReading } from "./parse.js";
+import type { UpstreamQueue } from "./queue.js";
 
 /**
  * The proxy request path.

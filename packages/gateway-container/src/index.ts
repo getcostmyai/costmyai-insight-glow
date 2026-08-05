@@ -2,10 +2,10 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { Readable, Writable } from "node:stream";
 
-import { CONTAINER_DEFAULTS, loadConfig, type ContainerConfig } from "./config";
-import { handleProxy } from "./proxy";
-import { UpstreamQueue } from "./queue";
-import { Spool } from "./spool";
+import { CONTAINER_DEFAULTS, loadConfig, type ContainerConfig } from "./config.js";
+import { handleProxy } from "./proxy.js";
+import { UpstreamQueue } from "./queue.js";
+import { Spool } from "./spool.js";
 
 /**
  * Entrypoint.

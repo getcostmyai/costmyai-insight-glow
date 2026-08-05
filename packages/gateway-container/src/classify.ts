@@ -1,4 +1,4 @@
-import { UNKNOWN_TASK_HINT, type TaskHint } from "./config";
+import { UNKNOWN_TASK_HINT, type TaskHint } from "./config.js";
 
 /**
  * Coarse task classification.
