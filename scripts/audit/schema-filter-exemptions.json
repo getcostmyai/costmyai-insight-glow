@@ -15,6 +15,11 @@
     "reason": "The sync itself must see every model key it has ever written, including delisted ones, to decide what is genuinely new. Filtering to active would re-report old models as new on every run. Reviewed Dispatch 88."
   },
   {
+    "table": "host_prices",
+    "file": "src/lib/pricing/sync.server.ts",
+    "reason": "Two reads, both of which must see delisted rows by design. The new-provider watch asks whether a host name has ever been priced, so that a relisted provider does not re-raise a parser task that was already solved; the delisting sweep exists precisely to read inactive rows and count their missed syncs. Neither read's output is ever quoted as a price: the first produces host names for the jobs board, the second updates lifecycle columns. The engine's own price reads (evaluate.server.ts, pipeline.functions.ts, dashboard.server.ts) all filter is_active, and delisted-price.integration.test.ts proves a delisted row cannot reach a recommendation. Reviewed Dispatch 110."
+  },
+  {
     "table": "organizations",
     "file": "src/lib/partners.functions.ts",
     "reason": "Reads referral attribution for one workspace by primary key through the caller's RLS-scoped client. There is no cross-tenant surface to contaminate. Reviewed Dispatch 88."
