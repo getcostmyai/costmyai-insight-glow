@@ -116,11 +116,21 @@ const TASK_ALIASES: Record<string, ProductTask> = {
   qa: "question_answering",
 };
 
+/**
+ * The label real gateway traffic carries when nothing structural identified the
+ * work (Dispatch 99). It is not a task and never resolves to one: an unlabelled
+ * cohort refuses, with copy that says why, instead of being quietly folded into
+ * `generation` and certified against an instrument that measures other work.
+ */
+export const UNLABELLED_TASK = "unknown";
+
 export function normalizeTask(task: string): ProductTask | null {
   const key = task.trim().toLowerCase().replaceAll("-", "_").replaceAll(" ", "_");
+  if (key === UNLABELLED_TASK) return null;
   if ((PRODUCT_TASKS as readonly string[]).includes(key)) return key as ProductTask;
   return TASK_ALIASES[key] ?? null;
 }
+
 
 /**
  * Walk the ranked candidates for `task` and return the index of the first rung
@@ -156,6 +166,16 @@ export function resolveLadder(
   separationOf: (field: AaField) => number | null,
 ): LadderResolution {
   const normalized = normalizeTask(task);
+  if (task.trim().toLowerCase() === UNLABELLED_TASK) {
+    return {
+      field: null,
+      rung: -1,
+      tried: [],
+      refusal: "no_valid_instrument",
+      detail:
+        "This traffic arrived without a task label — the connector reads only the endpoint and the model name, never your prompts — so there is no instrument to certify a quality-equivalent switch against. Cheaper-host switches on the same model are unaffected.",
+    };
+  }
   if (!normalized || TASK_LADDERS[normalized].length === 0) {
     return {
       field: null,
@@ -165,6 +185,7 @@ export function resolveLadder(
       detail: `No independent evaluation currently measures ${task.replaceAll("_", " ")} work, so no switch on it can be certified.`,
     };
   }
+
 
   const tried = TASK_LADDERS[normalized].map((field) => {
     const separation = separationOf(field);

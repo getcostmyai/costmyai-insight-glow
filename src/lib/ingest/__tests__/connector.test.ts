@@ -5,12 +5,16 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { normalizeTask, resolveLadder } from "@/lib/benchmarks/task-ladder";
+
 import { classifyTask, isInScope } from "../../../../packages/gateway-container/src/classify";
+import { createGateway } from "../../../../packages/gateway-container/src/index";
 import {
   CONTAINER_DEFAULTS,
   containerImageRef,
   dockerRunSnippet,
   loadConfig,
+  UNKNOWN_TASK_HINT,
 } from "../../../../packages/gateway-container/src/config";
 import { readUsage, StreamUsageCollector } from "../../../../packages/gateway-container/src/parse";
 import {
@@ -316,5 +320,77 @@ describe("one description of how the container is run", () => {
     expect(() =>
       loadConfig({ COSTMYAI_INGEST_TOKEN: "cma_live_test" }),
     ).toThrow(/COSTMYAI_UPSTREAM_URL/);
+  });
+});
+
+/* ------------------------------------------------ unlabelled work refuses */
+
+describe("an unlabelled cohort", () => {
+  it("refuses certification instead of borrowing an unrelated instrument", () => {
+    const r = resolveLadder(UNKNOWN_TASK_HINT, () => 99);
+    expect(r.field).toBeNull();
+    expect(r.refusal).toBe("no_valid_instrument");
+    expect(r.detail).toMatch(/without a task label/i);
+    expect(r.detail).toMatch(/never your prompts/i);
+  });
+
+  it("is never normalised into a real task", () => {
+    expect(normalizeTask("unknown")).toBeNull();
+    expect(normalizeTask("generation")).toBe("generation");
+    expect(normalizeTask("code")).toBe("coding");
+  });
+});
+
+/* ---------------------------------------------- retry / restart integrity */
+
+describe("a retried push", () => {
+  it("resends a byte-identical body, so the server dedupes it", async () => {
+    let attempt = 0;
+    const bodies: string[] = [];
+    const queue = new UpstreamQueue(config(), (async (_url: string, init: RequestInit) => {
+      bodies.push(String(init.body));
+      attempt++;
+      return attempt === 1 ? new Response("nope", { status: 503 }) : new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch);
+
+    const event = { model_key: "gpt-4o", host: "api.openai.com", idempotency_key: "evt-1" };
+    queue.enqueue({ kind: "events", body: { events: [event] } });
+
+    expect((await queue.drain()).sent).toBe(0);
+    expect((await queue.drain()).sent).toBe(1);
+    expect(bodies).toHaveLength(2);
+    expect(bodies[0]).toBe(bodies[1]);
+    expect(JSON.parse(bodies[1]!).events[0].idempotency_key).toBe("evt-1");
+  });
+
+  it("keeps the same key across a restart, so a reloaded spool cannot double-count", () => {
+    const dir = mkdtempSync(join(tmpdir(), "costmyai-spool-"));
+    const bounds = { maxItems: 100, maxAgeMs: 60_000 };
+    const item = { kind: "events" as const, body: { events: [{ idempotency_key: "evt-2" }] } };
+    new Spool(dir, bounds).persist([item]);
+    expect(new Spool(dir, bounds).load()).toEqual([item]);
+  });
+});
+
+describe("shutdown", () => {
+  it("flushes what is queued before the process exits", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "costmyai-shutdown-"));
+    const seen: string[] = [];
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: string) => {
+      seen.push(String(url));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    try {
+      const gateway = createGateway(config({ COSTMYAI_SPOOL_DIR: dir }));
+      gateway.queue.enqueue({ kind: "events", body: { events: [{ idempotency_key: "evt-3" }] } });
+      await gateway.shutdown("SIGTERM");
+      expect(seen).toHaveLength(1);
+      expect(gateway.queue.size).toBe(0);
+      // Nothing left on disk: the flush happened, it was not just persisted.
+      expect(new Spool(dir, { maxItems: 10, maxAgeMs: 60_000 }).load()).toHaveLength(0);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
   });
 });
