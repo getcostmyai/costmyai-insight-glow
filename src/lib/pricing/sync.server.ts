@@ -131,6 +131,16 @@ export async function syncOpenRouterPricing(): Promise<PriceSyncReport | { skipp
     const known = new Set((existingModels ?? []).map((m) => m.model_key));
     const modelsNew = entries.filter((e) => !known.has(e.model_key)).length;
 
+    // Dispatch 104. The same "what is new this run" read, one level up: a host
+    // we have never priced before is a provider nobody has ever inspected, and
+    // its response envelope is an open question until someone answers it.
+    const { fetchAllRows } = await import("@/lib/paginate.server");
+    const existingHostRows = await fetchAllRows((f, t) =>
+      supabase.from("host_prices").select("host").range(f, t),
+    );
+    const knownHosts = new Set(existingHostRows.map((r) => String(r.host)));
+
+
     await upsertCatalog(supabase, entries, syncedAt);
 
     // Every imported model is an alias of itself, so downstream resolution is total.
