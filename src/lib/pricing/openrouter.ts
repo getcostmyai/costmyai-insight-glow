@@ -293,6 +293,27 @@ export interface StoredPrice {
 export const PRICE_EPSILON = 1e-6;
 
 /**
+ * THE price-move magnitude function (Dispatch 114).
+ *
+ * Blended, because a change that raises input and cuts output has no single
+ * direction otherwise — and because a customer's bill is paid on both sides.
+ * This is the number written to `price_history.pct_change`, and the only
+ * definition any reader is allowed to use. The Intelligence page previously
+ * carried a second, input-first derivation that reported +145.0% for a row
+ * whose blended cost moved +12.05%; that is the duplicate-definition failure
+ * mode this export exists to make impossible.
+ */
+export function blendedPctChange(
+  next: { input_usd_per_mtok: number; output_usd_per_mtok: number },
+  prev: { input_usd_per_mtok: number; output_usd_per_mtok: number },
+): number | null {
+  const prevBlended = prev.input_usd_per_mtok + prev.output_usd_per_mtok;
+  const nextBlended = next.input_usd_per_mtok + next.output_usd_per_mtok;
+  if (!(prevBlended > 0)) return null;
+  return Math.round(((nextBlended - prevBlended) / prevBlended) * 10000) / 100;
+}
+
+/**
  * The only place a `price_history` row is decided.
  *
  * A re-verified UNCHANGED price returns null: it bumps `verified_at` and
