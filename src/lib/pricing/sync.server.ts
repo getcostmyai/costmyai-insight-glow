@@ -27,7 +27,7 @@ export const PRICING_FEED = "openrouter";
  * a provider's row. Ranked below the per-provider endpoint prices, which are
  * the more specific measurement of the same market.
  */
-export const AGGREGATE_SOURCE = "openrouter-aggregate";
+export { AGGREGATE_PRICE_SOURCE as AGGREGATE_SOURCE } from "@/lib/pricing/aggregate";
 export const AGGREGATE_PRIORITY = 60;
 export const AGGREGATE_HOST = "openrouter";
 export const AGGREGATE_HOST_LABEL = "OpenRouter";

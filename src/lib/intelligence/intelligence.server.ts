@@ -19,7 +19,7 @@ import { blendedPctChange } from "@/lib/pricing/openrouter";
  * endpoints only, so the spread we publish is a genuine provider-to-provider gap.
  */
 
-export const AGGREGATE_PRICE_SOURCE = "openrouter-aggregate";
+export { AGGREGATE_PRICE_SOURCE } from "@/lib/pricing/aggregate";
 
 export interface PriceMove {
   modelKey: string;
