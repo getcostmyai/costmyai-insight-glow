@@ -41,7 +41,36 @@ const normalize = (s: string) => s.trim().toLowerCase();
 /** Provider suffixes that name a variant of the same model, not a new model. */
 const stripDecorations = (s: string) => s.replace(/:(free|beta|extended|thinking|online)$/, "");
 
-export type ModelResolver = (rawKey: string) => ModelResolution;
+/**
+ * Dispatch 121. Anthropic (and Bedrock, and Vertex) report a dated snapshot of
+ * a model: `claude-haiku-4-5-20251001`, `claude-3-5-sonnet@20240620`. The date
+ * names *when* the weights were cut, never a different price. Dropping it is
+ * safe; keeping it costs the customer their pricing.
+ */
+const stripSnapshotDate = (s: string) => s.replace(/[-_@:]?v?\d{8}$/, "").replace(/[-_@:]$/, "");
+
+/**
+ * `claude-haiku-4-5` and `anthropic/claude-haiku-4.5` are the same model spelled
+ * two ways: the SDK cannot put a dot in a path segment, our catalog can. Only a
+ * digit-dash-digit pair is rewritten, so `gpt-4o-mini` and `claude-3-haiku`
+ * (where the dash is a word boundary, not a decimal point) are untouched.
+ */
+const dottedVersion = (s: string) => s.replace(/(\d)-(\d)(?![\d-]*[a-z])/g, "$1.$2");
+
+/** Every spelling of one reported key, most literal first. */
+function variantsOf(rawKey: string): string[] {
+  const seen = new Set<string>();
+  const base = normalize(rawKey);
+  for (const undecorated of [base, stripDecorations(base)]) {
+    for (const undated of [undecorated, stripSnapshotDate(undecorated)]) {
+      for (const candidate of [undated, dottedVersion(undated)]) {
+        if (candidate) seen.add(candidate);
+      }
+    }
+  }
+  return [...seen];
+}
+
 
 /**
  * Build a resolver over a snapshot of the catalog and the alias table. Pure and
