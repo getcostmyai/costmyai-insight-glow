@@ -175,6 +175,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             saving={level.lockedSaving}
             period={activeRange.long}
             what="quality-matched"
+            evaluated={data.stats.workloads}
           />
         ) : rows.length === 0 ? (
           <LevelEmpty state={data.dataState} kind="quality_match" />

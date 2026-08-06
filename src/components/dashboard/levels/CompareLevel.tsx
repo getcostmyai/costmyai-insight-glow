@@ -151,6 +151,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
             saving={level.lockedSaving}
             period={activeRange.long}
             what="cheaper-host"
+            evaluated={data.stats.workloads}
           />
         ) : rows.length === 0 ? (
           <LevelEmpty state={data.dataState} kind="host_arbitrage" />
