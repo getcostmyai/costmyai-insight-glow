@@ -91,8 +91,11 @@ type Row = Awaited<ReturnType<typeof listPartnerApplications>>[number];
 
 function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void }) {
   const setStatus = useServerFn(setPartnerApplicationStatus);
+  const provision = useServerFn(approveAndProvisionPartner);
   const [note, setNote] = useState(row.reviewerNote ?? "");
-  const [busy, setBusy] = useState<ApplicationStatus | null>(null);
+  const [busy, setBusy] = useState<ApplicationStatus | "provision" | null>(null);
+  const [provisioned, setProvisioned] = useState<string | null>(null);
+  const [provisionError, setProvisionError] = useState<string | null>(null);
 
   async function apply(status: ApplicationStatus) {
     setBusy(status);
@@ -103,6 +106,21 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
       setBusy(null);
     }
   }
+
+  async function approveAndActivate() {
+    setBusy("provision");
+    setProvisionError(null);
+    try {
+      const result = await provision({ data: { id: row.id } });
+      setProvisioned(result.referral_code);
+      onChanged();
+    } catch (err) {
+      setProvisionError(err instanceof Error ? err.message : "Could not activate the partner.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
