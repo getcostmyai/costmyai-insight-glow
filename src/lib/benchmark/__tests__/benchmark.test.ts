@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { K_ANONYMITY_FLOOR, candidateCuts, resolveBucket } from "../k-anonymity";
 import { checkAnswers } from "../sanity";
+import { BENCHMARK_ASK_THRESHOLD, askThresholdMet } from "../ask-gate";
+import { buildBenchmark } from "../benchmark.server";
 
 /**
  * The floor is the whole feature. A benchmark that can resolve to one
@@ -68,5 +70,77 @@ describe("data quality guard", () => {
 
   it("notices a use case that contradicts signup", () => {
     expect(checkAnswers({ useCase: "internal", customerFacing: true }).flag).toBe("conflicting_use_case");
+  });
+});
+
+/**
+ * Dispatch 123. The ask-gate: the four optional questions are only asked once
+ * the platform could plausibly assemble any cohort at all.
+ */
+describe("ask gate", () => {
+  const profile = {
+    org_id: "o1",
+    use_case: "customer_facing",
+    use_case_other: null,
+    industry: "SaaS / software",
+    revenue_band: null,
+    headcount_band: null,
+    customer_facing: null,
+    maturity: null,
+    quality_flag: null,
+    primer_seen_at: null,
+    benchmark_prompt_dismissed_at: null,
+  };
+
+  const clientWith = (eligible: number, cohort = 40) => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          eq: () => ({ eq: () => ({ gte: async () => ({ data: [{ cost_usd: 1000 }], error: null }) }) }),
+        }),
+      }),
+    }),
+    rpc: async (fn: string) =>
+      fn === "benchmark_eligible_companies"
+        ? { data: eligible, error: null }
+        : { data: [{ company_count: cohort, p25_usd: 100, p50_usd: 200, p75_usd: 300 }], error: null },
+  });
+
+  it("threshold sits above the k-anonymity floor", () => {
+    expect(BENCHMARK_ASK_THRESHOLD).toBeGreaterThan(K_ANONYMITY_FLOOR);
+    expect(askThresholdMet(BENCHMARK_ASK_THRESHOLD - 1)).toBe(false);
+    expect(askThresholdMet(BENCHMARK_ASK_THRESHOLD)).toBe(true);
+  });
+
+  it("defers the four questions below the threshold", async () => {
+    const view = await buildBenchmark(clientWith(1) as never, profile as never, "o1");
+    expect(view.state).toBe("too_early");
+    if (view.state !== "too_early") return;
+    expect(view.eligibleCompanies).toBe(1);
+    expect(view.threshold).toBe(BENCHMARK_ASK_THRESHOLD);
+  });
+
+  it("flips to asking once the eligible pool crosses the threshold", async () => {
+    const view = await buildBenchmark(
+      clientWith(BENCHMARK_ASK_THRESHOLD) as never,
+      profile as never,
+      "o1",
+    );
+    expect(view.state).toBe("locked");
+  });
+
+  it("never re-gates a workspace that already answered", async () => {
+    // Eligible pool of zero, but this workspace has an answer on file: the
+    // honest state is the k=5 cohort refusal, never a withdrawal of the ask.
+    const answered = { ...profile, revenue_band: "1m_10m" };
+    const client = clientWith(0, 1);
+    const view = await buildBenchmark(client as never, answered as never, "o1");
+    expect(view.state).toBe("refused");
+  });
+
+  it("shows the real comparison from stored answers once the cohort is large enough", async () => {
+    const answered = { ...profile, revenue_band: "1m_10m" };
+    const view = await buildBenchmark(clientWith(0, 40) as never, answered as never, "o1");
+    expect(view.state).toBe("shown");
   });
 });
