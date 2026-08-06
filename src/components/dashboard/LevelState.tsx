@@ -79,24 +79,10 @@ export function LevelLocked({
         </span>
         <div className="min-w-52 flex-1">
           <p className="text-sm font-semibold">
-            {nothingToCheck
-              ? "No traffic in this window, so there was nothing to check"
-              : count === 0
-                ? `This check found nothing to ${what} in this window`
-                : `${count} ${what} finding${count === 1 ? "" : "s"} on your traffic`}
+            {lockedHeadline({ evaluated, count, what })}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {nothingToCheck ? (
-              <>
-                {meta.label} unlocks the detail. {meta.blurb} Nothing has been measured yet — the
-                check runs on your own traffic as soon as it starts arriving.
-              </>
-            ) : (
-              <>
-                {meta.label} unlocks the detail. {meta.blurb} We ran the check anyway — the number
-                beside it is measured, not an estimate.
-              </>
-            )}
+            {meta.label} unlocks the detail. {meta.blurb} {lockedMeasurementNote(evaluated)}
           </p>
         </div>
         <div className="text-right">
@@ -106,9 +92,10 @@ export function LevelLocked({
             {usd(nothingToCheck ? 0 : saving, 0)}
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {nothingToCheck ? `nothing measured yet · ${period}` : `behind this level · ${period}`}
+            {lockedFigureLabel(evaluated, period)}
           </p>
         </div>
+
 
         <button className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95">
           <Sparkles className="size-4" />
