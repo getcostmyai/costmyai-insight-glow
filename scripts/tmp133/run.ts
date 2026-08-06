@@ -61,7 +61,7 @@ async function main() {
         email: PARTNER_EMAIL,
         phone: "+43 000 000 000",
         company: "D133 Proof Partner",
-        active_clients_bucket: "11-50",
+        active_clients_bucket: "11–50",
         starting_soon_bucket: "1",
         routed_path: "async",
         escalated: false,
