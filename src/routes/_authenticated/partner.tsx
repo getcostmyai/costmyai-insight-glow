@@ -32,6 +32,24 @@ const usd = (n: number) =>
 
 function PartnerPage() {
   const partner = useQuery({ queryKey: ["my-partner"], queryFn: () => getMyPartner() });
+  const [claiming, setClaiming] = useState(false);
+
+  // An approved applicant signs in for the first time with the email they
+  // applied with: the account links itself here, once, instead of waiting on a
+  // manual database insert.
+  useEffect(() => {
+    if (partner.isPending || partner.data || claiming) return;
+    let cancelled = false;
+    setClaiming(true);
+    void claimPartnerMembership()
+      .then((r) => {
+        if (!cancelled && r.partnerId) void partner.refetch();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [partner.isPending, partner.data, claiming, partner]);
 
   if (partner.isPending) return <Shell>Loading your partner account…</Shell>;
   if (partner.isError)
@@ -39,6 +57,7 @@ function PartnerPage() {
   if (!partner.data) return <NotAPartner />;
   return <PartnerDashboardView data={partner.data} />;
 }
+
 
 function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
   const { partner, referrals, commissions, payouts, totals } = data;
