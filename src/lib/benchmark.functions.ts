@@ -6,12 +6,16 @@ import type { BenchmarkView, ProfileRow } from "./benchmark/benchmark.server";
 import { checkAnswers } from "./benchmark/sanity";
 import {
   isHeadcountBand,
+  isIndustry,
   isMaturity,
   isRevenueBand,
+  isUseCase,
   type HeadcountBand,
   type Maturity,
   type RevenueBand,
+  type UseCase,
 } from "./benchmark/taxonomy";
+
 
 /**
  * Company profiling, read and written through the caller's own RLS-scoped
