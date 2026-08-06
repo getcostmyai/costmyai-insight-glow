@@ -5,9 +5,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CalendarCheck, ClipboardList, Loader2, Mail, Phone } from "lucide-react";
 
 import {
+  approveAndProvisionPartner,
   listPartnerApplications,
   setPartnerApplicationStatus,
 } from "@/lib/partner-application.functions";
+
 import { APPLICATION_STATUSES, type ApplicationStatus } from "@/lib/partner-application";
 
 export const Route = createFileRoute("/_authenticated/admin/partner-applications")({
