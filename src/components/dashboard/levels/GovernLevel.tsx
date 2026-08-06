@@ -25,6 +25,8 @@ import type { DashboardController } from "@/components/dashboard/useDashboardCon
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures } from "@/lib/dashboard/figures";
 import { compositionSentence } from "@/lib/dashboard/composition";
+import { governGateEmptyCopy } from "@/lib/dashboard/zero-data-copy";
+
 import { PLAN_META } from "@/lib/engine/types";
 
 /**
