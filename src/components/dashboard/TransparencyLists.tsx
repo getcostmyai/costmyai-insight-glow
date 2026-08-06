@@ -201,12 +201,10 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
       />
       {rows.length === 0 ? (
         <div className="card-surface p-6 text-sm text-muted-foreground">
-          {evaluated === 0
-            ? "No workloads reached us in this window, so nothing was evaluated and nothing was refused."
-            : "Every workload in this window produced a certified saving. Nothing was refused."}
+          {nonQualifyingEmptyCopy(evaluated)}
         </div>
-
       ) : (
+
         <div className="card-surface divide-y divide-border overflow-hidden">
           {rows.map((r) => (
             <div
