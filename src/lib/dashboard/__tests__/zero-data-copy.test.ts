@@ -26,7 +26,7 @@ describe("zero-data copy", () => {
 
     it("keeps the measured claim once real workloads were evaluated", () => {
       expect(lockedHeadline({ evaluated: 12, count: 0, what: "quality-matched" })).toBe(
-        "This check found nothing to quality-matched in this window",
+        "This check found no quality-matched findings in this window",
       );
       expect(lockedHeadline({ evaluated: 12, count: 1, what: "cheaper-host" })).toBe(
         "1 cheaper-host finding on your traffic",

@@ -14,7 +14,7 @@ export function lockedHeadline(input: {
   what: string;
 }): string {
   if (input.evaluated === 0) return "No traffic in this window, so there was nothing to check";
-  if (input.count === 0) return `This check found nothing to ${input.what} in this window`;
+  if (input.count === 0) return `This check found no ${input.what} findings in this window`;
   return `${input.count} ${input.what} finding${input.count === 1 ? "" : "s"} on your traffic`;
 }
 

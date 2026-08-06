@@ -352,7 +352,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
           count={level.lockedCount}
           saving={level.lockedSaving}
           period={activeRange.long}
-          what="oversized-workload"
+          what="oversized workload"
           evaluated={data.stats.workloads}
         />
       ) : data.oversized.length === 0 ? (

@@ -1,0 +1,99 @@
+# Journey 1 — real traffic through the real published connector.
+#
+# Manual only. This runs the exact image customers pull (no local build), points
+# it at a real CostMyAI workspace ingest token, and fires a handful of real
+# provider calls through it. Nothing here needs Docker on anyone's laptop: the
+# GitHub runner already has it.
+#
+# Two repository secrets are required (Settings -> Secrets and variables ->
+# Actions). Neither is ever committed, echoed or written to the log:
+#   COSTMYAI_INGEST_TOKEN  — minted in the dashboard, Settings -> Ingest tokens
+#   OPENAI_API_KEY         — a real provider key; it stays inside the runner and
+#                            is passed through the connector untouched
+name: Journey 1 smoke (real traffic)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "CostMyAI instance the connector reports to"
+        required: true
+        default: "https://costmyai-insight-glow.lovable.app"
+      model:
+        description: "Model to call"
+        required: true
+        default: "gpt-4o-mini"
+      calls:
+        description: "How many real completions to fire"
+        required: true
+        default: "5"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull the published image
+        run: docker pull ghcr.io/getcostmyai/gateway:v1
+
+      - name: Record the exact digest under test
+        run: |
+          docker image inspect ghcr.io/getcostmyai/gateway:v1 \
+            --format '{{index .RepoDigests 0}}'
+
+      # Flush interval is shortened to 5s only so the job does not idle for
+      # half a minute waiting for the default 30s tick. Everything else is the
+      # documented default.
+      - name: Start the connector
+        env:
+          COSTMYAI_INGEST_TOKEN: ${{ secrets.COSTMYAI_INGEST_TOKEN }}
+        run: |
+          docker run -d --name costmyai \
+            -e COSTMYAI_INGEST_TOKEN="$COSTMYAI_INGEST_TOKEN" \
+            -e COSTMYAI_BASE_URL="${{ inputs.base_url }}" \
+            -e COSTMYAI_UPSTREAM_URL=https://api.openai.com \
+            -e COSTMYAI_FLUSH_INTERVAL_MS=5000 \
+            -v costmyai-spool:/var/lib/costmyai/spool \
+            -p 8787:8787 \
+            ghcr.io/getcostmyai/gateway:v1
+
+      - name: Wait for the proxy to answer
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8787/healthz && break
+            sleep 1
+          done
+          echo
+
+      # Real calls, real key, real money. The key goes in the client's own
+      # Authorization header exactly as it would in production — the connector
+      # copies it upstream byte for byte.
+      - name: Fire real completions through the connector
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -e
+          for i in $(seq 1 ${{ inputs.calls }}); do
+            code=$(curl -s -o /tmp/resp.json -w '%{http_code}' \
+              http://localhost:8787/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H 'Content-Type: application/json' \
+              -d "{\"model\":\"${{ inputs.model }}\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with the number $i and nothing else.\"}],\"max_tokens\":16}")
+            echo "call $i -> HTTP $code"
+            # Usage only. No prompt, no completion text in the log.
+            python3 -c "import json;d=json.load(open('/tmp/resp.json'));print('  usage:', d.get('usage'), 'model:', d.get('model'))" || cat /tmp/resp.json
+          done
+
+      - name: Let the connector flush, then report its own health
+        run: |
+          sleep 12
+          curl -s http://localhost:8787/healthz | python3 -m json.tool
+
+      - name: Connector logs
+        if: always()
+        run: docker logs costmyai
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker rm -f costmyai || true
+          docker volume rm costmyai-spool || true
