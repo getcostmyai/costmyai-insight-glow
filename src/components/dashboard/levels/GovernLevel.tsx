@@ -293,21 +293,13 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         </p>
         {govern.eligible.length === 0 ? (
           <div className="card-surface p-6 text-sm text-muted-foreground">
-            {data.composition.consideredCount === 0 ? (
-              <>
-                No candidates were put in front of the gate in this window — the earlier levels
-                found nothing to evaluate, so nothing was accepted and nothing was refused.
-              </>
-            ) : (
-              <>
-                Nothing currently clears the gate. That is a real answer, not an empty state — every
-                candidate either fell below {usd(govern.policy.minMonthlySavingUsd, 0)}/mo or could
-                not be certified.
-              </>
-            )}
+            {governGateEmptyCopy({
+              consideredCount: data.composition.consideredCount,
+              minMonthlySavingLabel: usd(govern.policy.minMonthlySavingUsd, 0),
+            })}
           </div>
-
         ) : (
+
           <div className="space-y-3">
             {govern.eligible.map((c) => (
               <div
