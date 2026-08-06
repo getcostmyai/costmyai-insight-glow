@@ -18,7 +18,7 @@ export const Route = createFileRoute("/partners")({
       {
         name: "description",
         content:
-          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. Lifetime attribution, commission written only on real paid invoices, transparent tiers.",
+          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. A 60-day referral window, attribution frozen for the life of the account, commission written only on real paid invoices.",
       },
       { property: "og:title", content: "Become a CostMyAI partner" },
       {
