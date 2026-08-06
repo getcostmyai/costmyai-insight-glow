@@ -228,7 +228,7 @@ function Hero({ range, topRate }: { range: string | null; topRate: number }) {
               label: "Top commission rate",
             },
             { node: <Stat>Lifetime</Stat>, label: "Commission on every invoice they ever pay" },
-            { node: <Stat>Advisor</Stat>, label: "Turns a cost line into a win" },
+            { node: <Stat>Opportunity</Stat>, label: "Be the advisor who turns a cost line into a win" },
           ].map((s, i) => (
             <Reveal key={s.label} delay={300 + i * 90}>
               {s.node}
