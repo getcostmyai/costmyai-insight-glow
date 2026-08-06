@@ -259,7 +259,22 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
       output_p95: b.outputP95,
     }));
 
+  /**
+   * Dispatch 121. A rebuild is authoritative for the window it covers. When
+   * resolution improves, yesterday's rows were written under the raw provider
+   * name and today's under the catalog key — upserting alone would leave both
+   * and double the customer's tokens and requests. Clear the window first.
+   */
+  const { error: clearError } = await db
+    .from("usage_rollups")
+    .delete()
+    .eq("org_id", orgId)
+    .gte("bucket_start", from.toISOString())
+    .lt("bucket_start", to.toISOString());
+  if (clearError) throw new Error(`rollup clear failed: ${clearError.message}`);
+
   for (let i = 0; i < payload.length; i += 500) {
+
     const { error: upsertError } = await db
       .from("usage_rollups")
       .upsert(payload.slice(i, i + 500), {

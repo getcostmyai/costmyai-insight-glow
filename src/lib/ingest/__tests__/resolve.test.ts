@@ -13,6 +13,8 @@ const CATALOG = [
   "openai/gpt-4o-mini",
   "openai/gpt-5.5",
   "anthropic/claude-opus-4.7",
+  "anthropic/claude-haiku-4.5",
+  "anthropic/claude-opus-4.7-fast",
   "vendor-a/command-r",
   "vendor-b/command-r",
 ];
@@ -48,6 +50,23 @@ describe("model key resolution", () => {
 
   it("sees through provider variant decorations", () => {
     expect(resolve("gpt-4o-mini:free").key).toBe("openai/gpt-4o-mini");
+  });
+
+  it("resolves a dated Anthropic snapshot id to its catalog key (Dispatch 121)", () => {
+    expect(resolve("claude-haiku-4-5-20251001")).toMatchObject({
+      key: "anthropic/claude-haiku-4.5",
+      via: "suffix",
+    });
+  });
+
+  it("reads a dashed version number as the decimal it is", () => {
+    expect(resolve("claude-haiku-4-5").key).toBe("anthropic/claude-haiku-4.5");
+    expect(resolve("claude-opus-4-7-fast").key).toBe("anthropic/claude-opus-4.7-fast");
+    expect(resolve("claude-opus-4-7@20250514").key).toBe("anthropic/claude-opus-4.7");
+  });
+
+  it("does not read a word-boundary dash as a decimal point", () => {
+    expect(resolve("gpt-4o-mini").key).toBe("openai/gpt-4o-mini");
   });
 
   it("refuses to guess when two vendors claim the same suffix", () => {
