@@ -37,7 +37,7 @@ const PROMISES = [
   {
     icon: InfinityIcon,
     title: "60-day window, then lifetime",
-    body: "A referral link is remembered for 60 days and the first click wins — a workspace created after that needs a fresh click, or the code entered by hand. Once a workspace is attached the attribution is frozen and stays yours for the life of the account, with no reset at renewal.",
+    body: "A referral link is remembered for 60 days and the first click wins. A workspace created after that needs a fresh click, or the code entered by hand. Once a workspace is attached the attribution is frozen and stays yours for the life of the account, with no reset at renewal.",
   },
   {
     icon: Receipt,
