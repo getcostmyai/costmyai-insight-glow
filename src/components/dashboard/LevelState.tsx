@@ -1,6 +1,12 @@
 import { ArrowUpRight, Clock, Lock, PlugZap, ShieldCheck, Sparkles } from "lucide-react";
 
 import { emptyCopy, type DataState } from "@/lib/dashboard/onboarding";
+import {
+  lockedFigureLabel,
+  lockedHeadline,
+  lockedMeasurementNote,
+} from "@/lib/dashboard/zero-data-copy";
+
 import { OBJECTIVE_OPTIONS } from "@/lib/dashboard/objective";
 import { usd } from "@/lib/dashboard-data";
 import type { ObjectiveKind, PlanTier, RecKind } from "@/lib/engine/types";
@@ -50,6 +56,7 @@ export function LevelLocked({
   saving,
   period,
   what,
+  evaluated,
 }: {
   requiredPlan: PlanTier;
   count: number;
@@ -57,8 +64,15 @@ export function LevelLocked({
   saving: number;
   period: string;
   what: string;
+  /**
+   * Workloads the engine actually had to look at in this window. Zero means
+   * nothing was evaluated at all — a different fact from "evaluated, found
+   * nothing", and the copy must not conflate the two.
+   */
+  evaluated: number;
 }) {
   const meta = PLAN_META[requiredPlan];
+  const nothingToCheck = evaluated === 0;
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-6">
       <div
@@ -71,23 +85,24 @@ export function LevelLocked({
         </span>
         <div className="min-w-52 flex-1">
           <p className="text-sm font-semibold">
-            {count === 0
-              ? `This check found nothing to ${what} in this window`
-              : `${count} ${what} finding${count === 1 ? "" : "s"} on your traffic`}
+            {lockedHeadline({ evaluated, count, what })}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {meta.label} unlocks the detail. {meta.blurb} We ran the check anyway — the number
-            beside it is measured, not an estimate.
+            {meta.label} unlocks the detail. {meta.blurb} {lockedMeasurementNote(evaluated)}
           </p>
         </div>
         <div className="text-right">
-          <div className="num text-3xl text-primary blur-[0.5px] select-none">
-            {usd(saving, 0)}
+          <div
+            className={`num text-3xl text-primary ${nothingToCheck ? "" : "blur-[0.5px] select-none"}`}
+          >
+            {usd(nothingToCheck ? 0 : saving, 0)}
           </div>
           <p className="text-[11px] text-muted-foreground">
-            behind this level · {period}
+            {lockedFigureLabel(evaluated, period)}
           </p>
         </div>
+
+
         <button className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-transform hover:scale-[1.02] active:scale-95">
           <Sparkles className="size-4" />
           Unlock {meta.label}

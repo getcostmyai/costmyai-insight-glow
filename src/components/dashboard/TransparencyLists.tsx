@@ -6,6 +6,8 @@ import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 
 import { usd } from "@/lib/dashboard-data";
+import { nonQualifyingEmptyCopy } from "@/lib/dashboard/zero-data-copy";
+
 
 /**
  * Full transparency: everything the engine looked at, in three lists.
@@ -134,6 +136,7 @@ export function BenchmarkList({
           saving={level.lockedSaving}
           period={activeRange.long}
           what="quality-matched"
+          evaluated={data.stats.workloads}
         />
       ) : rows.length === 0 ? (
         <LevelEmpty state={data.dataState} kind="quality_match" />
@@ -186,6 +189,8 @@ export function BenchmarkList({
 /** List C — evaluated, and deliberately not turned into a recommendation. */
 export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
   const rows = ctl.data.nonQualifying;
+  /** Zero workloads means nothing was evaluated — not that everything passed. */
+  const evaluated = ctl.data.stats.workloads;
 
   return (
     <section>
@@ -198,9 +203,10 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
       />
       {rows.length === 0 ? (
         <div className="card-surface p-6 text-sm text-muted-foreground">
-          Every workload in this window produced a certified saving. Nothing was refused.
+          {nonQualifyingEmptyCopy(evaluated)}
         </div>
       ) : (
+
         <div className="card-surface divide-y divide-border overflow-hidden">
           {rows.map((r) => (
             <div

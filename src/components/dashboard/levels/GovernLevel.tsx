@@ -25,6 +25,8 @@ import type { DashboardController } from "@/components/dashboard/useDashboardCon
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures } from "@/lib/dashboard/figures";
 import { compositionSentence } from "@/lib/dashboard/composition";
+import { governGateEmptyCopy } from "@/lib/dashboard/zero-data-copy";
+
 import { PLAN_META } from "@/lib/engine/types";
 
 /**
@@ -293,11 +295,13 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
         </p>
         {govern.eligible.length === 0 ? (
           <div className="card-surface p-6 text-sm text-muted-foreground">
-            Nothing currently clears the gate. That is a real answer, not an empty state — every
-            candidate either fell below {usd(govern.policy.minMonthlySavingUsd, 0)}/mo or could not
-            be certified.
+            {governGateEmptyCopy({
+              consideredCount: data.composition.consideredCount,
+              minMonthlySavingLabel: usd(govern.policy.minMonthlySavingUsd, 0),
+            })}
           </div>
         ) : (
+
           <div className="space-y-3">
             {govern.eligible.map((c) => (
               <div
