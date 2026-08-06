@@ -187,6 +187,8 @@ export function BenchmarkList({
 /** List C — evaluated, and deliberately not turned into a recommendation. */
 export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
   const rows = ctl.data.nonQualifying;
+  /** Zero workloads means nothing was evaluated — not that everything passed. */
+  const evaluated = ctl.data.stats.workloads;
 
   return (
     <section>
@@ -199,8 +201,11 @@ export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
       />
       {rows.length === 0 ? (
         <div className="card-surface p-6 text-sm text-muted-foreground">
-          Every workload in this window produced a certified saving. Nothing was refused.
+          {evaluated === 0
+            ? "No workloads reached us in this window, so nothing was evaluated and nothing was refused."
+            : "Every workload in this window produced a certified saving. Nothing was refused."}
         </div>
+
       ) : (
         <div className="card-surface divide-y divide-border overflow-hidden">
           {rows.map((r) => (
