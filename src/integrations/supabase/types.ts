@@ -2033,6 +2033,16 @@ export type Database = {
         Args: { _org_id: string }
         Returns: Database["public"]["Enums"]["plan_tier"]
       }
+      partner_badge: {
+        Args: { _code: string }
+        Returns: {
+          joined_at: string
+          partner_name: string
+          rate_pct: number
+          tier: number
+          tier_name: string
+        }[]
+      }
       partner_commission_rate: {
         Args: { _partner_id: string }
         Returns: number

@@ -1,6 +1,4 @@
-// Vite asset import: resolves to the served URL of the wasm binary.
-import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url";
-import { initWasm, Resvg } from "@resvg/resvg-wasm";
+import { esc, renderSvgToPng } from "@/lib/brand/render.server";
 
 import type { ShareCard } from "./share-cards";
 import { monthLabelOf } from "./snapshot.server";
@@ -42,8 +40,7 @@ const TONE: Record<ShareCard["tone"], string> = {
 };
 
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 
 /** Greedy wrap by estimated advance width — good enough for a two-line caption. */
 function wrap(text: string, maxChars: number, maxLines: number): string[] {
@@ -104,54 +101,12 @@ export function buildShareSvg(card: ShareCard, monthKey: string): string {
 </svg>`;
 }
 
-let wasmReady: Promise<void> | null = null;
-function ensureWasm(origin: string) {
-  if (!wasmReady) {
-    wasmReady = initWasm(fetch(new URL(resvgWasmUrl as string, origin))).catch((err) => {
-      wasmReady = null;
-      throw err;
-    });
-  }
-  return wasmReady;
-}
-
-let fontCache: Uint8Array[] | null = null;
-
-/**
- * Inter, as real font bytes. The Google CSS endpoint returns TTF URLs when the
- * request carries no modern browser UA — resvg cannot read woff2, so we rely on
- * that deliberately rather than shipping a font file in the repo.
- */
-async function loadFonts(): Promise<Uint8Array[]> {
-  if (fontCache) return fontCache;
-  const css = await fetch("https://fonts.googleapis.com/css2?family=Inter:wght@400;600").then((r) =>
-    r.text(),
-  );
-  const urls = [...css.matchAll(/url\((https:\/\/[^)]+\.ttf)\)/g)].map((m) => m[1]).slice(0, 2);
-  if (urls.length === 0) throw new Error("no TTF face returned for Inter");
-  const buffers = await Promise.all(
-    urls.map(async (u) => {
-      const buf = (await (await fetch(u)).arrayBuffer()) as ArrayBuffer;
-      return new Uint8Array(buf);
-    }),
-  );
-  fontCache = buffers;
-  return buffers;
-}
-
 export async function renderShareImage(
   card: ShareCard,
   monthKey: string,
   origin: string,
 ): Promise<Response> {
-  await ensureWasm(origin);
-  const fontBuffers = await loadFonts();
-
-  const resvg = new Resvg(buildShareSvg(card, monthKey), {
-    fitTo: { mode: "width", value: 1200 },
-    font: { fontBuffers, defaultFontFamily: "Inter", loadSystemFonts: false },
-  });
-  const png = resvg.render().asPng();
+  const png = await renderSvgToPng(buildShareSvg(card, monthKey), 1200, origin);
 
   return new Response(png as unknown as BodyInit, {
     headers: {

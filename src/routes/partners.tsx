@@ -80,9 +80,79 @@ function PartnersPage() {
       <Hero range={range} topRate={topRate} />
       <Ladder tiers={tiers} topRate={topRate} />
       <Promises />
+      <BeyondCommission />
       <Steps />
       <ClosingCta />
     </MarketingShell>
+  );
+}
+
+/* --------------------------- beyond the commission ------------------------ */
+
+/**
+ * Two of these exist today and two are commitments. The copy says which is
+ * which, in the same words we would use in a call — a partner should never
+ * discover that something on this page was aspirational.
+ */
+const BEYOND = [
+  {
+    state: "Live today",
+    title: "A badge that can be checked, not just displayed",
+    body: "On activation you get a Certified Partner badge and LinkedIn banners generated from your own record, plus a verification link on costmyai.com carrying your name, tier and join date. Anyone can open the link. Nobody can issue one for themselves.",
+  },
+  {
+    state: "Live today",
+    title: "The market data before it is published",
+    body: "The public Intelligence page only publishes a month once it is frozen. Your partner dashboard shows the month while it is still moving — price moves, cuts and new listings across every model and host we track.",
+  },
+  {
+    state: "Commitment",
+    title: "Co-marketing on a named case study",
+    body: "From the second tier up, we will build and publish a case study with you. This needs a client willing to be named, so it starts the day you have one — not before. We will not publish an anonymous composite and call it a case study.",
+  },
+  {
+    state: "Commitment",
+    title: "A direct line on the roadmap",
+    body: "We will take partner feedback directly, on a call rather than through a form, and tell you plainly what we will and will not build. This is a person's time, not a product feature: ask for it and we will book it.",
+  },
+] as const;
+
+function BeyondCommission() {
+  return (
+    <section className="px-5 py-24 sm:px-8 sm:py-32">
+      <div className="mx-auto max-w-6xl">
+        <SectionHead
+          eyebrow="Beyond the commission"
+          title="What a partner account actually gets you."
+          lead="Two of these work the day you are activated. Two are commitments we honour when you take us up on them, and we say so rather than dressing them up as features."
+        />
+
+        <div className="mx-auto mt-16 max-w-4xl">
+          {BEYOND.map((b, i) => (
+            <Reveal
+              key={b.title}
+              delay={i * 90}
+              className="grid gap-3 border-t border-border py-9 sm:grid-cols-[10rem_1fr] sm:gap-8 sm:py-11"
+            >
+              <p
+                className={`text-[0.65rem] font-medium uppercase tracking-[0.16em] sm:pt-2 ${
+                  b.state === "Live today" ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {b.state}
+              </p>
+              <div className="min-w-0">
+                <h3 className="text-xl font-semibold tracking-[-0.03em] sm:text-2xl">{b.title}</h3>
+                <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                  {b.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -48,6 +48,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
 import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
 import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
@@ -70,6 +71,7 @@ import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public
 import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
+import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 
 const TermsRoute = TermsRouteImport.update({
@@ -267,6 +269,11 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const PartnerVerifyCodeRoute = PartnerVerifyCodeRouteImport.update({
+  id: '/partner_/verify/$code',
+  path: '/partner/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBuildInfoRoute = ApiPublicBuildInfoRouteImport.update({
   id: '/api/public/build-info',
   path: '/api/public/build-info',
@@ -390,6 +397,11 @@ const ApiPublicEmbedIntelligenceWidgetRoute =
     path: '/api/public/embed/intelligence-widget',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBadgeCodeRoute = ApiPublicBadgeCodeRouteImport.update({
+  id: '/api/public/badge/$code',
+  path: '/api/public/badge/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOgIntelligenceMonthRoute =
   ApiPublicOgIntelligenceMonthRouteImport.update({
     id: '/api/public/og/intelligence/$month',
@@ -444,7 +456,9 @@ export interface FileRoutesByFullPath {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
@@ -504,7 +518,9 @@ export interface FileRoutesByTo {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
@@ -569,7 +585,9 @@ export interface FileRoutesById {
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
@@ -634,7 +652,9 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/api/public/build-info'
+    | '/partner/verify/$code'
     | '/workspace/'
+    | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
@@ -694,7 +714,9 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/api/public/build-info'
+    | '/partner/verify/$code'
     | '/workspace'
+    | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
@@ -758,7 +780,9 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
     | '/api/public/build-info'
+    | '/partner_/verify/$code'
     | '/_authenticated/workspace/'
+    | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
@@ -802,6 +826,8 @@ export interface RootRouteChildren {
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
+  PartnerVerifyCodeRoute: typeof PartnerVerifyCodeRoute
+  ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
@@ -1093,6 +1119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/partner_/verify/$code': {
+      id: '/partner_/verify/$code'
+      path: '/partner/verify/$code'
+      fullPath: '/partner/verify/$code'
+      preLoaderRoute: typeof PartnerVerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/build-info': {
       id: '/api/public/build-info'
       path: '/api/public/build-info'
@@ -1247,6 +1280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmbedIntelligenceWidgetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/badge/$code': {
+      id: '/api/public/badge/$code'
+      path: '/api/public/badge/$code'
+      fullPath: '/api/public/badge/$code'
+      preLoaderRoute: typeof ApiPublicBadgeCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/og/intelligence/$month': {
       id: '/api/public/og/intelligence/$month'
       path: '/api/public/og/intelligence/$month'
@@ -1366,6 +1406,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
+  PartnerVerifyCodeRoute: PartnerVerifyCodeRoute,
+  ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
