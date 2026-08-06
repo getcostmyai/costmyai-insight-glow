@@ -1,4 +1,6 @@
+import { BENCHMARK_ASK_THRESHOLD, askThresholdMet } from "./ask-gate";
 import { resolveBucket, type BucketResolution, type Cut } from "./k-anonymity";
+
 
 /**
  * Benchmark resolution against real workspaces.
@@ -26,6 +28,12 @@ export interface ProfileRow {
 
 export type BenchmarkView =
   | { state: "no_profile" }
+  /**
+   * Dispatch 123. Too few companies are connected platform-wide for any cohort
+   * to clear the floor, so the four questions are not asked yet. Distinct from
+   * "refused": nobody has answered anything and nothing was evaluated.
+   */
+  | { state: "too_early"; eligibleCompanies: number; threshold: number }
   /** Signup answers only: we know the shape of the answer, not the answer. */
   | { state: "locked"; industry: string; useCase: string }
   | {
@@ -40,6 +48,7 @@ export type BenchmarkView =
       position: "below" | "typical" | "above";
     }
   | { state: "refused"; floor: number; reason: "no_dimensions" | "below_floor" };
+
 
 type Client = {
   from: (t: string) => any;
@@ -104,6 +113,19 @@ export async function ownMonthlySpend(client: Client, orgId: string): Promise<nu
   return (data ?? []).reduce((s: number, r: { cost_usd: number }) => s + Number(r.cost_usd), 0);
 }
 
+/**
+ * Platform-wide pool of benchmark-eligible companies: profiled, real,
+ * quality-clean, and sending real traffic. Exactly the population every cohort
+ * is drawn from, with no cut applied — so it can be read before knowing this
+ * workspace's answers, which is what makes the ask-gate non-circular.
+ */
+export async function eligibleCompanies(client: Client): Promise<number> {
+  const { data, error } = await client.rpc("benchmark_eligible_companies");
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return Number(typeof row === "object" && row !== null ? Object.values(row)[0] : row) || 0;
+}
+
 export async function buildBenchmark(
   client: Client,
   profile: ProfileRow | null,
@@ -111,8 +133,16 @@ export async function buildBenchmark(
 ): Promise<BenchmarkView> {
   if (!profile) return { state: "no_profile" };
   if (!hasBenchmarkAnswers(profile)) {
+    // Dispatch 123. Nothing answered yet: only ask when an answer could
+    // plausibly buy a comparison. Once answers exist we never come back here,
+    // so this can never turn into a re-prompt or a withdrawal of the ask.
+    const eligible = await eligibleCompanies(client);
+    if (!askThresholdMet(eligible)) {
+      return { state: "too_early", eligibleCompanies: eligible, threshold: BENCHMARK_ASK_THRESHOLD };
+    }
     return { state: "locked", industry: profile.industry, useCase: profile.use_case };
   }
+
 
   const resolution: BucketResolution = await resolveBucket(
     {
