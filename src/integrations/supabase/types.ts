@@ -1999,6 +1999,7 @@ export type Database = {
       }
       benchmark_eligible_companies: { Args: never; Returns: number }
       benchmark_k_floor: { Args: never; Returns: number }
+      claim_partner_membership: { Args: never; Returns: string }
       clawback_commission: {
         Args: { _environment?: string; _invoice_id: string; _reason: string }
         Returns: Json
@@ -2098,6 +2099,10 @@ export type Database = {
       plan_rank: {
         Args: { _plan: Database["public"]["Enums"]["plan_tier"] }
         Returns: number
+      }
+      provision_partner_from_application: {
+        Args: { _application_id: string }
+        Returns: Json
       }
       schema_filter_state: { Args: { _predicates: Json }; Returns: Json }
       set_org_plan: {
