@@ -19,7 +19,7 @@ const asRobin = createClient(URL, PUB, {
 const TAG = "d133";
 const PARTNER_EMAIL = `d133-partner@costmyai-test.invalid`;
 const CLIENT_EMAIL = `d133-client@costmyai-test.invalid`;
-const PW = "D133-temp-proof-" + Math.random().toString(36).slice(2);
+const PW = "D133-temp-proof-fixed-9f3a";
 
 const log = (...a: unknown[]) => console.log(...a);
 const j = (v: unknown) => JSON.stringify(v);
