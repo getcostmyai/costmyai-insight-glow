@@ -40,8 +40,7 @@ const TONE: Record<ShareCard["tone"], string> = {
 };
 
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 
 /** Greedy wrap by estimated advance width — good enough for a two-line caption. */
 function wrap(text: string, maxChars: number, maxLines: number): string[] {
