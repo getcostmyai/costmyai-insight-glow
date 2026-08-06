@@ -9,14 +9,14 @@ import {
 } from "@/lib/partner-tiers";
 
 const ROWS: PartnerTierRow[] = [
-  { tier: 2, name: "Silver", minLifetimeUsd: 10000, ratePct: 25 },
-  { tier: 0, name: "Starter", minLifetimeUsd: 0, ratePct: 15 },
-  { tier: 4, name: "Platinum", minLifetimeUsd: 130000, ratePct: 35 },
+  { tier: 2, name: "Senior Advisor", minLifetimeUsd: 10000, ratePct: 25 },
+  { tier: 0, name: "Associate", minLifetimeUsd: 0, ratePct: 15 },
+  { tier: 4, name: "Fellow", minLifetimeUsd: 130000, ratePct: 35 },
 ];
 
 describe("partner commission ladder", () => {
   it("orders levels by tier regardless of row order", () => {
-    expect(toLadder(ROWS).tiers.map((t) => t.name)).toEqual(["Starter", "Silver", "Platinum"]);
+    expect(toLadder(ROWS).tiers.map((t) => t.name)).toEqual(["Associate", "Senior Advisor", "Fellow"]);
   });
 
   it("derives the headline range from the rows, not from copy", () => {

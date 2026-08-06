@@ -230,7 +230,7 @@ function TierProgress({ partner }: { partner: PartnerDashboard["partner"] }) {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold">
-            {tiers.find((t) => t.tier === effectiveTier)?.name ?? "Starter"} tier
+            {tiers.find((t) => t.tier === effectiveTier)?.name ?? "Associate"} tier
             {partner.overridden ? (
               <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
                 assigned by CostMyAI

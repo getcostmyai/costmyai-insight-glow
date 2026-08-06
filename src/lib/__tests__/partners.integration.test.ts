@@ -186,7 +186,7 @@ describe("commission accrual", () => {
       .select("revenue_usd, rate_pct, commission_usd, status")
       .eq("partner_id", alicePartner);
     expect(rows).toHaveLength(1);
-    expect(Number(rows![0]!.rate_pct)).toBe(15); // Starter
+    expect(Number(rows![0]!.rate_pct)).toBe(15); // Associate
     expect(Number(rows![0]!.commission_usd)).toBe(60); // 15% of 400
     expect(rows![0]!.status).toBe("pending");
   }, 30_000);
@@ -197,7 +197,7 @@ describe("commission accrual", () => {
   }, 30_000);
 
   it("raises the rate as lifetime referred revenue crosses a tier threshold", async () => {
-    // 400 so far; 5,000 total earns Bronze (20%).
+    // 400 so far; 5,000 total earns Advisor (20%).
     await accrue(orgId, `in_${stamp}_2`, 4600);
 
     const earned = await admin.rpc("partner_earned_tier", { _partner_id: alicePartner });
