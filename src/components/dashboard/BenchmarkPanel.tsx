@@ -5,16 +5,20 @@ import { BarChart3, Check, Loader2, Lock, ShieldCheck, Sparkles, X } from "lucid
 import {
   acknowledgeBenchmarkNotice,
   getProfileState,
+  startBenchmarkProfile,
   saveBenchmarkAnswers,
   type ProfileState,
 } from "@/lib/benchmark.functions";
 import {
   HEADCOUNT_BANDS,
+  INDUSTRIES,
+  USE_CASES,
   MATURITIES,
   REVENUE_BANDS,
   type HeadcountBand,
   type Maturity,
   type RevenueBand,
+  type UseCase,
 } from "@/lib/benchmark/taxonomy";
 import { checkAnswers } from "@/lib/benchmark/sanity";
 import { usd } from "@/lib/dashboard-data";
@@ -37,7 +41,11 @@ export function BenchmarkPanel() {
   });
 
   const state = query.data;
-  if (!state?.profile) return null;
+  if (!state) return null;
+  // Dispatch 121. A workspace older than the signup profiling step has no
+  // profile row. Rendering nothing left those accounts with no way to ever
+  // reach the benchmark; ask the two signup questions here instead.
+  if (!state.profile) return <ProfileSetup />;
 
   if (state.benchmark.state === "shown") return <BenchmarkResult state={state} />;
   if (!state.hasUsage) return <Primer state={state} />;
@@ -63,6 +71,86 @@ function Frame({
       ) : null}
       <div className="relative">{children}</div>
     </section>
+  );
+}
+
+/** The two signup questions, for a workspace that never got asked them. */
+function ProfileSetup() {
+  const queryClient = useQueryClient();
+  const [useCase, setUseCase] = useState<UseCase | "">("");
+  const [useCaseOther, setUseCaseOther] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useMutation({
+    mutationFn: () =>
+      startBenchmarkProfile({ data: { useCase: useCase as UseCase, useCaseOther, industry } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile-state"] }),
+    onError: (e: unknown) =>
+      setError(e instanceof Error ? e.message : "Could not save that just now."),
+  });
+
+  return (
+    <Frame tone="invite">
+      <p className="eyebrow flex items-center gap-2">
+        <Sparkles className="size-3.5 text-primary" />
+        Benchmark
+      </p>
+      <h3 className="mt-2 text-xl font-semibold tracking-tight">
+        Two questions, and your spend gets a comparison
+      </h3>
+      <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+        This workspace was created before we started asking these at signup. They place you in a
+        peer group; nothing else in CostMyAI depends on them.
+      </p>
+
+      <div className="mt-6 grid gap-4 border-t border-border/60 pt-6 sm:grid-cols-2">
+        <Field label="What do you mainly use AI for?" hint="how your workloads are grouped">
+          <Select value={useCase} onChange={(v) => setUseCase(v as UseCase)}>
+            <option value="">Choose one</option>
+            {USE_CASES.map((u) => (
+              <option key={u.key} value={u.key}>
+                {u.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Industry" hint="the closest match is good enough">
+          <Select value={industry} onChange={setIndustry}>
+            <option value="">Choose one</option>
+            {INDUSTRIES.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {useCase === "other" ? (
+          <Field label="Tell us in a few words" hint="a label on this workspace only">
+            <input
+              value={useCaseOther}
+              onChange={(e) => setUseCaseOther(e.target.value)}
+              maxLength={120}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
+          </Field>
+        ) : null}
+      </div>
+
+      {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
+
+      <button
+        onClick={() => {
+          setError(null);
+          save.mutate();
+        }}
+        disabled={!useCase || !industry || save.isPending}
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+      >
+        {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+        Save
+      </button>
+    </Frame>
   );
 }
 
