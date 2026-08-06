@@ -7,6 +7,8 @@ import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
 
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
+import { BrandKitCard } from "@/components/partner/BrandKitCard";
+import { EarlyAccessCard } from "@/components/partner/EarlyAccessCard";
 
 export const Route = createFileRoute("/_authenticated/partner")({
   head: () => ({
