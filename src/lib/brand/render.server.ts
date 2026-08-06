@@ -31,7 +31,7 @@ export function ensureWasm(origin: string): Promise<void> {
   const g = globalThis as Record<string, unknown>;
   let ready = g[WASM_KEY] as Promise<void> | undefined;
   if (!ready) {
-    ready = initWasm(fetch(new URL(resvgWasmUrl as string, origin)))
+    ready = initWasm(fetch(new URL(RESVG_WASM_PATH, origin)))
       .then(() => undefined)
       .catch((err: unknown) => {
         if (err instanceof Error && /already initialized/i.test(err.message)) return;
