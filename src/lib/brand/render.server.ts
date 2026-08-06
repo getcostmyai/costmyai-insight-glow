@@ -14,15 +14,31 @@ import { initWasm, Resvg } from "@resvg/resvg-wasm";
 export const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-let wasmReady: Promise<void> | null = null;
-export function ensureWasm(origin: string) {
-  if (!wasmReady) {
-    wasmReady = initWasm(fetch(new URL(resvgWasmUrl as string, origin))).catch((err) => {
-      wasmReady = null;
-      throw err;
-    });
+/**
+ * The wasm module can only be initialised once per isolate, and the promise has
+ * to outlive this module: a hot reload, or a second copy of the module in a
+ * different bundle chunk, would otherwise call `initWasm` again and the second
+ * caller would get "Already initialized" instead of an image. Parking the
+ * promise on `globalThis` makes the guard isolate-wide, and treating an
+ * already-initialised rasteriser as success covers the case where something
+ * else initialised it first.
+ */
+const WASM_KEY = "__costmyai_resvg_wasm__";
+
+export function ensureWasm(origin: string): Promise<void> {
+  const g = globalThis as Record<string, unknown>;
+  let ready = g[WASM_KEY] as Promise<void> | undefined;
+  if (!ready) {
+    ready = initWasm(fetch(new URL(resvgWasmUrl as string, origin)))
+      .then(() => undefined)
+      .catch((err: unknown) => {
+        if (err instanceof Error && /already initialized/i.test(err.message)) return;
+        delete g[WASM_KEY];
+        throw err;
+      });
+    g[WASM_KEY] = ready;
   }
-  return wasmReady;
+  return ready;
 }
 
 let fontCache: Uint8Array[] | null = null;
