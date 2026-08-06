@@ -8,7 +8,7 @@ import {
 } from "@/lib/partner-badge.server";
 
 // TEMPORARY visual-QA route — deleted in the same dispatch.
-export const Route = createFileRoute("/api/public/__qa136/$format")({
+export const Route = createFileRoute("/api/public/qa136tmp/$format")({
   server: {
     handlers: {
       GET: async ({ params, request }) => {
