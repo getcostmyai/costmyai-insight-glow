@@ -115,15 +115,36 @@ export interface Finding {
 export const MANIFEST_VERSION = 1;
 
 /**
- * One query chain, as text. Slicing from `.from("table")` to the next statement
- * boundary is crude but it is the whole chain in practice: these are builder
- * chains that end in an await, a semicolon at depth zero, or a closing brace.
+ * One query chain, as text, walked by bracket depth rather than by whitespace.
+ *
+ * Dispatch 127: the previous version stopped at the first blank line, which is
+ * not a statement boundary in a builder chain — a stray blank line between
+ * `.select(...)` and `.eq("is_active", true)` truncated the chain and hid a
+ * filter that was really there. The chain ends where it actually ends: a `;` or
+ * `,` at depth zero, or a line that does not continue the chain.
  */
 function chainAfter(text: string, index: number): string {
-  const slice = text.slice(index, index + 900);
-  const stop = slice.search(/;\s|\n\s*\}\s*\n|\n\n/);
-  return stop === -1 ? slice : slice.slice(0, stop);
+  const slice = text.slice(index, index + 1600);
+  let depth = 0;
+  for (let i = 0; i < slice.length; i++) {
+    const c = slice[i]!;
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") {
+      depth--;
+      // Ran past the expression that contains the chain.
+      if (depth < 0) return slice.slice(0, i);
+    } else if (depth === 0 && (c === ";" || c === ",")) {
+      return slice.slice(0, i);
+    } else if (depth === 0 && c === "\n") {
+      // A chain only continues on a line whose first token is `.`.
+      const rest = slice.slice(i + 1);
+      const next = rest.replace(/^[\s]*(?:\/\/[^\n]*\n[\s]*)*/, "");
+      if (!next.startsWith(".")) return slice.slice(0, i);
+    }
+  }
+  return slice;
 }
+
 
 /**
  * Scan one source file for read queries against tables worth watching.
