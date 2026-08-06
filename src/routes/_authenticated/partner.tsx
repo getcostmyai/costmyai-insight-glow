@@ -203,6 +203,8 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
             </div>
           )}
         </section>
+
+        <BrandKitCard referralCode={partner.referralCode} active={partner.status === "active"} />
       </div>
     </main>
   );
