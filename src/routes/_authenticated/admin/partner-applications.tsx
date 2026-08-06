@@ -184,7 +184,29 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
             {busy === s ? "…" : s}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={approveAndActivate}
+          disabled={busy !== null}
+          className="rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {busy === "provision" ? "…" : "Approve & activate partner"}
+        </button>
       </div>
+
+      {provisioned && (
+        <p className="mt-3 rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          Partner account is live. Referral code{" "}
+          <span className="font-semibold text-foreground">{provisioned}</span>. They see it after
+          signing in at /partner/login with {row.email}.
+        </p>
+      )}
+      {provisionError && (
+        <p className="mt-3 rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive">
+          {provisionError}
+        </p>
+      )}
+
     </div>
   );
 }
