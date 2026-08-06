@@ -62,9 +62,19 @@ const INDIGO_WASH = "#EEF0FE";
 const HAIRLINE = "#E4E2DE";
 const MUTED = "#6B6A76";
 
-/** Truncate on estimated advance width so long names never collide with the edge. */
-function fit(text: string, maxChars: number): string {
-  return text.length <= maxChars ? text : `${text.slice(0, maxChars - 1).trimEnd()}…`;
+/** Rough advance width for Inter at a weight of 500–600, good enough for layout. */
+const advance = (text: string, size: number) => text.length * size * 0.56;
+
+/**
+ * Names are set as large as the column allows and only shrink when they must,
+ * so "Kai Ng" and "Vincent Weber Consulting" both sit on one confident line
+ * instead of one of them being cut with an ellipsis at a fixed character count.
+ */
+function fitName(text: string, maxWidth: number, maxSize: number, minSize: number) {
+  const size = Math.max(minSize, Math.min(maxSize, maxWidth / (text.length * 0.56)));
+  const maxChars = Math.floor(maxWidth / (size * 0.56));
+  const label = text.length <= maxChars ? text : `${text.slice(0, maxChars - 1).trimEnd()}…`;
+  return { label, size };
 }
 
 /**
@@ -80,13 +90,26 @@ function mark(x: number, y: number, size: number): string {
   </g>`;
 }
 
-/** "CostMyAI", with "My" in indigo — identical to the in-product wordmark. */
-function wordmark(x: number, y: number, size: number, anchor = "start"): string {
-  return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="Inter" font-size="${size}" font-weight="600" fill="${INK}" letter-spacing="${-size * 0.02}">Cost<tspan fill="${INDIGO}">My</tspan>AI</text>`;
+/**
+ * Mark plus "CostMyAI" wordmark ("My" in indigo), placed as one lockup so the
+ * pair is optically centred or right-aligned rather than the text drifting off
+ * the canvas edge.
+ */
+function lockup(opts: {
+  size: number;
+  baseline: number;
+  align: "center" | "right";
+  at: number;
+}): string {
+  const { size, baseline, align, at } = opts;
+  const glyph = size * 1.34;
+  const gap = size * 0.5;
+  const textW = advance("CostMyAI", size) * 1.02;
+  const total = glyph + gap + textW;
+  const left = align === "center" ? at - total / 2 : at - total;
+  return `${mark(left, baseline - glyph * 0.82, glyph)}
+<text x="${left + glyph + gap}" y="${baseline}" font-family="Inter" font-size="${size}" font-weight="600" fill="${INK}" letter-spacing="${-size * 0.02}">Cost<tspan fill="${INDIGO}">My</tspan>AI</text>`;
 }
-
-/** Rough advance width for Inter at a weight of 500–600, good enough for chips. */
-const advance = (text: string, size: number) => text.length * size * 0.56;
 
 function tierChip(cx: number, cy: number, size: number, label: string): string {
   const w = advance(label, size) + size * 2.4;
@@ -96,6 +119,7 @@ function tierChip(cx: number, cy: number, size: number, label: string): string {
     <text x="${cx}" y="${cy + size * 0.36}" text-anchor="middle" font-family="Inter" font-size="${size}" font-weight="600" fill="${INDIGO}" letter-spacing="${size * 0.02}">${esc(label)}</text>
   </g>`;
 }
+
 
 const DEFS = `<defs>
   <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
