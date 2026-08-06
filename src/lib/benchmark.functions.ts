@@ -158,7 +158,48 @@ export const saveBenchmarkAnswers = createServerFn({ method: "POST" })
     return { ...state, warning: verdict.warning };
   });
 
+/**
+ * Dispatch 121. Every workspace created through the current signup flow gets
+ * its profile row written alongside the workspace itself. Workspaces created
+ * before that flow existed have none, and the benchmark panel used to render
+ * nothing at all for them — silently, with no way back in. This is that way
+ * back in: the same two questions signup asks, asked once, in place.
+ */
+export const startBenchmarkProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { useCase: string; useCaseOther?: string | null; industry: string }) => {
+    if (!isUseCase(data?.useCase)) throw new Error("Pick what you mainly use AI for.");
+    if (!isIndustry(data?.industry)) throw new Error("Pick the industry closest to yours.");
+    return {
+      useCase: data.useCase as UseCase,
+      useCaseOther:
+        data.useCase === "other" ? (data.useCaseOther ?? "").trim().slice(0, 120) || null : null,
+      industry: data.industry,
+    };
+  })
+  .handler(async ({ context, data }): Promise<ProfileState> => {
+    const orgId = await resolveOrg(context as never);
+    const existing = await readProfile(context.supabase, orgId);
+    // Never overwrite what signup already recorded.
+    if (!existing) {
+      const { data: saved, error } = await context.supabase
+        .from("org_profiles")
+        .insert({
+          org_id: orgId,
+          use_case: data.useCase,
+          use_case_other: data.useCaseOther,
+          industry: data.industry,
+        })
+        .select("org_id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!saved) throw new Error("That profile could not be saved to this workspace.");
+    }
+    return stateFor(context.supabase, orgId);
+  });
+
 /** Step 2 and the standing invitation: both are just "stop showing me this". */
+
 export const acknowledgeBenchmarkNotice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { what: "primer" | "prompt" }) => ({
