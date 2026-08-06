@@ -49,9 +49,30 @@ export function BenchmarkPanel() {
 
   if (state.benchmark.state === "shown") return <BenchmarkResult state={state} />;
   if (!state.hasUsage) return <Primer state={state} />;
+  // Dispatch 123. Nobody has answered and no cohort could exist yet, so the
+  // four questions are not asked at all. Deliberately distinct from the k=5
+  // refusal below, which describes answers that were evaluated.
+  if (state.benchmark.state === "too_early") return <TooEarly state={state} />;
   if (state.benchmark.state === "refused") return <Refusal state={state} />;
   return <ProgressiveAsk state={state} />;
 }
+
+/** Pre-threshold: honest about why we are not asking anything yet. */
+function TooEarly({ state }: { state: ProfileState }) {
+  if (state.benchmark.state !== "too_early") return null;
+  return (
+    <Frame>
+      <div className="flex items-start gap-3">
+        <BarChart3 className="mt-0.5 size-4 shrink-0 text-primary" />
+        <p className="text-sm text-muted-foreground">
+          Not enough companies are connected yet for a comparison to mean anything — we'll ask you a
+          few questions when there are.
+        </p>
+      </div>
+    </Frame>
+  );
+}
+
 
 function Frame({
   tone = "quiet",
