@@ -138,14 +138,14 @@ ${DEFS}
 <rect width="600" height="600" rx="36" fill="${PAPER}"/>
 <rect x="0.75" y="0.75" width="598.5" height="598.5" rx="35.25" fill="none" stroke="${HAIRLINE}" stroke-width="1.5"/>
 <rect x="36" y="0" width="528" height="3" fill="url(#rule)"/>
-${lockup({ size: 28, baseline: 92, align: "center", at: 300 })}
-<rect x="88" y="148" width="424" height="1" fill="${HAIRLINE}"/>
-<text x="300" y="214" text-anchor="middle" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
-<text x="300" y="${292 + (46 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.2">${esc(name.label)}</text>
-${tierChip(300, 348, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedAt)}`)}
-<rect x="88" y="424" width="424" height="1" fill="${HAIRLINE}"/>
-<text x="300" y="474" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
-<text x="300" y="512" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
+${lockup({ size: 28, baseline: 104, align: "center", at: 300 })}
+<rect x="88" y="160" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="226" text-anchor="middle" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
+<text x="300" y="${306 + (46 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.2">${esc(name.label)}</text>
+${tierChip(300, 360, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedAt)}`)}
+<rect x="88" y="436" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="484" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
+<text x="300" y="522" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
 
