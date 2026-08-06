@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-05T22:13:16.986Z",
+  "generatedAt": "2026-08-06T12:27:08.059Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
-      "line": 68,
+      "line": 72,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -13,7 +13,7 @@
     },
     {
       "file": "src/lib/benchmark/benchmark.server.ts",
-      "line": 97,
+      "line": 106,
       "table": "usage_rollups",
       "filters": [
         "is_synthetic",
@@ -52,11 +52,8 @@
       "file": "src/lib/billing/guard.server.ts",
       "line": 23,
       "table": "organizations",
-      "filters": [
-        "org_id",
-        "status"
-      ],
-      "snippet": ".from(\"organizations\").select(\"plan\").eq(\"id\", orgId).maybeSingle(), supabase .from(\"subscriptions\")"
+      "filters": [],
+      "snippet": ".from(\"organizations\").select(\"plan\").eq(\"id\", orgId).maybeSingle()"
     },
     {
       "file": "src/lib/billing/guard.server.ts",
@@ -81,7 +78,9 @@
       "file": "src/lib/catalog/catalog.server.ts",
       "line": 68,
       "table": "host_prices",
-      "filters": [],
+      "filters": [
+        "is_active"
+      ],
       "snippet": ".from(\"host_prices\") .select( \"model_key, host_label, price_source, input_usd_per_mtok, output_usd_per_mtok, m"
     },
     {
@@ -114,8 +113,7 @@
       "line": 340,
       "table": "host_prices",
       "filters": [
-        "is_active",
-        "is_fixture"
+        "is_active"
       ],
       "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
     },
@@ -124,10 +122,7 @@
       "line": 352,
       "table": "benchmarks",
       "filters": [
-        "is_active",
-        "is_fixture",
-        "org_id",
-        "status"
+        "is_fixture"
       ],
       "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false)"
     },
@@ -136,11 +131,7 @@
       "line": 358,
       "table": "benchmark_margins",
       "filters": [
-        "is_active",
-        "is_fixture",
-        "is_synthetic",
-        "org_id",
-        "status"
+        "is_fixture"
       ],
       "snippet": ".from(\"benchmark_margins\") .select(\"suite, task_class, margin, method, synced_at, source_run_id\") .eq(\"is_fixt"
     },
@@ -149,10 +140,7 @@
       "line": 363,
       "table": "model_catalog",
       "filters": [
-        "is_active",
-        "is_synthetic",
-        "org_id",
-        "status"
+        "is_active"
       ],
       "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier\") .eq(\"is_active\", true)"
     },
@@ -161,7 +149,6 @@
       "line": 369,
       "table": "switches",
       "filters": [
-        "is_synthetic",
         "org_id",
         "status"
       ],
@@ -172,8 +159,7 @@
       "line": 376,
       "table": "organizations",
       "filters": [
-        "is_synthetic",
-        "org_id"
+        "is_synthetic"
       ],
       "snippet": ".from(\"organizations\") .select(\"name, plan, is_synthetic, autonomous_enabled\") .eq(\"id\", orgId)"
     },
@@ -255,8 +241,7 @@
       "line": 19,
       "table": "usage_events",
       "filters": [
-        "org_id",
-        "revoked_at"
+        "org_id"
       ],
       "snippet": ".from(\"usage_events\") .select(\"occurred_at\") .eq(\"org_id\", orgId)"
     },
@@ -268,26 +253,23 @@
         "org_id",
         "revoked_at"
       ],
-      "snippet": ".from(\"api_keys\").select(\"revoked_at\").eq(\"org_id\", orgId), ])"
+      "snippet": ".from(\"api_keys\").select(\"revoked_at\").eq(\"org_id\", orgId)"
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
       "line": 91,
       "table": "organizations",
       "filters": [
-        "is_active",
-        "is_fixture",
         "is_synthetic"
       ],
-      "snippet": ".from(\"organizations\").select(\"id, plan, is_synthetic, autonomous_enabled\"), fetchAllRows((from, to) => supaba"
+      "snippet": ".from(\"organizations\").select(\"id, plan, is_synthetic, autonomous_enabled\")"
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
       "line": 94,
       "table": "host_prices",
       "filters": [
-        "is_active",
-        "is_fixture"
+        "is_active"
       ],
       "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
     },
@@ -296,7 +278,6 @@
       "line": 106,
       "table": "benchmarks",
       "filters": [
-        "is_active",
         "is_fixture"
       ],
       "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false)"
@@ -306,7 +287,6 @@
       "line": 113,
       "table": "benchmark_margins",
       "filters": [
-        "is_active",
         "is_fixture"
       ],
       "snippet": ".from(\"benchmark_margins\") .select(\"suite, task_class, margin, method, synced_at, source_run_id\") .eq(\"is_fixt"
@@ -334,8 +314,7 @@
       "line": 204,
       "table": "objectives",
       "filters": [
-        "org_id",
-        "status"
+        "org_id"
       ],
       "snippet": ".from(\"objectives\") .select(\"model_key, host, task_hint, objective, quality_floor_score, max_latency_ms\") .eq("
     },
@@ -381,14 +360,14 @@
       "line": 28,
       "table": "benchmarks",
       "filters": [],
-      "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t), ), fetchAllRows((f, t) =>"
+      "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t)"
     },
     {
       "file": "src/lib/estimator/estimate.server.ts",
       "line": 31,
       "table": "benchmark_margins",
       "filters": [],
-      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\").range(f, t), ), ])"
+      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\").range(f, t)"
     },
     {
       "file": "src/lib/estimator/options.server.ts",
@@ -397,7 +376,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"host_prices\").select(\"model_key, host, host_label\").eq(\"is_active\", true).range(f, t), ), fetchAllRows("
+      "snippet": ".from(\"host_prices\").select(\"model_key, host, host_label\").eq(\"is_active\", true).range(f, t)"
     },
     {
       "file": "src/lib/estimator/options.server.ts",
@@ -406,7 +385,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"model_catalog\").select(\"model_key, display_name\").eq(\"is_active\", true).range(f, t), ), ])"
+      "snippet": ".from(\"model_catalog\").select(\"model_key, display_name\").eq(\"is_active\", true).range(f, t)"
     },
     {
       "file": "src/lib/ingest/billing.server.ts",
@@ -462,7 +441,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"model_catalog\").select(\"model_key\").eq(\"is_active\", true).range(f, t)), fetchAllRows((f, t) => db.from("
+      "snippet": ".from(\"model_catalog\").select(\"model_key\").eq(\"is_active\", true).range(f, t)"
     },
     {
       "file": "src/lib/ingest/keys.server.ts",
@@ -491,7 +470,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, is_active, first_seen_at\") .range(f, t),"
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, is_active, first_seen_at\") .range(f, t)"
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
@@ -507,14 +486,14 @@
       "line": 266,
       "table": "benchmarks",
       "filters": [],
-      "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t), ), supabase.from(\"benchmark_mar"
+      "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t)"
     },
     {
       "file": "src/lib/intelligence/intelligence.server.ts",
       "line": 268,
       "table": "benchmark_margins",
       "filters": [],
-      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\"), ])"
+      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\")"
     },
     {
       "file": "src/lib/intelligence/snapshot.server.ts",
@@ -571,7 +550,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"model_catalog\").select(\"model_key\", { count: \"exact\", head: true }).eq(\"is_active\", true), fetchAllRows"
+      "snippet": ".from(\"model_catalog\").select(\"model_key\", { count: \"exact\", head: true }).eq(\"is_active\", true)"
     },
     {
       "file": "src/lib/marketing.server.ts",
@@ -649,10 +628,9 @@
       "line": 445,
       "table": "organizations",
       "filters": [
-        "is_synthetic",
-        "status"
+        "is_synthetic"
       ],
-      "snippet": ".from(\"organizations\") .select(\"id, referred_by_partner_id, created_at\") .eq(\"is_synthetic\", false),"
+      "snippet": ".from(\"organizations\") .select(\"id, referred_by_partner_id, created_at\") .eq(\"is_synthetic\", false)"
     },
     {
       "file": "src/lib/partners.functions.ts",
@@ -661,7 +639,7 @@
       "filters": [
         "status"
       ],
-      "snippet": ".from(\"partners\").select(\"id, name, referral_code, status\"), ])"
+      "snippet": ".from(\"partners\").select(\"id, name, referral_code, status\")"
     },
     {
       "file": "src/lib/partners/payouts.server.ts",
@@ -702,8 +680,6 @@
       "line": 32,
       "table": "usage_rollups",
       "filters": [
-        "is_active",
-        "is_fixture",
         "org_id"
       ],
       "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, "
@@ -713,8 +689,7 @@
       "line": 40,
       "table": "host_prices",
       "filters": [
-        "is_active",
-        "is_fixture"
+        "is_active"
       ],
       "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
     },
@@ -725,7 +700,7 @@
       "filters": [
         "is_fixture"
       ],
-      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false),"
+      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score\") .eq(\"is_fixture\", false)"
     },
     {
       "file": "src/lib/pipeline.functions.ts",
@@ -743,7 +718,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"model_catalog\").select(\"model_key, display_name, vendor, tier\").eq(\"is_active\", true), ])"
+      "snippet": ".from(\"model_catalog\").select(\"model_key, display_name, vendor, tier\").eq(\"is_active\", true)"
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
@@ -766,7 +741,7 @@
       "line": 159,
       "table": "host_prices",
       "filters": [],
-      "snippet": ".from(\"host_prices\").select(\"host\").range(f, t), )"
+      "snippet": ".from(\"host_prices\").select(\"host\").range(f, t)"
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
@@ -817,10 +792,8 @@
       "file": "src/lib/workspace.functions.ts",
       "line": 33,
       "table": "organizations",
-      "filters": [
-        "org_id"
-      ],
-      "snippet": ".from(\"organizations\").select(\"id, name, slug, plan\").order(\"created_at\"), supabase.from(\"user_roles\").select("
+      "filters": [],
+      "snippet": ".from(\"organizations\").select(\"id, name, slug, plan\").order(\"created_at\")"
     },
     {
       "file": "src/routes/api/public/payments/webhook.ts",

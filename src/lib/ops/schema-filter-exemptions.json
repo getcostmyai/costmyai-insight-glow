@@ -23,5 +23,15 @@
     "table": "organizations",
     "file": "src/lib/partners.functions.ts",
     "reason": "Reads referral attribution for one workspace by primary key through the caller's RLS-scoped client. There is no cross-tenant surface to contaminate. Reviewed Dispatch 88."
+  },
+  {
+    "table": "organizations",
+    "file": "src/lib/billing/guard.server.ts",
+    "reason": "Reads one workspace's plan by primary key through the caller's RLS-scoped client, to decide that caller's own entitlement. is_synthetic is a cross-tenant mixing concern and there is no cross-tenant surface here: the row returned is the caller's own workspace, and a synthetic workspace is entitled to exactly the plan it holds. Surfaced by the Dispatch 127 scanner fix, which stopped this chain borrowing a neighbouring query's filters. Reviewed Dispatch 127."
+  },
+  {
+    "table": "organizations",
+    "file": "src/lib/workspace.functions.ts",
+    "reason": "Lists the workspaces the signed-in caller belongs to, through requireSupabaseAuth and the is_org_member RLS policy. Filtering is_synthetic here would hide the demo workspace from the one account permitted to see it while adding no isolation: RLS, not this filter, is what keeps other tenants out. Surfaced by the Dispatch 127 scanner fix. Reviewed Dispatch 127."
   }
 ]
