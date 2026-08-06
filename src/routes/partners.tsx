@@ -157,7 +157,7 @@ function Hero({ range, topRate }: { range: string | null; topRate: number }) {
               ),
               label: "Top commission rate",
             },
-            { node: <Stat>Lifetime</Stat>, label: "Attribution window" },
+            { node: <Stat>60 days</Stat>, label: "Click-to-signup window, then lifetime" },
             { node: <Stat>Paid only</Stat>, label: "When commission is written" },
           ].map((s, i) => (
             <Reveal key={s.label} delay={300 + i * 90}>
