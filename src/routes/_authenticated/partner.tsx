@@ -122,6 +122,10 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
           outstandingUsd={totals.outstandingUsd}
         />
 
+        <BrandKitCard referralCode={partner.referralCode} active={partner.status === "active"} />
+
+        <EarlyAccessCard />
+
         <TierProgress partner={partner} />
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6">
