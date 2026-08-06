@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, Copy, Handshake, TrendingUp } from "lucide-react";
 
 import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
