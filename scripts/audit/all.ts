@@ -18,6 +18,8 @@ const CHECKS = [
 
   { name: "test isolation", file: "scripts/audit/test-isolation.ts" },
   { name: "connector image published", file: "scripts/audit/image-published.ts" },
+  { name: "onboarding path", file: "scripts/audit/onboarding.ts" },
+
 ];
 
 const failed: string[] = [];

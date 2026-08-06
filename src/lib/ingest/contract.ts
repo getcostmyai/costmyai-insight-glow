@@ -69,26 +69,119 @@ export const CONTAINER_DEFAULTS = {
     upstreamTimeout: "COSTMYAI_UPSTREAM_TIMEOUT_MS",
     port: "COSTMYAI_PORT",
   },
-  appUrl: "https://app.costmyai.com",
+  /**
+   * Where a customer's container delivers metadata.
+   *
+   * Dispatch 124: this read `https://app.costmyai.com`, which has no DNS
+   * record at all. Every quickstart, README and generated `docker run` named a
+   * hostname that resolves nowhere, so a stranger's very first container could
+   * never deliver a single event — it would spool to disk forever and look
+   * "fine" in `docker logs`. Nothing caught it because every internal test
+   * pointed the container at a local server.
+   *
+   * This is now the stable production URL, which is immutable across project
+   * renames and is the address external callers are supposed to use. When
+   * `app.costmyai.com` is actually pointed at this deployment, change this one
+   * constant — every surface re-renders from it, and
+   * `scripts/audit/onboarding.ts` re-proves that the new value really answers.
+   */
+  appUrl: "https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app",
 } as const;
 
 export function containerImageRef(): string {
   return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.tag}`;
 }
 
-/** The exact `docker run` a customer copies. One renderer, two call sites. */
-export function dockerRunSnippet(token: string, upstreamUrl = "https://api.openai.com"): string {
+/**
+ * One container fronts one provider, and the SDK base URL a customer sets is
+ * NOT the same string for every provider — OpenAI clients append their own
+ * paths under `/v1`, Anthropic clients append `/v1/messages` to a bare origin,
+ * and Groq's OpenAI-compatible surface lives under `/openai/v1`. Getting this
+ * wrong is a 404 from the provider that looks like a broken proxy, so the
+ * quickstart renders the right pairing per provider instead of one example
+ * the reader has to generalise from.
+ *
+ * `port` differs per preset so a customer running two providers side by side
+ * can paste both commands without a port collision.
+ */
+export interface ProviderPreset {
+  id: string;
+  label: string;
+  /** What the container proxies to. */
+  upstream: string;
+  /** Suggested host port for this container. */
+  port: number;
+  /** The env var the customer's SDK reads. */
+  sdkEnv: string;
+  /** Path suffix appended to the container origin for that SDK. */
+  sdkPath: string;
+  /** A real call that proves the path end to end. */
+  verifyPath: string;
+}
+
+export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
+  {
+    id: "openai",
+    label: "OpenAI",
+    upstream: "https://api.openai.com",
+    port: 8787,
+    sdkEnv: "OPENAI_BASE_URL",
+    sdkPath: "/v1",
+    verifyPath: "/v1/chat/completions",
+  },
+  {
+    id: "anthropic",
+    label: "Anthropic",
+    upstream: "https://api.anthropic.com",
+    port: 8788,
+    sdkEnv: "ANTHROPIC_BASE_URL",
+    sdkPath: "",
+    verifyPath: "/v1/messages",
+  },
+  {
+    id: "google",
+    label: "Google Gemini",
+    upstream: "https://generativelanguage.googleapis.com",
+    port: 8789,
+    sdkEnv: "GOOGLE_GEMINI_BASE_URL",
+    sdkPath: "",
+    verifyPath: "/v1beta/models/gemini-2.5-flash:generateContent",
+  },
+  {
+    id: "openai-compatible",
+    label: "Groq / Together / Fireworks / Mistral / xAI / vLLM",
+    upstream: "https://api.groq.com",
+    port: 8790,
+    sdkEnv: "OPENAI_BASE_URL",
+    sdkPath: "/openai/v1",
+    verifyPath: "/openai/v1/chat/completions",
+  },
+] as const;
+
+export function sdkBaseUrl(preset: ProviderPreset, host = "localhost"): string {
+  return `http://${host}:${preset.port}${preset.sdkPath}`;
+}
+
+/** The exact `docker run` a customer copies. One renderer, every call site. */
+export function dockerRunSnippet(
+  token: string,
+  upstreamUrl = "https://api.openai.com",
+  options: { name?: string; port?: number } = {},
+): string {
   const e = CONTAINER_DEFAULTS.env;
+  const port = options.port ?? CONTAINER_DEFAULTS.port;
+  const name = options.name ?? "costmyai";
   return [
-    "docker run -d --name costmyai \\",
+    `docker run -d --name ${name} --restart unless-stopped \\`,
     `  -e ${e.token}=${token} \\`,
     `  -e ${e.baseUrl}=${CONTAINER_DEFAULTS.appUrl} \\`,
     `  -e ${e.upstream}=${upstreamUrl} \\`,
-    `  -v ${CONTAINER_DEFAULTS.spoolVolume}:${CONTAINER_DEFAULTS.spoolDir} \\`,
-    `  -p ${CONTAINER_DEFAULTS.port}:${CONTAINER_DEFAULTS.port} \\`,
+    `  -v ${name}-spool:${CONTAINER_DEFAULTS.spoolDir} \\`,
+    `  -p ${port}:${CONTAINER_DEFAULTS.port} \\`,
     `  ${containerImageRef()}`,
   ].join("\n");
 }
+
 
 
 /** First poll after a provider is connected looks this far back (brief §1). */
