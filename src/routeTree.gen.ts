@@ -70,6 +70,7 @@ import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public
 import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
+import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 
 const TermsRoute = TermsRouteImport.update({
@@ -390,6 +391,11 @@ const ApiPublicEmbedIntelligenceWidgetRoute =
     path: '/api/public/embed/intelligence-widget',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBadgeCodeRoute = ApiPublicBadgeCodeRouteImport.update({
+  id: '/api/public/badge/$code',
+  path: '/api/public/badge/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOgIntelligenceMonthRoute =
   ApiPublicOgIntelligenceMonthRouteImport.update({
     id: '/api/public/og/intelligence/$month',
@@ -445,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
@@ -505,6 +512,7 @@ export interface FileRoutesByTo {
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
@@ -570,6 +578,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
@@ -635,6 +644,7 @@ export interface FileRouteTypes {
     | '/workspace/rightsize'
     | '/api/public/build-info'
     | '/workspace/'
+    | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
@@ -695,6 +705,7 @@ export interface FileRouteTypes {
     | '/workspace/rightsize'
     | '/api/public/build-info'
     | '/workspace'
+    | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
@@ -759,6 +770,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/rightsize'
     | '/api/public/build-info'
     | '/_authenticated/workspace/'
+    | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
@@ -802,6 +814,7 @@ export interface RootRouteChildren {
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
+  ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
@@ -1247,6 +1260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmbedIntelligenceWidgetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/badge/$code': {
+      id: '/api/public/badge/$code'
+      path: '/api/public/badge/$code'
+      fullPath: '/api/public/badge/$code'
+      preLoaderRoute: typeof ApiPublicBadgeCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/og/intelligence/$month': {
       id: '/api/public/og/intelligence/$month'
       path: '/api/public/og/intelligence/$month'
@@ -1366,6 +1386,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
+  ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
@@ -1384,13 +1405,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
