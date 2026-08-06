@@ -1,6 +1,4 @@
-// Vite asset import: resolves to the served URL of the wasm binary.
-import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url";
-import { initWasm, Resvg } from "@resvg/resvg-wasm";
+import { esc, renderSvgToPng } from "@/lib/brand/render.server";
 
 import type { ShareCard } from "./share-cards";
 import { monthLabelOf } from "./snapshot.server";
