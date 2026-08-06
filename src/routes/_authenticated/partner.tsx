@@ -8,7 +8,7 @@ import { claimPartnerMembership } from "@/lib/partner-application.functions";
 
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 import { BrandKitCard } from "@/components/partner/BrandKitCard";
-import { EarlyAccessCard } from "@/components/partner/EarlyAccessCard";
+
 
 export const Route = createFileRoute("/_authenticated/partner")({
   head: () => ({
@@ -121,10 +121,6 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
           payouts={payouts}
           outstandingUsd={totals.outstandingUsd}
         />
-
-        <BrandKitCard referralCode={partner.referralCode} active={partner.status === "active"} />
-
-        <EarlyAccessCard />
 
         <TierProgress partner={partner} />
 
