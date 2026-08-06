@@ -18,7 +18,7 @@ export const Route = createFileRoute("/partners")({
       {
         name: "description",
         content:
-          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. Lifetime attribution, commission written only on real paid invoices, transparent tiers.",
+          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. A 60-day referral window, attribution frozen for the life of the account, commission written only on real paid invoices.",
       },
       { property: "og:title", content: "Become a CostMyAI partner" },
       {
@@ -36,8 +36,8 @@ export const Route = createFileRoute("/partners")({
 const PROMISES = [
   {
     icon: InfinityIcon,
-    title: "Lifetime attribution",
-    body: "A referral link is remembered for 60 days and the first click wins. Once a workspace is attached it stays yours for the life of the account — no reset at renewal.",
+    title: "60-day window, then lifetime",
+    body: "A referral link is remembered for 60 days and the first click wins. A workspace created after that needs a fresh click, or the code entered by hand. Once a workspace is attached the attribution is frozen and stays yours for the life of the account, with no reset at renewal.",
   },
   {
     icon: Receipt,
@@ -157,7 +157,7 @@ function Hero({ range, topRate }: { range: string | null; topRate: number }) {
               ),
               label: "Top commission rate",
             },
-            { node: <Stat>Lifetime</Stat>, label: "Attribution window" },
+            { node: <Stat>60 days</Stat>, label: "Click-to-signup window, then lifetime" },
             { node: <Stat>Paid only</Stat>, label: "When commission is written" },
           ].map((s, i) => (
             <Reveal key={s.label} delay={300 + i * 90}>

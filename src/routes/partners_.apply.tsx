@@ -314,12 +314,15 @@ function ApplyPage() {
                       : "The commission ladder is published on the partner page and read straight from our payout table."}
                   </Faq>
                   <Faq q="How long does commission last?">
-                    For the lifetime of the account. A workspace attaches your code once and stays
-                    attributed to you — there's no cookie window and no reset at renewal.
+                    For the lifetime of the account. Once a workspace is attached to your code it
+                    stays attributed to you, with no reset at renewal.
                   </Faq>
                   <Faq q="How does attribution work?">
-                    Your referral code is entered once by the workspace owner. Attribution is frozen
-                    at that point and cannot be moved to another partner afterwards.
+                    A click on your link is remembered for 60 days; a workspace created in that
+                    window is attached to you, and the code can also be entered by hand by the
+                    workspace owner. Attribution is frozen at that point and cannot be moved to
+                    another partner afterwards. If the 60 days lapse before signup, it takes a fresh
+                    click or the code entered manually.
                   </Faq>
                   <Faq q="When is commission actually written?">
                     Only when a real invoice is paid. Nothing is estimated in advance, and your
