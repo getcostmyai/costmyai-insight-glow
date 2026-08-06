@@ -35,27 +35,29 @@ const usd = (n: number) =>
 function PartnerPage() {
   const partner = useQuery({ queryKey: ["my-partner"], queryFn: () => getMyPartner() });
   const [claim, setClaim] = useState<"idle" | "running" | "done">("idle");
+  // The self-link is attempted exactly once per mount. A ref, not effect
+  // dependencies: `partner` is a new object every render, so depending on it
+  // re-ran the effect, and its cleanup cancelled the in-flight attempt before
+  // it could report back — a visitor who is not a partner sat on "Linking your
+  // partner account…" forever instead of being told so.
+  const claimed = useRef(false);
 
   // An approved applicant signs in for the first time with the email they
   // applied with: the account links itself here, once, instead of waiting on a
   // manual database insert.
   useEffect(() => {
-    if (partner.isPending || partner.data || claim !== "idle") return;
-    let cancelled = false;
+    if (partner.isPending || partner.data || claimed.current) return;
+    claimed.current = true;
     setClaim("running");
     void claimPartnerMembership()
       .then(async (r) => {
-        if (cancelled) return;
         if (r.partnerId) await partner.refetch();
       })
       .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) setClaim("done");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [partner.isPending, partner.data, claim, partner]);
+      .finally(() => setClaim("done"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partner.isPending, partner.data]);
+
 
   if (partner.isPending) return <Shell>Loading your partner account…</Shell>;
   if (partner.isError)
