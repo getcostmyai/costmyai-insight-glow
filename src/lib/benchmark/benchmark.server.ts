@@ -28,6 +28,12 @@ export interface ProfileRow {
 
 export type BenchmarkView =
   | { state: "no_profile" }
+  /**
+   * Dispatch 123. Too few companies are connected platform-wide for any cohort
+   * to clear the floor, so the four questions are not asked yet. Distinct from
+   * "refused": nobody has answered anything and nothing was evaluated.
+   */
+  | { state: "too_early"; eligibleCompanies: number; threshold: number }
   /** Signup answers only: we know the shape of the answer, not the answer. */
   | { state: "locked"; industry: string; useCase: string }
   | {
@@ -42,6 +48,7 @@ export type BenchmarkView =
       position: "below" | "typical" | "above";
     }
   | { state: "refused"; floor: number; reason: "no_dimensions" | "below_floor" };
+
 
 type Client = {
   from: (t: string) => any;
