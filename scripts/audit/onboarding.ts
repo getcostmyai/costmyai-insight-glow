@@ -34,20 +34,69 @@ const record = (name: string, ok: boolean, detail: string) => checks.push({ name
 
 const base = CONTAINER_DEFAULTS.appUrl.replace(/\/+$/, "");
 
-/** The address in the copy-paste has to be a real, reachable deployment. */
+/**
+ * The address in the copy-paste has to be a real, reachable deployment *of this
+ * app*, serving the code in the working tree.
+ *
+ * Three separate failures are distinguished, because at cutover time (when this
+ * constant is repointed at the final domain) each one is a plausible way to
+ * reproduce Dispatch 124's silent data loss:
+ *   - unreachable / non-2xx → no DNS, or nothing deployed there;
+ *   - 2xx but no build fingerprint → *something* answers, but it is not this
+ *     app (e.g. the old marketing site still on the domain), which is exactly
+ *     what a half-finished DNS cutover looks like;
+ *   - fingerprint present but not the working tree's → the domain serves a
+ *     stale build, so the ingest route a customer posts to may not be the one
+ *     just shipped.
+ */
 async function baseUrlResolves(): Promise<void> {
+  let local: { fingerprint: string } | null = null;
+  try {
+    const mod = (await import("./fingerprint.mjs")) as {
+      computeFingerprint: () => Promise<{ fingerprint: string }> | { fingerprint: string };
+    };
+    local = await mod.computeFingerprint();
+  } catch {
+    local = null;
+  }
+
   try {
     const res = await fetch(`${base}/api/public/build-info`, {
       signal: AbortSignal.timeout(20_000),
     });
-    const body = res.ok ? ((await res.json()) as { commit?: string; builtAt?: string }) : null;
+    if (!res.ok) {
+      record("base URL resolves", false, `${base} answered ${res.status}`);
+      return;
+    }
+    let body: { commit?: string; builtAt?: string; fingerprint?: string } | null = null;
+    try {
+      body = (await res.json()) as typeof body;
+    } catch {
+      body = null;
+    }
+    if (!body?.fingerprint) {
+      record(
+        "base URL resolves",
+        false,
+        `${base} answers 200 but serves no build fingerprint — something else is on this hostname, not this app. A customer's container would post metadata into it and lose every event.`,
+      );
+      return;
+    }
     record(
       "base URL resolves",
-      res.ok,
-      res.ok
-        ? `${base} — deployed ${body?.builtAt ?? "?"} (${(body?.commit ?? "?").slice(0, 8)})`
-        : `${base} answered ${res.status}`,
+      true,
+      `${base} — deployed ${body.builtAt ?? "?"} (${(body.commit ?? "?").slice(0, 8)}) fingerprint ${body.fingerprint}`,
     );
+    if (local) {
+      const fresh = local.fingerprint === body.fingerprint;
+      record(
+        "base URL serves the current build",
+        fresh,
+        fresh
+          ? `served fingerprint matches the working tree (${body.fingerprint})`
+          : `served ${body.fingerprint}, working tree ${local.fingerprint} — the address every quickstart names is running an older build. Publish before onboarding anyone.`,
+      );
+    }
   } catch (err) {
     record(
       "base URL resolves",
@@ -56,6 +105,7 @@ async function baseUrlResolves(): Promise<void> {
     );
   }
 }
+
 
 /**
  * The ingest route must exist and must refuse an unauthenticated push. A 404
