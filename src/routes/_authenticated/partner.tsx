@@ -34,30 +34,37 @@ const usd = (n: number) =>
 
 function PartnerPage() {
   const partner = useQuery({ queryKey: ["my-partner"], queryFn: () => getMyPartner() });
-  const [claiming, setClaiming] = useState(false);
+  const [claim, setClaim] = useState<"idle" | "running" | "done">("idle");
 
   // An approved applicant signs in for the first time with the email they
   // applied with: the account links itself here, once, instead of waiting on a
   // manual database insert.
   useEffect(() => {
-    if (partner.isPending || partner.data || claiming) return;
+    if (partner.isPending || partner.data || claim !== "idle") return;
     let cancelled = false;
-    setClaiming(true);
+    setClaim("running");
     void claimPartnerMembership()
-      .then((r) => {
-        if (!cancelled && r.partnerId) void partner.refetch();
+      .then(async (r) => {
+        if (cancelled) return;
+        if (r.partnerId) await partner.refetch();
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setClaim("done");
+      });
     return () => {
       cancelled = true;
     };
-  }, [partner.isPending, partner.data, claiming, partner]);
+  }, [partner.isPending, partner.data, claim, partner]);
 
   if (partner.isPending) return <Shell>Loading your partner account…</Shell>;
   if (partner.isError)
     return <Shell>We could not read your partner account. Try again shortly.</Shell>;
+  // Never show "you aren't a partner" while the link is still being checked.
+  if (!partner.data && claim !== "done") return <Shell>Linking your partner account…</Shell>;
   if (!partner.data) return <NotAPartner />;
   return <PartnerDashboardView data={partner.data} />;
+
 }
 
 
