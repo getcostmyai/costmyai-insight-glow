@@ -7,6 +7,10 @@ contains prompts, completions, or credentials — only metadata (model, host, ta
 token counts, latency, status) and, optionally, the invoiced totals it reads locally
 from your providers.
 
+**Handing this to an engineer who has never seen CostMyAI? Give them `CONNECT.md`** — the
+complete step-by-step deployment guide, with verification and troubleshooting. This file is
+the short version.
+
 Read `DECISIONS.md` for the guarantees behind that sentence — pass-through keys, no
 retry of a paid completion, byte-identical provider errors, bounded spool.
 
@@ -21,9 +25,9 @@ keeps queueing locally and tells you exactly what happened.
 One container per provider — `COSTMYAI_UPSTREAM_URL` names the upstream it fronts.
 
 ```bash
-docker run -d --name costmyai \
+docker run -d --name costmyai --restart unless-stopped \
   -e COSTMYAI_INGEST_TOKEN=cma_live_xxxxxxxxxxxxxxxxxxxxxxxx \
-  -e COSTMYAI_BASE_URL=https://app.costmyai.com \
+  -e COSTMYAI_BASE_URL=https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app \
   -e COSTMYAI_UPSTREAM_URL=https://api.openai.com \
   -v costmyai-spool:/var/lib/costmyai/spool \
   -p 8787:8787 \
@@ -31,14 +35,19 @@ docker run -d --name costmyai \
 ```
 
 For Anthropic, run a second one with `COSTMYAI_UPSTREAM_URL=https://api.anthropic.com`
-on another port.
+and `-p 8788:8787`.
 
 ## 3. Point your SDK at it
 
+The suffix differs per provider, because each SDK appends its own paths — an Anthropic
+client pointed at a base ending in `/v1` gets a 404 from Anthropic that reads like a
+broken proxy.
+
 ```bash
-export OPENAI_BASE_URL=http://localhost:8787/v1
-export ANTHROPIC_BASE_URL=http://localhost:8787
+export OPENAI_BASE_URL=http://localhost:8787/v1     # container fronting api.openai.com
+export ANTHROPIC_BASE_URL=http://localhost:8788     # container fronting api.anthropic.com
 ```
+
 
 Your key stays exactly where it is. Requests pass straight through with your own
 credentials; token counts are read off the response envelope. If CostMyAI is

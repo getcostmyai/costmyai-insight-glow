@@ -16,7 +16,7 @@
   "engines": {
     "node": ">=22"
   },
-  "files": ["dist", "README.md", "DECISIONS.md"],
+  "files": ["dist", "README.md", "CONNECT.md", "DECISIONS.md"],
   "devDependencies": {
     "@types/node": "^22.15.0",
     "typescript": "5.9.2"

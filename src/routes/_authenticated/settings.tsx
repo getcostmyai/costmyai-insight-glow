@@ -8,8 +8,11 @@ import {
   BACKFILL_LOOKBACK_DAYS,
   CONTAINER_DEFAULTS,
   dockerRunSnippet,
+  PROVIDER_PRESETS,
   ROLLING_WINDOW_DAYS,
+  sdkBaseUrl,
 } from "@/lib/ingest/contract";
+
 
 import {
   createIngestToken,
@@ -242,41 +245,156 @@ function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onDismiss:
   );
 }
 
+/**
+ * The quickstart a stranger actually follows (Dispatch 124).
+ *
+ * Everything below renders from CONTAINER_DEFAULTS / PROVIDER_PRESETS — the
+ * same constants the container and the package README read — because the
+ * snippet and the docs used to disagree on the env var name, the port and the
+ * image tag, and the copy a real customer pasted was the wrong one.
+ *
+ * What the audit found missing for an outsider, and is now here: the SDK base
+ * URL differs per provider (an Anthropic client appending /v1/messages to
+ * ".../v1" 404s and looks like a broken proxy), a verify step, what happens
+ * when a provider's envelope isn't one of the six shapes, and the four real
+ * failure modes with the command that distinguishes them.
+ */
 function Quickstart({ token }: { token: string | null }) {
   const shown = token ?? "cma_live_…";
+  const [presetId, setPresetId] = useState(PROVIDER_PRESETS[0].id);
+  const preset = PROVIDER_PRESETS.find((p) => p.id === presetId) ?? PROVIDER_PRESETS[0];
+
   return (
     <section className="mt-8 rounded-2xl border border-border bg-card p-6">
       <h2 className="text-sm font-semibold">Quickstart</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        One container per provider. Your provider key stays in your own environment — the
-        connector copies your <span className="font-mono">Authorization</span> header through
-        untouched and never reads or stores it.
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        The connector runs <span className="font-semibold text-foreground">in your environment</span>
+        , one container per provider.{" "}
+        <span className="font-semibold text-foreground">
+          Your application keeps sending its own provider key exactly as it does today.
+        </span>{" "}
+        The connector copies your <span className="font-mono">Authorization</span> header (and{" "}
+        <span className="font-mono">x-api-key</span>, and every other header) to the provider byte
+        for byte and never reads, stores or logs it. We hold no provider credential of yours, so
+        there is nothing for you to paste here and nothing of yours for us to leak. The only thing
+        that changes in your application is one line: the base URL.
       </p>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {PROVIDER_PRESETS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setPresetId(p.id)}
+            className={`rounded-full border px-3 py-1.5 text-xs transition ${
+              p.id === preset.id
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <Step n={1} title="Run the connector">
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed">
+          {dockerRunSnippet(shown, preset.upstream, {
+            name: `costmyai-${preset.id}`,
+            port: preset.port,
+          })}
+        </pre>
+      </Step>
+
+      <Step n={2} title="Point your SDK at it">
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs">
+          {`export ${preset.sdkEnv}=${sdkBaseUrl(preset)}`}
+        </pre>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Nothing else changes. Your key, your models, your code paths — identical. Provider errors
+          come back with the provider's own status, headers and body; a paid completion is never
+          retried; streaming responses stream through as they arrive.
+        </p>
+      </Step>
+
+      <Step n={3} title="Verify it">
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs">
+          {`curl -s http://localhost:${preset.port}/healthz`}
+        </pre>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Reports the upstream it fronts, queue depth, last successful flush and last error. Make
+          one real call through your SDK, then check that{" "}
+          <span className="font-mono">queued</span> returns to 0 and{" "}
+          <span className="font-mono">lastFlushAt</span> is recent. Your first events appear on the
+          dashboard within about a minute. Events queue to disk if we're unreachable, so a CostMyAI
+          outage never touches your inference path.
+        </p>
+      </Step>
+
       {/*
-        Rendered from CONTAINER_DEFAULTS, the same constant the package README and the
-        container itself read. This snippet and the docs used to disagree on the env var
-        name, the port and the image tag, and the copy a real customer pasted was the
-        wrong one.
+        Dispatch 104 enumerated six shapes across the tracked providers. A
+        customer whose provider is not one of them deserves to know what that
+        means before they wire it up, not after.
       */}
-      <pre className="mt-4 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed">
-        {dockerRunSnippet(shown)}
-      </pre>
-      <p className="mt-3 text-xs text-muted-foreground">
-        Then point your SDK at{" "}
-        <span className="font-mono">http://localhost:{CONTAINER_DEFAULTS.port}/v1</span> instead of
-        the provider. Events queue locally if we're unreachable, so a CostMyAI outage never touches
-        your inference.
-      </p>
+      <div className="mt-6 rounded-xl border border-border p-4">
+        <p className="text-xs font-semibold">If we don't recognise your provider's responses</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          The connector reads envelopes, not models — six shapes cover the tracked providers
+          (OpenAI-compatible, Anthropic, Google, Cohere, Bedrock Converse, Tencent Hunyuan), so every
+          model a covered provider ships is covered the day it ships. Anything else is still
+          forwarded untouched — your inference never depends on us recognising it — and the event is
+          reported honestly as <span className="font-mono">unparsed</span> rather than guessed at:
+          you'll see the request, its model, host, latency and status, with no token counts and no
+          cost. We keep a content-free structural skeleton of those responses (keys and numbers, every
+          string erased before it leaves your network), so when the parser ships your earlier traffic
+          is re-read and the history stops under-reporting. Tell us the provider and we'll add the
+          shape.
+        </p>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-border p-4">
+        <p className="text-xs font-semibold">If something goes wrong</p>
+        <dl className="mt-2 space-y-2 text-xs text-muted-foreground">
+          <Trouble symptom="Your calls work, but nothing appears on the dashboard">
+            Wrong or revoked ingest token. <span className="font-mono">/healthz</span> shows{" "}
+            <span className="font-mono">queued</span> climbing and a 401 in{" "}
+            <span className="font-mono">lastError</span>. Rotate above and redeploy — the queued
+            metadata drains once the new token is accepted, nothing is lost.
+          </Trouble>
+          <Trouble symptom="Your calls fail with a 502 from the connector">
+            The container can't reach the provider. Check egress from wherever it runs:{" "}
+            <span className="font-mono">docker exec costmyai-{preset.id} wget -qO- {preset.upstream}</span>
+            . A 504 instead means the provider didn't send headers within the timeout — never a
+            retry, so you're never billed twice.
+          </Trouble>
+          <Trouble symptom="Your calls return 404 from the provider">
+            Wrong base URL for this SDK. It must be exactly{" "}
+            <span className="font-mono">{sdkBaseUrl(preset)}</span> for {preset.label} — the suffix
+            differs per provider.
+          </Trouble>
+          <Trouble symptom="Wrong upstream configured">
+            One container fronts one provider. Sending Anthropic traffic to a container whose{" "}
+            <span className="font-mono">{CONTAINER_DEFAULTS.env.upstream}</span> is OpenAI reaches
+            OpenAI and fails there. <span className="font-mono">/healthz</span> names the upstream it
+            is actually fronting — check that first.
+          </Trouble>
+          <Trouble symptom="Container exits immediately on start">
+            A required variable is missing; the container says which one and stops rather than
+            running half-configured. <span className="font-mono">docker logs costmyai-{preset.id}</span>
+            .
+          </Trouble>
+        </dl>
+      </div>
+
       {/*
         The backfill promise, rendered from the same constants the poll planner
         reads (src/lib/ingest/backfill.ts) and the package README quotes. It used
         to be a sentence typed into the docs only, which is how a promise and the
         code behind it drift apart.
       */}
-      <p className="mt-3 text-xs text-muted-foreground">
-        <span className="font-semibold text-foreground">Billing reconciliation, day one.</span> The
-        first poll after you connect a provider looks back{" "}
-        <span className="font-mono">{BACKFILL_LOOKBACK_DAYS}</span> days, so you see a real
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+        <span className="font-semibold text-foreground">Billing reconciliation, day one.</span>{" "}
+        Optional: mount read-only billing credentials and the first poll after you connect a provider
+        looks back <span className="font-mono">{BACKFILL_LOOKBACK_DAYS}</span> days, so you see a real
         reconciled month immediately instead of waiting for one to accumulate. Every poll after that
         re-reads only the last <span className="font-mono">{ROLLING_WINDOW_DAYS}</span> days, because
         invoices settle late but settled invoices don't change. Captures are idempotent, so a
@@ -288,6 +406,30 @@ function Quickstart({ token }: { token: string | null }) {
     </section>
   );
 }
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-6">
+      <p className="text-xs font-semibold">
+        <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 font-mono text-[11px] tabular-nums text-primary">
+          {n}
+        </span>
+        {title}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function Trouble({ symptom, children }: { symptom: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="font-medium text-foreground">{symptom}</dt>
+      <dd className="mt-0.5 leading-relaxed">{children}</dd>
+    </div>
+  );
+}
+
 
 
 function Shell({ children }: { children: React.ReactNode }) {
