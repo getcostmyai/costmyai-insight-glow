@@ -55,7 +55,7 @@ const stripSnapshotDate = (s: string) => s.replace(/[-_@:]?v?\d{8}$/, "").replac
  * digit-dash-digit pair is rewritten, so `gpt-4o-mini` and `claude-3-haiku`
  * (where the dash is a word boundary, not a decimal point) are untouched.
  */
-const dottedVersion = (s: string) => s.replace(/(\d)-(\d)(?![\d-]*[a-z])/g, "$1.$2");
+const dottedVersion = (s: string) => s.replace(/(\d)-(\d)(?=$|[-.])/g, "$1.$2");
 
 /** Every spelling of one reported key, most literal first. */
 function variantsOf(rawKey: string): string[] {
@@ -71,6 +71,8 @@ function variantsOf(rawKey: string): string[] {
   return [...seen];
 }
 
+
+export type ModelResolver = (rawKey: string) => ModelResolution;
 
 /**
  * Build a resolver over a snapshot of the catalog and the alias table. Pure and
@@ -101,7 +103,7 @@ export function buildModelResolver(catalogKeys: Iterable<string>, aliases: Alias
 
   return (rawKey: string): ModelResolution => {
     const raw = rawKey;
-    const candidates = [normalize(rawKey), stripDecorations(normalize(rawKey))];
+    const candidates = variantsOf(rawKey);
 
     for (const c of candidates) {
       const exact = canonical.get(c);
