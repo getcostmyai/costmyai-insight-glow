@@ -48,3 +48,38 @@ export const setPartnerApplicationStatus = createServerFn({ method: "POST" })
     await setApplicationStatus(context.supabase, context.userId, data.id, data.status, data.note);
     return { ok: true };
   });
+
+/**
+ * Approval with a real side effect: creates the partner account, mints a unique
+ * referral code and marks the application approved, in one transaction. The
+ * admin check lives inside the database routine, so the argument alone buys
+ * nothing. Idempotent — approving twice returns the same partner.
+ */
+export const approveAndProvisionPartner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => {
+    if (!UUID.test(data?.id ?? "")) throw new Error("Application not found");
+    return { id: data.id };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: result, error } = await context.supabase.rpc(
+      "provision_partner_from_application",
+      { _application_id: data.id },
+    );
+    if (error) throw error;
+    return result as { partner_id: string; referral_code: string; created: boolean };
+  });
+
+/**
+ * Links the signed-in account to a partner account provisioned for the same
+ * email address. Identity comes from the session inside the database routine;
+ * nothing here is caller-supplied.
+ */
+export const claimPartnerMembership = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("claim_partner_membership");
+    if (error) throw error;
+    return { partnerId: (data as string | null) ?? null };
+  });
+

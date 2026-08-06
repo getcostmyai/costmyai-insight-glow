@@ -5,9 +5,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CalendarCheck, ClipboardList, Loader2, Mail, Phone } from "lucide-react";
 
 import {
+  approveAndProvisionPartner,
   listPartnerApplications,
   setPartnerApplicationStatus,
 } from "@/lib/partner-application.functions";
+
 import { APPLICATION_STATUSES, type ApplicationStatus } from "@/lib/partner-application";
 
 export const Route = createFileRoute("/_authenticated/admin/partner-applications")({
@@ -91,8 +93,11 @@ type Row = Awaited<ReturnType<typeof listPartnerApplications>>[number];
 
 function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void }) {
   const setStatus = useServerFn(setPartnerApplicationStatus);
+  const provision = useServerFn(approveAndProvisionPartner);
   const [note, setNote] = useState(row.reviewerNote ?? "");
-  const [busy, setBusy] = useState<ApplicationStatus | null>(null);
+  const [busy, setBusy] = useState<ApplicationStatus | "provision" | null>(null);
+  const [provisioned, setProvisioned] = useState<string | null>(null);
+  const [provisionError, setProvisionError] = useState<string | null>(null);
 
   async function apply(status: ApplicationStatus) {
     setBusy(status);
@@ -103,6 +108,21 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
       setBusy(null);
     }
   }
+
+  async function approveAndActivate() {
+    setBusy("provision");
+    setProvisionError(null);
+    try {
+      const result = await provision({ data: { id: row.id } });
+      setProvisioned(result.referral_code);
+      onChanged();
+    } catch (err) {
+      setProvisionError(err instanceof Error ? err.message : "Could not activate the partner.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
@@ -164,7 +184,29 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
             {busy === s ? "…" : s}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={approveAndActivate}
+          disabled={busy !== null}
+          className="rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {busy === "provision" ? "…" : "Approve & activate partner"}
+        </button>
       </div>
+
+      {provisioned && (
+        <p className="mt-3 rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          Partner account is live. Referral code{" "}
+          <span className="font-semibold text-foreground">{provisioned}</span>. They see it after
+          signing in at /partner/login with {row.email}.
+        </p>
+      )}
+      {provisionError && (
+        <p className="mt-3 rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive">
+          {provisionError}
+        </p>
+      )}
+
     </div>
   );
 }
