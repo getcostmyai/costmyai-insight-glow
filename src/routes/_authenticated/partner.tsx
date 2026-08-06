@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Copy, Handshake, TrendingUp } from "lucide-react";
 
 import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
+import { claimPartnerMembership } from "@/lib/partner-application.functions";
+
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 
 export const Route = createFileRoute("/_authenticated/partner")({
