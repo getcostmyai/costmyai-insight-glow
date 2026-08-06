@@ -63,7 +63,7 @@ const HAIRLINE = "#E4E2DE";
 const MUTED = "#6B6A76";
 
 /** Rough advance width for Inter at a weight of 500–600, good enough for layout. */
-const advance = (text: string, size: number) => text.length * size * 0.56;
+const advance = (text: string, size: number) => text.length * size * 0.52;
 
 /**
  * Names are set as large as the column allows and only shrink when they must,
@@ -71,8 +71,8 @@ const advance = (text: string, size: number) => text.length * size * 0.56;
  * instead of one of them being cut with an ellipsis at a fixed character count.
  */
 function fitName(text: string, maxWidth: number, maxSize: number, minSize: number) {
-  const size = Math.max(minSize, Math.min(maxSize, maxWidth / (text.length * 0.56)));
-  const maxChars = Math.floor(maxWidth / (size * 0.56));
+  const size = Math.max(minSize, Math.min(maxSize, maxWidth / (text.length * 0.52)));
+  const maxChars = Math.floor(maxWidth / (size * 0.52));
   const label = text.length <= maxChars ? text : `${text.slice(0, maxChars - 1).trimEnd()}…`;
   return { label, size };
 }
@@ -143,9 +143,9 @@ ${lockup({ size: 28, baseline: 92, align: "center", at: 300 })}
 <text x="300" y="214" text-anchor="middle" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
 <text x="300" y="${292 + (46 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.2">${esc(name.label)}</text>
 ${tierChip(300, 348, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedAt)}`)}
-<rect x="88" y="436" width="424" height="1" fill="${HAIRLINE}"/>
-<text x="300" y="486" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
-<text x="300" y="524" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
+<rect x="88" y="424" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="474" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
+<text x="300" y="512" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
 
