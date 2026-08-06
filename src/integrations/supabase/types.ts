@@ -1987,6 +1987,7 @@ export type Database = {
       }
       backup_export_counts: { Args: never; Returns: Json }
       backup_export_sql: { Args: never; Returns: string }
+      benchmark_ask_threshold: { Args: never; Returns: number }
       benchmark_cut: {
         Args: { _industry?: string; _revenue_band?: string; _use_case?: string }
         Returns: {
@@ -1996,6 +1997,7 @@ export type Database = {
           p75_usd: number
         }[]
       }
+      benchmark_eligible_companies: { Args: never; Returns: number }
       benchmark_k_floor: { Args: never; Returns: number }
       clawback_commission: {
         Args: { _environment?: string; _invoice_id: string; _reason: string }
