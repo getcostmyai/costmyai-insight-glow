@@ -115,15 +115,57 @@ export interface Finding {
 export const MANIFEST_VERSION = 1;
 
 /**
- * One query chain, as text. Slicing from `.from("table")` to the next statement
- * boundary is crude but it is the whole chain in practice: these are builder
- * chains that end in an await, a semicolon at depth zero, or a closing brace.
+ * One query chain, as text, walked by bracket depth rather than by whitespace.
+ *
+ * Dispatch 127: the previous version stopped at the first blank line, which is
+ * not a statement boundary in a builder chain — a stray blank line between
+ * `.select(...)` and `.eq("is_active", true)` truncated the chain and hid a
+ * filter that was really there. Worse, the same crude slice could run past the
+ * chain's real end into a NEIGHBOURING query and borrow its filters, which
+ * hides a genuinely unfiltered read. The walk below skips comments and string
+ * literals, so neither a comma in prose nor a comma in a column list can be
+ * mistaken for a statement boundary.
  */
 function chainAfter(text: string, index: number): string {
-  const slice = text.slice(index, index + 900);
-  const stop = slice.search(/;\s|\n\s*\}\s*\n|\n\n/);
-  return stop === -1 ? slice : slice.slice(0, stop);
+  const slice = text.slice(index, index + 1600);
+  let depth = 0;
+  for (let i = 0; i < slice.length; i++) {
+    const c = slice[i]!;
+    // Comments and strings are text, not syntax: step over them whole.
+    if (c === "/" && slice[i + 1] === "/") {
+      const nl = slice.indexOf("\n", i);
+      i = nl === -1 ? slice.length : nl - 1;
+      continue;
+    }
+    if (c === "/" && slice[i + 1] === "*") {
+      const end = slice.indexOf("*/", i + 2);
+      i = end === -1 ? slice.length : end + 1;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      while (j < slice.length && slice[j] !== c) j += slice[j] === "\\" ? 2 : 1;
+      i = j;
+      continue;
+    }
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") {
+      depth--;
+      // Ran past the expression that contains the chain.
+      if (depth < 0) return slice.slice(0, i);
+    } else if (depth === 0 && (c === ";" || c === ",")) {
+      return slice.slice(0, i);
+    } else if (depth === 0 && c === "\n") {
+      // A chain only continues on a line whose first token is `.`.
+      const rest = slice.slice(i + 1);
+      const next = rest.replace(/^\s*(?:\/\/[^\n]*\n\s*)*/, "");
+      if (!next.startsWith(".")) return slice.slice(0, i);
+    }
+  }
+  return slice;
 }
+
+
 
 /**
  * Scan one source file for read queries against tables worth watching.
