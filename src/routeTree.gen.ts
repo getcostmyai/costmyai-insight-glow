@@ -69,7 +69,6 @@ import { Route as ApiPublicSyncPartnerPayoutsRouteImport } from './routes/api/pu
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
-import { Route as ApiPublicQa136tmpFormatRouteImport } from './routes/api/public/qa136tmp/$format'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
@@ -386,11 +385,6 @@ const ApiPublicSyncBackupExportRoute =
     path: '/api/public/sync/backup-export',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicQa136tmpFormatRoute = ApiPublicQa136tmpFormatRouteImport.update({
-  id: '/api/public/qa136tmp/$format',
-  path: '/api/public/qa136tmp/$format',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -467,7 +461,6 @@ export interface FileRoutesByFullPath {
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/qa136tmp/$format': typeof ApiPublicQa136tmpFormatRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
@@ -530,7 +523,6 @@ export interface FileRoutesByTo {
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/qa136tmp/$format': typeof ApiPublicQa136tmpFormatRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
@@ -598,7 +590,6 @@ export interface FileRoutesById {
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/qa136tmp/$format': typeof ApiPublicQa136tmpFormatRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
@@ -666,7 +657,6 @@ export interface FileRouteTypes {
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
-    | '/api/public/qa136tmp/$format'
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
@@ -729,7 +719,6 @@ export interface FileRouteTypes {
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
-    | '/api/public/qa136tmp/$format'
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
@@ -796,7 +785,6 @@ export interface FileRouteTypes {
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
-    | '/api/public/qa136tmp/$format'
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
@@ -842,7 +830,6 @@ export interface RootRouteChildren {
   ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
-  ApiPublicQa136tmpFormatRoute: typeof ApiPublicQa136tmpFormatRoute
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
@@ -1279,13 +1266,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncBackupExportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/qa136tmp/$format': {
-      id: '/api/public/qa136tmp/$format'
-      path: '/api/public/qa136tmp/$format'
-      fullPath: '/api/public/qa136tmp/$format'
-      preLoaderRoute: typeof ApiPublicQa136tmpFormatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -1430,7 +1410,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
-  ApiPublicQa136tmpFormatRoute: ApiPublicQa136tmpFormatRoute,
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
