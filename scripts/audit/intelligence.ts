@@ -461,12 +461,25 @@ async function main() {
       }
       // (b) Dispatch 116 sentinel bug: a frozen saturation row that counted
       //     0.000 scores carries a spread the instruments never produced.
+      //     Dispatch 126: this must be sentinel-specific, not a plain count
+      //     comparison against today. A frozen count legitimately differs from
+      //     the present one whenever the instrument gains or loses models after
+      //     the freeze, and that drift is not a bug. The bug has a signature:
+      //     the frozen figures reproduce the sentinel-INCLUSIVE computation
+      //     while the measured one differs.
       for (const s of p.saturation ?? []) {
-        const measured = benchmarks.filter(
-          (b) => b.suite === s.suite && b.task_class === s.taskClass && Number(b.score) > 0,
+        const rows = benchmarks.filter(
+          (b) => b.suite === s.suite && b.task_class === s.taskClass,
         );
-        if (measured.length && s.models !== measured.length) staleBand++;
+        const measured = rows.filter((b) => Number(b.score) > 0);
+        if (rows.length === measured.length) continue; // no sentinel to mistake
+        const withSentinel = separationOfScores(rows.map((b) => Number(b.score))) ?? 0;
+        const clean = separationOfScores(measured.map((b) => Number(b.score))) ?? 0;
+        const countsSentinel =
+          s.models === rows.length || (near(s.spread, withSentinel, 1e-6) && !near(clean, withSentinel, 1e-6));
+        if (countsSentinel) staleBand++;
       }
+
       // (c) Dispatch 116 pseudo-host bug: providers count including the aggregate.
       if (p.liveHosts != null && p.liveHosts > new Set(real.map((r) => r.host)).size) staleHosts++;
     }
