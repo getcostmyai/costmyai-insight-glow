@@ -132,20 +132,20 @@ const DEFS = `<defs>
 /** Square embeddable badge, 600 × 600. */
 export function buildBadgeSvg(b: PartnerBadge, verifyUrl: string): string {
   const host = verifyUrl.replace(/^https?:\/\//, "");
+  const name = fitName(b.name, 452, 46, 26);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
 ${DEFS}
 <rect width="600" height="600" rx="36" fill="${PAPER}"/>
 <rect x="0.75" y="0.75" width="598.5" height="598.5" rx="35.25" fill="none" stroke="${HAIRLINE}" stroke-width="1.5"/>
 <rect x="36" y="0" width="528" height="3" fill="url(#rule)"/>
-${mark(232, 62, 40)}
-${wordmark(284, 92, 30)}
-<rect x="80" y="146" width="440" height="1" fill="${HAIRLINE}"/>
-<text x="300" y="212" text-anchor="middle" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
-<text x="300" y="292" text-anchor="middle" font-family="Inter" font-size="46" font-weight="600" fill="${INK}" letter-spacing="-1.2">${esc(fit(b.name, 22))}</text>
-${tierChip(300, 342, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedAt)}`)}
-<rect x="80" y="452" width="440" height="1" fill="${HAIRLINE}"/>
-<text x="300" y="500" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
-<text x="300" y="536" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
+${lockup({ size: 28, baseline: 92, align: "center", at: 300 })}
+<rect x="88" y="148" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="214" text-anchor="middle" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
+<text x="300" y="${292 + (46 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.2">${esc(name.label)}</text>
+${tierChip(300, 348, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedAt)}`)}
+<rect x="88" y="436" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="486" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
+<text x="300" y="524" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
 
@@ -159,16 +159,16 @@ ${tierChip(300, 342, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedA
  */
 export function buildPersonalBannerSvg(b: PartnerBadge, verifyUrl: string): string {
   const host = verifyUrl.replace(/^https?:\/\//, "");
+  const name = fitName(b.name, 700, 58, 34);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1584" height="396" viewBox="0 0 1584 396">
 ${DEFS}
 <rect width="1584" height="396" fill="${PAPER}"/>
 <rect x="0" y="0" width="1584" height="4" fill="url(#rule)"/>
 <rect x="0" y="392" width="1584" height="4" fill="url(#rule)"/>
 <rect x="560" y="96" width="1" height="204" fill="${HAIRLINE}"/>
-${mark(1416, 40, 44)}
-${wordmark(1472, 71, 26)}
+${lockup({ size: 26, baseline: 76, align: "right", at: 1500 })}
 <text x="620" y="132" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
-<text x="620" y="212" font-family="Inter" font-size="58" font-weight="600" fill="${INK}" letter-spacing="-1.6">${esc(fit(b.name, 26))}</text>
+<text x="620" y="${210 + (58 - name.size) * 0.4}" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.6">${esc(name.label)}</text>
 <text x="620" y="262" font-family="Inter" font-size="26" font-weight="400" fill="${MUTED}">${esc(b.tierName)} · partner since ${esc(joinedLabel(b.joinedAt))}</text>
 <text x="620" y="330" font-family="JetBrains Mono" font-size="22" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
@@ -182,20 +182,21 @@ ${wordmark(1472, 71, 26)}
  */
 export function buildCompanyBannerSvg(b: PartnerBadge, verifyUrl: string): string {
   const host = verifyUrl.replace(/^https?:\/\//, "");
+  const name = fitName(b.name, 1500, 88, 52);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="4200" height="700" viewBox="0 0 4200 700">
 ${DEFS}
 <rect width="4200" height="700" fill="${PAPER}"/>
 <rect x="0" y="0" width="4200" height="6" fill="url(#rule)"/>
 <rect x="0" y="694" width="4200" height="6" fill="url(#rule)"/>
-${mark(1996, 96, 64)}
-${wordmark(2078, 144, 42)}
-<rect x="1500" y="212" width="1200" height="1" fill="${HAIRLINE}"/>
-<text x="2100" y="286" text-anchor="middle" font-family="Inter" font-size="30" font-weight="600" fill="${INDIGO}" letter-spacing="11">CERTIFIED PARTNER</text>
-<text x="2100" y="404" text-anchor="middle" font-family="Inter" font-size="88" font-weight="600" fill="${INK}" letter-spacing="-2.4">${esc(fit(b.name, 34))}</text>
-<text x="2100" y="472" text-anchor="middle" font-family="Inter" font-size="36" font-weight="400" fill="${MUTED}">${esc(b.tierName)} · partner since ${esc(joinedLabel(b.joinedAt))}</text>
-<text x="2100" y="580" text-anchor="middle" font-family="JetBrains Mono" font-size="32" font-weight="400" fill="${INK}">${esc(host)}</text>
+${lockup({ size: 40, baseline: 152, align: "center", at: 2100 })}
+<rect x="1500" y="216" width="1200" height="1" fill="${HAIRLINE}"/>
+<text x="2100" y="290" text-anchor="middle" font-family="Inter" font-size="30" font-weight="600" fill="${INDIGO}" letter-spacing="11">CERTIFIED PARTNER</text>
+<text x="2100" y="${408 + (88 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-2.4">${esc(name.label)}</text>
+<text x="2100" y="476" text-anchor="middle" font-family="Inter" font-size="36" font-weight="400" fill="${MUTED}">${esc(b.tierName)} · partner since ${esc(joinedLabel(b.joinedAt))}</text>
+<text x="2100" y="584" text-anchor="middle" font-family="JetBrains Mono" font-size="32" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
+
 
 
 export type BannerFormat = "personal" | "company";
