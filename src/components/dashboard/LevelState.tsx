@@ -1,6 +1,12 @@
 import { ArrowUpRight, Clock, Lock, PlugZap, ShieldCheck, Sparkles } from "lucide-react";
 
 import { emptyCopy, type DataState } from "@/lib/dashboard/onboarding";
+import {
+  lockedFigureLabel,
+  lockedHeadline,
+  lockedMeasurementNote,
+} from "@/lib/dashboard/zero-data-copy";
+
 import { OBJECTIVE_OPTIONS } from "@/lib/dashboard/objective";
 import { usd } from "@/lib/dashboard-data";
 import type { ObjectiveKind, PlanTier, RecKind } from "@/lib/engine/types";
