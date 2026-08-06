@@ -52,10 +52,12 @@ let fontCache: Uint8Array[] | null = null;
  */
 export async function loadInterFonts(): Promise<Uint8Array[]> {
   if (fontCache) return fontCache;
-  const css = await fetch("https://fonts.googleapis.com/css2?family=Inter:wght@400;600").then((r) =>
-    r.text(),
-  );
-  const urls = [...css.matchAll(/url\((https:\/\/[^)]+\.ttf)\)/g)].map((m) => m[1]).slice(0, 2);
+  // Inter carries every brand surface; JetBrains Mono carries identifiers and
+  // verification URLs, exactly as the live product loads them in __root.
+  const css = await fetch(
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500",
+  ).then((r) => r.text());
+  const urls = [...css.matchAll(/url\((https:\/\/[^)]+\.ttf)\)/g)].map((m) => m[1]).slice(0, 6);
   if (urls.length === 0) throw new Error("no TTF face returned for Inter");
   const buffers = await Promise.all(
     urls.map(async (u) => {

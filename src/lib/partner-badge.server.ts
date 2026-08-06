@@ -45,47 +45,107 @@ export function joinedLabel(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
-const INK = "#11131D";
-const SURFACE = "#171A26";
-const PRIMARY = "#7945EC";
-const PRIMARY_SOFT = "#A47BF5";
-const MUTED = "#9A9BA6";
-const PAPER = "#FAFAFC";
+/*
+ * Brand surface, one set of values.
+ *
+ * These are the live product's own tokens, not a badge-only palette: warm white
+ * paper, near-black ink, indigo as the single accent. Inter carries every
+ * label; JetBrains Mono carries the verification URL, exactly the way the
+ * product treats identifiers everywhere else. Restraint is the point — a
+ * consultant should be able to put this next to a Stripe or Vercel mark without
+ * it looking louder.
+ */
+const PAPER = "#FAFAF9";
+const INK = "#14131A";
+const INDIGO = "#4338CA";
+const INDIGO_WASH = "#EEF0FE";
+const HAIRLINE = "#E4E2DE";
+const MUTED = "#6B6A76";
 
-/** Truncate on estimated advance width so long names never collide with the edge. */
-function fit(text: string, maxChars: number): string {
-  return text.length <= maxChars ? text : `${text.slice(0, maxChars - 1).trimEnd()}…`;
+/** Rough advance width for Inter at a weight of 500–600, good enough for layout. */
+const advance = (text: string, size: number) => text.length * size * 0.52;
+
+/**
+ * Names are set as large as the column allows and only shrink when they must,
+ * so "Kai Ng" and "Vincent Weber Consulting" both sit on one confident line
+ * instead of one of them being cut with an ellipsis at a fixed character count.
+ */
+function fitName(text: string, maxWidth: number, maxSize: number, minSize: number) {
+  const size = Math.max(minSize, Math.min(maxSize, maxWidth / (text.length * 0.52)));
+  const maxChars = Math.floor(maxWidth / (size * 0.52));
+  const label = text.length <= maxChars ? text : `${text.slice(0, maxChars - 1).trimEnd()}…`;
+  return { label, size };
 }
 
+/**
+ * The mark: a solid indigo square with the product's rounded corner radius and
+ * a single warm-white arc, the same glyph the wordmark sits beside in-app.
+ */
 function mark(x: number, y: number, size: number): string {
-  const r = size / 2;
+  const s = size;
   return `<g transform="translate(${x} ${y})">
-    <circle cx="${r}" cy="${r}" r="${r}" fill="url(#g)"/>
-    <path d="M ${r * 0.62} ${r * 0.68} A ${r * 0.45} ${r * 0.45} 0 1 0 ${r * 0.62} ${r * 1.34}"
-      fill="none" stroke="${PAPER}" stroke-width="${Math.max(2, size * 0.09)}" stroke-linecap="round"/>
+    <rect width="${s}" height="${s}" rx="${s * 0.28}" fill="${INDIGO}"/>
+    <path d="M ${s * 0.66} ${s * 0.34} A ${s * 0.22} ${s * 0.22} 0 1 0 ${s * 0.66} ${s * 0.66}"
+      fill="none" stroke="${PAPER}" stroke-width="${Math.max(2, s * 0.1)}" stroke-linecap="round"/>
   </g>`;
 }
 
+/**
+ * Mark plus "CostMyAI" wordmark ("My" in indigo), placed as one lockup so the
+ * pair is optically centred or right-aligned rather than the text drifting off
+ * the canvas edge.
+ */
+function lockup(opts: {
+  size: number;
+  baseline: number;
+  align: "center" | "right";
+  at: number;
+}): string {
+  const { size, baseline, align, at } = opts;
+  const glyph = size * 1.34;
+  const gap = size * 0.5;
+  const textW = advance("CostMyAI", size) * 1.02;
+  const total = glyph + gap + textW;
+  const left = align === "center" ? at - total / 2 : at - total;
+  return `${mark(left, baseline - glyph * 0.82, glyph)}
+<text x="${left + glyph + gap}" y="${baseline}" font-family="Inter" font-size="${size}" font-weight="600" fill="${INK}" letter-spacing="${-size * 0.02}">Cost<tspan fill="${INDIGO}">My</tspan>AI</text>`;
+}
+
+function tierChip(cx: number, cy: number, size: number, label: string): string {
+  const w = advance(label, size) + size * 2.4;
+  const h = size * 2.1;
+  return `<g>
+    <rect x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${INDIGO_WASH}"/>
+    <text x="${cx}" y="${cy + size * 0.36}" text-anchor="middle" font-family="Inter" font-size="${size}" font-weight="600" fill="${INDIGO}" letter-spacing="${size * 0.02}">${esc(label)}</text>
+  </g>`;
+}
+
+
 const DEFS = `<defs>
-  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="${PRIMARY}"/><stop offset="1" stop-color="${PRIMARY_SOFT}"/>
+  <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="${INDIGO}" stop-opacity="0"/>
+    <stop offset="0.5" stop-color="${INDIGO}" stop-opacity="0.55"/>
+    <stop offset="1" stop-color="${INDIGO}" stop-opacity="0"/>
   </linearGradient>
 </defs>`;
 
-/** Square-ish embeddable badge, 600 × 600. */
+/** Square embeddable badge, 600 × 600. */
 export function buildBadgeSvg(b: PartnerBadge, verifyUrl: string): string {
+  const host = verifyUrl.replace(/^https?:\/\//, "");
+  const name = fitName(b.name, 452, 46, 26);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
 ${DEFS}
-<rect width="600" height="600" rx="40" fill="${INK}"/>
-<rect x="1" y="1" width="598" height="598" rx="39" fill="none" stroke="${PRIMARY}" stroke-opacity="0.35" stroke-width="2"/>
-${mark(252, 74, 96)}
-<text x="300" y="238" text-anchor="middle" font-family="Inter" font-size="26" font-weight="600" fill="${PRIMARY_SOFT}" letter-spacing="4">CERTIFIED PARTNER</text>
-<text x="300" y="306" text-anchor="middle" font-family="Inter" font-size="46" font-weight="600" fill="${PAPER}">${esc(fit(b.name, 22))}</text>
-<text x="300" y="356" text-anchor="middle" font-family="Inter" font-size="30" font-weight="400" fill="${MUTED}">${esc(b.tierName)} tier · since ${esc(joinedLabel(b.joinedAt))}</text>
-<rect x="80" y="404" width="440" height="1" fill="#2A2E3E"/>
-<text x="300" y="456" text-anchor="middle" font-family="Inter" font-size="26" font-weight="600" fill="${PAPER}">CostMyAI</text>
-<text x="300" y="502" text-anchor="middle" font-family="Inter" font-size="20" font-weight="400" fill="${MUTED}">Verify at</text>
-<text x="300" y="534" text-anchor="middle" font-family="Inter" font-size="20" font-weight="400" fill="${PRIMARY_SOFT}">${esc(verifyUrl.replace(/^https?:\/\//, ""))}</text>
+<rect width="600" height="600" rx="36" fill="${PAPER}"/>
+<rect x="0.75" y="0.75" width="598.5" height="598.5" rx="35.25" fill="none" stroke="${HAIRLINE}" stroke-width="1.5"/>
+<rect x="36" y="0" width="528" height="3" fill="url(#rule)"/>
+${lockup({ size: 28, baseline: 104, align: "center", at: 300 })}
+<rect x="88" y="160" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="226" text-anchor="middle" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
+<text x="300" y="${306 + (46 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.2">${esc(name.label)}</text>
+${tierChip(300, 360, 20, `${b.tierName} · partner since ${joinedLabel(b.joinedAt)}`)}
+<rect x="88" y="436" width="424" height="1" fill="${HAIRLINE}"/>
+<text x="300" y="484" text-anchor="middle" font-family="Inter" font-size="14" font-weight="600" fill="${MUTED}" letter-spacing="4">VERIFY THIS BADGE</text>
+<text x="300" y="522" text-anchor="middle" font-family="JetBrains Mono" font-size="19" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
 
@@ -99,16 +159,18 @@ ${mark(252, 74, 96)}
  */
 export function buildPersonalBannerSvg(b: PartnerBadge, verifyUrl: string): string {
   const host = verifyUrl.replace(/^https?:\/\//, "");
+  const name = fitName(b.name, 700, 58, 34);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1584" height="396" viewBox="0 0 1584 396">
 ${DEFS}
-<rect width="1584" height="396" fill="${INK}"/>
-<rect x="0" y="0" width="1584" height="396" fill="url(#g)" opacity="0.10"/>
-<rect x="560" y="0" width="2" height="396" fill="#2A2E3E"/>
-${mark(1424, 40, 56)}
-<text x="620" y="128" font-family="Inter" font-size="22" font-weight="600" fill="${PRIMARY_SOFT}" letter-spacing="5">COSTMYAI CERTIFIED PARTNER</text>
-<text x="620" y="206" font-family="Inter" font-size="60" font-weight="600" fill="${PAPER}">${esc(fit(b.name, 26))}</text>
-<text x="620" y="262" font-family="Inter" font-size="30" font-weight="400" fill="${MUTED}">${esc(b.tierName)} tier · partner since ${esc(joinedLabel(b.joinedAt))}</text>
-<text x="620" y="330" font-family="Inter" font-size="24" font-weight="400" fill="${PRIMARY_SOFT}">${esc(host)}</text>
+<rect width="1584" height="396" fill="${PAPER}"/>
+<rect x="0" y="0" width="1584" height="4" fill="url(#rule)"/>
+<rect x="0" y="392" width="1584" height="4" fill="url(#rule)"/>
+<rect x="560" y="96" width="1" height="204" fill="${HAIRLINE}"/>
+${lockup({ size: 26, baseline: 76, align: "right", at: 1500 })}
+<text x="620" y="132" font-family="Inter" font-size="19" font-weight="600" fill="${INDIGO}" letter-spacing="6.5">CERTIFIED PARTNER</text>
+<text x="620" y="${210 + (58 - name.size) * 0.4}" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-1.6">${esc(name.label)}</text>
+<text x="620" y="262" font-family="Inter" font-size="26" font-weight="400" fill="${MUTED}">${esc(b.tierName)} · partner since ${esc(joinedLabel(b.joinedAt))}</text>
+<text x="620" y="330" font-family="JetBrains Mono" font-size="22" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
 
@@ -120,18 +182,22 @@ ${mark(1424, 40, 56)}
  */
 export function buildCompanyBannerSvg(b: PartnerBadge, verifyUrl: string): string {
   const host = verifyUrl.replace(/^https?:\/\//, "");
+  const name = fitName(b.name, 1500, 88, 52);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="4200" height="700" viewBox="0 0 4200 700">
 ${DEFS}
-<rect width="4200" height="700" fill="${INK}"/>
-<rect x="0" y="0" width="4200" height="700" fill="url(#g)" opacity="0.10"/>
-<rect x="900" y="330" width="2400" height="1" fill="#2A2E3E"/>
-${mark(2044, 116, 112)}
-<text x="2100" y="300" text-anchor="middle" font-family="Inter" font-size="40" font-weight="600" fill="${PRIMARY_SOFT}" letter-spacing="10">COSTMYAI CERTIFIED PARTNER</text>
-<text x="2100" y="430" text-anchor="middle" font-family="Inter" font-size="88" font-weight="600" fill="${PAPER}">${esc(fit(b.name, 34))}</text>
-<text x="2100" y="500" text-anchor="middle" font-family="Inter" font-size="40" font-weight="400" fill="${MUTED}">${esc(b.tierName)} tier · partner since ${esc(joinedLabel(b.joinedAt))}</text>
-<text x="2100" y="580" text-anchor="middle" font-family="Inter" font-size="34" font-weight="400" fill="${PRIMARY_SOFT}">${esc(host)}</text>
+<rect width="4200" height="700" fill="${PAPER}"/>
+<rect x="0" y="0" width="4200" height="6" fill="url(#rule)"/>
+<rect x="0" y="694" width="4200" height="6" fill="url(#rule)"/>
+${lockup({ size: 40, baseline: 152, align: "center", at: 2100 })}
+<rect x="1500" y="216" width="1200" height="1" fill="${HAIRLINE}"/>
+<text x="2100" y="290" text-anchor="middle" font-family="Inter" font-size="30" font-weight="600" fill="${INDIGO}" letter-spacing="11">CERTIFIED PARTNER</text>
+<text x="2100" y="${408 + (88 - name.size) * 0.4}" text-anchor="middle" font-family="Inter" font-size="${name.size}" font-weight="600" fill="${INK}" letter-spacing="-2.4">${esc(name.label)}</text>
+<text x="2100" y="476" text-anchor="middle" font-family="Inter" font-size="36" font-weight="400" fill="${MUTED}">${esc(b.tierName)} · partner since ${esc(joinedLabel(b.joinedAt))}</text>
+<text x="2100" y="584" text-anchor="middle" font-family="JetBrains Mono" font-size="32" font-weight="400" fill="${INK}">${esc(host)}</text>
 </svg>`;
 }
+
+
 
 export type BannerFormat = "personal" | "company";
 
