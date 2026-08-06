@@ -1,6 +1,8 @@
-// Vite asset import: resolves to the served URL of the wasm binary.
-import resvgWasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
+
+// Served as a static asset from `public/wasm/`, fetched by URL at render time.
+// Importing the binary from source would bundle it and break the deploy.
+const RESVG_WASM_PATH = "/wasm/resvg.wasm";
 
 /**
  * One SVG-to-PNG pipeline for the whole product.
