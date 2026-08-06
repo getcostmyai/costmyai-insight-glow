@@ -6,6 +6,8 @@ import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 
 import { usd } from "@/lib/dashboard-data";
+import { nonQualifyingEmptyCopy } from "@/lib/dashboard/zero-data-copy";
+
 
 /**
  * Full transparency: everything the engine looked at, in three lists.
