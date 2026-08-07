@@ -1761,6 +1761,72 @@ export type Database = {
         }
         Relationships: []
       }
+      task_drift_observations: {
+        Row: {
+          completion_tokens: number | null
+          created_at: string
+          error: string | null
+          id: string
+          is_fixture: boolean
+          latency_ms: number | null
+          model_key: string
+          observed_at: string
+          ok: boolean
+          prompt_sha256: string
+          prompt_tokens: number | null
+          reasoning_tokens: number | null
+          response_sha256: string | null
+          run_id: string
+          task_id: string
+          task_revision: number
+          total_tokens: number | null
+          upstream_cost_usd: number | null
+          vendor: string
+        }
+        Insert: {
+          completion_tokens?: number | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          is_fixture?: boolean
+          latency_ms?: number | null
+          model_key: string
+          observed_at?: string
+          ok: boolean
+          prompt_sha256: string
+          prompt_tokens?: number | null
+          reasoning_tokens?: number | null
+          response_sha256?: string | null
+          run_id: string
+          task_id: string
+          task_revision: number
+          total_tokens?: number | null
+          upstream_cost_usd?: number | null
+          vendor: string
+        }
+        Update: {
+          completion_tokens?: number | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          is_fixture?: boolean
+          latency_ms?: number | null
+          model_key?: string
+          observed_at?: string
+          ok?: boolean
+          prompt_sha256?: string
+          prompt_tokens?: number | null
+          reasoning_tokens?: number | null
+          response_sha256?: string | null
+          run_id?: string
+          task_id?: string
+          task_revision?: number
+          total_tokens?: number | null
+          upstream_cost_usd?: number | null
+          vendor?: string
+        }
+        Relationships: []
+      }
       usage_events: {
         Row: {
           created_at: string
