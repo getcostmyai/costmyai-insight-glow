@@ -152,6 +152,12 @@ export async function sweepTestResidue(
    * shorter than "still in production next week".
    */
   olderThanMs: number = 30 * 60_000,
+  /**
+   * Ops-board alert rows this caller wrote itself. Restricting the alert sweep
+   * to them makes the call deterministic under parallel execution: it can only
+   * remove its own rows, and no sibling sweep can remove them first.
+   */
+  ownedAlertIds?: string[],
 ): Promise<SweepResult> {
   const cutoff = new Date(Date.now() - olderThanMs).toISOString();
   const result: SweepResult = {
