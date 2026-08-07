@@ -15,6 +15,7 @@ import {
 import type { IntelligencePayload } from "@/lib/intelligence.functions";
 import type { PriceMove } from "@/lib/intelligence/intelligence.server";
 import { bandCardId, moveCardId, repricerCardId, spreadCardId } from "@/lib/intelligence/share-cards";
+import { LABELS, notesForMonth, notesNewestFirst } from "@/lib/intelligence/notes";
 
 /**
  * The Intelligence report body.
