@@ -1,4 +1,5 @@
 import type { BandWinner, HostBucket, SaturationRow } from "@/lib/intelligence/intelligence.server";
+import type { Decomposition } from "@/lib/intelligence/notes";
 
 /* ---------------------------------------------------------------------------
  * Price-moves donut. Same visual language as the dashboard's Captured/Available
@@ -304,8 +305,6 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
  * the Intelligence notes, where the whole point is that a headline price move
  * and the real cost move are not the same number.
  * ------------------------------------------------------------------------- */
-
-import type { Decomposition } from "@/lib/intelligence/notes";
 
 export function DecompositionBar({ d }: { d: Decomposition }) {
   const rows = [
