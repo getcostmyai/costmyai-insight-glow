@@ -297,3 +297,120 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
     </div>
   );
 }
+
+/* ---------------------------------------------------------------------------
+ * Decomposition bar. Two opposing contributions and the net between them —
+ * "price per token fell X%, tokens per task rose Y%, net effect Z%". Built for
+ * the Intelligence notes, where the whole point is that a headline price move
+ * and the real cost move are not the same number.
+ * ------------------------------------------------------------------------- */
+
+import type { Decomposition } from "@/lib/intelligence/notes";
+
+export function DecompositionBar({ d }: { d: Decomposition }) {
+  const rows = [
+    { ...d.down, tone: "saving" as const },
+    { ...d.up, tone: "destructive" as const },
+    { ...d.net, tone: d.net.pct <= 0 ? ("saving" as const) : ("destructive" as const), net: true },
+  ];
+  const max = Math.max(1, ...rows.map((r) => Math.abs(r.pct)));
+
+  return (
+    <div>
+      <p className="text-base font-semibold tracking-tight">{d.title}</p>
+      <ul className="mt-7 space-y-7">
+        {rows.map((r) => (
+          <li key={r.label} className={r.net ? "border-t border-border/60 pt-7" : undefined}>
+            <div className="flex items-baseline justify-between gap-6">
+              <span
+                className={
+                  r.net
+                    ? "text-sm font-semibold tracking-tight"
+                    : "text-sm text-muted-foreground"
+                }
+              >
+                {r.label}
+              </span>
+              <span
+                className={`num tabular-nums tracking-tight ${
+                  r.net ? "text-3xl font-semibold" : "text-xl font-semibold"
+                } ${r.tone === "saving" ? "text-saving" : "text-destructive"}`}
+              >
+                {r.pct > 0 ? "+" : ""}
+                {r.pct.toFixed(1)}%
+              </span>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-foreground/5">
+              <div
+                className={`h-full rounded-full ${
+                  r.tone === "saving" ? "bg-saving" : "bg-destructive"
+                }`}
+                style={{
+                  width: `${(Math.abs(r.pct) / max) * 100}%`,
+                  transition: "width 1.1s cubic-bezier(0.22,1,0.36,1)",
+                }}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-6 text-xs leading-relaxed text-muted-foreground">{d.caption}</p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Sourced trend line. The attribution is a required prop, not an optional
+ * caption: a series whose data is not ours cannot be drawn without naming who
+ * it belongs to.
+ * ------------------------------------------------------------------------- */
+
+export function SourcedTrendLine({
+  points,
+  unit,
+  source,
+}: {
+  points: { label: string; value: number }[];
+  unit: string;
+  source: string;
+}) {
+  if (points.length < 2) return null;
+
+  const w = 720;
+  const h = 220;
+  const padX = 8;
+  const padY = 16;
+  const values = points.map((p) => p.value);
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo || 1;
+  const x = (i: number) => padX + (i / (points.length - 1)) * (w - padX * 2);
+  const y = (v: number) => padY + (1 - (v - lo) / span) * (h - padY * 2);
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.value)}`).join(" ");
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label={`Trend in ${unit}`}>
+        <line
+          x1={padX}
+          x2={w - padX}
+          y1={h - padY}
+          y2={h - padY}
+          stroke="color-mix(in oklab, var(--foreground) 12%, transparent)"
+        />
+        <path d={path} fill="none" stroke="var(--primary)" strokeWidth={2.5} />
+        {points.map((p, i) => (
+          <circle key={p.label} cx={x(i)} cy={y(p.value)} r={3.5} fill="var(--primary)" />
+        ))}
+      </svg>
+      <div className="mt-3 flex justify-between text-[0.7rem] uppercase tracking-[0.14em] text-muted-foreground">
+        <span>{points[0].label}</span>
+        <span>{points[points.length - 1].label}</span>
+      </div>
+      <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
+        {unit}. Source: {source}. This series is not our measurement; it is reproduced here and
+        interpreted, not restated as CostMyAI data.
+      </p>
+    </div>
+  );
+}
