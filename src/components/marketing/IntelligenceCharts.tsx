@@ -307,10 +307,10 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
  * ------------------------------------------------------------------------- */
 
 export function DecompositionBar({ d }: { d: Decomposition }) {
-  const rows = [
-    { ...d.down, tone: "saving" as const },
-    { ...d.up, tone: "destructive" as const },
-    { ...d.net, tone: d.net.pct <= 0 ? ("saving" as const) : ("destructive" as const), net: true },
+  const rows: { label: string; pct: number; tone: "saving" | "destructive"; net: boolean }[] = [
+    { ...d.down, tone: "saving", net: false },
+    { ...d.up, tone: "destructive", net: false },
+    { ...d.net, tone: d.net.pct <= 0 ? "saving" : "destructive", net: true },
   ];
   const max = Math.max(1, ...rows.map((r) => Math.abs(r.pct)));
 
