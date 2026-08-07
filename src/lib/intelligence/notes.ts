@@ -370,8 +370,111 @@ const EQUIVALENCE_VERDICTS: Note = {
   ],
 };
 
+/**
+ * Note 3 — primary-source verification as method.
+ *
+ * Both quotes below were retrieved from their live URLs on 7 August 2026 and
+ * are reproduced verbatim. The price table is our own pull of Microsoft's
+ * public retail-price API on the same day, run to check the vendor's own FAQ
+ * rather than to take it on trust.
+ */
+const PRIMARY_SOURCE_VERIFICATION: Note = {
+  slug: "why-we-read-the-primary-source",
+  title: "Two sentences about the same price, and only one of them is Microsoft's",
+  deck: "A widely cited AI pricing tracker says Azure's Global and Regional deployments cost the same per token. Microsoft's own documentation says Regional carries a 10 to 25 percent premium. We checked the meter.",
+  description:
+    "A cited tracker and Microsoft disagree on Azure OpenAI regional pricing. Why aggregated pricing data inherits upstream errors silently.",
+  label: "proven-mechanism",
+  month: "2026-07",
+  published: "2026-08-07",
+  minutes: 5,
+  blocks: [
+    {
+      t: "p",
+      v: "This note is not about a wrong number on somebody else's website. It is about where a number comes from, which turns out to decide almost everything about whether it can be trusted six months later.",
+    },
+    {
+      t: "p",
+      v: "Here is the case that prompted it. A widely cited AI pricing tracker — not named here, because the point is structural and naming it would make it look personal — states that Azure OpenAI's Global and Regional deployment types carry the same per-token rate, and lists one price per model. Microsoft's own documentation states the opposite, in a sentence with numbers in it.",
+    },
+    { t: "h2", v: "The two sentences" },
+    {
+      t: "quote",
+      v: "Pricing varies by deployment type: Global (lowest) → Data Zone (~10% premium) → Regional (10–25% premium over Global, varying by region).",
+      attribution:
+        "Microsoft Learn, Azure OpenAI in Azure AI Foundry Models FAQ — learn.microsoft.com/azure/ai-foundry/openai/faq, retrieved 7 August 2026",
+    },
+    {
+      t: "p",
+      v: "Against that, the tracker's position is the absence of a distinction: one rate per model, no deployment-type dimension at all, so a reader planning a Regional deployment in Europe reads a Global price and calls it their budget. On a modest production workload that is a quiet fifth of the bill, and it is quiet because nothing about the page looks uncertain.",
+    },
+    { t: "h2", v: "Neither sentence is evidence. The meter is." },
+    {
+      t: "p",
+      v: "A vendor FAQ is still a secondary source about the vendor's own prices, so we did not stop there either. Microsoft publishes the actual billing meters through a public, unauthenticated retail-price API. We queried it for a single model and read the rates back per region and per deployment type.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit A",
+        title: "Azure retail price meters, gpt-4o input, one model across deployment types",
+        lines: [
+          "GET prices.azure.com/api/retail/prices",
+          "    productName eq 'Azure OpenAI' and contains(skuName,'gpt 4o 1120 Inp')",
+          "",
+          "USD / 1K tokens   region              SKU",
+          "0.0025            eastus              gpt 4o 1120 Inp glbl",
+          "0.0025            northeurope         gpt 4o 1120 Inp glbl",
+          "0.00275           eastus              gpt 4o 1120 Inp regnl      +10.0%",
+          "0.003025          swedencentral       gpt 4o 1120 Inp regnl      +21.0%",
+          "0.003025          uksouth             gpt 4o 1120 Inp regnl      +21.0%",
+          "0.0033            northeurope         gpt 4o 1120 Inp regnl      +32.0%",
+          "0.00275           eastus2             gpt 4o 1120 Inp Data Zone  +10.0%",
+          "",
+          "Global rate is identical in all 27 commercial regions returned.",
+          "Regional rate is not, and is never lower.",
+        ],
+        caption:
+          "Our own query against Microsoft's public Azure Retail Prices API on 7 August 2026, USD, unauthenticated and reproducible by anyone. Percentages are computed against the Global rate for the same model.",
+      },
+    },
+    {
+      t: "p",
+      v: "The meter confirms the direction and the mechanism, and it also refines the vendor's own range: 10 percent at the bottom, but 32 percent in North Europe, above the 25 percent the FAQ quotes. That is the ordinary reason to read primary sources even when a secondary one agrees with you. The tracker was not slightly off. It was missing the dimension the price varies along.",
+    },
+    { t: "h2", v: "Why this happens by construction" },
+    {
+      t: "p",
+      v: "Aggregated pricing data is compiled once and then cited. The citation carries no memory of how it was compiled, so an error introduced upstream — a simplification, a missed deployment type, a rate that was true last quarter — propagates downstream in a form that looks exactly like a verified fact. Nobody lies. The error simply survives, because there is no step anywhere in the chain whose job is to go back and look.",
+    },
+    {
+      t: "p",
+      v: "A connector that reads live vendor data does not have that failure mode, and not because it is more careful. It has no upstream to inherit from. The rate it applies is the rate the vendor is publishing at the moment of the call, and when the vendor changes it, the next read changes with it. A compiled table cannot do that at any level of diligence, because being current is not a property of the diligence, it is a property of the pipeline.",
+    },
+    {
+      t: "p",
+      v: "This is the same discipline we hold ourselves to, and it is why these notes look the way they do. Note 1 reproduced the captured response envelope rather than describing it. Note 2 printed the engine's real output, minus sign included, rather than paraphrasing a verdict. The rule is the same one applied outward here: show the artifact, and if there is no artifact, do not make the claim.",
+    },
+    {
+      t: "p",
+      v: "The practical version, for anyone pricing an AI workload: whichever tool you use, ask where the number came from. If the answer is another tool, you are one link further from the meter than you think.",
+    },
+    {
+      t: "cta",
+      headline:
+        "Every figure we publish states its source and the date it was read, instrument by instrument.",
+      label: "How every figure is computed",
+      to: "/legal/methodology",
+    },
+  ],
+};
+
 /** The corpus, newest first by convention rather than by requirement. */
-export const NOTES: Note[] = [EQUIVALENCE_VERDICTS, REASONING_OVERHEAD];
+export const NOTES: Note[] = [
+  PRIMARY_SOURCE_VERIFICATION,
+  EQUIVALENCE_VERDICTS,
+  REASONING_OVERHEAD,
+];
 
 
 export const noteBySlug = (slug: string): Note | null =>
