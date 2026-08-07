@@ -251,7 +251,9 @@ export function IntelligenceReport({
       <MarketStructure data={d} ctx={ctx} />
       <QualityPerDollar data={d} ctx={ctx} />
       <EmbedWidgetSection />
+      <NotesRail ctx={ctx} />
       <Archive ctx={ctx} />
+
       <Method />
 
     </>
