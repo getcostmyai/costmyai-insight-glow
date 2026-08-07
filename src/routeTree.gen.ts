@@ -65,6 +65,7 @@ import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/pu
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
+import { Route as ApiPublicSyncTaskDriftRouteImport } from './routes/api/public/sync/task-drift'
 import { Route as ApiPublicSyncSchemaFiltersRouteImport } from './routes/api/public/sync/schema-filters'
 import { Route as ApiPublicSyncReprocessRouteImport } from './routes/api/public/sync/reprocess'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
@@ -366,6 +367,11 @@ const ApiPublicSyntheticTickRoute = ApiPublicSyntheticTickRouteImport.update({
   path: '/api/public/synthetic/tick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncTaskDriftRoute = ApiPublicSyncTaskDriftRouteImport.update({
+  id: '/api/public/sync/task-drift',
+  path: '/api/public/sync/task-drift',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncSchemaFiltersRoute =
   ApiPublicSyncSchemaFiltersRouteImport.update({
     id: '/api/public/sync/schema-filters',
@@ -497,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
   '/api/public/sync/schema-filters': typeof ApiPublicSyncSchemaFiltersRoute
+  '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -563,6 +570,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
   '/api/public/sync/schema-filters': typeof ApiPublicSyncSchemaFiltersRoute
+  '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -634,6 +642,7 @@ export interface FileRoutesById {
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
   '/api/public/sync/schema-filters': typeof ApiPublicSyncSchemaFiltersRoute
+  '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
@@ -705,6 +714,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
     | '/api/public/sync/schema-filters'
+    | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -771,6 +781,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
     | '/api/public/sync/schema-filters'
+    | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -841,6 +852,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
     | '/api/public/sync/schema-filters'
+    | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
@@ -889,6 +901,7 @@ export interface RootRouteChildren {
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyncReprocessRoute: typeof ApiPublicSyncReprocessRoute
   ApiPublicSyncSchemaFiltersRoute: typeof ApiPublicSyncSchemaFiltersRoute
+  ApiPublicSyncTaskDriftRoute: typeof ApiPublicSyncTaskDriftRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
@@ -1290,6 +1303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyntheticTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/task-drift': {
+      id: '/api/public/sync/task-drift'
+      path: '/api/public/sync/task-drift'
+      fullPath: '/api/public/sync/task-drift'
+      preLoaderRoute: typeof ApiPublicSyncTaskDriftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/schema-filters': {
       id: '/api/public/sync/schema-filters'
       path: '/api/public/sync/schema-filters'
@@ -1502,6 +1522,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyncReprocessRoute: ApiPublicSyncReprocessRoute,
   ApiPublicSyncSchemaFiltersRoute: ApiPublicSyncSchemaFiltersRoute,
+  ApiPublicSyncTaskDriftRoute: ApiPublicSyncTaskDriftRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,

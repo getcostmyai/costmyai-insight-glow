@@ -57,7 +57,9 @@ function HomePage() {
       <ProviderMarquee stats={stats} />
 
       <Estimator />
+      <StillMoving />
       <Forecast />
+
       <HowItWorks />
       <Architecture />
       <BuiltFor />
@@ -253,6 +255,43 @@ function Forecast() {
 }
 
 
+/* ---------------------- 03b · nothing holds still ------------------------ */
+
+/**
+ * A single claim, at headline scale, with one link out to the full argument.
+ * Deliberately not a summary of the article: the whole job of this band is to
+ * make the reader realise the question exists.
+ */
+function StillMoving() {
+  return (
+    <section className="wash-section">
+      <div className="mx-auto max-w-6xl border-y border-border px-5 py-24 sm:px-8 sm:py-32">
+        <Reveal className="max-w-4xl">
+          <p className="eyebrow">Why this is a system, not an audit</p>
+          <h2 className="mt-5 text-4xl font-semibold leading-[1.04] tracking-[-0.04em] sm:text-6xl">
+            Nothing about AI pricing holds still.
+            <br />
+            Why would a{" "}
+            <span className="text-gradient-brand">one-time audit</span>?
+          </h2>
+          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            Prices are cut in response to competitors, your own workloads get heavier as they
+            mature, and the same model ID can bill differently next quarter with your code
+            untouched. An audit tells you where you stood. We measure where you are.
+          </p>
+          <Link
+            to="/blog/$slug"
+            params={{ slug: "why-ai-cost-optimisation-expires" }}
+            className="mt-9 inline-flex items-center gap-2 text-base font-semibold text-primary hover:underline"
+          >
+            Read the full argument, and what we can and cannot prove
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
 
 /* ------------------------------- 04 · video ------------------------------ */
