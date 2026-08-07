@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { recordRun } from "../engine/evaluate.server";
 import { mintApiKey, revokeApiKey } from "../ingest/keys.server";
+import { ACTIVE_CLIENT_BUCKETS, STARTING_SOON_BUCKETS } from "../partner-application";
 import { setApplicationStatus } from "../partner-application.server";
 import { guardIntegrationDatabase } from "./support/isolation";
 
@@ -92,8 +93,11 @@ beforeAll(async () => {
       email: `noop-app-${stamp}@costmyai-test.dev`,
       phone: "+43 000 0000",
       company: `Noop Co ${stamp}`,
-      active_clients_bucket: "1-5",
-      starting_soon_bucket: "1-5",
+      // Dispatch 132 put a CHECK behind these two columns: only the buckets
+      // the form actually offers are storable. Take them from the shared
+      // constant so a future bucket rename breaks the fixture at typecheck.
+      active_clients_bucket: ACTIVE_CLIENT_BUCKETS[2], // "11–50"
+      starting_soon_bucket: STARTING_SOON_BUCKETS[1], // "1"
       routed_path: "async",
       escalated: false,
     })
