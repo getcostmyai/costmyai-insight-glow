@@ -455,6 +455,37 @@ const PRIMARY_SOURCE_VERIFICATION: Note = {
       t: "p",
       v: "This is the same discipline we hold ourselves to, and it is why these notes look the way they do. Note 1 reproduced the captured response envelope rather than describing it. Note 2 printed the engine's real output, minus sign included, rather than paraphrasing a verdict. The rule is the same one applied outward here: show the artifact, and if there is no artifact, do not make the claim.",
     },
+    { t: "h2", v: "Update, 7 August 2026: it is not an Azure quirk" },
+    {
+      t: "p",
+      v: "After publishing we checked whether the deployment-region dimension exists anywhere else, on the assumption that a structure this easy to miss is rarely unique. It is not. Google's Vertex AI price list splits its Claude catalog into two explicitly named groups — \"Models with regional pricing\" and \"Models with uniform pricing across all regions\" — so whether the region dimension exists at all depends on which model you pick from the same vendor on the same page.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit B",
+        title: "Vertex AI, Claude models with regional pricing, USD per 1M input tokens",
+        lines: [
+          "region                     Opus 5     Haiku 4.5    vs Global",
+          "Global                     5.00       1.00         —",
+          "US Multi-Region (us)       5.50       1.10         +10.0%",
+          "EU Multi-Region (eu)       5.50       1.10         +10.0%",
+          "us-east5                   5.50       1.10         +10.0%",
+          "europe-west1               5.50       1.10         +10.0%",
+          "asia-east1                 5.50       1.10         +10.0%",
+          "",
+          "Same page, separate section: 'Models with uniform pricing",
+          "across all regions' — Claude Opus 4.1, Opus 4, Sonnet 4.",
+          "For those, the region dimension does not exist at all.",
+        ],
+        caption:
+          "Google Cloud's published Vertex AI generative-AI price list, cloud.google.com/vertex-ai/generative-ai/pricing, retrieved 7 August 2026. The premium is a flat 10 percent on every non-Global tab, unlike Azure's, which varies by region.",
+      },
+    },
+    {
+      t: "p",
+      v: "Two vendors, two different shapes: Azure's premium varies by region, Google's is a flat ten percent, and Google applies it to some models and not others. What they share is the part that matters here — a headline rate that is the cheapest of several, and a reader who has no way to tell from a one-price-per-model table that they were quoted the floor rather than their rate. We hold no per-region prices ourselves today; every rate in our own catalog is a global rate, and we would rather say that than imply a coverage we do not have.",
+    },
     {
       t: "p",
       v: "The practical version, for anyone pricing an AI workload: whichever tool you use, ask where the number came from. If the answer is another tool, you are one link further from the meter than you think.",
@@ -469,8 +500,141 @@ const PRIMARY_SOURCE_VERIFICATION: Note = {
   ],
 };
 
+/**
+ * Note 4 — the non-token cost layers on an Azure bill.
+ *
+ * Every rate below is a real published Azure list price, read on 7 August 2026
+ * from either Microsoft's public retail-price API or the relevant pricing page.
+ * The arithmetic in Exhibit B is our own, computed from those rates against an
+ * explicitly stated footprint. We deliberately do NOT assert the 15-40% figure
+ * that circulates in the research literature: see the closing section.
+ */
+const NON_TOKEN_COST_LAYERS: Note = {
+  slug: "the-bill-is-not-just-tokens",
+  title: "The meter you are watching is not the only meter running",
+  deck: "An idle fine-tuned deployment on Azure bills $1.70 an hour whether or not you call it once. Support, logging, egress and private networking bill too. None of it appears in a price-per-token table.",
+  description:
+    "Azure's non-token AI cost layers, at real list prices: idle fine-tune hosting, support plans, log ingestion, egress, private endpoints.",
+  label: "proven-mechanism",
+  month: "2026-07",
+  published: "2026-08-07",
+  minutes: 6,
+  blocks: [
+    {
+      t: "p",
+      v: "Every price comparison in this industry, ours included, is denominated in dollars per million tokens. It is the right unit for the question it answers. It is also, on a real cloud bill, not the only line, and the other lines have a property that makes them easy to underestimate: most of them do not scale with usage at all.",
+    },
+    {
+      t: "p",
+      v: "This note is Azure-only, and deliberately so. The same categories almost certainly exist on AWS and Google, but we have not read their meters with the same care, and the point of this series is that unverified generalisation is exactly the failure mode we are trying to avoid.",
+    },
+    { t: "h2", v: "The layers, at list price" },
+    {
+      t: "p",
+      v: "The most consequential is the one that surprises people, because it is a rental rather than a usage charge. Deploying a fine-tuned model on Azure OpenAI incurs an hourly hosting charge for as long as the deployment exists. Not per call. Per hour.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit A",
+        title: "Azure OpenAI hosting and adjacent meters, list price, read from the vendor",
+        lines: [
+          "FINE-TUNE HOSTING — billed hourly, usage-independent",
+          "  1.70 /hr   gpt-4o-0806-FT-Hstng-glbl      = 1,241.00 /mo",
+          "  1.70 /hr   gpt-4o-mini-0718-FT-Hstng-glbl = 1,241.00 /mo",
+          "  2.04 /hr   gpt-4o-0806-FT-Hstng-regnl     = 1,489.20 /mo",
+          "  5.00 /hr   gpt-4-8K-FT-Hstng-glbl         = 3,650.00 /mo",
+          "",
+          "SUPPORT PLAN — flat monthly",
+          "  29.00 /mo    Developer",
+          "  100.00 /mo   Standard",
+          "  1,000.00 /mo Professional Direct",
+          "",
+          "PRIVATE NETWORKING — billed hourly per endpoint",
+          "  0.01 /hr   Standard Private Endpoint      = 7.30 /mo",
+          "",
+          "LOG INGESTION — per GB ingested",
+          "  2.30 /GB   Azure Monitor, Analytics Logs",
+          "  0.50 /GB   Azure Monitor, Basic Logs",
+          "  0.10 /GB/mo  interactive retention beyond the included period",
+          "",
+          "INTERNET EGRESS — per GB, North America / Europe",
+          "  free       first 100 GB per month",
+          "  0.087 /GB  next 10 TB per month",
+          "  0.02 /GB   between regions within North America or Europe",
+        ],
+        caption:
+          "Hosting, provisioned and private-endpoint rates read from Microsoft's public Azure Retail Prices API on 7 August 2026 (unauthenticated, reproducible). Support, Azure Monitor and bandwidth rates from the corresponding azure.microsoft.com pricing pages, same date, USD, pay-as-you-go. Monthly equivalents are the hourly rate multiplied by 730 hours.",
+      },
+    },
+    {
+      t: "p",
+      v: "The hosting meter deserves the emphasis it is getting here. A fine-tuned gpt-4o deployment left running costs $1,241 a month at list price before a single token is spent, and the failure mode is not exotic: somebody fine-tunes a model to evaluate it, the evaluation finishes, and the deployment is never deleted. There is nothing in a per-token cost model that can see that, because from the token model's point of view the workload stopped.",
+    },
+    { t: "h2", v: "Why the percentage is the wrong question" },
+    {
+      t: "p",
+      v: "The figure that circulates for this — that non-token layers add somewhere between 15 and 40 percent to a real Azure AI bill — is not one we can verify, and we are not going to repeat it as though we had. It does not describe Azure's price list. It describes somebody's workloads. Run the same fixed footprint against three different token spends and the reason becomes obvious.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit B",
+        title: "One fixed footprint, three token spends",
+        lines: [
+          "FIXED MONTHLY FOOTPRINT (list price, 730 h)",
+          "  Standard support plan                      100.00",
+          "  1 idle fine-tuned gpt-4o deployment      1,241.00",
+          "  1 private endpoint                           7.30",
+          "  20 GB/mo Analytics Logs @ 2.30              46.00",
+          "  250 GB/mo egress (100 free, 150 @ 0.087)    13.05",
+          "                                          ---------",
+          "  total non-token                          1,407.35",
+          "",
+          "AS A PERCENTAGE OF TOKEN SPEND",
+          "  token spend    non-token    uplift",
+          "     500.00       1,407.35    +281.5%",
+          "   5,000.00       1,407.35     +28.1%",
+          "  50,000.00       1,407.35      +2.8%",
+          "",
+          "Same footprint. Same vendor. Same day.",
+          "Drop the idle fine-tune and the total falls to 166.35,",
+          "which is +3.3% at a 5,000 token spend, not +28.1%.",
+        ],
+        caption:
+          "Our own arithmetic, computed from the list prices in Exhibit A on 7 August 2026. The footprint is a stated assumption, not a measurement of any real customer: it is chosen to be modest and is shown precisely so the reader can substitute their own.",
+      },
+    },
+    {
+      t: "p",
+      v: "The 15 to 40 percent band is reproducible, but only by choosing a token spend that produces it. That is the tell. Because these layers are overwhelmingly fixed, the uplift is a statement about the size of the denominator — about how much you spend on tokens — rather than a property of the vendor's pricing. A team spending five hundred dollars a month on tokens and running one forgotten fine-tune is not 30 percent over. They are nearly quadruple.",
+    },
+    {
+      t: "p",
+      v: "Which inverts the usual advice. The smaller the AI workload, the more the non-token layers dominate it, and the less useful a per-token comparison is for deciding anything. At real scale the opposite holds and the token rate is almost the whole bill. Both statements are true at once, and neither survives being compressed into a single percentage.",
+    },
+    { t: "h2", v: "What we do and do not measure" },
+    {
+      t: "p",
+      v: "Our own connector reads token usage. It sees the meter it is pointed at, which is the token meter, and it does not see a support plan or a forgotten deployment sitting in a subscription we have no access to. So the honest scope of every saving we report is the token line, and that is what the methodology page says. We would rather state the boundary than let a per-token comparison quietly imply it covers the bill.",
+    },
+    {
+      t: "p",
+      v: "The practical version: before comparing per-token rates, list the non-token lines and check whether they are already larger than the difference you are optimising. Sometimes the cheapest available switch is deleting something nobody is calling.",
+    },
+    {
+      t: "cta",
+      headline:
+        "Every figure we publish states its source, its date, and what it does not cover.",
+      label: "How every figure is computed",
+      to: "/legal/methodology",
+    },
+  ],
+};
+
 /** The corpus, newest first by convention rather than by requirement. */
 export const NOTES: Note[] = [
+  NON_TOKEN_COST_LAYERS,
   PRIMARY_SOURCE_VERIFICATION,
   EQUIVALENCE_VERDICTS,
   REASONING_OVERHEAD,
