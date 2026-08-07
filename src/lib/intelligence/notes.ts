@@ -226,6 +226,11 @@ const REASONING_OVERHEAD: Note = {
       v: "Check what your own cost reporting reads. If it sums a field named for the answer rather than for the billing, every thinking model in your stack is under-counted, and the error grows precisely as you adopt more reasoning. Then reconcile a month against the provider invoice: a metering path that has never been reconciled against a bill is an estimate wearing the clothes of a measurement.",
     },
     {
+      t: "p",
+      v: "There is a second consequence, taken up in a later note rather than here: if the billed number lives in a field the answer does not touch, then an unchanged request is free to get more expensive without anything visible changing. That is the argument in \"An audit is a photograph of a market that keeps moving\", which uses the envelope above as its starting point.",
+    },
+
+    {
       t: "cta",
       headline:
         "Every figure on the Intelligence page is computed from the same parsed envelopes, and the method is written down.",
