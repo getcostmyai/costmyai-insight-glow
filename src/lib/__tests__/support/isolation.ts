@@ -77,8 +77,19 @@ const SHAPE_WATCH_JOB = "shape-watch";
  * Deliberately narrow: a shape-watch alert with a live workspace behind it and
  * no test stamp is real signal, and is never touched.
  */
-async function sweepAlertResidue(admin: AdminLike, cutoff: string): Promise<number> {
+async function sweepAlertResidue(
+  admin: AdminLike,
+  cutoff: string,
+  /**
+   * When the caller owns specific rows (it wrote them itself and is asserting
+   * on them), the sweep is restricted to those ids and the age gates drop
+   * away. Nothing outside the set can be touched, so a sibling file running in
+   * parallel can neither lose its rows to this call nor steal them from it.
+   */
+  ownedIds?: string[],
+): Promise<number> {
   let removed = 0;
+  const owned = ownedIds?.length ? ownedIds : null;
 
   // 1. Stamped by the watch. A stamped row is provably ours, so it gets a much
   //    shorter gate than the generic sweep window: long enough that a sibling
@@ -87,23 +98,30 @@ async function sweepAlertResidue(admin: AdminLike, cutoff: string): Promise<numb
   //    a suite finishes. Never looser than the caller's own window.
   const STAMPED_GRACE_MS = 2 * 60_000;
   const stampedCutoff = new Date(Date.now() - STAMPED_GRACE_MS).toISOString();
-  const stamped = await admin
+  let stampedQuery = admin
     .from("sync_runs")
     .delete()
     .eq("job", SHAPE_WATCH_JOB)
-    .eq("detail->>testRun", "true")
-    .lt("started_at", stampedCutoff > cutoff ? stampedCutoff : cutoff)
-    .select("id");
+    .eq("detail->>testRun", "true");
+  stampedQuery = owned
+    ? stampedQuery.in("id", owned)
+    : stampedQuery.lt("started_at", stampedCutoff > cutoff ? stampedCutoff : cutoff);
+  const stamped = await stampedQuery.select("id");
   removed += (stamped.data ?? []).length;
 
 
-  // 2. Alerts about a workspace that is gone. No age gate needed: the org was
-  //    already deleted, so the alert can no longer be about live traffic.
-  const { data: alerts } = await admin
+  // 2. Alerts about a workspace that is gone. The org being deleted is what
+  //    makes the row residue, but the age gate still applies: a sibling file
+  //    that has just written an alert and not yet created (or has already
+  //    torn down) its workspace owns that row until it ages out. Without the
+  //    gate this branch reaches across into live parallel runs.
+  let orphanQuery = admin
     .from("sync_runs")
     .select("id, detail")
     .eq("job", SHAPE_WATCH_JOB)
     .not("detail->>orgId", "is", null);
+  orphanQuery = owned ? orphanQuery.in("id", owned) : orphanQuery.lt("started_at", cutoff);
+  const { data: alerts } = await orphanQuery;
 
   const rows = (alerts ?? []) as Array<{ id: string; detail: { orgId?: string } | null }>;
   const orgIds = [...new Set(rows.map((r) => r.detail?.orgId).filter((v): v is string => !!v))];
