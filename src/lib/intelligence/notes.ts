@@ -236,7 +236,142 @@ const REASONING_OVERHEAD: Note = {
 };
 
 /** The corpus, newest first by convention rather than by requirement. */
-export const NOTES: Note[] = [REASONING_OVERHEAD];
+/**
+ * Note 2 — what a certification and a refusal actually are.
+ *
+ * Every number below was read out of the live benchmark ledger and the live
+ * catalog on 7 August 2026, and the certified pairing is the verbatim output
+ * of the same function that writes customer recommendations. Nothing is
+ * illustrative.
+ */
+const EQUIVALENCE_VERDICTS: Note = {
+  slug: "what-certified-and-refused-mean",
+  title: "Thirty-seven models are tied for first, and that is the finding",
+  deck: "A cheaper model is only equal to an expensive one if a test says so. On one benchmark that test returns a verdict; on another it returns a thirty-seven-way tie, and the honest answer there is no answer.",
+  description:
+    "GPQA cannot separate 37 of 138 models. What a statistical equivalence test certifies, what it refuses, and why the difference is the product.",
+  label: "proven-mechanism",
+  month: "2026-07",
+  published: "2026-08-07",
+  minutes: 7,
+  blocks: [
+    {
+      t: "p",
+      v: "Every AI cost tool will happily tell you a cheaper model exists. The only question that matters is whether it is the same model for your work, and answering that is not a matter of reading a leaderboard row. A benchmark score is a measurement, and every measurement has a precision. Below that precision, a difference in rank is not a difference in quality — it is noise with an ordering imposed on it.",
+    },
+    {
+      t: "p",
+      v: "So a switch here is decided by a test, not by a ranking. The test has two possible outcomes, and both are published: certified, or refused. The refusals are the more interesting half, because they are the ones a leaderboard cannot produce.",
+    },
+    { t: "h2", v: "The two words, defined" },
+    {
+      t: "defs",
+      items: [
+        {
+          term: "Margin",
+          text: "The measurement precision of one evaluation, synced alongside the scores rather than assumed. A difference smaller than the margin is not a real difference, however confidently a leaderboard orders it.",
+        },
+        {
+          term: "Certified",
+          text: "The cheaper model scores at or above the incumbent's score minus that evaluation's margin, on an instrument that still separates models, and it is genuinely cheaper on your own token shape. Any gap has to be inside the precision, and it is stated in the recommendation rather than hidden.",
+        },
+        {
+          term: "Refused",
+          text: "No claim is available. Either no independent evaluation measures this kind of work, or the traffic arrived unlabelled, or the instrument that would have to judge it can no longer tell the candidates apart. A refusal is an output, not an error.",
+        },
+      ],
+    },
+    { t: "h2", v: "A refusal: the instrument ran out of resolution" },
+    {
+      t: "p",
+      v: "GPQA Diamond is 198 graduate-level science questions. 198 items is not many, and the resulting measurement precision — computed from the item count, not chosen — is ±5.92 points. On 7 August the leaders sat at 94.1. Thirty-seven of the 138 models we hold a measured GPQA score for sit within 5.92 points of that, down to 88.2.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit A",
+        title: "GPQA Diamond, top of the field — a 37-way statistical tie",
+        lines: [
+          "instrument   GPQA Diamond, 198 items",
+          "margin       +/- 5.92 points",
+          "leaders      94.1  google/gemini-3.1-pro-preview",
+          "             94.1  openai/gpt-5.6-sol",
+          "             93.5  moonshotai/kimi-k3",
+          "             93.5  openai/gpt-5.5",
+          "             93.2  anthropic/claude-opus-5",
+          "             ...",
+          "             88.2  qwen/qwen3.6-plus   <- still inside the margin",
+          "",
+          "models measured on GPQA        138",
+          "inside the margin of the lead   37",
+        ],
+        caption:
+          "Read from the CostMyAI benchmark ledger on 7 August 2026, sentinel (0.000, not-measured) rows excluded. The same crowding was raised independently by our saturation detector the day before.",
+        sourcePath: "src/lib/intelligence/leads.ts",
+      },
+    },
+    {
+      t: "p",
+      v: "Those thirty-seven models are not ranked. They are tied. Handing that instrument the verdict would mean certifying the 88.2 model as equal to the 94.1 model, and certifying all thirty-seven as equal to each other, which is a sentence that should make anyone uncomfortable however true it is of the measurement. GPQA is not broken and the scores are not wrong. The instrument has simply been saturated by the field it was built to measure, and at the top of that field it has no verdict left to give.",
+    },
+    { t: "h2", v: "A certification: the same two models, an instrument that still separates" },
+    {
+      t: "p",
+      v: "The instrument is chosen before the candidates are, by a ranked ladder: for reasoning work, Humanity's Last Exam first, GPQA only if HLE stops separating models. HLE is 2,500 items, so its precision is ±1.59 points, and only 2 of the same 138 models sit inside that of the leader. Where GPQA has a 37-way tie, HLE has an ordering.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit B",
+        title: "The engine's own output on a real reasoning workload",
+        lines: [
+          'ladder(reasoning) -> "Humanity\'s Last Exam separates by 53.7 points"',
+          "  hle   separation 53.7  >= 10.0   selected",
+          "  gpqa  separation 59.0            never reached",
+          "",
+          "incumbent  google/gemini-3.1-pro-preview   HLE 47.0",
+          "candidate  meta/muse-spark-1.1             HLE 46.2",
+          "margin     +/- 1.59        bar 45.4        gap -0.8",
+          "verdict    CERTIFIED, cheaper, quality-equal",
+          "",
+          "the same pair judged on the saturated instrument:",
+          "  gpqa 94.1 vs 89.8  -> no verdict available",
+        ],
+        caption:
+          "findQualityMatches() run against the live catalog and the live benchmark ledger on 7 August 2026. The verdict line is the function's real output, not a description of it.",
+        sourcePath: "src/lib/engine/equivalence.ts",
+      },
+    },
+    {
+      t: "quote",
+      v: "Scores 46.2 against 47.0 today on the independent Humanity's Last Exam benchmark — slightly lower, but the 0.8-point gap is inside this benchmark's ±1.6 measurement precision, so the difference is not statistically real. It stays above the 45.4 minimum we require for this workload.",
+      attribution: "The sentence attached to the certified switch, verbatim",
+    },
+    {
+      t: "p",
+      v: "Note what that sentence does not do. It does not claim the cheaper model is better. It says it scores lower, states by how much, and states why that gap is not a difference. A recommendation that hid the minus sign would be easier to sell and impossible to defend in front of the engineer who has to sign off on it.",
+    },
+    { t: "h2", v: "Why the refusals are the point" },
+    {
+      t: "p",
+      v: "A tracker that never refuses is not being generous, it is not testing anything. Ours refuses on unlabelled traffic, because the connector reads the endpoint and the model name and never the prompt, so there is nothing to identify the work. It refuses on task types no independent evaluation currently measures, rather than borrowing an unrelated instrument. And it refuses to let a saturated instrument decide, which is the case above.",
+    },
+    {
+      t: "p",
+      v: "The uncomfortable consequence is that our answer for some workloads is that we do not know yet, and we say so on the page instead of filling the space. That is the cost of the claim being worth anything on the workloads where the answer is yes.",
+    },
+    {
+      t: "cta",
+      headline:
+        "The ladder, the margins and the refusal rules are written down, instrument by instrument.",
+      label: "How a switch is certified",
+      to: "/legal/methodology",
+    },
+  ],
+};
+
+/** The corpus, newest first by convention rather than by requirement. */
+export const NOTES: Note[] = [EQUIVALENCE_VERDICTS, REASONING_OVERHEAD];
 
 
 export const noteBySlug = (slug: string): Note | null =>
