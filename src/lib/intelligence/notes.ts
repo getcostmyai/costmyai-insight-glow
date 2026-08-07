@@ -455,6 +455,37 @@ const PRIMARY_SOURCE_VERIFICATION: Note = {
       t: "p",
       v: "This is the same discipline we hold ourselves to, and it is why these notes look the way they do. Note 1 reproduced the captured response envelope rather than describing it. Note 2 printed the engine's real output, minus sign included, rather than paraphrasing a verdict. The rule is the same one applied outward here: show the artifact, and if there is no artifact, do not make the claim.",
     },
+    { t: "h2", v: "Update, 7 August 2026: it is not an Azure quirk" },
+    {
+      t: "p",
+      v: "After publishing we checked whether the deployment-region dimension exists anywhere else, on the assumption that a structure this easy to miss is rarely unique. It is not. Google's Vertex AI price list splits its Claude catalog into two explicitly named groups — \"Models with regional pricing\" and \"Models with uniform pricing across all regions\" — so whether the region dimension exists at all depends on which model you pick from the same vendor on the same page.",
+    },
+    {
+      t: "exhibit",
+      v: {
+        ref: "Exhibit B",
+        title: "Vertex AI, Claude models with regional pricing, USD per 1M input tokens",
+        lines: [
+          "region                     Opus 5     Haiku 4.5    vs Global",
+          "Global                     5.00       1.00         —",
+          "US Multi-Region (us)       5.50       1.10         +10.0%",
+          "EU Multi-Region (eu)       5.50       1.10         +10.0%",
+          "us-east5                   5.50       1.10         +10.0%",
+          "europe-west1               5.50       1.10         +10.0%",
+          "asia-east1                 5.50       1.10         +10.0%",
+          "",
+          "Same page, separate section: 'Models with uniform pricing",
+          "across all regions' — Claude Opus 4.1, Opus 4, Sonnet 4.",
+          "For those, the region dimension does not exist at all.",
+        ],
+        caption:
+          "Google Cloud's published Vertex AI generative-AI price list, cloud.google.com/vertex-ai/generative-ai/pricing, retrieved 7 August 2026. The premium is a flat 10 percent on every non-Global tab, unlike Azure's, which varies by region.",
+      },
+    },
+    {
+      t: "p",
+      v: "Two vendors, two different shapes: Azure's premium varies by region, Google's is a flat ten percent, and Google applies it to some models and not others. What they share is the part that matters here — a headline rate that is the cheapest of several, and a reader who has no way to tell from a one-price-per-model table that they were quoted the floor rather than their rate. We hold no per-region prices ourselves today; every rate in our own catalog is a global rate, and we would rather say that than imply a coverage we do not have.",
+    },
     {
       t: "p",
       v: "The practical version, for anyone pricing an AI workload: whichever tool you use, ask where the number came from. If the answer is another tool, you are one link further from the meter than you think.",
