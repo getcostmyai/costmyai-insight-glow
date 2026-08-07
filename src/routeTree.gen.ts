@@ -47,6 +47,7 @@ import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as IntelligenceNotesIndexRouteImport } from './routes/intelligence.notes.index'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
 import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
 import { Route as IntelligenceNotesSlugRouteImport } from './routes/intelligence.notes.$slug'
@@ -264,6 +265,11 @@ const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const IntelligenceNotesIndexRoute = IntelligenceNotesIndexRouteImport.update({
+  id: '/intelligence/notes/',
+  path: '/intelligence/notes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWorkspaceIndexRoute =
   AuthenticatedWorkspaceIndexRouteImport.update({
     id: '/',
@@ -465,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -528,6 +535,7 @@ export interface FileRoutesByTo {
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
+  '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -596,6 +604,7 @@ export interface FileRoutesById {
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -664,6 +673,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/workspace/'
+    | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -727,6 +737,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/workspace'
+    | '/intelligence/notes'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -794,6 +805,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/$slug'
     | '/partner_/verify/$code'
     | '/_authenticated/workspace/'
+    | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -840,6 +852,7 @@ export interface RootRouteChildren {
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
   IntelligenceNotesSlugRoute: typeof IntelligenceNotesSlugRoute
   PartnerVerifyCodeRoute: typeof PartnerVerifyCodeRoute
+  IntelligenceNotesIndexRoute: typeof IntelligenceNotesIndexRoute
   ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1124,6 +1137,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/billing'
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/intelligence/notes/': {
+      id: '/intelligence/notes/'
+      path: '/intelligence/notes'
+      fullPath: '/intelligence/notes/'
+      preLoaderRoute: typeof IntelligenceNotesIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/workspace/': {
       id: '/_authenticated/workspace/'
@@ -1428,6 +1448,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
   IntelligenceNotesSlugRoute: IntelligenceNotesSlugRoute,
   PartnerVerifyCodeRoute: PartnerVerifyCodeRoute,
+  IntelligenceNotesIndexRoute: IntelligenceNotesIndexRoute,
   ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

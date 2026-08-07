@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { LabelChip } from "@/components/marketing/IntelligenceNote";
-import { formatNoteDate, notesNewestFirst } from "@/lib/intelligence/notes";
+import { formatNoteDate, notesNewestFirst, type Note } from "@/lib/intelligence/notes";
 
 /**
  * The notes index.
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/intelligence/notes/")({
 });
 
 function NotesIndex() {
-  const { notes } = Route.useLoaderData();
+  const { notes } = Route.useLoaderData() as { notes: Note[] };
 
   return (
     <MarketingShell>
