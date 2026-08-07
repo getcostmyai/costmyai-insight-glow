@@ -215,7 +215,7 @@ export async function sweepTestResidue(
 
   // Last, deliberately: the orphan rule reads which workspaces still exist, so
   // it has to run after this sweep has finished deleting them.
-  result.syncRunAlerts = await sweepAlertResidue(admin, cutoff);
+  result.syncRunAlerts = await sweepAlertResidue(admin, cutoff, ownedAlertIds);
 
   return result;
 }
