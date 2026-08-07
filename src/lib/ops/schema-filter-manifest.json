@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-06T12:27:08.059Z",
+  "generatedAt": "2026-08-07T13:08:09.842Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -496,6 +496,38 @@
       "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\")"
     },
     {
+      "file": "src/lib/intelligence/leads.functions.ts",
+      "line": 41,
+      "table": "intelligence_leads",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"intelligence_leads\") .select( \"id, detector, dedupe_key, severity, title, summary, evidence, status, ed"
+    },
+    {
+      "file": "src/lib/intelligence/leads.server.ts",
+      "line": 57,
+      "table": "host_prices",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, price_source, input_usd_per_mtok, output_usd_per_mt"
+    },
+    {
+      "file": "src/lib/intelligence/leads.server.ts",
+      "line": 64,
+      "table": "benchmarks",
+      "filters": [],
+      "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score, measured_at, source_run_id\") .range(f, t)"
+    },
+    {
+      "file": "src/lib/intelligence/leads.server.ts",
+      "line": 69,
+      "table": "benchmark_margins",
+      "filters": [],
+      "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\").range(f, t)"
+    },
+    {
       "file": "src/lib/intelligence/snapshot.server.ts",
       "line": 82,
       "table": "monthly_kpi_snapshot",
@@ -587,6 +619,15 @@
         "status"
       ],
       "snippet": ".from(\"partner_applications\") .select( \"id, first_name, last_name, email, phone, company, active_clients_bucke"
+    },
+    {
+      "file": "src/lib/partner-badge.functions.ts",
+      "line": 70,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select(\"referral_code, status\") .eq(\"id\", membership.data.partner_id)"
     },
     {
       "file": "src/lib/partners.functions.ts",
