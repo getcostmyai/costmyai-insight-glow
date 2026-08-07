@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { recordRun } from "../engine/evaluate.server";
 import { mintApiKey, revokeApiKey } from "../ingest/keys.server";
+import { ACTIVE_CLIENT_BUCKETS, STARTING_SOON_BUCKETS } from "../partner-application";
 import { setApplicationStatus } from "../partner-application.server";
 import { guardIntegrationDatabase } from "./support/isolation";
 
