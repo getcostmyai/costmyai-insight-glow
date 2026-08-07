@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
 import { POSTS } from "@/lib/blog/posts";
+import { notesNewestFirst } from "@/lib/intelligence/notes";
 
 // TODO: replace with your project URL once a project name or custom domain is set.
 const BASE_URL = "";
@@ -21,6 +22,22 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/models", changefreq: "daily", priority: "0.9" },
           { path: "/pricing", changefreq: "weekly", priority: "0.9" },
           { path: "/intelligence", changefreq: "weekly", priority: "0.8" },
+          // The notes index is only advertised once a note exists; an empty
+          // section in the sitemap is a crawl budget spent on nothing.
+          ...(notesNewestFirst().length > 0
+            ? [
+                {
+                  path: "/intelligence/notes",
+                  changefreq: "weekly" as const,
+                  priority: "0.7",
+                },
+              ]
+            : []),
+          ...notesNewestFirst().map((n) => ({
+            path: `/intelligence/notes/${n.slug}`,
+            changefreq: "monthly" as const,
+            priority: "0.7",
+          })),
           { path: "/standard", changefreq: "monthly", priority: "0.9" },
           { path: "/api", changefreq: "monthly", priority: "0.6" },
           { path: "/partners", changefreq: "monthly", priority: "0.7" },

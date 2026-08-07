@@ -47,8 +47,10 @@ import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as IntelligenceNotesIndexRouteImport } from './routes/intelligence.notes.index'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
 import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
+import { Route as IntelligenceNotesSlugRouteImport } from './routes/intelligence.notes.$slug'
 import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
 import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
@@ -263,6 +265,11 @@ const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const IntelligenceNotesIndexRoute = IntelligenceNotesIndexRouteImport.update({
+  id: '/intelligence/notes/',
+  path: '/intelligence/notes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWorkspaceIndexRoute =
   AuthenticatedWorkspaceIndexRouteImport.update({
     id: '/',
@@ -272,6 +279,11 @@ const AuthenticatedWorkspaceIndexRoute =
 const PartnerVerifyCodeRoute = PartnerVerifyCodeRouteImport.update({
   id: '/partner_/verify/$code',
   path: '/partner/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceNotesSlugRoute = IntelligenceNotesSlugRouteImport.update({
+  id: '/intelligence/notes/$slug',
+  path: '/intelligence/notes/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBuildInfoRoute = ApiPublicBuildInfoRouteImport.update({
@@ -456,8 +468,10 @@ export interface FileRoutesByFullPath {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -518,8 +532,10 @@ export interface FileRoutesByTo {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
+  '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -585,8 +601,10 @@ export interface FileRoutesById {
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
+  '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -652,8 +670,10 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/api/public/build-info'
+    | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/workspace/'
+    | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -714,8 +734,10 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/api/public/build-info'
+    | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/workspace'
+    | '/intelligence/notes'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -780,8 +802,10 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
     | '/api/public/build-info'
+    | '/intelligence/notes/$slug'
     | '/partner_/verify/$code'
     | '/_authenticated/workspace/'
+    | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/payments/webhook'
@@ -826,7 +850,9 @@ export interface RootRouteChildren {
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
+  IntelligenceNotesSlugRoute: typeof IntelligenceNotesSlugRoute
   PartnerVerifyCodeRoute: typeof PartnerVerifyCodeRoute
+  IntelligenceNotesIndexRoute: typeof IntelligenceNotesIndexRoute
   ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1112,6 +1138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/intelligence/notes/': {
+      id: '/intelligence/notes/'
+      path: '/intelligence/notes'
+      fullPath: '/intelligence/notes/'
+      preLoaderRoute: typeof IntelligenceNotesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/workspace/': {
       id: '/_authenticated/workspace/'
       path: '/'
@@ -1124,6 +1157,13 @@ declare module '@tanstack/react-router' {
       path: '/partner/verify/$code'
       fullPath: '/partner/verify/$code'
       preLoaderRoute: typeof PartnerVerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence/notes/$slug': {
+      id: '/intelligence/notes/$slug'
+      path: '/intelligence/notes/$slug'
+      fullPath: '/intelligence/notes/$slug'
+      preLoaderRoute: typeof IntelligenceNotesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/build-info': {
@@ -1406,7 +1446,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
+  IntelligenceNotesSlugRoute: IntelligenceNotesSlugRoute,
   PartnerVerifyCodeRoute: PartnerVerifyCodeRoute,
+  IntelligenceNotesIndexRoute: IntelligenceNotesIndexRoute,
   ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
@@ -1426,13 +1468,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
