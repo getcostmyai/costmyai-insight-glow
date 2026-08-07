@@ -113,6 +113,15 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Scans the price, benchmark and listing ledgers for something worth writing about, and files it in the editorial queue with its evidence attached.",
   },
   {
+    job: "task-drift",
+    label: "Token-drift meter",
+    cronName: "costmyai-task-drift",
+    schedule: "30 2 1 * *",
+    maxIntervalMinutes: 60 * 24 * 35,
+    what: "Sends eight frozen tasks to six pinned models and records the token counts each provider billed, so that a fixed workload getting quietly more expensive is measured rather than argued.",
+  },
+  {
+
 
     job: SHAPE_WATCH_JOB,
     label: "Unrecognised response shapes",
