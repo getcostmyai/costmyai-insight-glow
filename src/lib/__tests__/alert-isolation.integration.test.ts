@@ -39,8 +39,12 @@ const admin = createClient(URL, SERVICE, {
 guardIntegrationDatabase(admin);
 
 const stamp = Date.now();
-/** Older than the sweep's age gate, so the stamped row is actually eligible. */
-const OLD = new Date(Date.now() - 60 * 60_000).toISOString();
+/**
+ * Written as of now, deliberately. Age is what makes a row fair game for any
+ * other file's sweep running in parallel; a fresh row is inside every sibling's
+ * grace window, and this file reaches its own rows by id instead.
+ */
+const NOW = new Date().toISOString();
 const MISSING_ORG = "00000000-0000-4000-8000-0000000ff112";
 
 let realOrgId: string;
@@ -62,8 +66,8 @@ beforeAll(async () => {
     { detail: { orgId: realOrgId, note: stamp }, error: "[ingest] a real customer alert" },
   ].map((r) => ({
     job: "shape-watch",
-    started_at: OLD,
-    finished_at: OLD,
+    started_at: NOW,
+    finished_at: NOW,
     ok: false,
     outcome: "failed",
     rows_written: 1,
@@ -86,8 +90,11 @@ describe("the isolation sweep, on ops-board alerts", () => {
     const before = await admin.from("sync_runs").select("id").in("id", ids);
     expect((before.data ?? []).length).toBe(3);
 
-    const swept = await sweepTestResidue(admin as never);
-    expect(swept.syncRunAlerts).toBeGreaterThanOrEqual(2);
+    // Scoped to the three rows this file wrote: the predicate under test is
+    // exercised exactly as in production, but the count is not shared with
+    // whatever else the suite is doing at the same moment.
+    const swept = await sweepTestResidue(admin as never, 30 * 60_000, ids);
+    expect(swept.syncRunAlerts).toBe(2);
 
     const after = await admin.from("sync_runs").select("id, error").in("id", ids);
     const left = after.data ?? [];
