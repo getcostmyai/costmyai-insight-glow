@@ -619,7 +619,66 @@ function QualityPerDollar({ data, ctx }: { data: IntelligencePayload; ctx: Repor
   );
 }
 
+/**
+ * Notes rail.
+ *
+ * On a frozen page it shows only the notes written against that month; on the
+ * live page, the most recent notes overall. It renders nothing at all when
+ * there is nothing to show, so the section never advertises analysis that does
+ * not exist.
+ */
+function NotesRail({ ctx }: { ctx: ReportContext }) {
+  const notes = ctx.frozenMonth ? notesForMonth(ctx.frozenMonth) : notesNewestFirst().slice(0, 3);
+  if (notes.length === 0) return null;
+
+  return (
+    <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-28">
+      <div className="mx-auto max-w-6xl">
+        <SectionHead eyebrow="Notes" title="Why these numbers moved">
+          Each note is labelled before its first sentence: a proven mechanism, a correlation we
+          will not call a cause, or third-party data we have named.
+        </SectionHead>
+        <ul className="mt-10 divide-y divide-border/60 border-t border-border/60">
+          {notes.map((n) => (
+            <li key={n.slug}>
+              <Reveal>
+                <Link
+                  to="/intelligence/notes/$slug"
+                  params={{ slug: n.slug }}
+                  className="group grid gap-4 py-8 sm:grid-cols-[13rem_minmax(0,1fr)] sm:gap-10"
+                >
+                  <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    {LABELS[n.label].short}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xl font-semibold tracking-tight transition-colors group-hover:text-primary sm:text-2xl">
+                      {n.title}
+                    </span>
+                    <span className="mt-3 block max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                      {n.deck}
+                    </span>
+                  </span>
+                </Link>
+              </Reveal>
+            </li>
+          ))}
+        </ul>
+        <Reveal>
+          <Link
+            to="/intelligence/notes"
+            className="mt-10 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-opacity hover:opacity-70"
+          >
+            All notes
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 function Archive({ ctx }: { ctx: ReportContext }) {
+
   return (
     <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-6xl">
