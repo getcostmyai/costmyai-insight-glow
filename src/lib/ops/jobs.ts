@@ -105,6 +105,14 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Re-checks every read query against the lifecycle and tenancy columns the database actually carries today, and promotes a finding the moment a dormant guard goes live.",
   },
   {
+    job: "intelligence-leads",
+    label: "Intelligence lead detector",
+    cronName: "costmyai-intelligence-leads",
+    schedule: "50 5 * * *",
+    maxIntervalMinutes: 60 * 30,
+    what: "Scans the price, benchmark and listing ledgers for something worth writing about, and files it in the editorial queue with its evidence attached.",
+  },
+  {
 
     job: SHAPE_WATCH_JOB,
     label: "Unrecognised response shapes",

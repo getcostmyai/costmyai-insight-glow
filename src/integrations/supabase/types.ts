@@ -499,6 +499,54 @@ export type Database = {
           },
         ]
       }
+      intelligence_leads: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          detector: string
+          editor_note: string | null
+          evidence: Json
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          severity: string
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          detector: string
+          editor_note?: string | null
+          evidence?: Json
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          severity?: string
+          status?: string
+          summary: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          detector?: string
+          editor_note?: string | null
+          evidence?: Json
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          severity?: string
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       job_config: {
         Row: {
           created_at: string

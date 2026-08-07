@@ -59,6 +59,7 @@ import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
+import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin/leads'
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
@@ -68,6 +69,7 @@ import { Route as ApiPublicSyncSchemaFiltersRouteImport } from './routes/api/pub
 import { Route as ApiPublicSyncReprocessRouteImport } from './routes/api/public/sync/reprocess'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
 import { Route as ApiPublicSyncPartnerPayoutsRouteImport } from './routes/api/public/sync/partner-payouts'
+import { Route as ApiPublicSyncIntelligenceLeadsRouteImport } from './routes/api/public/sync/intelligence-leads'
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
@@ -333,6 +335,11 @@ const AuthenticatedAdminPartnerApplicationsRoute =
     path: '/admin/partner-applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
+  id: '/admin/leads',
+  path: '/admin/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminJobsRoute = AuthenticatedAdminJobsRouteImport.update({
   id: '/admin/jobs',
   path: '/admin/jobs',
@@ -379,6 +386,12 @@ const ApiPublicSyncPartnerPayoutsRoute =
   ApiPublicSyncPartnerPayoutsRouteImport.update({
     id: '/api/public/sync/partner-payouts',
     path: '/api/public/sync/partner-payouts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicSyncIntelligenceLeadsRoute =
+  ApiPublicSyncIntelligenceLeadsRouteImport.update({
+    id: '/api/public/sync/intelligence-leads',
+    path: '/api/public/sync/intelligence-leads',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicSyncFreezeRoute = ApiPublicSyncFreezeRouteImport.update({
@@ -460,6 +473,7 @@ export interface FileRoutesByFullPath {
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -478,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
+  '/api/public/sync/intelligence-leads': typeof ApiPublicSyncIntelligenceLeadsRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
@@ -524,6 +539,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoIndexRoute
   '/intelligence': typeof IntelligenceIndexRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -542,6 +558,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
+  '/api/public/sync/intelligence-leads': typeof ApiPublicSyncIntelligenceLeadsRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
@@ -593,6 +610,7 @@ export interface FileRoutesById {
   '/demo/': typeof DemoIndexRoute
   '/intelligence/': typeof IntelligenceIndexRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -611,6 +629,7 @@ export interface FileRoutesById {
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
+  '/api/public/sync/intelligence-leads': typeof ApiPublicSyncIntelligenceLeadsRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
@@ -662,6 +681,7 @@ export interface FileRouteTypes {
     | '/demo/'
     | '/intelligence/'
     | '/admin/jobs'
+    | '/admin/leads'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -680,6 +700,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
+    | '/api/public/sync/intelligence-leads'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
@@ -726,6 +747,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/intelligence'
     | '/admin/jobs'
+    | '/admin/leads'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -744,6 +766,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
+    | '/api/public/sync/intelligence-leads'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
@@ -794,6 +817,7 @@ export interface FileRouteTypes {
     | '/demo/'
     | '/intelligence/'
     | '/_authenticated/admin/jobs'
+    | '/_authenticated/admin/leads'
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/referrals'
@@ -812,6 +836,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
+    | '/api/public/sync/intelligence-leads'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
@@ -859,6 +884,7 @@ export interface RootRouteChildren {
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
+  ApiPublicSyncIntelligenceLeadsRoute: typeof ApiPublicSyncIntelligenceLeadsRoute
   ApiPublicSyncPartnerPayoutsRoute: typeof ApiPublicSyncPartnerPayoutsRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyncReprocessRoute: typeof ApiPublicSyncReprocessRoute
@@ -1222,6 +1248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPartnerApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/leads': {
+      id: '/_authenticated/admin/leads'
+      path: '/admin/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AuthenticatedAdminLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/jobs': {
       id: '/_authenticated/admin/jobs'
       path: '/admin/jobs'
@@ -1283,6 +1316,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/sync/partner-payouts'
       fullPath: '/api/public/sync/partner-payouts'
       preLoaderRoute: typeof ApiPublicSyncPartnerPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sync/intelligence-leads': {
+      id: '/api/public/sync/intelligence-leads'
+      path: '/api/public/sync/intelligence-leads'
+      fullPath: '/api/public/sync/intelligence-leads'
+      preLoaderRoute: typeof ApiPublicSyncIntelligenceLeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sync/freeze': {
@@ -1366,6 +1406,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
   AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRoute
+  AuthenticatedAdminLeadsRoute: typeof AuthenticatedAdminLeadsRoute
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
@@ -1378,6 +1419,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRouteWithChildren,
   AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRoute,
+  AuthenticatedAdminLeadsRoute: AuthenticatedAdminLeadsRoute,
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
@@ -1455,6 +1497,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
+  ApiPublicSyncIntelligenceLeadsRoute: ApiPublicSyncIntelligenceLeadsRoute,
   ApiPublicSyncPartnerPayoutsRoute: ApiPublicSyncPartnerPayoutsRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyncReprocessRoute: ApiPublicSyncReprocessRoute,
