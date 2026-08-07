@@ -440,7 +440,7 @@ const PRIMARY_SOURCE_VERIFICATION: Note = {
     },
     {
       t: "p",
-      v: "The meter confirms the direction and the mechanism, and it also refines the vendor's own range: 10 percent at the bottom, but 32 percent in North Europe, above the 25 percent the FAQ quotes. That is the ordinary reason to read primary sources even when a secondary one agrees with you. The tracker was not slightly off. It was missing the dimension the price varies along.",
+      v: "The meter confirms the direction and the mechanism. It also shows why a quoted range is not a substitute for a reading: the premium is 10 percent at the bottom, and 32 percent in North Europe on the day we looked, outside the 10 to 25 percent the FAQ describes. We do not read that as the documentation being wrong — a published range can be typical rather than absolute, and one region on one day cannot settle which it is. It is simply the reason to read the meter even when a secondary source agrees with you: the range tells you roughly what to expect, the meter tells you what you will actually be charged. The tracker, meanwhile, was not slightly off. It was missing the dimension the price varies along.",
     },
     { t: "h2", v: "Why this happens by construction" },
     {
