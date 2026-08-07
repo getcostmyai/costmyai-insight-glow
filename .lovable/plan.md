@@ -1,41 +1,72 @@
-# Partner Journey — Audit Plan
+# Intelligence Notes — from facts to context
 
-Pre-plan checks already ran against the live database and the real code. Four findings are confirmed now, before any work starts. The rest of the audit is what this plan proposes.
+Turn `/intelligence` from a figure board into a place where movements are explained, without ever letting an explanation pass as a measurement.
 
-## Confirmed before planning
+## Decisions this plan builds on
 
-- **`partners`: 0 rows. `partner_users`: 0 rows. `commission_ledger`: 0 rows.** Nothing real exists downstream of the application form.
-- **Approval does nothing.** `setApplicationStatus` only writes `status`, `reviewer_note`, `reviewed_by`, `reviewed_at` on `partner_applications`. No code anywhere inserts a `partners` row or a `partner_users` row — the only non-test reads of `partners` are the referral redirect and the partner dashboard. So today, "approved" is a label with no side effects, and creating a real partner takes the same hand-built construction Dispatch 129 did for its test.
-- **`partner_users` has no insert policy at all** (SELECT only). Even a platform admin cannot add an owner to a partner account through the app — only a migration or service-role script can. That is the hard blocker on self-serve onboarding.
-- **The one "pending application" is not real.** It is a leftover integration-test row: `Integration Test GmbH`, `slack-test-1785541603@integration-test.invalid`, created 2026-07-31, never reviewed. So the application form has never been used by a real person either.
+- **Where**: notes live under Intelligence, at `/intelligence/notes` and `/intelligence/notes/{slug}`. The live page and every frozen month get a rail linking the notes attached to them. Not `/blog` (marketing register), not a new top-level section.
+- **Production**: a detector proposes, a human writes. A scheduled job scores the closed month and writes candidate leads with evidence attached. No lead is ever published automatically, and no sentence in a published note is generated.
+- **Cadence**: one note per frozen month, written after the freeze. Off-cycle notes only when a lead crosses a pre-set severity threshold, so "newsworthy" is a data condition rather than a mood.
 
-Stripe Connect onboarding itself *is* self-serve (`startConnectOnboarding` creates a real account link, gated by `is_partner_owner`) — but it is unreachable until a `partners` + `partner_users` pair exists, which nothing can create.
+## The labeling rule, enforced structurally
 
-## What the audit will do
+Every note carries exactly one provenance label, and it is a required field, not a convention:
 
-**Stage 0 — Attraction.** Read the live `/partners` page end to end, capture real screenshots, and record what the value proposition actually rests on: the five-tier ladder read live from `partner_tiers` (15/20/25/30/35% at $0/$5K/$10K/$40K/$130K), three promises, three steps. Check discoverability (nav, footer, sitemap entry at priority 0.7) and confirm no fabricated testimonial, logo, or case study is standing in as a trust marker.
+- `proven-mechanism` — a demonstrable cause, with a concrete exhibit.
+- `correlated` — a real pattern with an unconfirmed explanation. Rendered as "Analysis, not established cause."
+- `third-party` — built on someone else's dataset. Requires a non-empty `source` field naming the provider, rendered above the body and repeated in the meta description.
 
-**Stage 1 — Application.** Submit a real application through the live form, confirm the row lands with the correct routing decision, confirm what the applicant sees afterwards, and confirm whether the reviewer alert actually fires to the configured webhook (the secret is set — the audit checks it delivers, not that it is configured). Then try to act on the existing test row through `/admin/partner-applications` and record exactly what happens. Delete the test row afterwards.
+Enforcement: the note type makes `source` mandatory when the label is `third-party`, a unit test asserts every note in the corpus satisfies its label's requirements, and the renderer draws the chip from the same field the test reads. A note cannot be published with the chip missing because there is no code path that renders a body without one.
 
-**Stage 2 — Approval to real partner.** Already answered above. The audit writes it up with the file:line evidence and enumerates precisely what a human must do by hand per partner: pick a referral code, insert the `partners` row, insert the `partner_users` owner row, tell the person to sign in, then let them run Connect onboarding.
+## Scope
 
-**Stage 3 — Partner dashboard, mirror-audit style.** Every element on `/partner`: what is displayed, real screenshot, real source, and whether the number is computed in the database (`partner_summary`, `partner_commission_rate`, `partner_effective_tier`, `partner_lifetime_revenue`) or duplicated in app code. Then a real end-to-end referral test: create a partner, click `/r/CODE`, sign up a workspace, and confirm the attribution shows in that partner's own dashboard and nowhere else.
+### 1. Notes corpus and rendering
 
-**Stage 4 — Lifecycle.** Confirm tier progression is computed from real referred revenue with no second copy of the ladder in app code, confirm the payout run (proven in Dispatch 129) reads the same ledger the webhook writes, and inventory partner-facing notifications — expected finding: none exist for tier changes, new referrals, or payouts sent.
+- `src/lib/intelligence/notes.ts` — the corpus, in the same structured-block shape as `src/lib/blog/posts.ts` (reuse the `Block` union, extended with a `figure` block and an `exhibit` block). Fields: `slug`, `title`, `deck`, `label`, `source`, `month` (the frozen month it attaches to, nullable for off-cycle), `published`, `blocks`, `description`.
+- `src/routes/intelligence.notes.index.tsx` — index, newest first, label chip per row.
+- `src/routes/intelligence.notes.$slug.tsx` — the note. Own `head()` with title, description, og:title, og:description, og:type article, canonical.
+- `src/components/marketing/IntelligenceNote.tsx` — renderer following the Intelligence design standard: hairline rails, oversized type, one purple accent, no cards, Reveal on entry.
+- Rail component on `/intelligence` and `/intelligence/$month` listing notes for that month (frozen page) or the newest three (live page).
 
-All audit fixtures are created and removed within the run, same isolation discipline as the previous audits.
+### 2. The exhibit primitive
 
-## Marketing deliverable (separate from the audit)
+A note that claims a mechanism must show the artifact. `Exhibit` renders a labeled evidence block — a captured payload, a ledger row, a measured pair — in IBM Plex Mono against a hairline rail, with a caption stating where the artifact came from. Notes labeled `proven-mechanism` are required by test to contain at least one exhibit block.
 
-A distinct written recommendation on attraction levers beyond commission — co-marketing and case-study exposure, early feature access, a public partner directory or verifiable badge, a direct product-feedback channel, tier recognition that is not only money, network effects between partners, and what the page should say when there are still zero named partners to point at. Recommendation only; nothing gets built from it in this pass.
+### 3. Charts
+
+Extend `src/components/marketing/IntelligenceCharts.tsx`:
+
+- **Decomposition bar** — two opposing contributions and their net (price per token down X%, tokens per task up Y%, net Z%). This is the chart the first note needs.
+- **Trend line** with an explicit source caption baked into the component, so a third-party series cannot be drawn without its attribution.
+
+Both take real numbers as props and refuse to render when a series is empty, matching how the report page already omits sections it has no data for.
+
+### 4. Lead detector
+
+- `src/lib/intelligence/leads.server.ts` — runs against the closed month's frozen payload plus tracked history. Detectors, each emitting a typed lead with its evidence: outsized price move against the model's own tracked history; provider spread crossing a threshold on identical weights; a benchmark instrument crossing into saturation; a cluster of new listings from one provider.
+- Table `intelligence_leads`: `id`, `month`, `kind`, `severity`, `subject`, `evidence` (jsonb), `detected_at`, `status` (`open` | `written` | `dismissed`), `note_slug`. Owner-only read/write through RLS; no anon grant. Leads are internal.
+- New job `intelligence-leads` registered in `src/lib/ops/jobs.ts`, run right after `freeze-intelligence` monthly, reporting into `sync_runs` like every other job so the health check covers it.
+- `src/routes/_authenticated/admin/leads.tsx` — the editorial queue: open leads with their evidence rendered, and controls to mark written or dismissed. Owner-gated with the existing middleware.
+
+### 5. First note
+
+`reasoning-token-overhead`, label `proven-mechanism`, attached to the newest frozen month.
+
+Thesis: per-token price is falling while cost per task is not, because reasoning models bill tokens they do not show you. Exhibit: the real captured call that reported 1 output token while 122 were billed, with the parser field that was missing. Chart: decomposition of price-per-token against tokens-per-task. Closes by pointing at the methodology page and the live figures, not at a signup.
+
+### 6. Ongoing commitment, stated plainly
+
+The build below is roughly a two-week engineering effort. The content is about one person-day per note, every month, indefinitely, and needs a named owner. If nobody owns it, the honest outcome is: ship the detector and the first note, and do not present notes as a series until someone does.
+
+## Explicitly out of scope
+
+Customer-specific longitudinal narratives. They need months of real per-customer history that does not exist yet, and synthesizing them would be exactly the failure mode this plan is built to prevent. One preparatory step is in scope: confirm the ingest path retains per-request token history at the granularity a future note would need, and record the gap if it does not.
 
 ## Technical notes
 
-Read-only except for the audit fixtures described above. No production schema or code changes are made during the audit. The Stage 2 remedy — an approve action that provisions a partner, generates a referral code, and grants owner membership, which needs a migration for the missing `partner_users` insert path — is scoped as a follow-up, not part of this run.
-
-## Decision needed
-
-Stage 2's answer is already in hand: partner creation is fully manual and partly impossible through the app. Vincent is the one real case waiting. Choose one:
-
-1. **Audit first, then build the pipeline** — Vincent gets hand-provisioned in the meantime.
-2. **Build the approval pipeline first** — Vincent becomes its first real run, audit follows.
+- Notes are code, not database rows. They are reviewed like code, versioned like code, and cannot be edited invisibly in production — the same reasoning behind the append-only frozen months.
+- Note pages are public and SSR'd; they read no authenticated data.
+- The rail on `/intelligence/$month` derives from the note's `month` field, so a frozen month and its interpretation stay linked permanently.
+- The leads table and admin queue are internal; nothing in the lead pipeline touches a public route.
+- Sitemap: add `/intelligence/notes` and each note slug to `src/routes/sitemap[.]xml.ts`.
+- Tests in `src/lib/intelligence/__tests__/notes.test.ts`: label/source integrity, exhibit requirement for proven-mechanism, unique slugs, every `month` value referencing a real frozen month.
