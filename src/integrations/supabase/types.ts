@@ -2126,6 +2126,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_partner: { Args: { _user_id: string }; Returns: boolean }
       is_org_manager: { Args: { _org_id: string }; Returns: boolean }
       is_org_member: { Args: { _org_id: string }; Returns: boolean }
       is_partner_member: { Args: { _partner_id: string }; Returns: boolean }

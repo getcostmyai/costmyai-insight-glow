@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireOwner } from "./owner-middleware";
+import { requireDemoAccess } from "./owner-middleware";
 
 import { runPipeline } from "./engine/pipeline";
 import type {
@@ -13,14 +13,13 @@ import type {
 
 export type PipelineRange = 1 | 7 | 30;
 
-/** Demo-workspace pipeline view — owner-only, same lock as the demo dashboard. */
+/** Demo-workspace pipeline view — same guard, and same per-audience workspace, as the demo dashboard. */
 export const getPipelineSnapshot = createServerFn({ method: "GET" })
-  .middleware([requireOwner])
+  .middleware([requireDemoAccess])
   .inputValidator((data: { days?: number } | undefined) => ({
     days: ([1, 7, 30] as number[]).includes(Number(data?.days)) ? Number(data?.days) : 30,
   }))
-  .handler(async ({ data }) => {
-    const { DEMO_ORG_ID } = await import("./supabase-public.server");
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const supabase = supabaseAdmin;
 
@@ -33,7 +32,7 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         .select(
           "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
         )
-        .eq("org_id", DEMO_ORG_ID)
+        .eq("org_id", context.demoOrgId)
         .eq("granularity", data.days === 1 ? "hour" : "day")
         .gte("bucket_start", since),
       supabase
