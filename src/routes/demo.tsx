@@ -40,8 +40,10 @@ export const Route = createFileRoute("/demo")({
     <div className="mx-auto max-w-lg p-16 text-center">
       <h1 className="text-xl font-semibold">This workspace is restricted</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        The internal demo workspace is limited to its owner.
+        The demo workspace is open to CostMyAI and to currently active partners. If your partnership
+        was recently approved, sign out and back in; if it is on hold, access resumes when it does.
       </p>
+
     </div>
   ),
   notFoundComponent: () => (
