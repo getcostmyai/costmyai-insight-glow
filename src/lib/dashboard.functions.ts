@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireOwner } from "./owner-middleware";
+import { requireDemoAccess } from "./owner-middleware";
 
 import type { ObjectiveKind } from "./engine/types";
 import type { DashboardSnapshot, RangeDays } from "./dashboard.server";
@@ -11,26 +11,27 @@ export type { DashboardSnapshot, RangeDays };
 const OBJECTIVES: ObjectiveKind[] = ["cost", "latency", "quality_floor"];
 
 /**
- * The demo workspace snapshot — owner-only.
+ * The demo workspace snapshot — owner, or a real, currently-active partner.
  *
  * This is not a public read: the caller must present a valid bearer token AND
- * be the one account allowed to see it. Enforced here, at the data boundary,
- * so hiding the route in the UI is never what keeps it private.
+ * pass the demo guard. Which workspace they get is derived from who they are
+ * (`context.demoOrgId`), never from the request, so a partner cannot reach the
+ * internal workspace and vice versa. Enforced here, at the data boundary, so
+ * hiding the route in the UI is never what keeps it private.
  */
 export const getDashboardSnapshot = createServerFn({ method: "GET" })
-  .middleware([requireOwner])
+  .middleware([requireDemoAccess])
   .inputValidator((data: { days?: number; objective?: string } | undefined) => ({
     days: (([1, 7, 30] as number[]).includes(Number(data?.days)) ? Number(data?.days) : 30) as RangeDays,
     objective: (OBJECTIVES.includes(data?.objective as ObjectiveKind)
       ? data?.objective
       : "cost") as ObjectiveKind,
   }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { buildDashboardSnapshot } = await import("./dashboard.server");
-    const { DEMO_ORG_ID } = await import("./supabase-public.server");
     // Read with the service client, not the anon one: the demo workspace's
     // public RLS policies are gone, so this is the only remaining path to it —
-    // and it is only reachable after requireOwner has passed.
+    // and it is only reachable after the demo guard has passed.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { OBJECTIVE_OPTIONS } = await import("./dashboard/objective");
@@ -39,7 +40,7 @@ export const getDashboardSnapshot = createServerFn({ method: "GET" })
     return buildDashboardSnapshot({
       days: data.days,
       objective: selection,
-      orgId: DEMO_ORG_ID,
+      orgId: context.demoOrgId,
       client: supabaseAdmin as never,
     });
   });

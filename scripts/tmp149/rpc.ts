@@ -1,0 +1,14 @@
+import { createClient } from "@supabase/supabase-js";
+const URL_=process.env.SUPABASE_URL!;
+const admin=createClient(URL_,process.env.SUPABASE_SERVICE_ROLE_KEY!,{auth:{persistSession:false}});
+const email=`d149-r-${Date.now()}@costmyai.test`,pass=`D149-${crypto.randomUUID()}`;
+const {data:u,error}=await admin.auth.admin.createUser({email,password:pass,email_confirm:true}); if(error) throw error;
+const pub=createClient(URL_,process.env.SUPABASE_PUBLISHABLE_KEY!,{auth:{persistSession:false}});
+const si=await pub.auth.signInWithPassword({email,password:pass}); if(si.error) throw si.error;
+console.log("before partner:", await pub.rpc("is_active_partner" as never,{_user_id:u.user!.id} as never));
+const {data:p}=await admin.from("partners").insert({name:"D149 rpc",referral_code:`D149RPC${Date.now()%100000}`,status:"active"}).select("id").single();
+await admin.from("partner_users").insert({partner_id:p!.id,user_id:u.user!.id,role:"owner"});
+console.log("as partner:", await pub.rpc("is_active_partner" as never,{_user_id:u.user!.id} as never));
+await admin.from("partner_users").delete().eq("partner_id",p!.id);
+await admin.from("partners").delete().eq("id",p!.id);
+await admin.auth.admin.deleteUser(u.user!.id);

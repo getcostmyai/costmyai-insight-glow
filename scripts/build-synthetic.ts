@@ -25,7 +25,7 @@ import { aggregateRollups, buildBilling, buildProfiles } from "../src/lib/synthe
 import { sizeWorkloads } from "../src/lib/synthetic/sizing";
 import { SYNTHETIC_WORKLOADS } from "../src/lib/synthetic/workloads";
 
-export const ORG_ID = "00000000-0000-0000-0000-000000000001";
+export const ORG_ID = process.env.SYNTHETIC_ORG_ID ?? "00000000-0000-0000-0000-000000000001";
 export const WINDOW_DAYS = 30;
 /** Always covers the whole current UTC day, so today's day bucket can be rebuilt from raw events. */
 export const RAW_EVENT_HOURS = 30;

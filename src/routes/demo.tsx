@@ -1,15 +1,16 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
-import { isOwner } from "@/lib/access";
+import { getDemoAccess } from "@/lib/demo-access.functions";
 
 /**
- * The internal demo workspace — Robin only.
+ * The demo workspace — Robin, or a real, currently-active partner.
  *
  * The route is client-rendered (`ssr: false`) because the Supabase session
  * lives in per-origin localStorage, which the server cannot read. The real
- * enforcement is server-side (`requireOwner` on every data function); this
- * gate only avoids rendering a shell that could never load data.
+ * enforcement is server-side (`requireDemoAccess` on every data function); this
+ * gate only avoids rendering a shell that could never load data. Which
+ * workspace a caller actually reads is decided server-side too.
  */
 export const Route = createFileRoute("/demo")({
   ssr: false,
@@ -19,10 +20,13 @@ export const Route = createFileRoute("/demo")({
     if (error || !data.user) {
       throw redirect({ to: "/auth", search: { next: location.href } });
     }
-    if (!isOwner(data.user.id)) {
+    const { audience } = await getDemoAccess();
+    if (!audience) {
       throw new Error("Forbidden: this workspace is restricted");
     }
+    return { demoAudience: audience };
   },
+
 
   head: () => ({
     meta: [
