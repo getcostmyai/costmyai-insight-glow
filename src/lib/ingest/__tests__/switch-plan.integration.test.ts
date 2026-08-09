@@ -224,3 +224,40 @@ describe("switch plan endpoint", () => {
     expect(cross.blocked_reason).toBe("routing_not_granted");
   });
 });
+
+describe("container poll loop, against the real endpoint (Stage 3)", () => {
+  it("polls the live plan, then survives the endpoint disappearing", async () => {
+    const { loadConfig } = await import("../../../../packages/gateway-container/src/config");
+    const { SwitchMap, STALE_AFTER_MS } = await import(
+      "../../../../packages/gateway-container/src/switch-map"
+    );
+
+    const cfg = (base: string) =>
+      loadConfig({
+        COSTMYAI_INGEST_TOKEN: token,
+        COSTMYAI_BASE_URL: base,
+        COSTMYAI_UPSTREAM_URL: "https://api.openai.com",
+        COSTMYAI_SPOOL_DIR: "/tmp/costmyai-stage3-live",
+      });
+
+    // Make the same-host switch executable, so there is a real decision to lose.
+    await admin.from("switches").update({ status: "active" }).eq("id", sameHostSwitchId);
+
+    let now = Date.now();
+    const live = new SwitchMap(cfg(APP), fetch, () => now);
+    expect(await live.refresh()).toBe(true);
+    expect(live.status().active).toBe(true);
+    const hit = live.lookup("openai/gpt-4o-mini", "api.openai.com");
+    expect(hit?.target.model_key).toBe("openai/gpt-4.1-mini");
+
+    // CostMyAI becomes unreachable. Nothing about the customer's traffic changes
+    // until we can no longer vouch for the decision, and then it stops.
+    const dead = new SwitchMap(cfg("http://127.0.0.1:9"), fetch, () => now);
+    expect(await dead.refresh()).toBe(false);
+    expect(dead.lookup("openai/gpt-4o-mini", "openai")).toBeNull();
+
+    now += STALE_AFTER_MS + 1;
+    expect(live.lookup("openai/gpt-4o-mini", "openai")).toBeNull();
+    expect(live.status().stale).toBe(true);
+  }, 60_000);
+});
