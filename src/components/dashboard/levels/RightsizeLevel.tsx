@@ -16,8 +16,11 @@ import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/Le
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
-import { executionCopy } from "@/lib/dashboard/execution-copy";
-import { ExecutionBadge, ExecutionNote, actionLabelFor } from "@/components/dashboard/ExecutionNote";
+import {
+  ExecutionSubtitle,
+  SwitchAction,
+  actionLabelFor,
+} from "@/components/dashboard/ExecutionNote";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
@@ -276,13 +279,6 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           {isArb ? "Same model, cheaper host" : "Quality-proven model swap"} · reversible at any
           time
         </p>
-        {/* Dispatch 157: the hero's switch tells the same truth as the row. */}
-        <ExecutionBadge execution={best.execution} dark className="mt-2" />
-        {best.execution ? (
-          <p className="mt-2 max-w-xl text-[11px] leading-relaxed text-white/55">
-            {executionCopy(best.execution).detail}
-          </p>
-        ) : null}
       </div>
       <div className="text-right">
         <div className="num text-3xl text-[oklch(0.86_0.16_155)]">
@@ -290,6 +286,8 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           <span className="text-sm text-white/55"> · {ctl.activeRange.long}</span>
         </div>
       </div>
+      {/* Dispatch 159: the state is a subtitle of the control it explains. */}
+      <SwitchAction execution={best.execution} dark align="left">
       {ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost) ? (
         /* Same rule as the rows below: state before action. */
         <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white/85">
@@ -331,6 +329,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           <ArrowUpRight className="size-4" />
         </Link>
       )}
+      </SwitchAction>
 
       {errorFor(key) ? (
         <p className="w-full text-[11px] text-[oklch(0.8_0.15_25)]">{errorFor(key)}</p>
@@ -390,14 +389,12 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 </span>
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
-              {/* Dispatch 157: the right-size cards run through the same
-                  execution resolver as every other switch surface. */}
-              <ExecutionNote execution={o.execution} className="mt-3" />
               {o.toModel ? (
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-opportunity/20 pt-3">
                   <span className="text-xs text-muted-foreground">
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
                   </span>
+                  <SwitchAction execution={o.execution} className="ml-auto">
                   {ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? (
                     // The right-size switch is running; the traffic is not on
                     // it yet, so the waste above is still real.
@@ -438,6 +435,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                       <ArrowUpRight className="size-3" />
                     </Link>
                   )}
+                  </SwitchAction>
 
                 </div>
               ) : null}
@@ -533,14 +531,6 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                   </div>
                 </div>
 
-                {/* Dispatch 156: three real states, never one blanket claim.
-                    Which one applies is decided server-side from the same rule
-                    the container's plan is built from. */}
-                <ExecutionNote
-                  execution={s.execution}
-                  className="mt-4 border-t border-border pt-3"
-                />
-
                 <SwitchControls
                   state="active"
                   busy={busy(`switch:${s.switchId}`)}
@@ -553,6 +543,13 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                       action,
                     })
                   }
+                />
+
+                {/* Dispatch 159: attached to the controls it describes. */}
+                <ExecutionSubtitle
+                  execution={s.execution}
+                  align="left"
+                  className="mt-3 border-t border-border pt-3"
                 />
               </div>
             ))
