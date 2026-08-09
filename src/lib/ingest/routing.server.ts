@@ -171,23 +171,19 @@ export async function resolveProviderGates(
   ]);
 
   const granted = new Set(grants.filter((g) => g.granted && !g.revokedAt).map((g) => norm(g.host)));
-  const cutoff = Date.now() - PROVIDER_SEEN_WINDOW_DAYS * 86_400_000;
 
   const out = new Map<string, ProviderGate>();
   for (const host of wanted) {
-    const lastSeenAt = seen.get(host) ?? null;
-    const state: ProviderGateState = !lastSeenAt
-      ? "not_connected"
-      : granted.has(host)
-        ? "granted"
-        : "connected";
-    out.set(host, {
+    out.set(
       host,
-      state,
-      lastSeenAt,
-      activeRecently: Boolean(lastSeenAt && new Date(lastSeenAt).getTime() >= cutoff),
-      everSwitchedTo: switched.has(host),
-    });
+      gateFor({
+        host,
+        lastSeenAt: seen.get(host) ?? null,
+        granted: granted.has(host),
+        everSwitchedTo: switched.has(host),
+      }),
+    );
   }
   return out;
 }
+
