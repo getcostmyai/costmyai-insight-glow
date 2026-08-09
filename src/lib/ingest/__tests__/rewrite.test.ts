@@ -317,6 +317,8 @@ describe("shapes Stage 4 must refuse are refused, and disclosed", () => {
     expect(seen[0]!.body).toBe(raw);
     expect(response.headers.get("x-costmyai-reroute")).toBeNull();
   });
+});
+
 /* ------------------------------------------- 3+4. the rewrite, and its event */
 
 describe("a real same-host model swap", () => {
