@@ -874,6 +874,53 @@ export type Database = {
           },
         ]
       }
+      org_provider_routing: {
+        Row: {
+          container_id: string | null
+          created_at: string
+          first_granted_at: string
+          granted: boolean
+          host: string
+          id: string
+          last_seen_at: string
+          org_id: string
+          revoked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          container_id?: string | null
+          created_at?: string
+          first_granted_at?: string
+          granted?: boolean
+          host: string
+          id?: string
+          last_seen_at?: string
+          org_id: string
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          container_id?: string | null
+          created_at?: string
+          first_granted_at?: string
+          granted?: boolean
+          host?: string
+          id?: string
+          last_seen_at?: string
+          org_id?: string
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_provider_routing_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           autonomous_enabled: boolean
