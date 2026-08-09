@@ -2,6 +2,8 @@ import { classifyTask, isInScope } from "./classify.js";
 import type { ContainerConfig } from "./config.js";
 import { readUsage, StreamUsageCollector, type UsageReading } from "./parse.js";
 import type { UpstreamQueue } from "./queue.js";
+import { planRewrite, type RewriteOutcome } from "./rewrite.js";
+import type { SwitchMap } from "./switch-map.js";
 
 /**
  * The proxy request path.
@@ -57,6 +59,11 @@ export interface ProxyDeps {
   now?: () => number;
   /** Injected for tests; production passes crypto.randomUUID. */
   uuid?: () => string;
+  /**
+   * The local switch plan (Dispatch 155). Optional: a container without one
+   * behaves exactly as it did before Stage 4 — a byte-identical pass-through.
+   */
+  switchMap?: SwitchMap;
 }
 
 export interface ProxyEvent {
@@ -69,6 +76,15 @@ export interface ProxyEvent {
   latency_ms: number;
   status: "ok" | "error";
   parse_status: "parsed" | "tokens_only" | "unparsed";
+  /**
+   * Dispatch 155. Present only on a request this container actually rewrote.
+   * Absent — not false — on every untouched request, so an unrerouted event is
+   * byte-identical to what a v1 container sends.
+   */
+  rerouted?: boolean;
+  original_model_key?: string;
+  original_host?: string;
+  route_reason?: string;
   /**
    * Dispatch 106. Set only when the envelope could not be read cleanly: a
    * content-free structural skeleton (numbers and keys, every string erased)
@@ -108,6 +124,28 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       : new Uint8Array(await request.arrayBuffer());
   const requestedModel = modelFromRequest(bodyBytes, incoming.pathname);
 
+  // Dispatch 155, Stage 4. `lookup` is synchronous and memory-only; with no
+  // fresh plan, no matching switch, or no switch map at all it returns null and
+  // `planRewrite` passes the request through untouched.
+  const rewrite: RewriteOutcome = planRewrite({
+    lookup: deps.switchMap?.lookup(requestedModel, upstream.host) ?? null,
+    path: incoming.pathname,
+    headers: request.headers,
+    body: bodyBytes,
+    originalModel: requestedModel,
+    originalHost: upstream.host,
+  });
+  const sentBody = rewrite.rerouted ? rewrite.body : bodyBytes;
+  const sentModel = rewrite.rerouted ? (rewrite.disclosure["x-costmyai-model"] ?? requestedModel) : requestedModel;
+  const reroute = rewrite.rerouted
+    ? {
+        rerouted: true as const,
+        originalModel: requestedModel ?? "unknown",
+        originalHost: upstream.host,
+        switchId: rewrite.disclosure["x-costmyai-switch"] as string,
+      }
+    : undefined;
+
   const startedAt = now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.upstreamTimeoutMs);
@@ -117,7 +155,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
     response = await fetchImpl(target.toString(), {
       method: request.method,
       headers,
-      body: bodyBytes as unknown as undefined,
+      body: sentBody as unknown as undefined,
       signal: controller.signal,
       redirect: "manual",
     });
@@ -132,9 +170,10 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       uuid,
       host: upstream.host,
       path: incoming.pathname,
-      model: requestedModel,
+      model: sentModel,
       reading: null,
       status: "error",
+      reroute,
     });
     return new Response(
       JSON.stringify({
@@ -145,7 +184,10 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
             : `Could not reach ${upstream.host}: ${err instanceof Error ? err.message : String(err)}`,
         },
       }),
-      { status: 504, headers: { "content-type": "application/json" } },
+      {
+        status: 504,
+        headers: { "content-type": "application/json", ...rewrite.disclosure },
+      },
     );
   }
   clearTimeout(timeout);
@@ -161,6 +203,10 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
     if (name === "content-encoding" || name === "content-length") return;
     outHeaders.set(key, value);
   });
+  // Disclosure, never silence: the caller can see on their own response that we
+  // moved this request, what it was, and which switch did it — and can see a
+  // refusal just as plainly. Nothing here is added to an untouched request.
+  for (const [name, value] of Object.entries(rewrite.disclosure)) outHeaders.set(name, value);
 
   const status = response.status >= 400 ? "error" : "ok";
   const inScope = isInScope(incoming.pathname);
@@ -174,10 +220,11 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       uuid,
       host: upstream.host,
       path: incoming.pathname,
-      model: requestedModel,
+      model: sentModel,
       reading: null,
       status,
       skip: !inScope,
+      reroute,
     });
     return new Response(buffered, { status: response.status, headers: outHeaders });
   }
@@ -193,9 +240,10 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         uuid,
         host: upstream.host,
         path: incoming.pathname,
-        model: reading.model ?? requestedModel,
+        model: reading.model ?? sentModel,
         reading,
         status,
+        reroute,
       }),
   });
 
@@ -231,6 +279,7 @@ interface RecordArgs {
   reading: UsageReading | null;
   status: "ok" | "error";
   skip?: boolean;
+  reroute?: { rerouted: true; originalModel: string; originalHost: string; switchId: string };
 }
 
 function record(deps: ProxyDeps, args: RecordArgs): void {
@@ -249,6 +298,12 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     parse_status: args.reading?.parseStatus ?? "unparsed",
     idempotency_key: args.uuid(),
   };
+  if (args.reroute) {
+    event.rerouted = true;
+    event.original_model_key = args.reroute.originalModel.slice(0, 120);
+    event.original_host = args.reroute.originalHost.slice(0, 120);
+    event.route_reason = args.reroute.switchId;
+  }
   if (event.parse_status !== "parsed" && args.reading?.skeleton) {
     event.envelope_skeleton = args.reading.skeleton;
   }
