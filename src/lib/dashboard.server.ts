@@ -910,6 +910,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   );
   /** Present-tense run rate. Only ever rendered where "/mo" is written next to it. */
   const activeMonthlyRate = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+  /** Dispatch 161. Only switches that are actually rerouting may be called running. */
+  const reroutingCount = runningSwitches.filter((s) => s.execution?.state === "automatic").length;
+
 
   /**
    * ---- Govern: what would run unattended, and what refuses to -------------
