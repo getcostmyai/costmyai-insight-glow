@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight, Clock, Copy, Loader2, ShieldCheck } from "luc
 import type { SwitchRow } from "@/lib/dashboard-data";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
-import { ExecutionNote, actionLabelFor } from "@/components/dashboard/ExecutionNote";
+import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNote";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
@@ -89,9 +89,6 @@ export function SwitchCard({
               {row.note}
             </p>
           ) : null}
-          {/* Dispatch 157: the same execution truth the active-switches panel
-              shows, on the row that offers the switch in the first place. */}
-          <ExecutionNote execution={row.execution} className="mt-3" />
           {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
         </div>
       </div>
@@ -114,6 +111,7 @@ export function SwitchCard({
             />
           </div>
         </div>
+        <SwitchAction execution={row.execution}>
         {pendingTraffic ? (
           // State, not action: the switch exists, the traffic does not yet.
           // Ahead of every other branch, because it is the truth about the row.
@@ -156,6 +154,7 @@ export function SwitchCard({
             <ArrowUpRight className="size-3.5" />
           </Link>
         )}
+        </SwitchAction>
       </div>
     </div>
   );
