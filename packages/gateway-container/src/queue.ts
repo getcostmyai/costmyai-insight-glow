@@ -11,7 +11,7 @@ import { INGEST_API_VERSION, INGEST_PATHS, type ContainerConfig } from "./config
  */
 
 export interface QueueItem {
-  kind: "events" | "billing";
+  kind: "events" | "billing" | "fallbacks";
   body: unknown;
 }
 

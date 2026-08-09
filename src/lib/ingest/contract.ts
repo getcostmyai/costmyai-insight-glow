@@ -44,6 +44,12 @@ export const INGEST_PATHS = {
    * holds a customer-granted key for. Same token as ingest.
    */
   switches: "/api/public/v1/switches",
+  /**
+   * Rerouting fallbacks (Dispatch 155, Stage 5). Same endpoint as the switch
+   * plan, same token: a container reports that a rerouted request had to fall
+   * back to the caller's original model, and repeated reports pause the switch.
+   */
+  fallbacks: "/api/public/v1/switches",
 } as const;
 
 

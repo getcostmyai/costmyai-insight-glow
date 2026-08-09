@@ -167,6 +167,12 @@ export interface ActiveSwitchRow {
   saved: number;
   monthlyRate: number;
   autonomous: boolean;
+  /**
+   * Dispatch 155, Stage 5. Present only on a switch CostMyAI paused itself
+   * after repeated rerouting fallbacks — the workspace reads why here, on the
+   * switch, rather than finding it stopped for no stated reason.
+   */
+  autoPausedReason?: string;
 }
 
 export interface ReconciliationRow {
@@ -685,6 +691,28 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     (switches.data ?? []).filter((s) => s.status === "paused"),
     w,
   ).map(toSwitchRow);
+  // Why a switch is paused, when we paused it ourselves. Read from the same
+  // event row the auto-pause wrote, never re-derived here.
+  if (frozenSwitches.length) {
+    const { data: pauseEvents } = await supabase
+      .from("switch_events")
+      .select("switch_id, detail, created_at")
+      .eq("org_id", orgId)
+      .eq("event", "auto_paused")
+      .in(
+        "switch_id",
+        frozenSwitches.map((s) => s.switchId),
+      )
+      .order("created_at", { ascending: false });
+    const reasons = new Map<string, string>();
+    for (const e of pauseEvents ?? []) {
+      if (!reasons.has(e.switch_id) && e.detail) reasons.set(e.switch_id, e.detail);
+    }
+    for (const s of frozenSwitches) {
+      const reason = reasons.get(s.switchId);
+      if (reason) s.autoPausedReason = reason;
+    }
+  }
   const frozen = frozenSwitches.length;
 
   // ---- Reconciliation: current ledger rows only (append-only history behind) --

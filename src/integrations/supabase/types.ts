@@ -1694,6 +1694,63 @@ export type Database = {
           },
         ]
       }
+      switch_fallbacks: {
+        Row: {
+          created_at: string
+          host: string | null
+          id: string
+          idempotency_key: string | null
+          is_synthetic: boolean
+          model_key: string | null
+          occurred_at: string
+          org_id: string
+          reason: string
+          status_code: number | null
+          switch_id: string
+        }
+        Insert: {
+          created_at?: string
+          host?: string | null
+          id?: string
+          idempotency_key?: string | null
+          is_synthetic?: boolean
+          model_key?: string | null
+          occurred_at?: string
+          org_id: string
+          reason: string
+          status_code?: number | null
+          switch_id: string
+        }
+        Update: {
+          created_at?: string
+          host?: string | null
+          id?: string
+          idempotency_key?: string | null
+          is_synthetic?: boolean
+          model_key?: string | null
+          occurred_at?: string
+          org_id?: string
+          reason?: string
+          status_code?: number | null
+          switch_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "switch_fallbacks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "switch_fallbacks_switch_id_fkey"
+            columns: ["switch_id"]
+            isOneToOne: false
+            referencedRelation: "switches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       switches: {
         Row: {
           activated_at: string

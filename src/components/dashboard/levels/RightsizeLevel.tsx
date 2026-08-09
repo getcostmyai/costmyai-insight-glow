@@ -568,6 +568,9 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Paused · {s.toHost} · since {s.since}
               </p>
+              {s.autoPausedReason ? (
+                <p className="mt-1 text-[11px] text-frozen">{s.autoPausedReason}</p>
+              ) : null}
               <SwitchControls
                 state="paused"
                 busy={busy(`switch:${s.switchId}`)}

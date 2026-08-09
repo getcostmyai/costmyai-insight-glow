@@ -134,6 +134,16 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Reports a provider response envelope the connector could not read, and a provider appearing on the pricing feed with no known shape.",
     quietMeans: "Every shape seen so far is one of the six the connector parses.",
   },
+  {
+    job: "switch-auto-pause",
+    label: "Switch auto-pause",
+    cronName: "—",
+    schedule: "on event",
+    maxIntervalMinutes: Number.MAX_SAFE_INTEGER,
+    eventDriven: true,
+    what: "Reports a live switch paused automatically after repeated rerouting fallbacks, so a switch that keeps sending traffic back to where it started stops running unattended.",
+    quietMeans: "No workspace has hit the fallback threshold on a live switch.",
+  },
 ];
 
 

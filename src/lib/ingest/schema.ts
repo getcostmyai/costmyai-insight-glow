@@ -78,6 +78,14 @@ export const ingestEventSchema = z
     original_host: z.string().min(1).max(120).optional(),
     /** Why it moved: the id of the switch that matched. Never free text. */
     route_reason: z.string().uuid().optional(),
+    /**
+     * Dispatch 155, Stage 5. Set only on the failed rerouted attempt that made
+     * the container fall back to the caller's original model. One of four
+     * deterministic, pre-billing conditions; never free text.
+     */
+    fallback_reason: z
+      .enum(["connection_error", "model_not_found", "unsupported_parameter", "destination_4xx"])
+      .optional(),
     /** Caller-supplied de-duplication key; a retried push must not double-count. */
     idempotency_key: z.string().min(1).max(200).optional(),
   })
@@ -90,6 +98,15 @@ export const ingestEventSchema = z
   .refine((e) => !e.rerouted || (Boolean(e.original_model_key) && Boolean(e.original_host)), {
     message: "rerouted events must carry original_model_key and original_host",
     path: ["rerouted"],
+  })
+  /**
+   * A fallback is, by definition, something that happened to a rerouted
+   * attempt. An event claiming one without saying what it rerouted cannot be
+   * reconciled against a switch, so it is refused rather than stored loose.
+   */
+  .refine((e) => !e.fallback_reason || (e.rerouted === true && Boolean(e.route_reason)), {
+    message: "fallback_reason requires a rerouted event carrying route_reason",
+    path: ["fallback_reason"],
   });
 
 
