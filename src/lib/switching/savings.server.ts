@@ -284,7 +284,11 @@ export async function recomputeSwitchSavings(
     if (!before) continue;
 
     /** Refused: the row is forced to zero, never left holding an uncredited figure. */
-    const creditUsd = refusedReason ? 0 : s.savedUsd;
+    const creditUsd = creditableUsd({
+      state: refusedReason ? "needs_your_action" : "automatic",
+      observedUsd: s.savedUsd,
+    });
+
 
     const { data: after, error } = await db
       .from("switches")
