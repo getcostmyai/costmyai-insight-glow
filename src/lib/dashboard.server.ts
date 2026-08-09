@@ -39,6 +39,8 @@ import {
 } from "./dashboard/window";
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
+import { creditableUsd } from "@/lib/switching/credit";
+
 import { resolveProviderGates } from "./ingest/routing.server";
 import { shapeForHost } from "./ingest/provider-shapes";
 import { decideExecutable, phaseFor } from "./ingest/switch-plan";
@@ -754,6 +756,19 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     // makes the same figure disagree between server render and client, and
     // between two pages read a moment apart.
     const activeDays = Math.max(1, Math.floor((now - new Date(s.activated_at).getTime()) / DAY_MS));
+    const execution = executionById.get(s.id);
+    /**
+     * Dispatch 161. A switch that is not rerouting has captured nothing, and
+     * no stored figure may say otherwise on any surface, demo included. The
+     * accrual path refuses to credit a non-executable switch; this is the same
+     * invariant enforced again at render, so a stale row can never present a
+     * captured figure beside a label that says nothing is moving.
+     */
+    const rerouting = execution?.state === "automatic";
+    const saved = round2(
+      creditableUsd({ state: execution?.state, observedUsd: Number(s.saved_usd) }),
+    );
+
     return {
       switchId: s.id,
       fromModel: s.from_model,
@@ -764,11 +779,12 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       basis: s.basis,
       activatedAt: s.activated_at,
       since: new Date(s.activated_at).toISOString().slice(0, 10),
-      saved: round2(Number(s.saved_usd)),
-      monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
+      saved,
+      monthlyRate: rerouting ? round2((saved / activeDays) * 30) : 0,
       autonomous: s.autonomous,
-      ...(executionById.has(s.id) ? { execution: executionById.get(s.id)! } : {}),
+      ...(execution ? { execution } : {}),
     };
+
   };
 
   const activeSwitches: ActiveSwitchRow[] = selectSwitchesInWindow(
@@ -899,6 +915,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   );
   /** Present-tense run rate. Only ever rendered where "/mo" is written next to it. */
   const activeMonthlyRate = round2(runningSwitches.reduce((s, a) => s + a.monthlyRate, 0));
+  /** Dispatch 161. Only switches that are actually rerouting may be called running. */
+  const reroutingCount = runningSwitches.filter((s) => s.execution?.state === "automatic").length;
+
 
   /**
    * ---- Govern: what would run unattended, and what refuses to -------------
@@ -1093,6 +1112,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     activeSwitches,
     frozenSwitches,
     switchesOutsideWindow,
+    /**
+     * Dispatch 161. How many active switches are genuinely rerouting traffic
+     * right now, window or no window. The only number a counter may use when
+     * it says "already running".
+     */
+    reroutingCount,
+
     frozen,
     /**
      * Govern. `unlocked` is the plan; `enabled` is the workspace's own switch.

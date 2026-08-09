@@ -31,11 +31,18 @@ import {
   type PriceHistoryRow,
 } from "../../src/lib/intelligence/intelligence.server";
 import { blendedPctChange } from "../../src/lib/pricing/openrouter";
+import { decideExecutable, phaseFor } from "../../src/lib/ingest/switch-plan";
+import { shapeForHost } from "../../src/lib/ingest/provider-shapes";
+import { resolveProviderGates } from "../../src/lib/ingest/routing.server";
+import { executionStateFor } from "../../src/lib/dashboard/execution-copy";
+import { savedUsdViolations } from "../../src/lib/switching/credit";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
 const DEMO_ORG = "00000000-0000-0000-0000-000000000001";
+const PARTNER_DEMO_ORG = "00000000-0000-0000-0000-000000000002";
 const EPS = 1e-9;
+
 
 const db = createClient(URL, SERVICE, { auth: { persistSession: false } });
 
@@ -178,6 +185,57 @@ async function main() {
     const total = shaped.reduce((s, x) => s + x.saved, 0);
     check("captured never exceeds money actually saved", cap30 <= Math.round(total * 100) / 100 + 0.01, `${cap30} <= ${total.toFixed(2)}`);
   }
+
+  // ---- 3b. Dispatch 161: money may only sit on a switch that is rerouting ---
+  console.log("\nexecution gate vs stored saved_usd");
+  {
+    for (const org of [DEMO_ORG, PARTNER_DEMO_ORG]) {
+      const { data: rows } = await db
+        .from("switches")
+        .select("id, from_host, to_host, autonomous, status, saved_usd")
+        .eq("org_id", org)
+        .eq("status", "active");
+      const active = rows ?? [];
+      const gates = await resolveProviderGates(org, active.map((r) => String(r.to_host)));
+      const shaped = active.map((r) => {
+        const toHost = String(r.to_host).trim().toLowerCase();
+        const gate = gates.get(toHost);
+        const phase = phaseFor({
+          fromHost: String(r.from_host).trim().toLowerCase(),
+          toHost,
+          toShape: shapeForHost(toHost)?.shape ?? null,
+        });
+        const d = decideExecutable({
+          phase,
+          gate: gate?.state ?? "not_connected",
+          autonomous: Boolean(r.autonomous),
+          everSwitchedTo: gate?.everSwitchedTo ?? false,
+        });
+        return {
+          id: String(r.id),
+          savedUsd: Number(r.saved_usd),
+          from: String(r.from_host),
+          to: toHost,
+          state: executionStateFor({
+            phase,
+            executable: d.executable,
+            ...(d.reason ? { blockedReason: d.reason } : {}),
+          }),
+        };
+      });
+      const bad = savedUsdViolations(shaped);
+      for (const b of bad) {
+        console.log(`      ${b.id} ${b.from} -> ${b.to} holds $${b.savedUsd.toFixed(2)} while ${b.state}`);
+      }
+      check(
+        `no captured money on a switch that is not rerouting (${org.slice(-4)})`,
+        bad.length === 0,
+        `${shaped.filter((s) => s.state === "automatic").length}/${shaped.length} rerouting`,
+      );
+    }
+  }
+
+
 
   // ---- 4. separation / margin ----------------------------------------------
   console.log("\nseparation and margin");

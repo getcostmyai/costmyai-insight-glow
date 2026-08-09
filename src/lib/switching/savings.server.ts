@@ -38,9 +38,19 @@ import type { Database } from "@/integrations/supabase/types";
 import { costOf, round2 } from "@/lib/engine/cost";
 import type { PriceRow } from "@/lib/engine/types";
 import { fetchAllRows } from "@/lib/paginate.server";
+import { creditableUsd } from "@/lib/switching/credit";
+
 
 import { buildModelResolver } from "../ingest/resolve";
 import { buildHostResolver } from "../ingest/resolve-host";
+import { shapeForHost } from "../ingest/provider-shapes";
+import { resolveProviderGates } from "../ingest/routing.server";
+import {
+  decideExecutable,
+  phaseFor,
+  type SwitchBlockedReason,
+} from "../ingest/switch-plan";
+
 
 type Db = SupabaseClient<Database>;
 
@@ -193,10 +203,26 @@ export interface SavingsWriteResult extends SwitchSavings {
   previousUsd: number;
   /** Read back from the row after the write, never assumed. */
   storedUsd: number;
+  /**
+   * Dispatch 161. True when the server refused to credit the observed money
+   * because the switch is not executable under its own current gate.
+   */
+  refused: boolean;
+  /** Present whenever `refused`. Never free text. */
+  refusedReason?: SwitchBlockedReason | "switch_not_active";
 }
 
 /**
  * Recompute and store `saved_usd` for the switches named by real traffic.
+ *
+ * Dispatch 161 — the server no longer takes a container at its word. A
+ * container reports `rerouted: true` and names a switch; that claim is
+ * re-checked here against the switch's own gate state, resolved by the same
+ * `phaseFor` / `decideExecutable` that built the plan the container polls. A
+ * switch that is not executable today cannot have moved traffic today, so its
+ * observed "saving" is not credited: the row is forced to zero, the refusal is
+ * written to `switch_events` so it is visible rather than silently dropped,
+ * and the result carries `refused: true`.
  *
  * Every write is read back (Dispatch 93: a PostgREST write that matched no row
  * returns success). A switch id a container invented matches nothing under this
@@ -212,19 +238,63 @@ export async function recomputeSwitchSavings(
     (s) => !wanted || wanted.has(s.switchId),
   );
   const written: SavingsWriteResult[] = [];
+  if (computed.length === 0) return written;
+
+  /** The switch rows themselves — the gate is decided from these, not from the report. */
+  const { data: switchRows, error: switchErr } = await db
+    .from("switches")
+    .select("id, from_host, to_host, autonomous, status")
+    .eq("org_id", orgId)
+    .in(
+      "id",
+      computed.map((s) => s.switchId),
+    );
+  if (switchErr) throw new Error(`switch gate unreadable: ${switchErr.message}`);
+  const byId = new Map((switchRows ?? []).map((r) => [r.id, r]));
+  const gates = await resolveProviderGates(orgId, (switchRows ?? []).map((r) => r.to_host));
 
   for (const s of computed) {
+    const row = byId.get(s.switchId);
+    if (!row) continue; // Not this workspace's switch. Nothing is created here.
+
+    const toHost = row.to_host.trim().toLowerCase();
+    const gate = gates.get(toHost);
+    const phase = phaseFor({
+      fromHost: row.from_host.trim().toLowerCase(),
+      toHost,
+      toShape: shapeForHost(toHost)?.shape ?? null,
+    });
+    const decision = decideExecutable({
+      phase,
+      gate: gate?.state ?? "not_connected",
+      autonomous: Boolean(row.autonomous),
+      everSwitchedTo: gate?.everSwitchedTo ?? false,
+    });
+    const refusedReason: SwitchBlockedReason | "switch_not_active" | null =
+      row.status !== "active"
+        ? "switch_not_active"
+        : decision.executable
+          ? null
+          : (decision.reason ?? "routing_not_granted");
+
     const { data: before } = await db
       .from("switches")
       .select("saved_usd")
       .eq("org_id", orgId)
       .eq("id", s.switchId)
       .maybeSingle();
-    if (!before) continue; // Not this workspace's switch. Nothing is created here.
+    if (!before) continue;
+
+    /** Refused: the row is forced to zero, never left holding an uncredited figure. */
+    const creditUsd = creditableUsd({
+      state: refusedReason ? "needs_your_action" : "automatic",
+      observedUsd: s.savedUsd,
+    });
+
 
     const { data: after, error } = await db
       .from("switches")
-      .update({ saved_usd: s.savedUsd, updated_at: new Date().toISOString() })
+      .update({ saved_usd: creditUsd, updated_at: new Date().toISOString() })
       .eq("org_id", orgId)
       .eq("id", s.switchId)
       .select("saved_usd")
@@ -232,12 +302,27 @@ export async function recomputeSwitchSavings(
     if (error) throw new Error(`saved_usd write failed for ${s.switchId}: ${error.message}`);
     if (!after) throw new Error(`saved_usd write matched no row for ${s.switchId}`);
 
+    if (refusedReason) {
+      const { error: eventErr } = await db.from("switch_events").insert({
+        org_id: orgId,
+        switch_id: s.switchId,
+        event: "savings_refused",
+        detail:
+          `Container reported ${s.events} rerouted event(s) worth $${s.savedUsd.toFixed(2)}, ` +
+          `but this switch is not executable today (${refusedReason}). Not credited.`,
+      });
+      if (eventErr) throw new Error(`savings refusal not recorded for ${s.switchId}: ${eventErr.message}`);
+    }
+
     written.push({
       ...s,
       previousUsd: Number(before.saved_usd),
       storedUsd: Number(after.saved_usd),
+      refused: refusedReason !== null,
+      ...(refusedReason ? { refusedReason } : {}),
     });
   }
 
   return written;
 }
+

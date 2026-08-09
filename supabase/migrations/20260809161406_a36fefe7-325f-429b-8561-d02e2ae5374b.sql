@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_savings_gate() FROM PUBLIC, anon, authenticated;
