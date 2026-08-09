@@ -203,3 +203,25 @@ server-side. The pause is written to `switch_events` with the reason in plain
 words, shows up in the customer's paused list, and raises an ops alert. A switch
 that keeps sending traffic back where it started should not keep charging every
 request the latency of two attempts to end up nowhere.
+
+## Savings are observed, and withheld when unsourceable (Dispatch 155, Stage 6)
+
+`switches.saved_usd` is no longer an estimate carried over from the
+recommendation. It is recomputed from stored events: every rerouted, `ok`,
+non-fallback event is priced twice against live `host_prices` rows — once for
+the model that actually ran, once for the model the caller asked for — and the
+signed difference is the saving. Recomputation runs on ingest, so the tile is at
+most one batch behind the traffic.
+
+Three consequences, all deliberate:
+
+- **A negative saving is shown as a negative saving.** If the destination turns
+  out dearer on real token mix, the number goes down. There is no `max(0, …)`.
+- **Delisted prices do not value anything.** The engine reads only
+  `is_active` rows, so a withdrawn price cannot quietly back a claim.
+- **An unpriced pair is counted, not guessed.** Traffic through a host we hold
+  no price row for (aggregators, self-hosted endpoints) lands in
+  `unpricedEvents` and contributes nothing. The reroute provenance is still
+  recorded in full; only the money is withheld. Closing that gap means adding
+  real price rows for those hosts, never inferring one from another host.
+
