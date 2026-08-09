@@ -34,10 +34,31 @@ export interface SwitchExecution {
   toHost: string;
 }
 
+/**
+ * Dispatch 159. Four real distances-to-action, not a binary. The state alone
+ * cannot carry this: "connect a brand-new vendor" and "flip one config on a
+ * container you already run" are both `needs_your_action`, and they are not
+ * the same ask.
+ */
+export type ExecutionTone =
+  /** Live. Nothing left to do. */
+  | "automatic"
+  /** A new vendor relationship has to exist first: the biggest real ask. */
+  | "connect_first"
+  /** The vendor exists; one config step on infrastructure they already run. */
+  | "allow_routing"
+  /** One in-product confirmation, here. */
+  | "confirm_once"
+  /** Not resolvable by the customer at all today: our limitation, not theirs. */
+  | "not_available";
+
 export interface ExecutionCopy {
   state: SwitchExecutionState;
+  tone: ExecutionTone;
   /** Short status, safe next to a badge. */
   label: string;
+  /** One line, sized to sit directly under the button as its subtitle. */
+  hint: string;
   /** The honest sentence: what is happening, and if not, what has to happen. */
   detail: string;
 }
@@ -72,7 +93,9 @@ export function executionCopy(x: SwitchExecution): ExecutionCopy {
   if (x.state === "automatic") {
     return {
       state: "automatic",
+      tone: "automatic",
       label: "Rerouting automatically",
+      hint: "Live on matching requests. Reversible whenever you pause it.",
       detail:
         `Same provider, same credential: your container rewrites the model on each matching ` +
         `request and sends it to ${provider} itself. Nothing for you to do, and it reverses ` +
@@ -83,7 +106,9 @@ export function executionCopy(x: SwitchExecution): ExecutionCopy {
   if (x.state === "not_available_yet") {
     return {
       state: "not_available_yet",
+      tone: "not_available",
       label: "Not executed by us yet",
+      hint: `A CostMyAI limitation today, not a setting on your side. Measured and priced here; the change is made in your stack.`,
       detail:
         `${provider} requests carry the model in the URL and, on Bedrock, a per-request AWS ` +
         `signature. We will not rewrite a signed request or forge a path, so CostMyAI cannot ` +
@@ -96,7 +121,9 @@ export function executionCopy(x: SwitchExecution): ExecutionCopy {
     case "provider_not_connected":
       return {
         state: "needs_your_action",
+        tone: "connect_first",
         label: `Connect ${provider} first`,
+        hint: `New vendor: create the ${provider} account and add its key (2-3 minutes), then allow routing.`,
         detail:
           `This switch sends traffic to ${provider}, which this workspace has never used. ` +
           `Nothing is being rerouted. Connect it the way you connected the source provider, ` +
@@ -105,7 +132,9 @@ export function executionCopy(x: SwitchExecution): ExecutionCopy {
     case "first_switch_needs_confirmation":
       return {
         state: "needs_your_action",
+        tone: "confirm_once",
         label: "Confirm the first switch",
+        hint: `One confirmation, here. Every later switch to ${provider} runs unattended.`,
         detail:
           `Everything is in place, but this workspace has never switched to ${provider} before. ` +
           `Autonomous mode asks once, here. Nothing is rerouted until you confirm; every later ` +
@@ -115,7 +144,9 @@ export function executionCopy(x: SwitchExecution): ExecutionCopy {
     default:
       return {
         state: "needs_your_action",
+        tone: "allow_routing",
         label: `Allow routing to ${provider}`,
+        hint: `${provider} is already connected. One key on the container you already run.`,
         detail:
           `${provider} is connected and reporting, but using a provider elsewhere is not ` +
           `permission to send traffic to it. Give that container its own ${provider} key ` +
