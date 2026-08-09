@@ -763,7 +763,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
      * captured figure beside a label that says nothing is moving.
      */
     const rerouting = execution?.state === "automatic";
-    const saved = rerouting ? round2(Number(s.saved_usd)) : 0;
+    const saved = round2(
+      creditableUsd({ state: execution?.state, observedUsd: Number(s.saved_usd) }),
+    );
+
     return {
       switchId: s.id,
       fromModel: s.from_model,
