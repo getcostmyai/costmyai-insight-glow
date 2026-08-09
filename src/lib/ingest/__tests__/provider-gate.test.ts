@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   FIRST_SWITCH_CONFIRM_LABEL,
+  gateFor,
   isExecutable,
   needsFirstSwitchConfirmation,
   NEW_PROVIDER_RATE_TIER_NOTE,
@@ -119,5 +120,40 @@ describe("provider gate", () => {
   it("discloses the rate tier rather than burying it", () => {
     expect(NEW_PROVIDER_RATE_TIER_NOTE).toContain("lowest rate tier");
     expect(FIRST_SWITCH_CONFIRM_LABEL.length).toBeGreaterThan(0);
+  });
+});
+
+describe("stale traffic never regresses to not-connected", () => {
+  const now = Date.parse("2026-08-09T00:00:00Z");
+
+  it("keeps a provider connected long after the window has passed", () => {
+    const g = gateFor({
+      host: "anthropic",
+      lastSeenAt: "2025-09-01T00:00:00Z", // ~11 months old
+      granted: false,
+      everSwitchedTo: false,
+      now,
+    });
+    expect(g.state).toBe("connected");
+    expect(g.activeRecently).toBe(false);
+  });
+
+  it("keeps a granted destination executable while its traffic is quiet", () => {
+    const g = gateFor({
+      host: "together",
+      lastSeenAt: "2026-01-02T00:00:00Z",
+      granted: true,
+      everSwitchedTo: true,
+      now,
+    });
+    expect(g.state).toBe("granted");
+    expect(isExecutable(g)).toBe(true);
+  });
+
+  it("still reports a never-seen provider as not connected", () => {
+    expect(
+      gateFor({ host: "together", lastSeenAt: null, granted: true, everSwitchedTo: false, now })
+        .state,
+    ).toBe("not_connected");
   });
 });
