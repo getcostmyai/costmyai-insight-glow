@@ -56,11 +56,13 @@ let otherSwitchId: string;
 let ownerClient: SupabaseClient;
 
 async function report(body: unknown, bearer = token): Promise<Response> {
-  return fetch(POST_URL, {
+  const r = await fetch(POST_URL, {
     method: "POST",
     headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json" },
     body: JSON.stringify(body),
   });
+  if (r.status >= 500) console.log("DEBUG", r.status, await r.clone().text());
+  return r;
 }
 
 const fallback = (id: string, n: number) => ({
