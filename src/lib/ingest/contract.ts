@@ -38,7 +38,14 @@ export const ROUTE_KEY_ENV_PREFIX = "COSTMYAI_ROUTE_KEY_";
 export const INGEST_PATHS = {
   events: "/api/public/v1/events",
   billing: "/api/public/v1/billing",
+  /**
+   * The switch plan (Dispatch 155, Stage 2). GET returns active switches with
+   * server-resolved match keys; POST asserts which destinations this container
+   * holds a customer-granted key for. Same token as ingest.
+   */
+  switches: "/api/public/v1/switches",
 } as const;
+
 
 
 /** Batch caps. A push above these is rejected, never silently truncated. */
