@@ -8,13 +8,38 @@
  * a customer's traffic without anyone noticing.
  */
 
-/** Payload contract version. Bumped only on a breaking change of the body shape. */
-export const INGEST_API_VERSION = 1 as const;
+/**
+ * Payload contract version.
+ *
+ * Dispatch 155 raises this to 2 for the rerouting fields below. Both versions
+ * are accepted for the whole rollout and a v1 batch keeps byte-for-byte the
+ * semantics it had before: an older container in the field must not start
+ * failing because a newer one exists. There is no cut-over date because there
+ * is no way to make a stranger restart their container on our schedule.
+ */
+export const INGEST_API_VERSION = 2 as const;
+
+/** Every version the endpoint still accepts. Never shrinks without a real plan. */
+export const SUPPORTED_INGEST_API_VERSIONS = [1, 2] as const;
+export type IngestApiVersion = (typeof SUPPORTED_INGEST_API_VERSIONS)[number];
+
+/**
+ * The env-var prefix a customer uses to grant one container a credential for a
+ * destination provider — e.g. `COSTMYAI_ROUTE_KEY_TOGETHER`.
+ *
+ * Dispatch 155 scopes a previously absolute rule (DECISIONS.md §1-2): the
+ * container holds no credential for pass-through traffic, ever, and holds one
+ * only for a destination the customer separately and explicitly granted. The
+ * value stays in the customer's own infrastructure; it is never sent here, and
+ * there is no field anywhere in this contract that could carry it.
+ */
+export const ROUTE_KEY_ENV_PREFIX = "COSTMYAI_ROUTE_KEY_";
 
 export const INGEST_PATHS = {
   events: "/api/public/v1/events",
   billing: "/api/public/v1/billing",
 } as const;
+
 
 /** Batch caps. A push above these is rejected, never silently truncated. */
 export const MAX_EVENTS_PER_BATCH = 1000;

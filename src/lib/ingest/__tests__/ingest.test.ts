@@ -43,9 +43,14 @@ describe("payload contract", () => {
     expect(parsed.v).toBe(INGEST_API_VERSION);
   });
 
-  it("refuses an unknown payload version", () => {
-    expect(ingestBatchSchema.safeParse({ v: 2, events: [validEvent] }).success).toBe(false);
+  it("still accepts v1 from a container nobody can make us restart", () => {
+    expect(ingestBatchSchema.safeParse({ v: 1, events: [validEvent] }).success).toBe(true);
   });
+
+  it("refuses an unknown payload version", () => {
+    expect(ingestBatchSchema.safeParse({ v: 3, events: [validEvent] }).success).toBe(false);
+  });
+
 
   it("rejects any payload carrying prompt or completion content", () => {
     for (const contentField of ["prompt", "completion", "messages", "input", "output", "text"]) {

@@ -5,10 +5,12 @@ import {
   MAX_CAPTURES_PER_BATCH,
   MAX_EVENTS_PER_BATCH,
   PARSE_STATUSES,
+  SUPPORTED_INGEST_API_VERSIONS,
   TASK_HINTS,
   UNKNOWN_TASK_HINT,
 } from "./contract";
 import { isContentFree } from "../../../packages/gateway-container/src/skeleton";
+
 
 /**
  * The ingest contract.
@@ -61,14 +63,41 @@ export const ingestEventSchema = z
         message: "envelope_skeleton must contain no string values",
       })
       .optional(),
+    /**
+     * Dispatch 155, contract v2. Set only when this container rerouted the
+     * request away from what the caller asked for. Absent on v1 and on every
+     * unrerouted v2 event, so an unrerouted event is byte-identical to what a
+     * v1 container sends.
+     *
+     * These name a model and a host and nothing else. There is deliberately no
+     * field here for the destination credential — the key the customer granted
+     * stays in their own container and never crosses this boundary.
+     */
+    rerouted: z.boolean().optional(),
+    original_model_key: z.string().min(1).max(120).optional(),
+    original_host: z.string().min(1).max(120).optional(),
+    /** Why it moved: the id of the switch that matched. Never free text. */
+    route_reason: z.string().uuid().optional(),
     /** Caller-supplied de-duplication key; a retried push must not double-count. */
     idempotency_key: z.string().min(1).max(200).optional(),
   })
-  .strict();
+  .strict()
+  /**
+   * A rerouted event that cannot say what it moved away from is unusable for
+   * savings reconciliation and would quietly credit the wrong pair. Refused,
+   * not defaulted.
+   */
+  .refine((e) => !e.rerouted || (Boolean(e.original_model_key) && Boolean(e.original_host)), {
+    message: "rerouted events must carry original_model_key and original_host",
+    path: ["rerouted"],
+  });
 
 
 /** Payload version. Present on every batch; unknown versions are refused. */
-const versionField = z.literal(INGEST_API_VERSION).default(INGEST_API_VERSION);
+const versionField = z
+  .union([z.literal(SUPPORTED_INGEST_API_VERSIONS[0]), z.literal(SUPPORTED_INGEST_API_VERSIONS[1])])
+  .default(INGEST_API_VERSION);
+
 
 export const ingestBatchSchema = z
   .object({
