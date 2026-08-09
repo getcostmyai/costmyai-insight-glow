@@ -2368,6 +2368,10 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["switch_status"]
       }
+      switch_is_executable: {
+        Args: { _from_host: string; _org_id: string; _to_host: string }
+        Returns: boolean
+      }
       system_apply_switch: { Args: { _rec_id: string }; Returns: string }
       system_upsert_recommendation: {
         Args: {
