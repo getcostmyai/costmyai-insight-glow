@@ -645,7 +645,51 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     .reduce((sum, r) => sum + Number(r.cost_usd), 0);
 
   // ---- What is already running, inside the selected window -------------------
+  /**
+   * Dispatch 156. Whether a switch is actually moving traffic is decided here,
+   * by the same `phaseFor` / `decideExecutable` the container's plan is built
+   * from — never re-derived in a component. Three distinct real states, so no
+   * surface can reuse Phase 1's automatic execution as a blanket claim.
+   */
+  const executionById = new Map<string, SwitchExecution>();
+  {
+    const rows = switches.data ?? [];
+    if (rows.length) {
+      const gates = await resolveProviderGates(
+        orgId,
+        rows.map((s) => s.to_host),
+      );
+      for (const s of rows) {
+        const toHost = String(s.to_host).trim().toLowerCase();
+        const gate = gates.get(toHost);
+        const phase = phaseFor({
+          fromHost: String(s.from_host).trim().toLowerCase(),
+          toHost,
+          toShape: shapeForHost(toHost)?.shape ?? null,
+        });
+        const decision = decideExecutable({
+          phase,
+          gate: gate?.state ?? "not_connected",
+          autonomous: Boolean(s.autonomous),
+          everSwitchedTo: gate?.everSwitchedTo ?? false,
+        });
+        executionById.set(s.id, {
+          phase,
+          gate: gate?.state ?? "not_connected",
+          toHost,
+          state: executionStateFor({
+            phase,
+            executable: decision.executable,
+            blockedReason: decision.reason,
+          }),
+          ...(decision.reason ? { blockedReason: decision.reason } : {}),
+        });
+      }
+    }
+  }
+
   const toSwitchRow = (s: {
+
     id: string;
     from_model: string;
     from_host: string;
