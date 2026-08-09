@@ -39,6 +39,13 @@ import {
 } from "./dashboard/window";
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
+import { resolveProviderGates } from "./ingest/routing.server";
+import { shapeForHost } from "./ingest/provider-shapes";
+import { decideExecutable, phaseFor } from "./ingest/switch-plan";
+import {
+  executionStateFor,
+  type SwitchExecution,
+} from "./dashboard/execution-copy";
 
 
 /**
@@ -167,6 +174,12 @@ export interface ActiveSwitchRow {
   saved: number;
   monthlyRate: number;
   autonomous: boolean;
+  /**
+   * Dispatch 156. What this switch is really doing to traffic: rerouting
+   * automatically, waiting on an action of the customer's, or not executable
+   * by us at all yet. Decided server-side, rendered by `executionCopy`.
+   */
+  execution?: SwitchExecution;
   /**
    * Dispatch 155, Stage 5. Present only on a switch CostMyAI paused itself
    * after repeated rerouting fallbacks — the workspace reads why here, on the
@@ -718,6 +731,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       saved: round2(Number(s.saved_usd)),
       monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
       autonomous: s.autonomous,
+      ...(executionById.has(s.id) ? { execution: executionById.get(s.id)! } : {}),
     };
   };
 
