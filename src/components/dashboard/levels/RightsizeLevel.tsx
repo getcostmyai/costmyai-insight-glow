@@ -16,6 +16,7 @@ import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/Le
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
+import { executionCopy } from "@/lib/dashboard/execution-copy";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 

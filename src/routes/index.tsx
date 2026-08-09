@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "CostMyAI reads only metadata from your stack, proves where the same quality costs less, and switches it — manually, or automatically on Govern. No provider keys, no prompt content.",
+          "CostMyAI reads only metadata from your stack and proves where the same quality costs less. Same-provider swaps it executes for you, automatically on Govern; a move to another provider waits until you allow routing to it. No provider keys, no prompt content.",
       },
       { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
       {
