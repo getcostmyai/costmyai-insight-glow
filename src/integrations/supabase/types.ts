@@ -1935,6 +1935,7 @@ export type Database = {
         Row: {
           created_at: string
           envelope_skeleton: Json | null
+          fallback_reason: string | null
           host: string
           id: number
           idempotency_key: string | null
@@ -1944,16 +1945,21 @@ export type Database = {
           model_key: string
           occurred_at: string
           org_id: string
+          original_host: string | null
+          original_model_key: string | null
           output_tokens: number
           parse_status: string
           parser_revision: number | null
           reparsed_at: string | null
+          rerouted: boolean
+          route_reason: string | null
           status: string
           task_hint: string
         }
         Insert: {
           created_at?: string
           envelope_skeleton?: Json | null
+          fallback_reason?: string | null
           host: string
           id?: number
           idempotency_key?: string | null
@@ -1963,16 +1969,21 @@ export type Database = {
           model_key: string
           occurred_at?: string
           org_id: string
+          original_host?: string | null
+          original_model_key?: string | null
           output_tokens?: number
           parse_status?: string
           parser_revision?: number | null
           reparsed_at?: string | null
+          rerouted?: boolean
+          route_reason?: string | null
           status?: string
           task_hint?: string
         }
         Update: {
           created_at?: string
           envelope_skeleton?: Json | null
+          fallback_reason?: string | null
           host?: string
           id?: number
           idempotency_key?: string | null
@@ -1982,10 +1993,14 @@ export type Database = {
           model_key?: string
           occurred_at?: string
           org_id?: string
+          original_host?: string | null
+          original_model_key?: string | null
           output_tokens?: number
           parse_status?: string
           parser_revision?: number | null
           reparsed_at?: string | null
+          rerouted?: boolean
+          route_reason?: string | null
           status?: string
           task_hint?: string
         }
