@@ -547,8 +547,9 @@ function ActiveSwitchCard({
 
 /** What is rerouting traffic right now, what is only activated, and what is paused. */
 export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
-  const { data, activeRange } = ctl;
+  const { data, activeRange, canAct, lifecycle, busy, errorFor } = ctl;
   const waiting = data.dataState !== "ready";
+
   const rerouting = data.activeSwitches.filter((s) => s.execution?.state === "automatic");
   const notMoving = data.activeSwitches.filter((s) => s.execution?.state !== "automatic");
 
