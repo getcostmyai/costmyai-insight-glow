@@ -41,6 +41,14 @@ import { fetchAllRows } from "@/lib/paginate.server";
 
 import { buildModelResolver } from "../ingest/resolve";
 import { buildHostResolver } from "../ingest/resolve-host";
+import { shapeForHost } from "../ingest/provider-shapes";
+import { resolveProviderGates } from "../ingest/routing.server";
+import {
+  decideExecutable,
+  phaseFor,
+  type SwitchBlockedReason,
+} from "../ingest/switch-plan";
+
 
 type Db = SupabaseClient<Database>;
 
