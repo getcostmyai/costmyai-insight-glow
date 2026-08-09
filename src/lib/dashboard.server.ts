@@ -39,6 +39,8 @@ import {
 } from "./dashboard/window";
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
+import { creditableUsd } from "@/lib/switching/credit";
+
 import { resolveProviderGates } from "./ingest/routing.server";
 import { shapeForHost } from "./ingest/provider-shapes";
 import { decideExecutable, phaseFor } from "./ingest/switch-plan";
