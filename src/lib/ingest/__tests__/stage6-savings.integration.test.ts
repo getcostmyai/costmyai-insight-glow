@@ -325,7 +325,22 @@ describe("Stage 6 — a real rerouted call, priced from what really happened", (
     expect(snapshot.savings.captured).toBeGreaterThan(0);
     const tile = snapshot.activeSwitches.find((s) => s.switchId === switchId)!;
     expect(tile.saved).toBeCloseTo(expectedSavedUsd, 2);
+
+    // Printed, not merely asserted: the figure this whole arc exists to make real.
+    const { data: stored } = await admin.from("switches").select("saved_usd").eq("id", switchId).single();
+    console.log(
+      [
+        "--- Stage 6 ledger (all figures computed at run time) ---",
+        `traffic            : ${CALLS} rerouted calls, ${INPUT_TOKENS} in / ${OUTPUT_TOKENS} out each`,
+        `counterfactual     : $${expectedCounterfactual.toFixed(2)}  (${FROM_MODEL} @ ${HOST})`,
+        `actually served    : $${expectedActual.toFixed(2)}  (${TO_MODEL} @ ${HOST})`,
+        `saved_usd stored   : $${Number(stored!.saved_usd).toFixed(2)}`,
+        `switch tile        : $${tile.saved.toFixed(2)}`,
+        `savedToDate tile   : $${snapshot.savings.savedToDate.toFixed(2)}`,
+      ].join("\n"),
+    );
   }, 90_000);
+
 
   it("credits nothing to a switch in another workspace", async () => {
     const other = await computeSwitchSavings(admin as never, otherOrgId);
