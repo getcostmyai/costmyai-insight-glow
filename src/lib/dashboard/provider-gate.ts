@@ -41,6 +41,38 @@ export interface ProviderGate {
 /** First detection looks back this far. It is a floor, not an expiry. */
 export const PROVIDER_SEEN_WINDOW_DAYS = 30;
 
+/**
+ * Combine the two signals into one state. Pure, so the stale-traffic rule is
+ * testable without a database: a provider seen a year ago is still connected.
+ * The window only ever moves `activeRecently`, which gates nothing.
+ */
+export function gateFor(input: {
+  host: string;
+  lastSeenAt: string | null;
+  granted: boolean;
+  everSwitchedTo: boolean;
+  now?: number;
+}): ProviderGate {
+  const { host, lastSeenAt, granted, everSwitchedTo } = input;
+  const now = input.now ?? Date.now();
+  const state: ProviderGateState = !lastSeenAt
+    ? "not_connected"
+    : granted
+      ? "granted"
+      : "connected";
+  return {
+    host,
+    state,
+    lastSeenAt,
+    activeRecently: Boolean(
+      lastSeenAt &&
+        new Date(lastSeenAt).getTime() >= now - PROVIDER_SEEN_WINDOW_DAYS * 86_400_000,
+    ),
+    everSwitchedTo,
+  };
+}
+
+
 export const providerGateCopy = {
   not_connected: (provider: string, currentProvider: string) => ({
     label: `Connect ${provider} first`,
