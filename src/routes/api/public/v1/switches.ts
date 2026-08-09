@@ -28,6 +28,38 @@ const grantAssertionSchema = z
   })
   .strict();
 
+/**
+ * A rerouting fallback report (Dispatch 155, Stage 5). Strict, and there is no
+ * field here that could carry a prompt, a response or a credential — a
+ * fallback is a switch id, a reason from a closed set, and a status code.
+ */
+const fallbackReportSchema = z
+  .object({
+    v: z.union([z.literal(1), z.literal(2)]).default(2),
+    fallbacks: z
+      .array(
+        z
+          .object({
+            switch_id: z.string().uuid(),
+            reason: z.enum([
+              "connection_error",
+              "model_not_found",
+              "unsupported_parameter",
+              "destination_4xx",
+            ]),
+            status_code: z.number().int().min(100).max(599).nullable().optional(),
+            model_key: z.string().min(1).max(120).nullable().optional(),
+            host: z.string().min(1).max(120).nullable().optional(),
+            occurred_at: z.string().datetime({ offset: true }).nullable().optional(),
+            idempotency_key: z.string().min(1).max(200).nullable().optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(100),
+  })
+  .strict();
+
 function unauthorized() {
   return Response.json(
     {
@@ -74,6 +106,28 @@ export const Route = createFileRoute("/api/public/v1/switches")({
           body = await request.json();
         } catch {
           return Response.json({ error: "Body must be JSON" }, { status: 400 });
+        }
+
+        // Two reports share this endpoint and are told apart by shape, not by a
+        // mode flag: a grant assertion names hosts, a fallback report names
+        // switches. Anything matching neither is refused.
+        if (body && typeof body === "object" && "fallbacks" in (body as Record<string, unknown>)) {
+          const report = fallbackReportSchema.safeParse(body);
+          if (!report.success) {
+            return Response.json(
+              { error: "Invalid payload", detail: report.error.issues.slice(0, 5) },
+              { status: 422 },
+            );
+          }
+          try {
+            const { recordSwitchFallbacks } = await import("@/lib/ingest/fallback.server");
+            const result = await recordSwitchFallbacks(authed.orgId, report.data.fallbacks);
+            return Response.json(result);
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error("fallback report failed", message);
+            return Response.json({ error: message }, { status: 500 });
+          }
         }
 
         const parsed = grantAssertionSchema.safeParse(body);

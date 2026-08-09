@@ -233,3 +233,22 @@ dashboard says so.
 Point the base URL back at the provider and restart your app. That's the whole rollback —
 nothing about your keys, models or code changed. The container can keep running or be
 stopped; either way your inference path is unaffected.
+
+## If a switch does not work out
+
+When a switch sends a request to a destination that refuses it before doing any
+work, the container immediately re-sends your original request and marks the
+response:
+
+```
+x-costmyai-reroute: fell_back
+x-costmyai-reroute-fallback: model_not_found
+x-costmyai-attempted-model: openai/gpt-4.1-mini
+x-costmyai-model: openai/gpt-4o-mini
+```
+
+You get your answer, from your own model. Nothing is retried after a server
+error or a timeout, because the provider may already have billed that work.
+
+If the same switch falls back three times in an hour, CostMyAI pauses it for
+you and tells you why on the switch itself. You can resume it at any time.

@@ -163,3 +163,43 @@ Nothing is silent, in either direction. A rewritten call comes back with
 the switch id; a refused one comes back with `x-costmyai-reroute: refused` and
 the reason. An untouched request carries no `x-costmyai-*` header at all, and
 its ingest event carries no `rerouted` field — byte-identical to a v1 container.
+
+## Fallback: when a reroute is undone, and when it is not (Dispatch 155, Stage 5)
+
+A switch can send a request somewhere that refuses it. When that happens the
+container sends the caller's own original request instead, once, and tells them
+it did. The whole policy is four conditions, and they were chosen by one test:
+**could the destination already have started billing?**
+
+Falls back:
+
+| Condition | Why it is safe |
+| --- | --- |
+| `connection_error` | The request never arrived. Nothing was generated. |
+| `model_not_found` | The destination rejected the identifier before any work. |
+| `unsupported_parameter` | A 400 on request validation, before any work. |
+| `destination_4xx` | Any other 4xx: refused, not attempted. |
+
+Never falls back:
+
+- **Any 5xx.** The destination may have generated, and billed, a completion and
+  then failed to hand it back. Retrying can charge the customer twice.
+- **Our own timeout.** Same reason, and worse: the work is probably still
+  running on the other side.
+- **Anything after the first byte reaches the caller.** This is structural, not
+  a flag: the fallback decision sits above the point where the response body is
+  returned, so a stream that dies halfway through cannot reach it.
+
+There is at most one retry, ever. The fallback attempt itself is never retried.
+
+Both attempts are reported as real events — the failed rerouted one carries
+`rerouted: true` and `fallback_reason`, the served one is honestly not rerouted
+because it ran on the caller's own model. Disclosure on the caller's response is
+`x-costmyai-reroute: fell_back` plus `x-costmyai-reroute-fallback`,
+`x-costmyai-attempted-model` and `x-costmyai-model`.
+
+Three fallbacks on one switch inside an hour pause that switch automatically,
+server-side. The pause is written to `switch_events` with the reason in plain
+words, shows up in the customer's paused list, and raises an ops alert. A switch
+that keeps sending traffic back where it started should not keep charging every
+request the latency of two attempts to end up nowhere.

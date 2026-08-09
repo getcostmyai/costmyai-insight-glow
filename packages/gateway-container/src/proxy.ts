@@ -1,5 +1,11 @@
 import { classifyTask, isInScope } from "./classify.js";
 import type { ContainerConfig } from "./config.js";
+import {
+  classifyResponseFailure,
+  classifyTransportFailure,
+  MAX_ERROR_BODY_BYTES,
+  type FallbackReason,
+} from "./fallback.js";
 import { readUsage, StreamUsageCollector, type UsageReading } from "./parse.js";
 import type { UpstreamQueue } from "./queue.js";
 import { planRewrite, type RewriteOutcome } from "./rewrite.js";
@@ -86,6 +92,11 @@ export interface ProxyEvent {
   original_host?: string;
   route_reason?: string;
   /**
+   * Dispatch 155, Stage 5. Present only on the failed rerouted attempt that
+   * caused a fallback to the caller's original model. Absent everywhere else.
+   */
+  fallback_reason?: FallbackReason;
+  /**
    * Dispatch 106. Set only when the envelope could not be read cleanly: a
    * content-free structural skeleton (numbers and keys, every string erased)
    * so a parser shipped later can re-read the event retroactively. Absent on
@@ -146,34 +157,131 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       }
     : undefined;
 
-  const startedAt = now();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), config.upstreamTimeoutMs);
+  /**
+   * One upstream attempt. Never retried by itself — every retry in this file is
+   * an explicit, disclosed fallback decided below, and there is at most one.
+   */
+  async function attempt(
+    body: Uint8Array | undefined,
+  ): Promise<
+    | { ok: true; response: Response; startedAt: number }
+    | { ok: false; aborted: boolean; error: unknown; startedAt: number }
+  > {
+    const attemptStartedAt = now();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.upstreamTimeoutMs);
+    try {
+      const response = await fetchImpl(target.toString(), {
+        method: request.method,
+        headers,
+        body: body as unknown as undefined,
+        signal: controller.signal,
+        redirect: "manual",
+      });
+      return { ok: true, response, startedAt: attemptStartedAt };
+    } catch (error) {
+      return { ok: false, aborted: controller.signal.aborted, error, startedAt: attemptStartedAt };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
 
-  let response: Response;
-  try {
-    response = await fetchImpl(target.toString(), {
-      method: request.method,
-      headers,
-      body: sentBody as unknown as undefined,
-      signal: controller.signal,
-      redirect: "manual",
-    });
-  } catch (err) {
-    clearTimeout(timeout);
-    const aborted = controller.signal.aborted;
+  let outcome = await attempt(sentBody);
+  let disclosure: Record<string, string> = { ...rewrite.disclosure };
+  let activeReroute = reroute;
+  let modelInFlight = sentModel;
+  /**
+   * Set only when a rerouted attempt returned >=400 and its body had to be read
+   * to classify it. Held so a response we decide NOT to fall back on is still
+   * returned to the caller byte-for-byte.
+   */
+  let bufferedError: ArrayBuffer | null = null;
+
+  // ---- The fallback decision (Dispatch 155, Stage 5) -------------------------
+  //
+  // This is the ONLY place a request is ever sent twice, and it can only be
+  // reached before a single byte of any response has been handed to the caller.
+  // Once the streaming response below is returned, the caller owns the bytes
+  // and no retry is possible — the no-retry-after-first-byte invariant is
+  // structural here, not a flag someone has to remember to check.
+  if (rewrite.rerouted && reroute) {
+    let reason: FallbackReason | null = null;
+    let statusCode: number | null = null;
+    if (!outcome.ok) {
+      reason = classifyTransportFailure(outcome.aborted);
+    } else if (outcome.response.status >= 400) {
+      statusCode = outcome.response.status;
+      bufferedError = await outcome.response.arrayBuffer();
+      const text = new TextDecoder().decode(new Uint8Array(bufferedError).slice(0, MAX_ERROR_BODY_BYTES));
+      reason = classifyResponseFailure(statusCode, text);
+    }
+
+    if (reason) {
+      // The failed rerouted attempt is a real, reported event in its own right.
+      record(deps, {
+        startedAt: outcome.startedAt,
+        now,
+        uuid,
+        host: upstream.host,
+        path: incoming.pathname,
+        model: sentModel,
+        reading: null,
+        status: "error",
+        reroute,
+        fallbackReason: reason,
+      });
+      // Told to the control plane, which pauses the switch if a workspace keeps
+      // seeing this. Off the request path: enqueued, never awaited.
+      queue.enqueue({
+        kind: "fallbacks",
+        body: {
+          fallbacks: [
+            {
+              switch_id: reroute.switchId,
+              reason,
+              status_code: statusCode,
+              model_key: (sentModel ?? "unknown").slice(0, 120),
+              host: upstream.host.slice(0, 120),
+              occurred_at: new Date(outcome.startedAt).toISOString(),
+              idempotency_key: uuid(),
+            },
+          ],
+        },
+      });
+
+      // One retry, with the caller's own original request.
+      outcome = await attempt(bodyBytes);
+      activeReroute = undefined;
+      modelInFlight = requestedModel;
+      bufferedError = null;
+      disclosure = {
+        "x-costmyai-reroute": "fell_back",
+        "x-costmyai-reroute-fallback": reason,
+        "x-costmyai-switch": reroute.switchId,
+        "x-costmyai-attempted-model": rewrite.disclosure["x-costmyai-model"] ?? "unknown",
+        "x-costmyai-attempted-host": rewrite.disclosure["x-costmyai-host"] ?? upstream.host,
+        "x-costmyai-model": requestedModel ?? "unknown",
+        "x-costmyai-original-model": requestedModel ?? "unknown",
+        "x-costmyai-original-host": upstream.host,
+      };
+    }
+  }
+
+  if (!outcome.ok) {
+    const aborted = outcome.aborted;
+    const err = outcome.error;
     // Not retried, on purpose. The caller decides — they own the idempotency
     // of their own workload; we must not double-execute a paid completion.
     record(deps, {
-      startedAt,
+      startedAt: outcome.startedAt,
       now,
       uuid,
       host: upstream.host,
       path: incoming.pathname,
-      model: sentModel,
+      model: modelInFlight,
       reading: null,
       status: "error",
-      reroute,
+      reroute: activeReroute,
     });
     return new Response(
       JSON.stringify({
@@ -186,11 +294,13 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       }),
       {
         status: 504,
-        headers: { "content-type": "application/json", ...rewrite.disclosure },
+        headers: { "content-type": "application/json", ...disclosure },
       },
     );
   }
-  clearTimeout(timeout);
+
+  const response = outcome.response;
+  const startedAt = outcome.startedAt;
 
   const outHeaders = new Headers();
   response.headers.forEach((value, key) => {
@@ -205,32 +315,37 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   });
   // Disclosure, never silence: the caller can see on their own response that we
   // moved this request, what it was, and which switch did it — and can see a
-  // refusal just as plainly. Nothing here is added to an untouched request.
-  for (const [name, value] of Object.entries(rewrite.disclosure)) outHeaders.set(name, value);
+  // refusal or a fallback just as plainly. Nothing here is added to an
+  // untouched request.
+  for (const [name, value] of Object.entries(disclosure)) outHeaders.set(name, value);
 
   const status = response.status >= 400 ? "error" : "ok";
   const inScope = isInScope(incoming.pathname);
 
   // Errors pass through byte-identically: provider status, provider body.
-  if (!response.body || !inScope) {
-    const buffered = response.body ? await response.arrayBuffer() : null;
+  if (bufferedError !== null || !response.body || !inScope) {
+    const buffered = bufferedError ?? (response.body ? await response.arrayBuffer() : null);
     record(deps, {
       startedAt,
       now,
       uuid,
       host: upstream.host,
       path: incoming.pathname,
-      model: sentModel,
+      model: modelInFlight,
       reading: null,
       status,
       skip: !inScope,
-      reroute,
+      reroute: activeReroute,
     });
     return new Response(buffered, { status: response.status, headers: outHeaders });
   }
 
   // True streaming: the caller's bytes are never held. One branch goes straight
   // to them, the other feeds a bounded 16KB head/tail window (parse.ts).
+  //
+  // Past this point the caller has the response. A stream that dies halfway is
+  // never retried and never falls back: the destination has already generated,
+  // and may already have billed, whatever it produced.
   const [toCaller, toMeter] = response.body.tee();
   void meter(toMeter, {
     onDone: (reading) =>
@@ -240,10 +355,10 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         uuid,
         host: upstream.host,
         path: incoming.pathname,
-        model: reading.model ?? sentModel,
+        model: reading.model ?? modelInFlight,
         reading,
         status,
-        reroute,
+        reroute: activeReroute,
       }),
   });
 
@@ -279,6 +394,7 @@ interface RecordArgs {
   reading: UsageReading | null;
   status: "ok" | "error";
   skip?: boolean;
+  fallbackReason?: FallbackReason;
   reroute?: { rerouted: true; originalModel: string; originalHost: string; switchId: string };
 }
 
@@ -304,6 +420,7 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     event.original_host = args.reroute.originalHost.slice(0, 120);
     event.route_reason = args.reroute.switchId;
   }
+  if (args.fallbackReason) event.fallback_reason = args.fallbackReason;
   if (event.parse_status !== "parsed" && args.reading?.skeleton) {
     event.envelope_skeleton = args.reading.skeleton;
   }
