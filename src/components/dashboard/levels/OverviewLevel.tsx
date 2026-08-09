@@ -74,8 +74,9 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       step: 4,
       title: "Switches running",
       detail: "Rerouting traffic right now",
-      value: data.activeSwitches.length,
-      unit: "active switches",
+      value: data.reroutingCount,
+      unit: "switches rerouting",
+
       tone: "spend" as const,
     },
   ];
