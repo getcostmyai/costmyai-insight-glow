@@ -22,6 +22,7 @@ import type { SwitchPlan, SwitchPlanEntry } from "@/lib/ingest/switch-plan";
 
 import { loadConfig } from "../../../../packages/gateway-container/src/config";
 import { handleProxy, type ProxyEvent } from "../../../../packages/gateway-container/src/proxy";
+import { planRewrite } from "../../../../packages/gateway-container/src/rewrite";
 import type { QueueItem, UpstreamQueue } from "../../../../packages/gateway-container/src/queue";
 import { SwitchMap } from "../../../../packages/gateway-container/src/switch-map";
 
@@ -139,7 +140,8 @@ describe("non-matching traffic is byte-identical, as it was before Stage 4 exist
 
   for (const [label, build] of cases) {
     it(`${label} → request forwarded byte-for-byte, no disclosure header`, async () => {
-      const { seen, fetchImpl } = upstream();
+      // The provider echoes the model the caller asked for; nothing rewrote it.
+      const { seen, fetchImpl } = upstream({ model: "gpt-4.1", usage: { prompt_tokens: 5, completion_tokens: 2 } });
       const { events, queue } = collector();
       const switchMap = await build();
 
@@ -276,28 +278,45 @@ describe("shapes Stage 4 must refuse are refused, and disclosed", () => {
     expect(response.headers.get("x-costmyai-reroute-refused")).toBe("phase_not_supported");
   });
 
-  it("an unrecognized (non-JSON) body is refused, not guessed at", async () => {
+  it("an unrecognized body shape is refused at the rewrite boundary, not guessed at", () => {
+    // A body the container cannot read as a JSON object with a model field can
+    // never be rewritten. Proven directly, because at proxy level such a
+    // request has no liftable model and therefore never matches a switch at
+    // all — two independent reasons it is left alone.
+    for (const body of ["not json at all", JSON.stringify([1, 2, 3]), JSON.stringify({ messages: [] })]) {
+      const outcome = planRewrite({
+        lookup: { id: SWITCH_ID, phase: 1, target: { model_key: "gpt-4o-mini", host: "api.openai.com" } },
+        path: "/v1/chat/completions",
+        headers: new Headers(),
+        body: new TextEncoder().encode(body),
+        originalModel: "gpt-4o",
+        originalHost: "api.openai.com",
+      });
+      expect(outcome.rerouted).toBe(false);
+      expect(outcome.refusal).toBe("unrecognized_shape");
+      expect(outcome.body).toBeUndefined();
+    }
+  });
+
+  it("a body the container cannot read passes through byte-for-byte", async () => {
     const { seen, fetchImpl } = upstream();
     const { queue } = collector();
-    const switchMap = await mapWith([
-      entry({ match: { model_keys: ["gpt-4o", "unknown"], hosts: ["api.openai.com"] } }),
-    ]);
+    const switchMap = await mapWith([entry()]);
+    const raw = "model=gpt-4o&prompt=hello";
 
     const response = await handleProxy(
       new Request("http://localhost:8787/v1/chat/completions", {
         method: "POST",
-        headers: { "content-type": "application/octet-stream" },
-        body: "\u0000\u0001not json at all",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: raw,
       }),
       { config: config(), queue, fetchImpl, switchMap },
     );
     await response.text();
 
-    expect(seen[0]!.body).toBe("\u0000\u0001not json at all");
-    expect(response.headers.get("x-costmyai-reroute-refused")).toBe("unrecognized_shape");
+    expect(seen[0]!.body).toBe(raw);
+    expect(response.headers.get("x-costmyai-reroute")).toBeNull();
   });
-});
-
 /* ------------------------------------------- 3+4. the rewrite, and its event */
 
 describe("a real same-host model swap", () => {
