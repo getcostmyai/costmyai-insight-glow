@@ -38,6 +38,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { costOf, round2 } from "@/lib/engine/cost";
 import type { PriceRow } from "@/lib/engine/types";
 import { fetchAllRows } from "@/lib/paginate.server";
+import { creditableUsd } from "@/lib/switching/credit";
+
 
 import { buildModelResolver } from "../ingest/resolve";
 import { buildHostResolver } from "../ingest/resolve-host";
