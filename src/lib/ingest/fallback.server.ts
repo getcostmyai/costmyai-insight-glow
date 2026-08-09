@@ -89,18 +89,35 @@ export async function recordSwitchFallbacks(
     }));
   if (rows.length === 0) return { recorded: 0, paused: [] };
 
-  // Dispatch 91: the write is verified, not assumed. A replayed batch collides
-  // on the idempotency index and is ignored rather than double-counted.
+  // Replay safety. A container that could not reach us re-sends the same
+  // batch, and a fallback counted twice could pause a switch that only failed
+  // once — so keys we already hold are dropped before the insert rather than
+  // after. The partial unique index behind `idempotency_key` is the backstop.
+  const keys = rows.map((r) => r.idempotency_key).filter((k): k is string => Boolean(k));
+  let fresh = rows;
+  if (keys.length) {
+    const { data: seen, error: seenError } = await db
+      .from("switch_fallbacks")
+      .select("idempotency_key")
+      .eq("org_id", orgId)
+      .in("idempotency_key", keys);
+    if (seenError) throw new Error(`fallback replay check failed: ${seenError.message}`);
+    const known = new Set((seen ?? []).map((r) => r.idempotency_key));
+    fresh = rows.filter((r) => !r.idempotency_key || !known.has(r.idempotency_key));
+  }
+  if (fresh.length === 0) return { recorded: 0, paused: [] };
+
+  // Dispatch 91: the write is verified, not assumed.
   const { data: inserted, error } = await db
     .from("switch_fallbacks")
-    .upsert(rows, { onConflict: "org_id,idempotency_key", ignoreDuplicates: true })
+    .insert(fresh)
     .select("id, switch_id");
   if (error) throw new Error(`recording fallbacks failed: ${error.message}`);
 
   const paused: string[] = [];
   const since = new Date(Date.now() - AUTO_PAUSE_WINDOW_MINUTES * 60_000).toISOString();
 
-  for (const switchId of new Set(rows.map((r) => r.switch_id))) {
+  for (const switchId of new Set(fresh.map((r) => r.switch_id))) {
     const row = switches.get(switchId);
     if (!row || row.status !== "active") continue;
 
@@ -113,7 +130,7 @@ export async function recordSwitchFallbacks(
     if (countError) throw new Error(`fallback count failed: ${countError.message}`);
     if ((count ?? 0) < AUTO_PAUSE_THRESHOLD) continue;
 
-    const reason = rows.find((r) => r.switch_id === switchId)?.reason ?? "destination_4xx";
+    const reason = fresh.find((r) => r.switch_id === switchId)?.reason ?? "destination_4xx";
     const detail = `Paused automatically after ${count} fallbacks in ${AUTO_PAUSE_WINDOW_MINUTES} minutes — ${REASON_LABEL[reason as FallbackReason]}. Traffic is back on ${row.from_model}.`;
 
     // Verified write: the update must actually have moved an active row.
