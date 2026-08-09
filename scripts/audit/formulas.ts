@@ -31,11 +31,18 @@ import {
   type PriceHistoryRow,
 } from "../../src/lib/intelligence/intelligence.server";
 import { blendedPctChange } from "../../src/lib/pricing/openrouter";
+import { decideExecutable, phaseFor } from "../../src/lib/ingest/switch-plan";
+import { shapeForHost } from "../../src/lib/ingest/provider-shapes";
+import { resolveProviderGates } from "../../src/lib/ingest/routing.server";
+import { executionStateFor } from "../../src/lib/dashboard/execution-copy";
+import { savedUsdViolations } from "../../src/lib/switching/credit";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
 const DEMO_ORG = "00000000-0000-0000-0000-000000000001";
+const PARTNER_DEMO_ORG = "00000000-0000-0000-0000-000000000002";
 const EPS = 1e-9;
+
 
 const db = createClient(URL, SERVICE, { auth: { persistSession: false } });
 
