@@ -42,9 +42,27 @@ export interface ExecutionCopy {
   detail: string;
 }
 
+/** Display names for the hosts this copy names out loud. */
+const PROVIDER_NAMES: Record<string, string> = {
+  openai: "OpenAI",
+  azure: "Azure OpenAI",
+  anthropic: "Anthropic",
+  google: "Google (Gemini / Vertex)",
+  vertex: "Google Vertex",
+  bedrock: "AWS Bedrock",
+  deepinfra: "DeepInfra",
+  coreweave: "CoreWeave",
+  ionstream: "IonStream",
+  alibaba: "Alibaba",
+  baidu: "Baidu",
+  groq: "Groq",
+  venice: "Venice",
+};
+
 const providerName = (host: string) =>
+  PROVIDER_NAMES[host] ??
   host
-    .split(/[-_]/)
+    .split(/[-_.]/)
     .map((p) => (p.length <= 3 ? p.toUpperCase() : p[0]!.toUpperCase() + p.slice(1)))
     .join(" ");
 
@@ -67,9 +85,10 @@ export function executionCopy(x: SwitchExecution): ExecutionCopy {
       state: "not_available_yet",
       label: "Not executed by us yet",
       detail:
-        `${provider} requests are signed per provider, and we will not rewrite a request ` +
-        `someone else signed. CostMyAI cannot move this traffic automatically today — the ` +
-        `saving is measured and priced here, but the change has to be made in your own stack.`,
+        `${provider} requests carry the model in the URL and, on Bedrock, a per-request AWS ` +
+        `signature. We will not rewrite a signed request or forge a path, so CostMyAI cannot ` +
+        `move this traffic automatically today. The saving is measured and priced here, but ` +
+        `the change has to be made in your own stack.`,
     };
   }
 
