@@ -186,7 +186,7 @@ describe("switch map — the request path never waits on CostMyAI", () => {
     const gateway = createGateway(
       config({
         COSTMYAI_UPSTREAM_URL: `http://127.0.0.1:${upstreamPort}`,
-        COSTMYAI_APP_URL: `http://127.0.0.1:${controlPort}`,
+        COSTMYAI_BASE_URL: `http://127.0.0.1:${controlPort}`,
         COSTMYAI_PORT: "0",
       }),
     );
