@@ -1,11 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
-import {
-  PROVIDER_SEEN_WINDOW_DAYS,
-  type ProviderGate,
-  type ProviderGateState,
-} from "@/lib/dashboard/provider-gate";
+import { gateFor, type ProviderGate } from "@/lib/dashboard/provider-gate";
+
 
 /**
  * The two signals behind provider-gated switching (Dispatch 155, Stage 1).
