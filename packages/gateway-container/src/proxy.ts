@@ -184,7 +184,10 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
             : `Could not reach ${upstream.host}: ${err instanceof Error ? err.message : String(err)}`,
         },
       }),
-      { status: 504, headers: { "content-type": "application/json" } },
+      {
+        status: 504,
+        headers: { "content-type": "application/json", ...rewrite.disclosure },
+      },
     );
   }
   clearTimeout(timeout);

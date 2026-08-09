@@ -33,10 +33,10 @@ export function createGateway(config: ContainerConfig) {
     log("spool restored", { items: restored.length });
   }
 
-  // Control channel (Dispatch 155, Stage 3). Read-only in this stage: the map
-  // is populated and observable, and nothing in the request path consults it
-  // yet. Its whole contract is that an outage here is indistinguishable, from
-  // the customer's traffic's point of view, from us not existing.
+  // Control channel (Dispatch 155). The request path reads this map
+  // synchronously, from memory only (Stage 4). Its whole contract is that an
+  // outage here is indistinguishable, from the customer's traffic's point of
+  // view, from us not existing: no fresh plan means byte-identical pass-through.
   const switches = new SwitchMap(config, fetch);
   const stopSwitchPoll = switches.start(config.switchPollIntervalMs);
 
@@ -77,7 +77,7 @@ export function createGateway(config: ContainerConfig) {
       return;
     }
 
-    const response = await handleProxy(toWebRequest(req, url), { config, queue });
+    const response = await handleProxy(toWebRequest(req, url), { config, queue, switchMap: switches });
     res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
     if (response.body) await response.body.pipeTo(Writable.toWeb(res) as WritableStream<Uint8Array>);
     else res.end();
