@@ -73,12 +73,22 @@ export interface SwitchSavings {
   toHost: string;
 }
 
-interface EventRow {
+/**
+ * Dispatch 163. One aggregated row per (switch, served pair, original pair),
+ * summed in Postgres. The previous shape read every rerouted event this
+ * workspace has ever stored, 1000 at a time, on every ingest — a model whose
+ * cost grows with the customer's whole history rather than with the batch, and
+ * which timed out at 19k demo events long before a Govern customer's volume.
+ * The saving is a sum over per-event costs, and cost is linear in tokens, so
+ * summing tokens first is the same number by construction.
+ */
+interface BasisRow {
+  switch_id: string;
   model_key: string;
   host: string;
   original_model_key: string | null;
   original_host: string | null;
-  route_reason: string | null;
+  events: number;
   input_tokens: number;
   output_tokens: number;
 }
@@ -88,24 +98,21 @@ interface EventRow {
  * saving per switch. Pure read — nothing is written here, so this is also what
  * an auditor calls to check the stored figure independently.
  */
-export async function computeSwitchSavings(db: Db, orgId: string): Promise<SwitchSavings[]> {
-  const events = await fetchAllRows<EventRow>(
-    (f, t) =>
-      db
-        .from("usage_events")
-        .select(
-          "model_key, host, original_model_key, original_host, route_reason, input_tokens, output_tokens",
-        )
-        .eq("org_id", orgId)
-        .eq("rerouted", true)
-        .eq("status", "ok")
-        .is("fallback_reason", null)
-        .not("route_reason", "is", null)
-        .order("occurred_at", { ascending: true })
-        .range(f, t),
-    { maxPages: 500 },
-  );
-  if (events.length === 0) return [];
+export async function computeSwitchSavings(
+  db: Db,
+  orgId: string,
+  only?: string[],
+): Promise<SwitchSavings[]> {
+  const { data, error } = await (db as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: BasisRow[] | null; error: { message: string } | null }>;
+  }).rpc("switch_savings_basis", {
+    _org_id: orgId,
+    _switch_ids: only && only.length > 0 ? only : null,
+  });
+  if (error) throw new Error(`switch savings basis unreadable: ${error.message}`);
+  const groups = data ?? [];
+  if (groups.length === 0) return [];
+
 
   /**
    * Live, real price rows only. A delisted pair is not a price we would quote
@@ -159,8 +166,9 @@ export async function computeSwitchSavings(db: Db, orgId: string): Promise<Switc
   };
 
   const acc = new Map<string, SwitchSavings>();
-  for (const e of events) {
-    const switchId = e.route_reason!;
+  for (const g of groups) {
+    const switchId = g.switch_id;
+    const count = Number(g.events);
     const row =
       acc.get(switchId) ??
       ({
@@ -170,25 +178,26 @@ export async function computeSwitchSavings(db: Db, orgId: string): Promise<Switc
         counterfactualUsd: 0,
         actualUsd: 0,
         savedUsd: 0,
-        fromModel: e.original_model_key ?? "",
-        fromHost: e.original_host ?? "",
-        toModel: e.model_key,
-        toHost: e.host,
+        fromModel: g.original_model_key ?? "",
+        fromHost: g.original_host ?? "",
+        toModel: g.model_key,
+        toHost: g.host,
       } satisfies SwitchSavings);
 
-    const before = e.original_model_key && e.original_host ? priceFor(e.original_model_key, e.original_host) : undefined;
-    const after = priceFor(e.model_key, e.host);
+    const before = g.original_model_key && g.original_host ? priceFor(g.original_model_key, g.original_host) : undefined;
+    const after = priceFor(g.model_key, g.host);
     if (!before || !after) {
-      row.unpricedEvents += 1;
+      row.unpricedEvents += count;
       acc.set(switchId, row);
       continue;
     }
 
-    row.events += 1;
-    row.counterfactualUsd += costOf(before, e.input_tokens, e.output_tokens);
-    row.actualUsd += costOf(after, e.input_tokens, e.output_tokens);
+    row.events += count;
+    row.counterfactualUsd += costOf(before, Number(g.input_tokens), Number(g.output_tokens));
+    row.actualUsd += costOf(after, Number(g.input_tokens), Number(g.output_tokens));
     acc.set(switchId, row);
   }
+
 
   return [...acc.values()].map((r) => ({
     ...r,
@@ -234,9 +243,10 @@ export async function recomputeSwitchSavings(
   only?: string[],
 ): Promise<SavingsWriteResult[]> {
   const wanted = only && only.length > 0 ? new Set(only) : null;
-  const computed = (await computeSwitchSavings(db, orgId)).filter(
+  const computed = (await computeSwitchSavings(db, orgId, only)).filter(
     (s) => !wanted || wanted.has(s.switchId),
   );
+
   const written: SavingsWriteResult[] = [];
   if (computed.length === 0) return written;
 

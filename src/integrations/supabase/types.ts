@@ -2372,6 +2372,19 @@ export type Database = {
         Args: { _from_host: string; _org_id: string; _to_host: string }
         Returns: boolean
       }
+      switch_savings_basis: {
+        Args: { _org_id: string; _switch_ids?: string[] }
+        Returns: {
+          events: number
+          host: string
+          input_tokens: number
+          model_key: string
+          original_host: string
+          original_model_key: string
+          output_tokens: number
+          switch_id: string
+        }[]
+      }
       system_apply_switch: { Args: { _rec_id: string }; Returns: string }
       system_upsert_recommendation: {
         Args: {
