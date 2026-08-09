@@ -1,3 +1,4 @@
+import type { SwitchExecution } from "@/lib/dashboard/execution-copy";
 export type SwitchKind = "host" | "quality";
 
 /** Shape the switch cards render. Populated live by the pipeline, never hardcoded. */
@@ -17,6 +18,8 @@ export interface SwitchRow {
   basis?: string;
   note?: string;
   qualityDelta?: number | null;
+  /** Dispatch 157. What pressing the action would really do. Server-decided. */
+  execution?: SwitchExecution;
 }
 
 export const usd = (n: number, digits = 2) =>
