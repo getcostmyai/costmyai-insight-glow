@@ -90,8 +90,10 @@ function Hero({ stats }: { stats: MarketingStats }) {
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
           CostMyAI reads your gateway metadata, forecasts your month-end AI bill from real usage,
-          proves cheaper options against real benchmarks, and switches only what holds quality —
-          manually, or automatically with Govern.
+          proves cheaper options against real benchmarks, and switches only what holds quality.
+          Same-provider swaps run automatically with Govern; moving to a different provider waits
+          on your own routing grant.
+
         </Reveal>
 
         <Reveal delay={180} className="mx-auto mt-9 grid max-w-4xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
