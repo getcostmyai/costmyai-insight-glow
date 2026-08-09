@@ -450,111 +450,157 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
   );
 }
 
-/** What is rerouting traffic right now, and what is paused. */
+/**
+ * Dispatch 161. One card, two lists.
+ *
+ * A switch that is activated is not necessarily a switch that is executing.
+ * Mixing both under a header that asserts live execution is the LIVE-is-
+ * absolute violation this section was split for: "Rerouting now" contains only
+ * switches whose execution state is `automatic`, and nothing else may claim a
+ * captured figure.
+ */
+function ActiveSwitchCard({
+  s,
+  ctl,
+}: {
+  s: DashboardController["data"]["activeSwitches"][number];
+  ctl: DashboardController;
+}) {
+  const { canAct, lifecycle, busy, errorFor } = ctl;
+  const rerouting = s.execution?.state === "automatic";
+  return (
+    <div className="card-surface p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${
+            s.badge === "Proven switch" ? "bg-saving-soft text-saving" : "bg-primary-soft text-primary"
+          }`}
+        >
+          <Zap className="size-3" />
+          {s.badge}
+        </span>
+        <span className="text-[11px] text-muted-foreground">
+          {s.basis} · since {s.since}
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-mono text-sm text-muted-foreground">{s.fromModel}</span>
+        <ArrowRight className="size-3.5 text-primary" />
+        <span className="font-mono text-sm font-semibold text-primary">{s.toModel}</span>
+        <span className="text-[11px] text-muted-foreground">{s.toHost}</span>
+      </div>
+      {/* Two different facts about one switch, each named: what it saves per
+          month at today's rate, and what it has saved so far. Neither exists
+          until traffic has actually moved. */}
+      {rerouting ? (
+        <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-3">
+          <div>
+            <p className="eyebrow">Run rate</p>
+            {s.saved > 0 ? (
+              <p className="num text-lg">
+                {usd(s.monthlyRate, 0)}
+                <span className="text-xs text-muted-foreground">/mo</span>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Rate still calculating
+                <span className="block text-[11px]">
+                  first full day of traffic not measured yet
+                </span>
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="eyebrow">Captured to date</p>
+            <p className="num text-lg text-saving">+{usd(s.saved)}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 border-t border-border pt-3">
+          <p className="eyebrow">Captured to date</p>
+          <p className="text-sm font-semibold">No traffic moved yet</p>
+          <p className="text-[11px] text-muted-foreground">
+            This switch is recorded, not running. Nothing is captured until it reroutes.
+          </p>
+        </div>
+      )}
+
+      <SwitchControls
+        state="active"
+        busy={busy(`switch:${s.switchId}`)}
+        error={errorFor(`switch:${s.switchId}`)}
+        canAct={canAct}
+        onAction={(action) =>
+          lifecycle.mutate({ key: `switch:${s.switchId}`, switchId: s.switchId, action })
+        }
+      />
+
+      {/* Dispatch 159: attached to the controls it describes. */}
+      <ExecutionSubtitle
+        execution={s.execution}
+        align="left"
+        className="mt-3 border-t border-border pt-3"
+      />
+    </div>
+  );
+}
+
+/** What is rerouting traffic right now, what is only activated, and what is paused. */
 export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
-  const { data, activeRange, canAct, lifecycle, busy, errorFor } = ctl;
+  const { data, activeRange } = ctl;
   const waiting = data.dataState !== "ready";
+  const rerouting = data.activeSwitches.filter((s) => s.execution?.state === "automatic");
+  const notMoving = data.activeSwitches.filter((s) => s.execution?.state !== "automatic");
 
   return (
     <section>
       <SectionTitle
-        eyebrow="Working for you right now"
-        title="Active switches"
-        hint={`Activated in the ${activeRange.long}, ranked by amount saved.${
+        eyebrow="Rerouting your traffic right now"
+        title="Rerouting now"
+        hint={`Activated in the ${activeRange.long} and actually moving requests today, ranked by amount saved.${
           data.switchesOutsideWindow > 0
             ? ` ${data.switchesOutsideWindow} more started before this window.`
             : ""
         }`}
-        badge={`${data.activeSwitches.length} in window`}
+        badge={`${rerouting.length} rerouting`}
         badgeTone="spend"
       />
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-3">
-          {data.activeSwitches.length === 0 ? (
+          {rerouting.length === 0 ? (
             <EmptyState
               text={
                 waiting
                   ? data.dataState === "awaiting_first_event"
                     ? "No switch can run until your first event lands. Connect your gateway and the meter starts here."
                     : "No switch was activated inside this window. Widen the range to see earlier activations."
-                  : data.switchesOutsideWindow > 0
-                    ? `No switch was activated in the ${activeRange.long}. ${data.switchesOutsideWindow} started earlier and are still rerouting traffic.`
+                  : notMoving.length > 0
+                    ? `Nothing is rerouting yet. ${notMoving.length} activated switch${notMoving.length === 1 ? "" : "es"} below ${notMoving.length === 1 ? "is" : "are"} recorded and waiting on a step outside this dashboard.`
                     : "Nothing rerouted yet. Activating a same-provider switch starts rerouting immediately; a switch to another provider is recorded here and waits for you to allow routing to it."
               }
             />
           ) : (
-            data.activeSwitches.map((s) => (
-              <div key={`${s.fromModel}-${s.toHost}`} className="card-surface p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${
-                      s.badge === "Proven switch"
-                        ? "bg-saving-soft text-saving"
-                        : "bg-primary-soft text-primary"
-                    }`}
-                  >
-                    <Zap className="size-3" />
-                    {s.badge}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {s.basis} · since {s.since}
-                  </span>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="font-mono text-sm text-muted-foreground">{s.fromModel}</span>
-                  <ArrowRight className="size-3.5 text-primary" />
-                  <span className="font-mono text-sm font-semibold text-primary">{s.toModel}</span>
-                  <span className="text-[11px] text-muted-foreground">{s.toHost}</span>
-                </div>
-                {/* Two different facts about one switch, each named: what it
-                    saves per month at today's rate, and what it has saved so far. */}
-                <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-3">
-                  <div>
-                    <p className="eyebrow">Run rate</p>
-                    {s.saved > 0 ? (
-                      <p className="num text-lg">
-                        {usd(s.monthlyRate, 0)}
-                        <span className="text-xs text-muted-foreground">/mo</span>
-                      </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Rate still calculating
-                        <span className="block text-[11px]">
-                          first full day of traffic not measured yet
-                        </span>
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="eyebrow">Captured to date</p>
-                    <p className="num text-lg text-saving">+{usd(s.saved)}</p>
-                  </div>
-                </div>
-
-                <SwitchControls
-                  state="active"
-                  busy={busy(`switch:${s.switchId}`)}
-                  error={errorFor(`switch:${s.switchId}`)}
-                  canAct={canAct}
-                  onAction={(action) =>
-                    lifecycle.mutate({
-                      key: `switch:${s.switchId}`,
-                      switchId: s.switchId,
-                      action,
-                    })
-                  }
-                />
-
-                {/* Dispatch 159: attached to the controls it describes. */}
-                <ExecutionSubtitle
-                  execution={s.execution}
-                  align="left"
-                  className="mt-3 border-t border-border pt-3"
-                />
-              </div>
-            ))
+            rerouting.map((s) => <ActiveSwitchCard key={s.switchId} s={s} ctl={ctl} />)
           )}
+
+          {notMoving.length > 0 ? (
+            <div className="pt-6">
+              <SectionTitle
+                eyebrow="Activated, but nothing is moving"
+                title="Activated, waiting on you"
+                hint="Recorded and priced, not executing. Each one names the single step that would start it. No money is captured while a switch waits."
+                badge={`${notMoving.length} waiting`}
+                badgeTone="spend"
+              />
+              <div className="space-y-3">
+                {notMoving.map((s) => (
+                  <ActiveSwitchCard key={s.switchId} s={s} ctl={ctl} />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
+
 
         <div className="space-y-4">
           <div className="card-surface flex items-center gap-4 p-5">
