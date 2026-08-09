@@ -17,6 +17,7 @@ import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { executionCopy } from "@/lib/dashboard/execution-copy";
+import { ExecutionBadge, ExecutionNote, actionLabelFor } from "@/components/dashboard/ExecutionNote";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
@@ -275,6 +276,13 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           {isArb ? "Same model, cheaper host" : "Quality-proven model swap"} · reversible at any
           time
         </p>
+        {/* Dispatch 157: the hero's switch tells the same truth as the row. */}
+        <ExecutionBadge execution={best.execution} dark className="mt-2" />
+        {best.execution ? (
+          <p className="mt-2 max-w-xl text-[11px] leading-relaxed text-white/55">
+            {executionCopy(best.execution).detail}
+          </p>
+        ) : null}
       </div>
       <div className="text-right">
         <div className="num text-3xl text-[oklch(0.86_0.16_155)]">
@@ -306,7 +314,7 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
           className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[oklch(0.22_0.07_285)] transition-transform active:scale-95 disabled:opacity-60"
         >
           {busy(key) ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
-          {busy(key) ? "Switching…" : "Switch now"}
+          {busy(key) ? "Switching…" : actionLabelFor(best.execution, "Switch now")}
         </button>
       ) : ctl.demoReadOnly ? (
         /* The demo is a showcase, not a console: the action reads as a label. */
@@ -382,6 +390,9 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 </span>
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
+              {/* Dispatch 157: the right-size cards run through the same
+                  execution resolver as every other switch surface. */}
+              <ExecutionNote execution={o.execution} className="mt-3" />
               {o.toModel ? (
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-opportunity/20 pt-3">
                   <span className="text-xs text-muted-foreground">
@@ -412,7 +423,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                       className="ml-auto inline-flex items-center gap-2 rounded-full bg-opportunity px-3.5 py-1.5 text-xs font-semibold text-white transition-transform active:scale-95 disabled:opacity-60"
                     >
                       {busy(rsKey(o)) ? <Loader2 className="size-3.5 animate-spin" /> : null}
-                      Right-size now
+                      {actionLabelFor(o.execution, "Right-size now")}
                     </button>
                   ) : ctl.demoReadOnly ? (
                     <span className="ml-auto rounded-full border border-opportunity/50 px-3.5 py-1.5 text-xs font-semibold text-opportunity">
@@ -525,29 +536,10 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                 {/* Dispatch 156: three real states, never one blanket claim.
                     Which one applies is decided server-side from the same rule
                     the container's plan is built from. */}
-                {s.execution ? (
-                  (() => {
-                    const c = executionCopy(s.execution);
-                    const tone =
-                      c.state === "automatic"
-                        ? "border-saving/30 bg-saving-soft text-saving"
-                        : c.state === "needs_your_action"
-                          ? "border-primary/30 bg-primary-soft text-primary"
-                          : "border-border bg-muted text-muted-foreground";
-                    return (
-                      <div className="mt-4 border-t border-border pt-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${tone}`}
-                        >
-                          {c.label}
-                        </span>
-                        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                          {c.detail}
-                        </p>
-                      </div>
-                    );
-                  })()
-                ) : null}
+                <ExecutionNote
+                  execution={s.execution}
+                  className="mt-4 border-t border-border pt-3"
+                />
 
                 <SwitchControls
                   state="active"

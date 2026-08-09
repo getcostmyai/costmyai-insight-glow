@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, Clock, Copy, Loader2, ShieldCheck } from "luc
 import type { SwitchRow } from "@/lib/dashboard-data";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
+import { ExecutionNote, actionLabelFor } from "@/components/dashboard/ExecutionNote";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
@@ -88,6 +89,9 @@ export function SwitchCard({
               {row.note}
             </p>
           ) : null}
+          {/* Dispatch 157: the same execution truth the active-switches panel
+              shows, on the row that offers the switch in the first place. */}
+          <ExecutionNote execution={row.execution} className="mt-3" />
           {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
         </div>
       </div>
@@ -140,7 +144,7 @@ export function SwitchCard({
             className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-glow)] transition-transform active:scale-95 disabled:opacity-60"
           >
             {pending ? <Loader2 className="size-3.5 animate-spin" /> : null}
-            {pending ? "Switching…" : actionLabel}
+            {pending ? "Switching…" : actionLabelFor(row.execution, actionLabel)}
           </button>
         ) : (
           <Link

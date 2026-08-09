@@ -90,6 +90,12 @@ export interface SwitchOpportunity {
   basis: string;
   note: string;
   qualityDelta: number | null;
+  /**
+   * Dispatch 157. What pressing "Switch" on this row would actually do —
+   * reroute traffic today, or record a switch that waits on the customer.
+   * Same resolver as the running switches: one source, many consumers.
+   */
+  execution?: SwitchExecution;
 }
 
 /** A switch the autonomous gate would run unattended. */
@@ -105,6 +111,8 @@ export interface GovernCandidate {
   /** Labelled 30-day run-rate, which the autonomous threshold is written in. */
   monthlySaving: number;
   basis: string;
+  /** Dispatch 157. Whether this candidate can actually run unattended today. */
+  execution?: SwitchExecution;
 }
 
 /** A switch the autonomous gate refuses to run unattended, and why. */
@@ -159,6 +167,8 @@ export interface OversizedWorkload {
   wastedMonthly: number;
   savingPct: number;
   note: string;
+  /** Dispatch 157. Same execution resolver as every other switch surface. */
+  execution?: SwitchExecution;
 }
 
 export interface ActiveSwitchRow {
@@ -523,7 +533,57 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     objectives: objectiveRows,
   });
 
+  /**
+   * Dispatch 157. One execution resolver for every switch-rendering surface.
+   *
+   * Dispatch 156 wired only the "Active switches" panel to the real gates, so
+   * every other surface — Lists A and B, the right-size cards, the hero's
+   * one-click switch, Govern's eligible and refused lists — still offered a
+   * blanket "Switch" as if Phase 1's automatic execution applied everywhere.
+   * The gates are resolved once here, for every destination host the page can
+   * possibly render, and the same `phaseFor` / `decideExecutable` the
+   * container's plan is built from decides all of them.
+   */
+  const gateHosts = new Set<string>();
+  for (const r of [...result.hostArbitrage, ...result.qualityMatched, ...result.oversized]) {
+    gateHosts.add(String(r.toHost ?? r.fromHost));
+  }
+  for (const s of switches.data ?? []) gateHosts.add(String(s.to_host));
+  const gates = await resolveProviderGates(orgId, [...gateHosts]);
+
+  const executionFor = (input: {
+    fromHost: string;
+    toHost: string;
+    autonomous?: boolean;
+  }): SwitchExecution => {
+    const toHost = input.toHost.trim().toLowerCase();
+    const gate = gates.get(toHost);
+    const phase = phaseFor({
+      fromHost: input.fromHost.trim().toLowerCase(),
+      toHost,
+      toShape: shapeForHost(toHost)?.shape ?? null,
+    });
+    const decision = decideExecutable({
+      phase,
+      gate: gate?.state ?? "not_connected",
+      autonomous: Boolean(input.autonomous),
+      everSwitchedTo: gate?.everSwitchedTo ?? false,
+    });
+    return {
+      phase,
+      gate: gate?.state ?? "not_connected",
+      toHost,
+      state: executionStateFor({
+        phase,
+        executable: decision.executable,
+        blockedReason: decision.reason,
+      }),
+      ...(decision.reason ? { blockedReason: decision.reason } : {}),
+    };
+  };
+
   const toOpportunity = (r: Recommendation): SwitchOpportunity => ({
+    execution: executionFor({ fromHost: r.fromHost, toHost: r.toHost ?? r.fromHost }),
     fromModel: r.fromModel,
     fromHost: r.fromHost,
     fromHostLabel: r.fromHostLabel,
@@ -566,6 +626,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         wastedMonthly: round2(r.monthlySavingUsd),
         savingPct: pct1(r.savingPct),
         note: r.note,
+        execution: executionFor({ fromHost: r.fromHost, toHost: r.toHost ?? r.fromHost }),
       }),
     ),
     (o) => o.wasted,
@@ -665,40 +726,15 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    * surface can reuse Phase 1's automatic execution as a blanket claim.
    */
   const executionById = new Map<string, SwitchExecution>();
-  {
-    const rows = switches.data ?? [];
-    if (rows.length) {
-      const gates = await resolveProviderGates(
-        orgId,
-        rows.map((s) => s.to_host),
-      );
-      for (const s of rows) {
-        const toHost = String(s.to_host).trim().toLowerCase();
-        const gate = gates.get(toHost);
-        const phase = phaseFor({
-          fromHost: String(s.from_host).trim().toLowerCase(),
-          toHost,
-          toShape: shapeForHost(toHost)?.shape ?? null,
-        });
-        const decision = decideExecutable({
-          phase,
-          gate: gate?.state ?? "not_connected",
-          autonomous: Boolean(s.autonomous),
-          everSwitchedTo: gate?.everSwitchedTo ?? false,
-        });
-        executionById.set(s.id, {
-          phase,
-          gate: gate?.state ?? "not_connected",
-          toHost,
-          state: executionStateFor({
-            phase,
-            executable: decision.executable,
-            blockedReason: decision.reason,
-          }),
-          ...(decision.reason ? { blockedReason: decision.reason } : {}),
-        });
-      }
-    }
+  for (const s of switches.data ?? []) {
+    executionById.set(
+      s.id,
+      executionFor({
+        fromHost: String(s.from_host),
+        toHost: String(s.to_host),
+        autonomous: Boolean(s.autonomous),
+      }),
+    );
   }
 
   const toSwitchRow = (s: {
@@ -898,6 +934,11 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       taskHint: rec.taskHint,
       saving: round2(rec.savingUsd),
       monthlySaving: round2(rec.monthlySavingUsd),
+      execution: executionFor({
+        fromHost: rec.fromHost,
+        toHost: rec.toHost ?? rec.fromHost,
+        autonomous: true,
+      }),
       basis: rec.basis,
     };
     if (verdict.allowed) governEligible.push(base);

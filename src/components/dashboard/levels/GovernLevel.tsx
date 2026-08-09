@@ -19,6 +19,7 @@ import {
   TopSwitchControl,
 } from "@/components/dashboard/levels/RightsizeLevel";
 
+import { ExecutionBadge, ExecutionNote } from "@/components/dashboard/ExecutionNote";
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -323,6 +324,9 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                   </span>
                 </div>
                 <span className="num text-lg text-saving">{usd(c.saving, 0)}</span>
+                {/* Dispatch 157: "cleared the gate" is not the same as "runs
+                    unattended today" — the execution resolver says which. */}
+                <ExecutionNote execution={c.execution} className="w-full" />
               </div>
             ))}
           </div>
@@ -356,6 +360,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                     <span className="font-mono text-sm">{r.toModel}</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
+                  <ExecutionBadge execution={r.execution} className="mt-2" />
                 </div>
                 <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                   {r.reason.replace(/_/g, " ")}
