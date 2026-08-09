@@ -62,6 +62,7 @@ import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './rou
 import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin/leads'
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
+import { Route as ApiPublicV1SwitchesRouteImport } from './routes/api/public/v1/switches'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
@@ -352,6 +353,11 @@ const ApiPublicWidgetIntelligenceRoute =
     path: '/api/public/widget/intelligence',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1SwitchesRoute = ApiPublicV1SwitchesRouteImport.update({
+  id: '/api/public/v1/switches',
+  path: '/api/public/v1/switches',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1EventsRoute = ApiPublicV1EventsRouteImport.update({
   id: '/api/public/v1/events',
   path: '/api/public/v1/events',
@@ -507,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
+  '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -574,6 +581,7 @@ export interface FileRoutesByTo {
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
+  '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -646,6 +654,7 @@ export interface FileRoutesById {
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
+  '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -718,6 +727,7 @@ export interface FileRouteTypes {
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
+    | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
     | '/api/public/og/intelligence/$month'
   fileRoutesByTo: FileRoutesByTo
@@ -785,6 +795,7 @@ export interface FileRouteTypes {
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
+    | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
     | '/api/public/og/intelligence/$month'
   id:
@@ -856,6 +867,7 @@ export interface FileRouteTypes {
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
     | '/api/public/v1/events'
+    | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
     | '/api/public/og/intelligence/$month'
   fileRoutesById: FileRoutesById
@@ -905,6 +917,7 @@ export interface RootRouteChildren {
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
+  ApiPublicV1SwitchesRoute: typeof ApiPublicV1SwitchesRoute
   ApiPublicWidgetIntelligenceRoute: typeof ApiPublicWidgetIntelligenceRoute
   ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -1282,6 +1295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWidgetIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/switches': {
+      id: '/api/public/v1/switches'
+      path: '/api/public/v1/switches'
+      fullPath: '/api/public/v1/switches'
+      preLoaderRoute: typeof ApiPublicV1SwitchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/events': {
       id: '/api/public/v1/events'
       path: '/api/public/v1/events'
@@ -1526,6 +1546,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
+  ApiPublicV1SwitchesRoute: ApiPublicV1SwitchesRoute,
   ApiPublicWidgetIntelligenceRoute: ApiPublicWidgetIntelligenceRoute,
   ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
 }
