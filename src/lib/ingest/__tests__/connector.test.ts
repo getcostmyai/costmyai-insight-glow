@@ -385,7 +385,9 @@ describe("shutdown", () => {
       const gateway = createGateway(config({ COSTMYAI_SPOOL_DIR: dir }));
       gateway.queue.enqueue({ kind: "events", body: { events: [{ idempotency_key: "evt-3" }] } });
       await gateway.shutdown("SIGTERM");
-      expect(seen).toHaveLength(1);
+      // Exactly one metadata delivery. The control-plane poll (Dispatch 155)
+      // shares this stub but is a separate, read-only endpoint.
+      expect(seen.filter((u) => u.includes("/v1/events"))).toHaveLength(1);
       expect(gateway.queue.size).toBe(0);
       // Nothing left on disk: the flush happened, it was not just persisted.
       expect(new Spool(dir, { maxItems: 10, maxAgeMs: 60_000 }).load()).toHaveLength(0);

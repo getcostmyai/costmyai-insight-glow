@@ -6,6 +6,7 @@ import { CONTAINER_DEFAULTS, loadConfig, type ContainerConfig } from "./config.j
 import { handleProxy } from "./proxy.js";
 import { UpstreamQueue } from "./queue.js";
 import { Spool } from "./spool.js";
+import { SwitchMap } from "./switch-map.js";
 
 /**
  * Entrypoint.
@@ -31,6 +32,13 @@ export function createGateway(config: ContainerConfig) {
     queue.restore(restored);
     log("spool restored", { items: restored.length });
   }
+
+  // Control channel (Dispatch 155, Stage 3). Read-only in this stage: the map
+  // is populated and observable, and nothing in the request path consults it
+  // yet. Its whole contract is that an outage here is indistinguishable, from
+  // the customer's traffic's point of view, from us not existing.
+  const switches = new SwitchMap(config, fetch);
+  const stopSwitchPoll = switches.start(config.switchPollIntervalMs);
 
   let lastError: string | undefined;
   let lastFlushAt: string | undefined;
@@ -62,6 +70,7 @@ export function createGateway(config: ContainerConfig) {
         queued: queue.size,
         lastFlushAt: lastFlushAt ?? null,
         lastError: lastError ?? null,
+        switches: switches.status(),
       });
       res.writeHead(200, { "content-type": "application/json" });
       res.end(body);
@@ -80,6 +89,7 @@ export function createGateway(config: ContainerConfig) {
   async function shutdown(signal: string): Promise<void> {
     log("shutting down", { signal, queued: queue.size });
     clearInterval(timer);
+    stopSwitchPoll();
     await new Promise<void>((resolve) => server.close(() => resolve()));
     spool.persist(queue.snapshot());
     await flush();
@@ -87,7 +97,7 @@ export function createGateway(config: ContainerConfig) {
     log("shutdown complete", { queued: queue.size });
   }
 
-  return { server, queue, spool, flush, shutdown };
+  return { server, queue, spool, switches, flush, shutdown };
 }
 
 function toWebRequest(req: IncomingMessage, url: URL): Request {
