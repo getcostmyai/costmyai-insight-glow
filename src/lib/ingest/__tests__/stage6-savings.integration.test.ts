@@ -20,6 +20,7 @@ import { mintApiKey } from "@/lib/ingest/keys.server";
 import type { SwitchPlan, SwitchPlanEntry } from "@/lib/ingest/switch-plan";
 import { buildDashboardSnapshot } from "@/lib/dashboard.server";
 import { computeSwitchSavings } from "@/lib/switching/savings.server";
+import { assertRoutingGrants } from "@/lib/ingest/routing.server";
 
 import { loadConfig } from "../../../../packages/gateway-container/src/config";
 import { handleProxy, type ProxyEvent } from "../../../../packages/gateway-container/src/proxy";
@@ -185,6 +186,14 @@ beforeAll(async () => {
   ownerClient = owner.client;
   token = (await mintApiKey(orgId, "Stage 6 savings proof", ownerId)).token;
   switchId = await activeSwitch(orgId);
+  /**
+   * Dispatch 161 made accrual conditional on the switch being executable under
+   * its own gate, so the fixture has to write the artefact a real customer
+   * writes — a connected row for the destination host, through the same
+   * `assertRoutingGrants` a container calls. Without it the server is right to
+   * refuse the money, and the proof would be measuring the refusal.
+   */
+  await assertRoutingGrants(orgId, [HOST], "stage6-container");
 
   const other = await makeOrg("stage6-other");
   otherOwnerId = other.userId;
