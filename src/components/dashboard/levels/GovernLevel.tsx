@@ -104,7 +104,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Active saving"
                 value={usd(savings.captured, 0)}
-                sub={`saved by ${data.activeSwitches.length + data.switchesOutsideWindow} switches already running`}
+                sub={`saved by ${data.reroutingCount} switch${data.reroutingCount === 1 ? "" : "es"} actually rerouting traffic`}
                 accent="oklch(0.82 0.16 155)"
               />
               <HeroStat
