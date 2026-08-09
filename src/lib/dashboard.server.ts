@@ -1104,6 +1104,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     activeSwitches,
     frozenSwitches,
     switchesOutsideWindow,
+    /**
+     * Dispatch 161. How many active switches are genuinely rerouting traffic
+     * right now, window or no window. The only number a counter may use when
+     * it says "already running".
+     */
+    reroutingCount,
+
     frozen,
     /**
      * Govern. `unlocked` is the plan; `enabled` is the workspace's own switch.
