@@ -47,12 +47,13 @@ const PROMOTED: Record<string, string[]> = {
     "dbc987e6-37bb-4822-be1b-62ca3d26783e", // alibaba → ionstream, qwen3-coder-next
   ],
   "00000000-0000-0000-0000-000000000002": [
-    // The partner workspace's two highest-value switches that sit behind traffic
-    // it actually has. Its gpt-5.5 switch is a fixture with no observed stream
-    // in that workspace at all, and crediting it would mean inventing traffic.
-    "af76ee5a-e0f0-4f7f-b318-fa5d70889906", // azure → openai, gpt-5.4
+    // Dispatch 163: locked to the one switch in this workspace with real
+    // backing traffic. Its gpt-5.5 and gpt-5.4 azure switches are fixtures with
+    // no observed stream here, and crediting them would mean inventing traffic,
+    // so they stay gated rather than being padded out to a round number.
     "c4919085-85ec-4fe9-97ff-64532f575e94", // alibaba → ionstream, qwen3-coder-next
   ],
+
 
 };
 

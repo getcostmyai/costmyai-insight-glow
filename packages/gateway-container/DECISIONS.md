@@ -225,3 +225,32 @@ Three consequences, all deliberate:
   recorded in full; only the money is withheld. Closing that gap means adding
   real price rows for those hosts, never inferring one from another host.
 
+
+### Amendment, 9 August 2026 (Dispatch 163) — savings are measured in the database, not paged into the app
+
+**Finding, recorded whether or not you call it a bug:** the first version of
+`computeSwitchSavings` read *every rerouted event the workspace had ever
+stored*, 1000 rows at a time, on **every** ingest batch. Its cost grew with the
+customer's whole history rather than with the batch, which is the definition of
+an unbounded model. It was not a slow query, it was the wrong shape: at 19,124
+demo events it already exceeded the two-minute statement budget mid-run, and a
+Govern customer at real volume would have hit it in their first week and lost
+the accrual write on every batch afterwards.
+
+**Fix, root-caused rather than chunked smaller.** The sum is now done once in
+Postgres — `public.switch_savings_basis(_org_id, _switch_ids)` returns one row
+per (switch, served pair, original pair) with the event count and the token
+totals, and only those few rows are priced in the app. It is arithmetically the
+same number: cost is linear in tokens, so summing tokens before pricing and
+pricing before summing agree by construction. The recompute also pushes the
+switch filter into the query instead of reading the workspace and discarding
+most of it.
+
+Measured after the change: 76,496 rerouted events in the demo workspace
+aggregate in **171 ms**, and the work is now bounded by the number of distinct
+routed pairs (3), not by history length.
+
+**Second-order rule this sets:** any figure recomputed on the ingest path must
+be bounded by the batch or by a fixed cardinality. If a calculation needs to
+walk history to answer, it belongs in SQL or in a job, never in the request that
+reports the traffic.
