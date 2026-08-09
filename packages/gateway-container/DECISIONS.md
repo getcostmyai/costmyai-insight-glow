@@ -17,6 +17,34 @@ would mean a compromised container leaks a live provider key.
 
 Practical consequence: your code changes one line, the base URL. Nothing else.
 
+### Amendment, 9 August 2026 (Dispatch 155) — scoped, not withdrawn
+
+This rule was absolute. It is now scoped, deliberately and with the reason
+written down rather than discovered later in a diff.
+
+**Unchanged, and still absolute: pass-through traffic.** The key your
+application sends is still copied byte for byte, still never read, stored,
+rewritten or logged. Nothing about the ordinary request path changes.
+
+**The one exception: a destination you granted.** For a switch to send traffic
+to a *different* provider, that provider must be paid — and the key on the
+incoming request belongs to the provider your application called, not the one
+we would be routing to. So a destination is executable only when you have
+separately put that provider's own key in your own container
+(`COSTMYAI_ROUTE_KEY_<PROVIDER>`), which is a distinct act from merely using
+that provider elsewhere.
+
+What this does not change: the key lives in your infrastructure, in a container
+you run. It is never sent to CostMyAI, there is no field in the ingest contract
+that could carry one, and we still cannot recover or read it. What it does
+change: for granted destinations only, the container is no longer a pure relay —
+it holds a credential you handed it, for exactly the destinations you named, and
+you withdraw it by removing the variable or revoking the grant in Settings.
+
+Traffic that is rerouted says so, per request, in a response header. There is no
+mode in which this happens without disclosure.
+
+
 ## 2. Credentials never appear in any output
 
 No log line, error message, health payload or upstream body ever contains a
