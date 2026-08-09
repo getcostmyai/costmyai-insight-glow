@@ -45,6 +45,8 @@ export interface ContainerConfig {
   /** Spool bounds — a CostMyAI outage must not fill the customer's disk. */
   spoolMaxItems: number;
   spoolMaxAgeMs: number;
+  /** How often the switch plan is polled. Never on the request path. */
+  switchPollIntervalMs: number;
 }
 
 function intFrom(value: string | undefined, fallback: number): number {
@@ -74,6 +76,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     flushIntervalMs: intFrom(env[e.flushInterval], 30_000),
     upstreamTimeoutMs: intFrom(env[e.upstreamTimeout], 120_000),
     port: intFrom(env[e.port], CONTAINER_DEFAULTS.port),
+    switchPollIntervalMs: 60_000,
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
   };
