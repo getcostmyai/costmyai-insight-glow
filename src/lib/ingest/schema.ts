@@ -5,10 +5,12 @@ import {
   MAX_CAPTURES_PER_BATCH,
   MAX_EVENTS_PER_BATCH,
   PARSE_STATUSES,
+  SUPPORTED_INGEST_API_VERSIONS,
   TASK_HINTS,
   UNKNOWN_TASK_HINT,
 } from "./contract";
 import { isContentFree } from "../../../packages/gateway-container/src/skeleton";
+
 
 /**
  * The ingest contract.
