@@ -754,6 +754,16 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     // makes the same figure disagree between server render and client, and
     // between two pages read a moment apart.
     const activeDays = Math.max(1, Math.floor((now - new Date(s.activated_at).getTime()) / DAY_MS));
+    const execution = executionById.get(s.id);
+    /**
+     * Dispatch 161. A switch that is not rerouting has captured nothing, and
+     * no stored figure may say otherwise on any surface, demo included. The
+     * accrual path refuses to credit a non-executable switch; this is the same
+     * invariant enforced again at render, so a stale row can never present a
+     * captured figure beside a label that says nothing is moving.
+     */
+    const rerouting = execution?.state === "automatic";
+    const saved = rerouting ? round2(Number(s.saved_usd)) : 0;
     return {
       switchId: s.id,
       fromModel: s.from_model,
@@ -764,11 +774,12 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       basis: s.basis,
       activatedAt: s.activated_at,
       since: new Date(s.activated_at).toISOString().slice(0, 10),
-      saved: round2(Number(s.saved_usd)),
-      monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
+      saved,
+      monthlyRate: rerouting ? round2((saved / activeDays) * 30) : 0,
       autonomous: s.autonomous,
-      ...(executionById.has(s.id) ? { execution: executionById.get(s.id)! } : {}),
+      ...(execution ? { execution } : {}),
     };
+
   };
 
   const activeSwitches: ActiveSwitchRow[] = selectSwitchesInWindow(
