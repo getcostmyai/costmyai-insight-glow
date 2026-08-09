@@ -141,3 +141,25 @@ The consequence is that a parser shipped in month six repairs traffic from month
 one — `parse_status` is corrected, the rollups are rebuilt from the corrected
 events, and the customer's history stops under-reporting. What can never be
 recovered from a skeleton is what was never in it, and that is the point.
+
+## §8 — Rewriting is narrow, refusals are loud (Dispatch 155, Stage 4)
+
+The container may now change a request, and exactly one thing about it: the
+`model` field of a JSON body, on a same-host switch (Phase 1), where it already
+fronts that provider with the customer's own key. Nothing else is edited — not
+the URL, not the headers, not any other field.
+
+Everything not completely understood is **refused**, and a refusal forwards the
+original request byte-for-byte: a SigV4-signed request (`signed_request`,
+editing the body would invalidate the signature), a model-in-path shape such as
+Gemini or Bedrock (`model_in_path`), a body that is not a JSON object with a
+model field (`unrecognized_shape`), and any Phase 2 or Phase 3 entry
+(`phase_not_supported`) — refused by the container independently of what the
+plan says, not merely unreachable because the server has not marked them
+executable yet.
+
+Nothing is silent, in either direction. A rewritten call comes back with
+`x-costmyai-reroute: applied` plus the original and actual model and host and
+the switch id; a refused one comes back with `x-costmyai-reroute: refused` and
+the reason. An untouched request carries no `x-costmyai-*` header at all, and
+its ingest event carries no `rerouted` field — byte-identical to a v1 container.
