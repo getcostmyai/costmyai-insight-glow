@@ -73,6 +73,8 @@ export interface IngestResult {
   accepted: number;
   duplicates: number;
   bucketsRebuilt: number;
+  /** Switches whose observed `saved_usd` was recomputed from this batch's traffic. */
+  switchesRepriced: number;
 }
 
 export async function ingestEvents(orgId: string, events: IngestEvent[]): Promise<IngestResult> {
@@ -103,8 +105,21 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
      */
     envelope_skeleton:
       e.parse_status === "parsed" ? null : ((e.envelope_skeleton ?? null) as never),
+    /**
+     * Dispatch 155, Stage 6. The rerouting fields were validated at the edge
+     * from Stage 4 and then dropped here, which meant the one piece of evidence
+     * that a switch had actually moved traffic never reached storage — and
+     * `saved_usd` could never be anything but asserted. Stored now, exactly as
+     * reported: a model, a host and the id of the switch that matched.
+     */
+    rerouted: e.rerouted === true,
+    original_model_key: e.rerouted ? (e.original_model_key ?? null) : null,
+    original_host: e.rerouted ? (e.original_host ?? null) : null,
+    route_reason: e.rerouted ? (e.route_reason ?? null) : null,
+    fallback_reason: e.fallback_reason ?? null,
     idempotency_key: e.idempotency_key ?? null,
   }));
+
 
   const { data: inserted, error } = await db
     .from("usage_events")
@@ -120,9 +135,23 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
   // It raises a report on the jobs board instead of passing silently.
   await watchUnparsedShapes(orgId, rows);
 
+  /**
+   * Dispatch 155, Stage 6. A batch that moved traffic updates the money the
+   * switch has saved, in the same request that reported the traffic — so the
+   * dashboard tile and the events behind it can never be more than one batch
+   * apart. Recomputed from all of that switch's events, never incremented from
+   * this batch, for the same reason rollups are re-derived rather than added to.
+   */
+  const touched = [...new Set(rows.filter((r) => r.rerouted && r.route_reason).map((r) => r.route_reason!))];
+  let switchesRepriced = 0;
+  if (accepted > 0 && touched.length > 0) {
+    const { recomputeSwitchSavings } = await import("@/lib/switching/savings.server");
+    switchesRepriced = (await recomputeSwitchSavings(db, orgId, touched)).length;
+  }
 
-  return { accepted, duplicates: rows.length - accepted, bucketsRebuilt };
+  return { accepted, duplicates: rows.length - accepted, bucketsRebuilt, switchesRepriced };
 }
+
 
 /**
  * Raise one report per batch that carried an envelope the connector could not
