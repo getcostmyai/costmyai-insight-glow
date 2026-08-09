@@ -39,6 +39,13 @@ import {
 } from "./dashboard/window";
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
+import { resolveProviderGates } from "./ingest/routing.server";
+import { shapeForHost } from "./ingest/provider-shapes";
+import { decideExecutable, phaseFor } from "./ingest/switch-plan";
+import {
+  executionStateFor,
+  type SwitchExecution,
+} from "./dashboard/execution-copy";
 
 
 /**
@@ -167,6 +174,12 @@ export interface ActiveSwitchRow {
   saved: number;
   monthlyRate: number;
   autonomous: boolean;
+  /**
+   * Dispatch 156. What this switch is really doing to traffic: rerouting
+   * automatically, waiting on an action of the customer's, or not executable
+   * by us at all yet. Decided server-side, rendered by `executionCopy`.
+   */
+  execution?: SwitchExecution;
   /**
    * Dispatch 155, Stage 5. Present only on a switch CostMyAI paused itself
    * after repeated rerouting fallbacks — the workspace reads why here, on the
@@ -645,7 +658,51 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     .reduce((sum, r) => sum + Number(r.cost_usd), 0);
 
   // ---- What is already running, inside the selected window -------------------
+  /**
+   * Dispatch 156. Whether a switch is actually moving traffic is decided here,
+   * by the same `phaseFor` / `decideExecutable` the container's plan is built
+   * from — never re-derived in a component. Three distinct real states, so no
+   * surface can reuse Phase 1's automatic execution as a blanket claim.
+   */
+  const executionById = new Map<string, SwitchExecution>();
+  {
+    const rows = switches.data ?? [];
+    if (rows.length) {
+      const gates = await resolveProviderGates(
+        orgId,
+        rows.map((s) => s.to_host),
+      );
+      for (const s of rows) {
+        const toHost = String(s.to_host).trim().toLowerCase();
+        const gate = gates.get(toHost);
+        const phase = phaseFor({
+          fromHost: String(s.from_host).trim().toLowerCase(),
+          toHost,
+          toShape: shapeForHost(toHost)?.shape ?? null,
+        });
+        const decision = decideExecutable({
+          phase,
+          gate: gate?.state ?? "not_connected",
+          autonomous: Boolean(s.autonomous),
+          everSwitchedTo: gate?.everSwitchedTo ?? false,
+        });
+        executionById.set(s.id, {
+          phase,
+          gate: gate?.state ?? "not_connected",
+          toHost,
+          state: executionStateFor({
+            phase,
+            executable: decision.executable,
+            blockedReason: decision.reason,
+          }),
+          ...(decision.reason ? { blockedReason: decision.reason } : {}),
+        });
+      }
+    }
+  }
+
   const toSwitchRow = (s: {
+
     id: string;
     from_model: string;
     from_host: string;
@@ -674,6 +731,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       saved: round2(Number(s.saved_usd)),
       monthlyRate: round2((Number(s.saved_usd) / activeDays) * 30),
       autonomous: s.autonomous,
+      ...(executionById.has(s.id) ? { execution: executionById.get(s.id)! } : {}),
     };
   };
 

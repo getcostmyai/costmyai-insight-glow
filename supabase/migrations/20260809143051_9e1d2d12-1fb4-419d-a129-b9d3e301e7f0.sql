@@ -1,0 +1,3 @@
+insert into public.switches (org_id, from_model, from_host, to_model, to_host, basis, badge, autonomous, status, activated_at, saved_usd, is_synthetic)
+select '00000000-0000-0000-0000-000000000001', 'anthropic/claude-opus-4.5', 'anthropic', 'anthropic/claude-haiku-4.5', 'anthropic', 'Same provider, cheaper model at equal measured quality', 'Proven switch', false, 'active', now() - interval '9 days', 41.80, true
+where exists (select 1 from public.model_catalog where model_key = 'anthropic/claude-haiku-4.5');
