@@ -469,7 +469,7 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                     : "No switch was activated inside this window. Widen the range to see earlier activations."
                   : data.switchesOutsideWindow > 0
                     ? `No switch was activated in the ${activeRange.long}. ${data.switchesOutsideWindow} started earlier and are still rerouting traffic.`
-                    : "Nothing rerouted yet. Activating a certified switch starts the meter here."
+                    : "Nothing rerouted yet. Activating a same-provider switch starts rerouting immediately; a switch to another provider is recorded here and waits for you to allow routing to it."
               }
             />
           ) : (
@@ -520,6 +520,33 @@ export function ActiveSwitchesSection({ ctl }: { ctl: DashboardController }) {
                     <p className="num text-lg text-saving">+{usd(s.saved)}</p>
                   </div>
                 </div>
+
+                {/* Dispatch 156: three real states, never one blanket claim.
+                    Which one applies is decided server-side from the same rule
+                    the container's plan is built from. */}
+                {s.execution ? (
+                  (() => {
+                    const c = executionCopy(s.execution);
+                    const tone =
+                      c.state === "automatic"
+                        ? "border-saving/30 bg-saving-soft text-saving"
+                        : c.state === "needs_your_action"
+                          ? "border-primary/30 bg-primary-soft text-primary"
+                          : "border-border bg-muted text-muted-foreground";
+                    return (
+                      <div className="mt-4 border-t border-border pt-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${tone}`}
+                        >
+                          {c.label}
+                        </span>
+                        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                          {c.detail}
+                        </p>
+                      </div>
+                    );
+                  })()
+                ) : null}
 
                 <SwitchControls
                   state="active"
