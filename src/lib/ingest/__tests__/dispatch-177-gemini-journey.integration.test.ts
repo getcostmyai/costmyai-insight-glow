@@ -176,7 +176,6 @@ live("a real native Gemini call, all the way to a dashboard", () => {
     console.log("DASHBOARD", JSON.stringify({
       spend: snapshot.totals.spend,
       requests: snapshot.totals.requests,
-      models: snapshot.workloads?.length ?? null,
     }, null, 1));
     expect(snapshot.totals.requests).toBe(1);
   }, 180_000);
