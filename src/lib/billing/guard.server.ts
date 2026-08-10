@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { PlanTier } from "../engine/types";
-import { effectivePlan, isEntitledTo, type SubscriptionState } from "./entitlement";
+import {
+  effectivePlan,
+  isEntitledTo,
+  resolveAccess,
+  type PlanAccessSource,
+  type SubscriptionState,
+} from "./entitlement";
+import { planAtLeast } from "../engine/types";
 
 /**
  * Server-side plan gate.
@@ -14,12 +21,47 @@ import { effectivePlan, isEntitledTo, type SubscriptionState } from "./entitleme
 
 export type StripeEnvName = "sandbox" | "live";
 
+/**
+ * A subscription that exists, but in the other payment environment.
+ *
+ * Sandbox and live rows share one table and every read is scoped to the
+ * environment the build runs against, so a row written by a test-mode checkout
+ * is invisible to a live build. That is correct — it must never unlock a paid
+ * level — but silently falling back to Compare hides the reason. This carries
+ * the fact so the billing page can say it out loud.
+ */
+export interface OtherEnvSubscription {
+  environment: StripeEnvName;
+  plan: PlanTier;
+  status: string;
+}
+
+export interface PlanState {
+  plan: PlanTier;
+  subscription: SubscriptionState | null;
+  otherEnv: OtherEnvSubscription | null;
+  isPlatformAdmin: boolean;
+}
+
+const otherEnvironment = (e: StripeEnvName): StripeEnvName =>
+  e === "live" ? "sandbox" : "live";
+
+function toState(row: any): SubscriptionState {
+  return {
+    plan: row.plan as PlanTier,
+    status: row.status as string,
+    currentPeriodEnd: (row.current_period_end as string | null) ?? null,
+    cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
+  };
+}
+
 export async function loadPlanState(
   supabase: SupabaseClient<any, any, any>,
   orgId: string,
   environment: StripeEnvName,
-): Promise<{ plan: PlanTier; subscription: SubscriptionState | null }> {
-  const [org, sub] = await Promise.all([
+): Promise<PlanState> {
+  const other = otherEnvironment(environment);
+  const [org, sub, otherSub, admin] = await Promise.all([
     supabase.from("organizations").select("plan").eq("id", orgId).maybeSingle(),
     supabase
       .from("subscriptions")
@@ -29,6 +71,15 @@ export async function loadPlanState(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("plan, status, current_period_end, cancel_at_period_end")
+      .eq("org_id", orgId)
+      .eq("environment", other)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.rpc("is_platform_admin"),
   ]);
 
   if (org.error) throw org.error;
@@ -36,14 +87,15 @@ export async function loadPlanState(
 
   return {
     plan: org.data.plan as PlanTier,
-    subscription: sub.data
+    subscription: sub.data ? toState(sub.data) : null,
+    otherEnv: otherSub.data
       ? {
-          plan: sub.data.plan as PlanTier,
-          status: sub.data.status as string,
-          currentPeriodEnd: (sub.data.current_period_end as string | null) ?? null,
-          cancelAtPeriodEnd: Boolean(sub.data.cancel_at_period_end),
+          environment: other,
+          plan: otherSub.data.plan as PlanTier,
+          status: otherSub.data.status as string,
         }
       : null,
+    isPlatformAdmin: admin.data === true,
   };
 }
 
@@ -53,8 +105,8 @@ export async function resolvePlan(
   orgId: string,
   environment: StripeEnvName,
 ): Promise<PlanTier> {
-  const { plan, subscription } = await loadPlanState(supabase, orgId, environment);
-  return effectivePlan(plan, subscription);
+  const state = await loadPlanState(supabase, orgId, environment);
+  return resolveAccess(state.plan, state.subscription, state.isPlatformAdmin).plan;
 }
 
 /** Throws unless the workspace is currently paying for `required` (or better). */
@@ -64,9 +116,25 @@ export async function requirePlan(
   required: PlanTier,
   environment: StripeEnvName,
 ): Promise<PlanTier> {
-  const { plan, subscription } = await loadPlanState(supabase, orgId, environment);
-  if (!isEntitledTo(required, plan, subscription)) {
+  const state = await loadPlanState(supabase, orgId, environment);
+  const paidEntitled = isEntitledTo(required, state.plan, state.subscription);
+  // Staff access is an explicit second branch, never a payment row: a platform
+  // admin gets no more than the workspace's own recorded plan, and an ordinary
+  // customer is refused exactly as before.
+  const staffEntitled = state.isPlatformAdmin && planAtLeast(state.plan, required);
+  if (!paidEntitled && !staffEntitled) {
     throw new Error(`This workspace is not on the ${required} plan.`);
   }
-  return effectivePlan(plan, subscription);
+  return resolveAccess(state.plan, state.subscription, state.isPlatformAdmin).plan;
+}
+
+/** The level and the authority behind it — for surfaces that must say which. */
+export async function resolveAccessFor(
+  supabase: SupabaseClient<any, any, any>,
+  orgId: string,
+  environment: StripeEnvName,
+): Promise<{ plan: PlanTier; source: PlanAccessSource; state: PlanState }> {
+  const state = await loadPlanState(supabase, orgId, environment);
+  const access = resolveAccess(state.plan, state.subscription, state.isPlatformAdmin);
+  return { ...access, state };
 }

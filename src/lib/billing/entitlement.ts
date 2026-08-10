@@ -49,3 +49,37 @@ export function isEntitledTo(
 ): boolean {
   return planAtLeast(effectivePlan(orgPlan, subscription, now), required);
 }
+
+/**
+ * Who is granting the level, and why.
+ *
+ * `subscription` — a real paying subscription in this build's payment
+ * environment. `platform_admin` — CostMyAI staff looking at a workspace they
+ * administer; explicit, never inferred from a payment row. `free` — Compare.
+ */
+export type PlanAccessSource = "free" | "subscription" | "platform_admin";
+
+export interface ResolvedAccess {
+  plan: PlanTier;
+  source: PlanAccessSource;
+}
+
+/**
+ * The level a workspace may use, and on what authority.
+ *
+ * Staff access is deliberately a separate branch from billing: it never writes
+ * or reads a payment row, it grants no more than the workspace's own recorded
+ * plan, and it is reported as `platform_admin` so every surface can say out
+ * loud that this is not a paid subscription.
+ */
+export function resolveAccess(
+  orgPlan: PlanTier,
+  subscription: SubscriptionState | null,
+  isPlatformAdmin: boolean,
+  now: Date = new Date(),
+): ResolvedAccess {
+  const paid = effectivePlan(orgPlan, subscription, now);
+  if (paid !== "compare") return { plan: paid, source: "subscription" };
+  if (isPlatformAdmin && orgPlan !== "compare") return { plan: orgPlan, source: "platform_admin" };
+  return { plan: "compare", source: "free" };
+}
