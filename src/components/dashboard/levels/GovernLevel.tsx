@@ -184,16 +184,21 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
              A locked workspace sees the real control, inert — not a description. */
           <div className="w-full max-w-xs space-y-5">
             <div>
+              {/* Govern's own numerator: money applied unattended, over what is
+                  allowed to run unattended. Not the cross-check capture rate —
+                  on a mixed workspace those are different quantities. */}
               <SavingsRing
-                captured={savings.captured}
-                available={savings.available}
+                captured={govern.captured}
+                available={govern.eligibleSaving}
                 period={activeRange.long}
+                label="Applied unattended"
               />
               <div className="mt-3 flex justify-center gap-5 text-xs text-white/70">
-                <Legend color="oklch(0.65 0.15 158)" label="Captured" />
-                <Legend color="oklch(0.72 0.11 195)" label="Available" />
+                <Legend color="oklch(0.65 0.15 158)" label="Unattended" />
+                <Legend color="oklch(0.72 0.11 195)" label="Eligible" />
               </div>
             </div>
+
             <div className="rounded-3xl bg-white/10 p-5 backdrop-blur">
               <div className="flex items-center gap-3">
                 <span
