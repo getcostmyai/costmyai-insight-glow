@@ -29,7 +29,7 @@ import {
   type ObjectiveSelection,
 } from "./dashboard/objective";
 import { gateLevel, nextPlan } from "./dashboard/plan";
-import { effectivePlan, type SubscriptionState } from "./billing/entitlement";
+import { resolveAccess, type SubscriptionState } from "./billing/entitlement";
 import { paymentsEnvironment } from "./billing/env.server";
 import {
   partitionRollups,
@@ -478,7 +478,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const recordedPlan = org.data.plan as PlanTier;
   const plan = org.data.is_synthetic
     ? recordedPlan
-    : effectivePlan(recordedPlan, toSubscriptionState(subscription.data));
+    : resolveAccess(recordedPlan, toSubscriptionState(subscription.data), platformAdmin.data === true)
+        .plan;
   const objective = effectiveSelection(plan, requestedObjective);
 
   const objectiveRows = mergeObjectives((storedObjectives.data ?? []) as ObjectiveRow[], objective);

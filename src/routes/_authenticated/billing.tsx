@@ -189,6 +189,46 @@ function BillingPage() {
       <PaymentTestModeBanner />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
+      {/* A subscription written in the other payment environment cannot unlock
+          anything here. Say so explicitly instead of silently showing Compare. */}
+      {billing.data?.otherEnvironmentSubscription ? (
+        <div className="rounded-2xl border border-opportunity/40 bg-opportunity-soft p-5">
+          <p className="eyebrow text-opportunity">Subscription recorded in the other payment environment</p>
+          <p className="mt-2 text-sm text-foreground">
+            This workspace has a{" "}
+            <span className="font-semibold">
+              {PLAN_META[billing.data.otherEnvironmentSubscription.plan].label}
+            </span>{" "}
+            subscription ({billing.data.otherEnvironmentSubscription.status}) recorded in the{" "}
+            <span className="font-semibold">
+              {billing.data.otherEnvironmentSubscription.environment === "sandbox"
+                ? "test"
+                : "live"}
+            </span>{" "}
+            payment environment. This site runs against{" "}
+            <span className="font-semibold">
+              {getStripeEnvironment() === "sandbox" ? "test" : "live"}
+            </span>
+            , so that subscription does not grant a level here and you have not been charged twice.
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Nothing is broken and nothing is lost. To use the paid level on this site, subscribe
+            here; the other record stays where it is.
+          </p>
+        </div>
+      ) : null}
+
+      {/* Staff access is not a purchase and must never look like one. */}
+      {billing.data?.accessSource === "platform_admin" ? (
+        <div className="rounded-2xl border border-border bg-muted/40 p-5">
+          <p className="eyebrow">Staff access</p>
+          <p className="mt-2 text-sm text-foreground">
+            {PLAN_META[current].label} is open on this workspace because your account is a CostMyAI
+            platform administrator, not because of a payment. No subscription is active here.
+          </p>
+        </div>
+      ) : null}
+
       {/* Current subscription */}
       <section className="card-surface p-6">
         <div className="flex flex-wrap items-start justify-between gap-6">
@@ -200,7 +240,13 @@ function BillingPage() {
           <div className="grid gap-6 sm:grid-cols-3">
             <Fact
               label="Status"
-              value={current === "compare" ? "Free — no subscription" : (status ?? "unknown")}
+              value={
+                billing.data?.accessSource === "platform_admin"
+                  ? "Staff access — no subscription"
+                  : current === "compare"
+                    ? "Free — no subscription"
+                    : (status ?? "unknown")
+              }
             />
             <Fact
               label={billing.data?.cancelAtPeriodEnd ? "Access until" : "Renews"}
