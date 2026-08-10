@@ -36,7 +36,7 @@ const APP = process.env["CONNECTOR_TEST_APP_URL"] ?? "http://localhost:8080";
 
 const PROVIDER_URL = "https://generativelanguage.googleapis.com";
 const GEMINI_KEY = process.env["GEMINI_API_KEY"];
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.6-flash";
 const PORT = 8794;
 
 if (!GEMINI_KEY) {
