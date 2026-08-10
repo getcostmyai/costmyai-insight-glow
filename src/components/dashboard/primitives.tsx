@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Loader2, Pause, Play, Undo2 } from "lucide-react";
 
 import { ranges, type RangeKey } from "@/lib/dashboard-queries";
@@ -99,10 +99,10 @@ export function HeroStat({
    * So the number measures itself and shrinks only as far as it must, down to
    * a floor, and re-measures whenever its column resizes.
    */
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = React.useState(1);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
 
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const fit = () => {
