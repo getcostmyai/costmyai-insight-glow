@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-10T11:40:28.400Z",
+  "generatedAt": "2026-08-10T18:37:34.675Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -32,7 +32,7 @@
     },
     {
       "file": "src/lib/billing.functions.ts",
-      "line": 209,
+      "line": 228,
       "table": "subscriptions",
       "filters": [
         "org_id"
@@ -41,7 +41,7 @@
     },
     {
       "file": "src/lib/billing.functions.ts",
-      "line": 267,
+      "line": 286,
       "table": "subscriptions",
       "filters": [
         "org_id"
@@ -50,14 +50,24 @@
     },
     {
       "file": "src/lib/billing/guard.server.ts",
-      "line": 23,
+      "line": 65,
       "table": "organizations",
       "filters": [],
       "snippet": ".from(\"organizations\").select(\"plan\").eq(\"id\", orgId).maybeSingle()"
     },
     {
       "file": "src/lib/billing/guard.server.ts",
-      "line": 25,
+      "line": 67,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"plan, status, current_period_end, cancel_at_period_end\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/billing/guard.server.ts",
+      "line": 75,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -101,7 +111,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 374,
+      "line": 376,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -110,7 +120,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 386,
+      "line": 388,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -119,7 +129,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 398,
+      "line": 400,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -128,7 +138,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 404,
+      "line": 406,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -137,7 +147,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 409,
+      "line": 411,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -146,7 +156,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 415,
+      "line": 417,
       "table": "switches",
       "filters": [
         "org_id",
@@ -156,7 +166,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 422,
+      "line": 424,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -165,7 +175,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 429,
+      "line": 431,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -174,7 +184,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 435,
+      "line": 437,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -183,7 +193,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 441,
+      "line": 443,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -193,7 +203,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 452,
+      "line": 454,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -202,7 +212,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 677,
+      "line": 683,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -211,7 +221,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 692,
+      "line": 698,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -220,7 +230,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 823,
+      "line": 829,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -229,7 +239,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 846,
+      "line": 852,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -238,7 +248,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 854,
+      "line": 860,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
