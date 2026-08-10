@@ -455,6 +455,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         .order("synced_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      // Staff access: explicit, database-answered, and never inferred from a
+      // payment row. It grants no more than the workspace's recorded plan.
+      supabase.rpc("is_platform_admin"),
     ]);
 
   const firstError =
