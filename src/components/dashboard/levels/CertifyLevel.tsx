@@ -58,6 +58,9 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const refused = data.stats.qualityRefused;
   const refusedMeasured = data.stats.qualityRefusedMeasured ?? refused;
   const unmeasurable = data.stats.qualityRefusedUnmeasurable ?? 0;
+  /** Measured fine, but nothing cheaper was worth switching to. */
+  const noCandidate = data.stats.qualityRefusedNoCandidate ?? 0;
+
   const evaluated = data.stats.qualityEvaluated;
   const certifiable = data.stats.qualityCertifiable ?? evaluated;
   const certifyRate = certificationRate(data.stats);
