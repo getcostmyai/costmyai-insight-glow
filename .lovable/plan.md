@@ -1,94 +1,110 @@
-# Dispatch 160 — Audit findings and fix plan
+# Dispatch 169 — Donut freshness and the "Live" claim (audit, real workspace)
 
-## What was measured
+All evidence below is from the **real, non-demo** path: signed in as mail@costmyai.com,
+org `5e7ad1de-…d60de6c2c0ed` ("Robinpetermueller's workspace", plan `certify`, non-synthetic),
+loading `/workspace/*` in a real browser.
 
-### 1. The rows behind the "Allow routing to X" cards
+## 1. Is the donut computed fresh, or cached?
 
-```sql
-select id, org_id, from_model, from_host, to_model, to_host, status, saved_usd, is_synthetic, activated_at
-from switches order by activated_at desc;
-```
+Fresh, per request. No server cache, no CDN cache, no materialized view, no snapshot table.
 
-Real output (extract, both demo orgs `...0001` Demo Workspace and `...0002` Partner Demo Workspace):
+- Route → component → data: `src/routes/_authenticated/workspace.compare.tsx:6` →
+  `LevelScreen scope="mine"` (`src/components/dashboard/LevelScreen.tsx:18`) →
+  `useDashboardController` (`useDashboardController.ts:38`) →
+  `dashboardQuery(range, objective, "mine")` (`src/lib/dashboard-queries.ts:19-33`) →
+  `getMyDashboardSnapshot` (`src/lib/dashboard.functions.ts:60-92`) →
+  `buildDashboardSnapshot` (`src/lib/dashboard.server.ts`).
+  This is the same file the customer's browser hits — `scope` is the only difference from demo,
+  and the only demo-specific branch anywhere in the snapshot is the plan bypass at
+  `src/lib/dashboard.server.ts:464` (`is_synthetic ? recordedPlan : effectivePlan(...)`).
+  No donut input is branched on synthetic.
+- The engine runs in-request: rollups, `host_prices`, `benchmarks`, `benchmark_margins`,
+  `model_catalog` are read at `dashboard.server.ts:359-437` and fed to `runPipeline`.
+  Compare's and Certify's donut numbers are pipeline output, not a read of `recommendations`.
+  Rightsize's/Govern's captured number is `switches.saved_usd`, recomputed at ingest.
+- Measured: three consecutive loads of `/workspace/compare`, `_serverFn` response bodies carried
+  three distinct `generatedAt` values — `10:27:11.635`, `10:27:14.414`, `10:27:18.062` — with
+  **no `Cache-Control` header** on the RPC response. Recomputed every time.
+- The only TTL in the chain is client-side: `staleTime: 60_000` (`dashboard-queries.ts:30`).
+  `QueryClient` is constructed with no default options (`src/router.tsx:6`), so React Query's
+  defaults apply: refetch on mount and on window focus, once the 60s staleness has elapsed.
+  There is **no `refetchInterval`** on the dashboard query.
 
-```text
-id                                    from_host      to_host    status  saved_usd  is_synthetic  activated_at
-6e2bbbbe-2029-4101-9d12-c47321f70fdd  azure          google     active       0.00  t             2026-08-04
-e813c3f0-4979-4df9-b7a4-c38a2eea4645  anthropic      deepinfra  active      35.07  t             2026-08-03
-17d5bba2-6b58-4cce-802c-aca9737b55ae  azure          openai     active      12.12  t             2026-08-01
-408fdec5-75aa-4cfe-af5c-619e9040d882  venice         baidu      active      18.17  t             2026-07-30
-5be85486-7ccd-4248-bf2a-ecd1000a0702  groq           deepinfra  active      37.14  t             2026-07-28
-2c1e9ad1-887f-4171-9cc3-27f3b7a7e215  groq           coreweave  active     102.10  t             2026-07-26
-dbc987e6-37bb-4822-be1b-62ca3d26783e  alibaba        ionstream  active     239.10  t             2026-07-24
-350216fc-f5a9-4257-818e-0c5ec0f42dfa  azure          openai     active     294.73  t             2026-07-22
-690037d7-0298-41e3-8143-8fe7edad49c0  azure          openai     active     568.36  t             2026-07-18
-6fc70ad6-cc59-409c-a46d-bfba20e2bfdf  api.openai.com azure      active     461.28  t             2026-07-13
-(25 rows total; every row is_synthetic = t)
-```
+## 2. Is it org-scoped?
 
-`saved_usd` is **nonzero** for switches whose card renders "Allow routing to OpenAI" / "Connect IonStream first". Screenshot of `/demo/rightsize`: card `openai/gpt-5.5 -> openai` shows `CAPTURED TO DATE +$568.36` with the subtitle `ALLOW ROUTING TO OPENAI`; `qwen3-coder-next -> ionstream` shows `+$187.44` under `CONNECT IONSTREAM FIRST`.
+Yes, twice over — explicit filter *and* RLS.
 
-### 2. Gate state that produces those labels
+- The org id never crosses the wire: it is resolved server-side from `memberships`
+  (`dashboard.functions.ts:73-80`), then every read is `.eq("org_id", orgId)` —
+  `dashboard.server.ts:363, 404, 416, 422, 428, 664, 679, 810, 833`.
+- The read runs through the caller's RLS client (`context.supabase`,
+  `dashboard.functions.ts:90`). Policies on `usage_rollups`, `usage_events`, `switches`:
+  `is_org_member(org_id) AND (is_synthetic = org_is_synthetic(org_id))`.
+- Proof it is not a global aggregate: global 30-day rollup spend is **$33,578.23**; this org's
+  own 30-day rollup spend is **$0.001445 over 6 requests**. The real dashboard renders
+  `SPEND · LAST 30 DAYS $0.00`, `6 requests`, `96 input tok`, `PATTERNS CHECKED 2`,
+  `CHEAPER HOSTS 0% of $0 spend`. It is showing this org, not the dataset.
 
-```sql
-select org_id, host, granted, revoked_at from org_provider_routing;
--- (0 rows)
-```
+## 3. Would a real org's traffic change show up without a deploy or cache bust?
 
-No routing grant exists anywhere, so `decideExecutable` returns `executable: false` for every cross-host switch in the system. The labels are correct. The money is not.
+Yes, and the mechanism exists in code:
 
-### 3. Which code path wrote the nonzero figures
+`POST /api/public/v1/events` → `ingestEvents` → `rebuildRollups(orgId, timestamps)`
+(`src/lib/ingest/ingest.server.ts:130`), which re-derives every touched hour and day bucket from
+the stored events in the same request; rerouted batches additionally call
+`recomputeSwitchSavings` (`ingest.server.ts:145-150`), which is what moves the Rightsize/Govern
+captured numerator. The next snapshot read re-runs the pipeline over those rollups.
+No cron, no refresh job, no build step sits between ingest and the donut.
 
-Not the runtime path.
+Not testable live today: this workspace's last event was **2026-08-06 07:45Z** (99h ago) and we do
+not hold the plaintext ingest token, so the end-to-end write was not exercised in this audit.
+The statement above is a code trace, not an observed round trip — flagged as such.
 
-```sql
-select org_id, count(*) filter (where rerouted) as rerouted, count(*) as total from usage_events group by 1;
--- ...0001 | 0 | 1287380
--- ...0002 | 0 |  210812
--- 5e7ad1de (Robin, real) | 0 | 6
+## 4. Actual refresh cadence a real customer experiences
 
-select org_id, route_reason, count(*) from usage_events where rerouted group by 1,2;
--- (0 rows)
-```
+- Server figures (including all four donuts): recomputed **only when the query refetches** —
+  on mount, on route change into a level, and on window focus, subject to the 60s `staleTime`.
+  A customer who leaves the tab open and focused sees the donut sit still indefinitely.
+- Between refetches the *counters* move: `useLiveTotals` (`src/lib/gateway-metrics.ts:32-70`)
+  accrues spend/requests/tokens forward every 1.8s at the window's average rate, with
+  deterministic jitter, whenever `ingest.state === "live"`.
+- Upstream cadence: the container flushes every **30s** by default
+  (`packages/gateway-container/src/config.ts:76`).
 
-Zero rerouted events exist, so `recomputeSwitchSavings` (`src/lib/switching/savings.server.ts:205`) has never written any of these values — it only sums `usage_events` where `rerouted = true and status = 'ok'` (`savings.server.ts:87-91`) and is only invoked from `src/lib/ingest/ingest.server.ts:145-149`.
+## FINDING A (live-claim violation) — "Live · streaming from your gateway"
 
-The two writers are seed migrations:
+`src/components/dashboard/levels/OverviewLevel.tsx:159` shows that banner whenever the newest
+event is under 3h old (`QUIET_AFTER_HOURS = 3`, `src/lib/dashboard/ingest-health.ts:21,55`).
+Nothing streams: there is no realtime channel, no SSE, and no polling interval on the dashboard
+query. The only thing moving on screen is a client-side extrapolation. Under the LIVE-is-absolute
+rule this is a claim the mechanism does not back — it needs either a real refresh mechanism
+(`refetchInterval` aligned to the 30s flush, or a realtime subscription) or honest copy
+("last event 4m ago", "updates when you reload").
 
-- `supabase/migrations/20260804214025_...sql:19` — `saved_usd = round(staged.monthly / 30.0 * staged.days_ago * 0.9, 2)`, i.e. the recommendation's projected monthly saving pro-rated by age, applied to `is_synthetic` rows.
-- `supabase/migrations/20260809143051_...sql:1-2` — inserts a switch with a literal `41.80`.
+Correctly, the real workspace today shows the *quiet* branch — "No events for 99h" — so the
+violation is latent, not currently on screen for this org. It would fire for any customer whose
+gateway pushed within the last 3 hours.
 
-Neither consults gate state, because neither is a runtime path. **This is not a gate bypass in the customer path.**
+## FINDING B — Compare and Certify donut denominators are not measured
 
-### 4. Cross-check against the real workspace
+Both rings divide by `live.spend`, the extrapolated counter, not the measured window total:
+`CompareLevel.tsx:47,115` and `CertifyLevel.tsx:126`. Numerator (`available`,
+`certifyIdentified`) is the fixed server figure. So the percentage in the ring drifts downward
+every 1.8s on spend that was never observed. Rightsize (`RightsizeLevel.tsx:207`) and Govern
+(`GovernLevel.tsx:191-192`) use server figures on both sides and do not have this defect.
 
-Robin's `Robinpetermueller's workspace` (`5e7ad1de-...`, plan `certify`) has **0 rows in `switches`** and 0 rerouted events, so no real customer figure is affected today. The only writer that can ever produce a nonzero `saved_usd` for a real workspace is `recomputeSwitchSavings`, fed exclusively by container-reported `rerouted` events.
+## FINDING C (minor) — stale rationale behind the quiet threshold
 
-### Residual, worth closing while we are here
+`ingest-health.ts:19-21` justifies the 3h quiet threshold with "the container polls hourly".
+The container's default flush is 30s (`config.ts:76`). The threshold may still be the right
+number, but the reason recorded for it is no longer true, which is how a threshold quietly
+stops matching the system it guards.
 
-Ingest trusts the container's `route_reason` without re-checking the switch's own gate server-side (`src/lib/ingest/ingest.server.ts:115-118`, then `:145`). A container that reported `rerouted: true` naming a switch that is not executable today would accrue `saved_usd` against an "Allow routing" card. It cannot happen with our container, but the server should not depend on that.
+## Proposed fixes (not built — awaiting your call)
 
-### 5. Section-title accuracy (standalone violation)
-
-`src/components/dashboard/levels/RightsizeLevel.tsx:461-462` renders eyebrow `Working for you right now` / title `Active switches` over a list that, as the screenshot shows, currently contains 13 cards of which none are executing. Two of the four execution tones in that one list assert the opposite of the header. This breaks the LIVE-is-absolute rule independently of the money bug.
-
-## The fix
-
-1. **Fixture honesty (root cause of the number).** New migration that zeroes `saved_usd` for every `is_synthetic` switch whose destination host has no `granted` row in `org_provider_routing` — i.e. every synthetic switch that is not Phase 1 same-host executable. Same-host synthetic switches keep a seeded figure, because those genuinely would be rerouting. Remove the pro-rating formula from the seeding path (`scripts/apply-synthetic.ts` / future seeds) so it cannot be reintroduced: seeds may only write `saved_usd` for rows they also back with rerouted `usage_events`.
-
-2. **Server-side gate at accrual time.** In `recomputeSwitchSavings`, resolve the switch's gate through the same `decideExecutable` used by the plan builder and refuse to credit a switch that is not executable, recording the refusal rather than silently dropping it. This makes the invariant "a card that says Allow routing cannot show captured dollars" enforced at the write, not at render.
-
-3. **Render-side invariant (defence in depth).** In `dashboard.server.ts` `toSwitchRow`, when `execution.tone` is not `automatic`, `saved`/`monthlyRate` must be 0 and the card renders "No traffic moved yet" in place of `CAPTURED TO DATE`. A number and a "not executing" label can never appear on the same card again.
-
-4. **Split the section by real execution state.** Replace the single "Active switches / Working for you right now" block with two:
-   - `Rerouting now` — only `tone === "automatic"` rows. Keeps run-rate and captured figures.
-   - `Activated, waiting on you` — `connect_first`, `allow_routing`, `confirm_once`, `not_available` rows, headed with copy that states nothing is moving yet, showing the opportunity value rather than a captured figure.
-   Same treatment in `GovernLevel.tsx`, which reuses `data.activeSwitches`. Counters that say "switches already running" (`RightsizeLevel.tsx:173`, `GovernLevel.tsx:107`) count only the executing set.
-
-5. **Standing check.** Add an audit assertion (`scripts/audit/formulas.ts`) that fails when any switch has `saved_usd <> 0` while its execution state is not `automatic`, and a unit test over the pure helper. Regression cannot ship silently.
-
-## Proof to produce on build
-
-- `select ... from switches` after the migration showing zero captured dollars on every non-executable row.
-- Screenshots of both new sections on `/demo/rightsize` and `/demo/govern`.
-- Audit script output, red before the fix and green after.
+1. Decide the real cadence for Findings A: either add `refetchInterval` (30–60s) to
+   `dashboardQuery` while `ingest.state === "live"`, or change the Overview banner copy to state
+   what actually happens.
+2. Finding B: divide the Compare/Certify rings by the measured `data.totals.spend`, leaving the
+   ticking counters to the hero stats where accrual is disclosed.
+3. Finding C: restate the threshold's basis against the 30s flush interval, or re-derive it.
