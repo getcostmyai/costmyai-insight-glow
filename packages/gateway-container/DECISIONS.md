@@ -254,3 +254,42 @@ routed pairs (3), not by history length.
 be bounded by the batch or by a fixed cardinality. If a calculation needs to
 walk history to answer, it belongs in SQL or in a job, never in the request that
 reports the traffic.
+
+### Amendment, 10 August 2026 (Dispatch 170) — a "live" dashboard has to actually refresh
+
+Three corrections, one theme: a number that moves is not the same as a number
+that was measured.
+
+1. **The banner is now backed by a mechanism.** "Live · streaming from your
+   gateway" was shown whenever the newest event was under 3h old, while the
+   dashboard query had no polling at all — it re-read the server on mount and
+   on window focus, and nothing else. Between those, the only motion on screen
+   was `useLiveTotals` extrapolating spend forward at the window's average rate.
+   `dashboardQuery` now carries `refetchInterval: 30s`, gated on
+   `ingest.state === "live"`, matching the container's real default flush
+   interval. Quiet, disconnected and never-connected workspaces do not poll:
+   there is nothing to poll for.
+
+2. **Ring denominators are measured, never extrapolated.** Compare's and
+   Certify's donuts divided a fixed server numerator by the *ticking*
+   `live.spend`, so the percentage drifted downward every 1.8s against spend
+   nobody observed. Both now divide by `data.totals.spend`. Compare's "on
+   cheapest host" coverage percentage had the same defect and was fixed with
+   them. Rightsize and Govern were already measured on both sides.
+
+   **Rule:** the live counter may be *displayed* (its accrual is disclosed), but
+   it is never the denominator of a ratio whose numerator is a server figure.
+
+3. **`QUIET_AFTER_HOURS` had a false justification.** The comment claimed "the
+   container polls hourly", so 3h was "three missed polls". The flush interval
+   is 30s and always has been in shipped config, making 3h roughly 360 missed
+   flushes. Re-derived: the threshold tracks *traffic* cadence, not flush
+   cadence — a real workspace can legitimately be silent overnight or between
+   batch jobs. 3h stays, but on the honest reason, and a tighter number needs a
+   distribution of real customer inter-event gaps before it can be defended.
+
+**Residual gap, recorded and not closed.** The ingest → rollup → donut round
+trip is still a code trace, not an observed test: no plaintext ingest token was
+available, and the only real workspace has been quiet for 99h. To close it, push
+a real event with a live token and watch the donut move on the next 30s tick.
+Do it as soon as there is a live customer or Robin supplies a token.

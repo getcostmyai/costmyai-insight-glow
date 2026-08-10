@@ -15,8 +15,26 @@
 export type IngestState = "never" | "live" | "quiet" | "disconnected";
 
 /**
- * The container polls hourly (INGEST_POLL_INTERVAL). Three missed polls is the
- * point where "the provider was slow" stops being the likely explanation.
+ * How long a connected workspace may go silent before we stop calling it live.
+ *
+ * Dispatch 170 corrected the reasoning here. The old comment justified 3 hours
+ * with "the container polls hourly" — it does not, and never did in shipped
+ * config: the flush interval is 30s
+ * (packages/gateway-container/src/config.ts). Three hours is therefore not
+ * "three missed polls", it is roughly 360 missed flushes.
+ *
+ * Re-derived honestly, 3h still holds, but for a different reason. The signal
+ * is not the flush cadence, it is the *traffic* cadence: a real workspace can
+ * legitimately send nothing overnight, between batch jobs, or over a weekend,
+ * and the container has nothing to flush when the customer made no calls. The
+ * threshold has to be long enough that ordinary quiet traffic is not reported
+ * as a broken connection, and short enough that a genuinely dead pipe is
+ * caught inside a working day. 3h satisfies both; the flush interval only
+ * tells us the lower bound — anything under a few minutes would be noise, not
+ * that 3h is right.
+ *
+ * A tighter number would need a distribution of real customer inter-event gaps
+ * to justify, and we do not have one yet. Revisit once there is.
  */
 export const QUIET_AFTER_HOURS = 3;
 

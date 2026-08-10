@@ -45,13 +45,21 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   // the gateway usage widget below read the same object, so they cannot drift
   // apart by a cent the way two independent tickers did.
   const windowSpend = live.spend;
+  /**
+   * Dispatch 170. Ratios divide by the *measured* window spend, never the live
+   * counter. `live.spend` accrues forward between refetches at the window's
+   * average rate — fine for a disclosed ticking counter, wrong as the
+   * denominator of a percentage whose numerator is a fixed server figure: the
+   * ring would drift downward every 1.8s on spend nobody observed.
+   */
+  const measuredSpend = data.totals.spend;
   // Real dollars over the window on screen. Both sides of every ratio below are
   // the same window, so a shorter tab can never report more money than a longer one.
   const available = levelSaving(data, "host_arbitrage");
   const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
-  const onCheapestHost = Math.max(0, windowSpend - available);
-  const coveragePct = windowSpend > 0 ? (onCheapestHost / windowSpend) * 100 : 100;
+  const onCheapestHost = Math.max(0, measuredSpend - available);
+  const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : 100;
   const certifySaving = levelSaving(data, "quality_match");
   const certifyCount = levelCount(data, "quality_match");
 
@@ -112,7 +120,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <OpportunityRing
               saving={available}
-              spend={windowSpend}
+              spend={measuredSpend}
               period={activeRange.long}
               label="Cheaper hosts"
             />

@@ -16,6 +16,19 @@ export const ranges: { key: RangeKey; label: string; long: string; days: 1 | 7 |
 
 export const rangeFor = (key: RangeKey) => ranges.find((r) => r.key === key)!;
 
+/**
+ * Dispatch 170. The container flushes every 30s by default
+ * (packages/gateway-container/src/config.ts), so a connected workspace can gain
+ * new events twice a minute. Refetching on that cadence is what makes the
+ * "Live · streaming from your gateway" banner true: before this, the only thing
+ * moving between mount and window-focus was a client-side extrapolation.
+ *
+ * 30s matches the flush exactly. It only runs while the snapshot itself says
+ * ingest is live — a quiet, disconnected or never-connected workspace has
+ * nothing to poll for and is left alone.
+ */
+export const DASHBOARD_LIVE_REFETCH_MS = 30_000;
+
 export const dashboardQuery = (
   range: RangeKey,
   objective: ObjectiveKind = "cost",
@@ -27,7 +40,11 @@ export const dashboardQuery = (
       const data = { days: rangeFor(range).days, objective };
       return scope === "mine" ? getMyDashboardSnapshot({ data }) : getDashboardSnapshot({ data });
     },
-    staleTime: 60_000,
+    // Below the poll interval, so a scheduled tick actually re-reads the server
+    // instead of being served the cached snapshot back.
+    staleTime: 15_000,
+    refetchInterval: (query) =>
+      query.state.data?.ingest.state === "live" ? DASHBOARD_LIVE_REFETCH_MS : false,
     // Switching range keeps the last window on screen instead of blanking it.
     placeholderData: keepPreviousData,
   });
