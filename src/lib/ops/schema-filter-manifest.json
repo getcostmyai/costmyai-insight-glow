@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-09T14:08:45.047Z",
+  "generatedAt": "2026-08-10T11:31:52.960Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -101,7 +101,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 334,
+      "line": 359,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -110,7 +110,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 346,
+      "line": 371,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -119,7 +119,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 358,
+      "line": 383,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -128,7 +128,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 364,
+      "line": 389,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -137,7 +137,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 369,
+      "line": 394,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -146,7 +146,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 375,
+      "line": 400,
       "table": "switches",
       "filters": [
         "org_id",
@@ -156,7 +156,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 382,
+      "line": 407,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -165,7 +165,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 389,
+      "line": 414,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -174,7 +174,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 395,
+      "line": 420,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -183,7 +183,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 401,
+      "line": 426,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -193,7 +193,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 412,
+      "line": 437,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -202,7 +202,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 586,
+      "line": 662,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -211,7 +211,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 601,
+      "line": 677,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -220,7 +220,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 698,
+      "line": 808,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -229,7 +229,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 721,
+      "line": 831,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -238,7 +238,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 729,
+      "line": 839,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
@@ -455,7 +455,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 177,
+      "line": 206,
       "table": "usage_events",
       "filters": [
         "org_id",
@@ -465,7 +465,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 189,
+      "line": 218,
       "table": "host_prices",
       "filters": [
         "is_fixture"
@@ -474,7 +474,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 204,
+      "line": 233,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -877,6 +877,44 @@
         "is_active"
       ],
       "snippet": ".from(\"host_prices\") .select(\"id, model_key, host, region, price_source, input_usd_per_mtok, output_usd_per_mt"
+    },
+    {
+      "file": "src/lib/switching/savings.server.ts",
+      "line": 125,
+      "table": "host_prices",
+      "filters": [
+        "is_active",
+        "is_fixture"
+      ],
+      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_f"
+    },
+    {
+      "file": "src/lib/switching/savings.server.ts",
+      "line": 150,
+      "table": "model_catalog",
+      "filters": [
+        "is_active"
+      ],
+      "snippet": ".from(\"model_catalog\").select(\"model_key\").eq(\"is_active\", true).range(f, t)"
+    },
+    {
+      "file": "src/lib/switching/savings.server.ts",
+      "line": 255,
+      "table": "switches",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"switches\") .select(\"id, from_host, to_host, autonomous, status\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/switching/savings.server.ts",
+      "line": 291,
+      "table": "switches",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"switches\") .select(\"saved_usd\") .eq(\"org_id\", orgId)"
     },
     {
       "file": "src/lib/synthetic/tick.server.ts",

@@ -2422,6 +2422,14 @@ export type Database = {
         }
         Returns: string
       }
+      usage_collector_days: {
+        Args: { _org_id: string; _since: string }
+        Returns: {
+          day: string
+          outcome: string
+          runs: number
+        }[]
+      }
     }
     Enums: {
       ai_use_case: "customer_facing" | "internal" | "both" | "other"

@@ -59,9 +59,16 @@ export function captureFigures(savings: DashboardSnapshot["savings"]): CaptureFi
   return { identified, rate, pct: Math.round(rate * 100) };
 }
 
-/** Certification rate — Certify's headline, Overview's step-2 detail. */
+/**
+ * Certification rate — Certify's headline, Overview's step-2 detail.
+ *
+ * Dispatch 172. The denominator is the workloads a verdict could actually be
+ * reached on, not every workload seen. A workload with no instrument for its
+ * task class was never measured, so counting it as a failed certification
+ * asserts a test that never ran.
+ */
 export function certificationRate(stats: DashboardSnapshot["stats"]): number {
-  return stats.qualityEvaluated > 0
-    ? (stats.qualityCertified / stats.qualityEvaluated) * 100
-    : 0;
+  const certifiable = stats.qualityCertifiable ?? stats.qualityEvaluated;
+  return certifiable > 0 ? (stats.qualityCertified / certifiable) * 100 : 0;
 }
+

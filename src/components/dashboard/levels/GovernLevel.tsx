@@ -45,6 +45,18 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   const capture = captureFigures(savings);
   const mech = mechanismSavings(ctl);
   const govern = data.govern;
+  /**
+   * Hours left on a cooldown that is actually running, or null when none is.
+   * Derived from the real last unattended change, not from the policy constant.
+   */
+  const cooldownRemainingHours = (() => {
+    if (!govern.lastAutonomousAt) return null;
+    const endsAt =
+      Date.parse(govern.lastAutonomousAt) + govern.policy.cooldownHours * 3_600_000;
+    const left = endsAt - Date.now();
+    return left > 0 ? left / 3_600_000 : null;
+  })();
+
   const meta = PLAN_META["govern"];
   const autonomyOn = govern.unlocked && govern.enabled;
   const interactive = govern.unlocked && canAct;
@@ -162,20 +174,44 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 sub="per switch, per month"
                 accent="oklch(0.86 0.09 265)"
               />
-              <HeroStat
-                label="Cooldown"
-                value={`${govern.policy.cooldownHours}h`}
-                sub={
-                  govern.lastAutonomousAt ? (
+              {/* Dispatch 172. This tile read as a live timer while it was only
+                  ever printing a policy constant. It now says which it is: a
+                  real remaining countdown when a cooldown is genuinely running,
+                  and an explicitly labelled policy figure when it is not. */}
+              {cooldownRemainingHours !== null ? (
+                <HeroStat
+                  label="Cooldown remaining"
+                  value={
+                    cooldownRemainingHours >= 1
+                      ? `${Math.floor(cooldownRemainingHours)}h ${Math.round((cooldownRemainingHours % 1) * 60)}m`
+                      : `${Math.max(1, Math.round(cooldownRemainingHours * 60))}m`
+                  }
+                  sub={
                     <>
-                      last change <LocalTime iso={govern.lastAutonomousAt} />
+                      until the next unattended change · last change{" "}
+                      <LocalTime iso={govern.lastAutonomousAt!} />
                     </>
-                  ) : (
-                    "no autonomous change yet"
-                  )
-                }
-                accent="oklch(0.9 0.03 285)"
-              />
+                  }
+                  accent="oklch(0.9 0.03 285)"
+                />
+              ) : (
+                <HeroStat
+                  label="Cooldown policy"
+                  value={`${govern.policy.cooldownHours}h`}
+                  sub={
+                    govern.lastAutonomousAt ? (
+                      <>
+                        between unattended changes · not in cooldown · last change{" "}
+                        <LocalTime iso={govern.lastAutonomousAt} />
+                      </>
+                    ) : (
+                      "between unattended changes · no autonomous change yet"
+                    )
+                  }
+                  accent="oklch(0.9 0.03 285)"
+                />
+              )}
+
             </HeroStatRow>
           </div>
         }

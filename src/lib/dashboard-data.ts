@@ -22,7 +22,30 @@ export interface SwitchRow {
   execution?: SwitchExecution;
 }
 
-export const usd = (n: number, digits = 2) =>
-  `$${n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+/**
+ * Money, formatted.
+ *
+ * Dispatch 172. A real workspace's first day of traffic costs fractions of a
+ * cent, and `$0.00` for $0.001445 is indistinguishable from a workspace that
+ * spent nothing at all — the one reading a new customer most needs to trust.
+ * Anything nonzero that would round away is printed as `< $0.01` instead, so
+ * "we saw no traffic" and "we saw traffic too small to price at two decimals"
+ * can never render the same string.
+ */
+export const usd = (n: number, digits = 2) => {
+  const fmt = (d: number) =>
+    `$${n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })}`;
+  if (n !== 0 && Number.isFinite(n)) {
+    const abs = Math.abs(n);
+    // Rounds to zero at the requested precision, but is not zero.
+    if (abs < 0.5 * 10 ** -digits) {
+      if (abs < 0.005) return n < 0 ? "> -$0.01" : "< $0.01";
+      // e.g. usd(0.4, 0) — show the cents rather than print "$0".
+      return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  }
+  return fmt(digits);
+};
+
 
 export const pct = (n: number, digits = 0) => `${n.toFixed(digits)}%`;

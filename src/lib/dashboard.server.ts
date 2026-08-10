@@ -212,7 +212,22 @@ export interface ReconciliationRow {
 
 const DAY_MS = 86_400_000;
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+/**
+ * Money, rounded for transport.
+ *
+ * Dispatch 172. Rounding to cents on the server destroyed a real workspace's
+ * entire first day of spend — $0.001445 left here as exactly 0, so the
+ * formatter downstream had nothing left to distinguish "too small to price in
+ * cents" from "no traffic at all". Values below a cent keep four decimals; the
+ * client decides how to print them.
+ */
+const round2 = (n: number) => {
+  if (n !== 0 && Number.isFinite(n) && Math.abs(n) < 0.005) {
+    return Math.round(n * 10_000) / 10_000;
+  }
+  return Math.round(n * 100) / 100;
+};
+
 /** Real percentage, one decimal, always short of a bare 100%. */
 const pct1 = (n: number) => Math.min(99.9, Math.max(0, Math.round(n * 10) / 10));
 
@@ -700,7 +715,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    * collectors never ran, read from the same `sync_runs` ledger the platform
    * already uses to prove sync health.
    */
-  const forecastSyncGaps = await syncGapDays(now, FORECAST_RULES.levelDays);
+  const forecastSyncGaps = await syncGapDays(orgId, now, FORECAST_RULES.levelDays);
   const forecast = forecastMonthEnd(
     (forecastData ?? []).map((r) => ({
       date: String(r.bucket_start).slice(0, 10),

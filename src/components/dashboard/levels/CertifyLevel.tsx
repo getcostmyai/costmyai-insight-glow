@@ -52,9 +52,16 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   // server. Never the three-mechanism total: Certify cannot see the third.
   const certifyIdentified = data.certifySavings.identified;
 
+  // Dispatch 172. Refusals are split by whether a measurement actually
+  // happened. A workload with no instrument for its task class was never
+  // tested, so it cannot be described as having failed an equivalence band.
   const refused = data.stats.qualityRefused;
+  const refusedMeasured = data.stats.qualityRefusedMeasured ?? refused;
+  const unmeasurable = data.stats.qualityRefusedUnmeasurable ?? 0;
   const evaluated = data.stats.qualityEvaluated;
+  const certifiable = data.stats.qualityCertifiable ?? evaluated;
   const certifyRate = certificationRate(data.stats);
+
   const rightsizeSaving = levelSaving(data, "rightsize");
   const rightsizeCount = levelCount(data, "rightsize");
 
@@ -77,7 +84,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             </span>
           </>
         }
-        sub={`Measured against ${data.coverage.evaluations} independent benchmark tests. A switch we cannot prove against an independent third-party benchmark is refused — ${refused} ${refused === 1 ? "was" : "were"} refused on your traffic.`}
+        sub={`Measured against ${data.coverage.evaluations} independent benchmark tests. A switch we cannot prove against an independent third-party benchmark is refused — ${refusedMeasured} ${refusedMeasured === 1 ? "was" : "were"} measured and refused on your traffic${unmeasurable > 0 ? `, and ${unmeasurable} could not be measured at all because no instrument covers that task type` : ""}.`}
         stats={
           <>
             <HeroStat
@@ -101,22 +108,35 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Patterns checked"
               value={`${evaluated}`}
-              sub={`${data.stats.qualityCertified} certified · ${refused} refused`}
+              sub={`${data.stats.qualityCertified} certified · ${refusedMeasured} refused${unmeasurable > 0 ? ` · ${unmeasurable} not measurable` : ""}`}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
               label="Refused on quality"
-              value={`${refused} candidate${refused === 1 ? "" : "s"}`}
-              sub="cheaper, but not provably equivalent"
+              value={`${refusedMeasured} candidate${refusedMeasured === 1 ? "" : "s"}`}
+              sub="measured against an instrument, and outside the band"
               accent="oklch(0.83 0.13 55)"
             />
+            {unmeasurable > 0 ? (
+              <HeroStat
+                label="Not measurable"
+                value={`${unmeasurable} workload${unmeasurable === 1 ? "" : "s"}`}
+                sub="no instrument covers this task type, so nothing was tested"
+                accent="oklch(0.9 0.03 285)"
+              />
+            ) : null}
 
             <HeroStat
               label="Certification rate"
-              value={`${Math.round(certifyRate)}%`}
-              sub="of everything we checked"
+              value={certifiable > 0 ? `${Math.round(certifyRate)}%` : "—"}
+              sub={
+                certifiable > 0
+                  ? "of everything we could actually measure"
+                  : "nothing measurable yet"
+              }
               accent="oklch(0.9 0.03 285)"
             />
+
           </>
         }
         aside={
@@ -209,11 +229,20 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
       <section className="card-surface p-6">
         <p className="eyebrow">Why some candidates are refused</p>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          {refused} candidate{refused === 1 ? "" : "s"} on your own traffic cleared on price and
-          were still refused, because the measured quality gap fell outside the equivalence band for
-          that task class. We would rather show you a smaller number we can defend than a larger one
-          we cannot.
+          {refusedMeasured} candidate{refusedMeasured === 1 ? "" : "s"} on your own traffic cleared
+          on price and {refusedMeasured === 1 ? "was" : "were"} still refused, because the measured
+          quality gap fell outside the equivalence band for that task class. We would rather show
+          you a smaller number we can defend than a larger one we cannot.
         </p>
+        {unmeasurable > 0 ? (
+          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+            A further {unmeasurable} workload{unmeasurable === 1 ? "" : "s"} {unmeasurable === 1 ? "was" : "were"}{" "}
+            not measured at all: no independent instrument covers that task type on your traffic
+            yet, so there was no band to fall outside of. That is a gap in our evidence, not a
+            verdict about the model, and it is counted separately for exactly that reason.
+          </p>
+        ) : null}
+
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           This is a different count from Govern&rsquo;s &ldquo;held for you&rdquo;. Refused here
           means the quality claim itself could not be proven. Held on Govern means the switch is

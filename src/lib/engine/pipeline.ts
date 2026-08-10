@@ -1,6 +1,8 @@
 import { findHostArbitrage } from "./arbitrage";
 import { findQualityMatches } from "./equivalence";
 import { objectiveResolver, type ObjectiveRow } from "./objectives";
+import { breakdownRefusals } from "./refusal-class";
+
 import { findOversized } from "./rightsize";
 import type {
   BenchmarkRow,
@@ -32,9 +34,22 @@ export interface EngineOutput {
     qualityEvaluated: number;
     qualityCertified: number;
     qualityRefused: number;
+    /** Refused after a real comparison against an instrument. */
+    qualityRefusedMeasured: number;
+    /** Refused because nothing could be measured: no instrument, score or price. */
+    qualityRefusedUnmeasurable: number;
+    /** Measured, but nothing cheaper was worth switching to. */
+    qualityRefusedNoCandidate: number;
+    /**
+     * Workloads a certification verdict could actually be reached on. The
+     * denominator of the certification rate: an unlabelled workload was never
+     * a candidate, so counting it as a failed certification is a false claim.
+     */
+    qualityCertifiable: number;
     oversizedFlagged: number;
   };
 }
+
 
 /**
  * The pipeline, in the order the product runs it:
@@ -56,6 +71,10 @@ export function runPipeline(input: EngineInput): EngineOutput {
   );
   const oversized = findOversized(input.usage, input.models, input.prices);
 
+  // Split the refusals by whether a measurement actually happened, so no
+  // surface can describe an absent instrument as a failed quality test.
+  const refusalMix = breakdownRefusals(refusals.map((r) => r.reason));
+
   return {
     hostArbitrage,
     qualityMatched,
@@ -66,10 +85,15 @@ export function runPipeline(input: EngineInput): EngineOutput {
       hostCertified: hostArbitrage.length,
       qualityEvaluated: input.usage.length,
       qualityCertified: qualityMatched.length,
-      qualityRefused: refusals.length,
+      qualityRefused: refusalMix.total,
+      qualityRefusedMeasured: refusalMix.measured,
+      qualityRefusedUnmeasurable: refusalMix.unmeasurable,
+      qualityRefusedNoCandidate: refusalMix.noCandidate,
+      qualityCertifiable: Math.max(0, input.usage.length - refusalMix.unmeasurable),
       oversizedFlagged: oversized.length,
     },
   };
+
 }
 
 export * from "./arbitrage";
