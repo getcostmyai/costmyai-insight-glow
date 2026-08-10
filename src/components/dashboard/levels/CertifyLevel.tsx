@@ -87,7 +87,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             </span>
           </>
         }
-        sub={`Measured against ${data.coverage.evaluations} independent benchmark tests. A switch we cannot prove against an independent third-party benchmark is refused — ${refusedMeasured} ${refusedMeasured === 1 ? "was" : "were"} measured and refused on your traffic${unmeasurable > 0 ? `, and ${unmeasurable} could not be measured at all because no instrument covers that task type` : ""}.`}
+        sub={`${certifyArithmetic} Measured against ${data.coverage.evaluations} independent benchmark tests. A switch we cannot prove against an independent third-party benchmark is refused — ${refusedMeasured} ${refusedMeasured === 1 ? "was" : "were"} measured and refused on your traffic${unmeasurable > 0 ? `, and ${unmeasurable} could not be measured at all because no instrument covers that task type` : ""}.`}
         stats={
           <>
             <HeroStat
