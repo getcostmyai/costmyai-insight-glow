@@ -68,6 +68,21 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const rightsizeSaving = levelSaving(data, "rightsize");
   const rightsizeCount = levelCount(data, "rightsize");
 
+  /**
+   * The arithmetic behind Certify's ring, stated rather than implied:
+   *   arbitrage + benchmark − overlap = identified
+   * Every figure comes from `certifySavings`, which is deduped over these two
+   * lists only — never sliced out of the three-mechanism total, which also
+   * carries right-size money Certify cannot see.
+   */
+  const overlapUsd = data.certifySavings.overlapUsd;
+  const overlapCount = data.certifySavings.overlapCount;
+  const certifyArithmetic = `${usd(arbitrageSaving, 0)} arbitrage + ${usd(benchmarkSaving, 0)} benchmark${
+    overlapCount > 0
+      ? `, less ${usd(overlapUsd, 0)} counted twice across ${overlapCount} shared workload${overlapCount === 1 ? "" : "s"},`
+      : `, with no workload found by both,`
+  } is ${usd(certifyIdentified, 0)} identified on this level.`;
+
   return (
     <>
       <LevelHero
