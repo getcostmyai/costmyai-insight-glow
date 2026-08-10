@@ -93,12 +93,36 @@ export function HeroStat({
    * own column instead of bleeding into the neighbouring card.
    */
   /**
-   * A long value gets its own smaller step rather than an ellipsis. A projected
-   * range ("$21,101–$23,480") is roughly twice the width of a single figure, so
-   * at the shared size it clipped in its column at every viewport — including a
-   * 27" desktop, because the column is a grid fraction, not a pixel width.
+   * A long value gets a smaller step rather than an ellipsis. Character count
+   * alone cannot decide that: the column is a grid fraction, so the same
+   * figure fits in Rightsize's four-up row and clips in Govern's tighter one.
+   * So the number measures itself and shrinks only as far as it must, down to
+   * a floor, and re-measures whenever its column resizes.
    */
-  const dense = value.length > 12;
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = React.useState(1);
+
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      setScale(1);
+      requestAnimationFrame(() => {
+        const node = ref.current;
+        if (!node) return;
+        const parent = node.parentElement;
+        const room = parent ? parent.clientWidth : node.clientWidth;
+        const needed = node.scrollWidth;
+        if (needed > room && room > 0) {
+          setScale(Math.max(0.55, room / needed));
+        }
+      });
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => ro.disconnect();
+  }, [value]);
 
   return (
     <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-2 pl-4">
@@ -106,18 +130,18 @@ export function HeroStat({
         {label}
       </p>
       <div
-        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums leading-none"
+        ref={ref}
+        className="num min-w-0 self-end overflow-hidden whitespace-nowrap -tracking-tight tabular-nums leading-none"
         style={{
           color: accent,
           fontVariantNumeric: "tabular-nums",
-          /* Inline so the two steps are guaranteed to exist at runtime rather
-             than depending on both arbitrary utilities being generated. */
-          fontSize: dense ? "clamp(0.62rem,0.68vw,0.85rem)" : "clamp(0.8rem,1.05vw,1.25rem)",
+          fontSize: `calc(clamp(0.8rem,1.05vw,1.25rem) * ${scale})`,
         }}
         title={value}
       >
         {value}
       </div>
+
 
 
 
