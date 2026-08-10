@@ -293,3 +293,23 @@ trip is still a code trace, not an observed test: no plaintext ingest token was
 available, and the only real workspace has been quiet for 99h. To close it, push
 a real event with a live token and watch the donut move on the next 30s tick.
 Do it as soon as there is a live customer or Robin supplies a token.
+
+## Dispatch 177 — parser coverage, stated honestly
+
+Real-traffic status of the six envelope parsers, as of this dispatch:
+
+| shape | real provider call | parsed | persisted + rolled up + on a dashboard |
+| --- | --- | --- | --- |
+| openai-compatible | yes (D102) | yes | yes |
+| anthropic | yes (D103/176) | yes | yes (D120 Journey 1) |
+| gemini (native) | yes (D103/176) | yes | **yes (D177)** — `src/lib/ingest/__tests__/dispatch-177-gemini-journey.integration.test.ts` |
+| cohere | no | fixture only | no |
+| bedrock | no | fixture only | no |
+| tencent | no | fixture only | no |
+
+Cohere, Bedrock and Tencent have **no credential of any kind in this project**
+— not production, not sandbox. Their parsers are proven against recorded
+envelopes and nothing more, and no wording anywhere may imply otherwise until a
+real key exists. The Bedrock line here is about *ingestion*: observing and
+certifying Bedrock traffic. It says nothing about the Phase 3 execution
+refusal, which stands — SigV4-signed requests are never rewritten.
