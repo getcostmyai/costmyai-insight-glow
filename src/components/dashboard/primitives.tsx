@@ -107,7 +107,7 @@ export function HeroStat({
       </p>
       <div
         className={`num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums leading-none ${
-          dense ? "text-[clamp(0.7rem,0.78vw,0.95rem)]" : "text-[clamp(0.8rem,1.05vw,1.25rem)]"
+          dense ? "text-[clamp(0.65rem,0.72vw,0.9rem)]" : "text-[clamp(0.8rem,1.05vw,1.25rem)]"
         }`}
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
         title={value}
