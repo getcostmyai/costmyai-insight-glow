@@ -63,12 +63,14 @@ describe("account subpages keep the dashboard sidebar", () => {
 });
 
 describe("every level page", () => {
-  it("renders the captured/available donut", () => {
+  it("renders a donut", () => {
     for (const [name, src] of Object.entries(LEVEL_FILES)) {
       // Govern renders the mode control in its hero aside instead of the ring,
       // but inherits Rightsize's sections below it.
       if (name === "govern") continue;
-      expect(src, name).toContain("<SavingsRing");
+      // Compare and Certify show opportunity-against-spend (Dispatch 165),
+      // Overview and Rightsize show captured-against-available.
+      expect(src, name).toMatch(/<SavingsRing|<OpportunityRing/);
     }
   });
 
@@ -90,12 +92,25 @@ describe("cross-page dollar parity", () => {
     expect(read("components/dashboard/useDashboardController.ts")).toContain("useLiveTotals");
   });
 
-  it("takes the donut figures from one shared, window-scoped savings object", () => {
-    for (const name of ["overview", "compare", "certify", "rightsize"] as const) {
+  it("takes the captured/available donut from one shared, window-scoped savings object", () => {
+    for (const name of ["overview", "rightsize"] as const) {
       expect(LEVEL_FILES[name], name).toMatch(/SavingsRing[\s\S]{0,160}savings\.captured/);
       expect(LEVEL_FILES[name], name).toMatch(/SavingsRing[\s\S]{0,220}savings\.available/);
     }
   });
+
+  it("never divides a ring by the extrapolated live counter", () => {
+    // Dispatch 170. The ticker accrues spend forward between refetches; using
+    // it as a denominator made the percentage drift on money nobody measured.
+    for (const name of ["overview", "compare", "certify", "rightsize", "govern"] as const) {
+      expect(LEVEL_FILES[name], name).not.toMatch(
+        /(SavingsRing|OpportunityRing)[\s\S]{0,220}spend=\{(live\.spend|windowSpend)\}/,
+      );
+    }
+    expect(LEVEL_FILES.compare).toMatch(/OpportunityRing[\s\S]{0,160}spend=\{measuredSpend\}/);
+    expect(LEVEL_FILES.certify).toMatch(/OpportunityRing[\s\S]{0,160}spend=\{data\.totals\.spend\}/);
+  });
+
 
   it("never renders a monthly run-rate as if it were the period figure", () => {
     // The audit: shorter windows showed bigger money because the lists summed
