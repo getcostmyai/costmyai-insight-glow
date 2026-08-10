@@ -1189,6 +1189,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       activeMonthlyRate,
     },
     /**
+     * Arbitrage + benchmark only, deduped per workload. Certify's ring.
+     * `identified` is plan-independent; `available` is what this plan can act on.
+     */
+    certifySavings: {
+      available: certifyTotals.available,
+      locked: certifyTotals.locked,
+      identified: round2(certifyTotals.available + certifyTotals.locked),
+      overlapUsd: certifyTotals.overlapUsd,
+      overlapCount: certifyTotals.overlapCount,
+    },
+
+    /**
      * One month-end forecast on every tab: month-to-date actual plus a
      * trailing 7-day level, weekly factors when the pattern is real, a damped
      * trend, and a range whenever the data does not support a single number.
