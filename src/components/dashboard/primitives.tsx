@@ -92,18 +92,29 @@ export function HeroStat({
    * plus a clamped, non-wrapping number keeps a long spend figure inside its
    * own column instead of bleeding into the neighbouring card.
    */
+  /**
+   * A long value gets its own smaller step rather than an ellipsis. A projected
+   * range ("$21,101–$23,480") is roughly twice the width of a single figure, so
+   * at the shared size it clipped in its column at every viewport — including a
+   * 27" desktop, because the column is a grid fraction, not a pixel width.
+   */
+  const dense = value.length > 12;
+
   return (
     <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-3 pl-4">
       <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
         {label}
       </p>
       <div
-        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.8rem,1.05vw,1.25rem)] leading-none"
+        className={`num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums leading-none ${
+          dense ? "text-[clamp(0.7rem,0.78vw,0.95rem)]" : "text-[clamp(0.8rem,1.05vw,1.25rem)]"
+        }`}
         style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
         title={value}
       >
         {value}
       </div>
+
 
       <p className="self-start text-[11px] break-words text-white/55">{sub}</p>
     </div>
