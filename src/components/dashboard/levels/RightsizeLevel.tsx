@@ -202,15 +202,19 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
 
         aside={
           <>
+            {/* The only page whose ring is the cross-check capture rate: this
+                level is the one that can act on all three mechanisms. */}
             <SavingsRing
               captured={savings.captured}
               available={savings.available}
               period={activeRange.long}
+              label="Captured · all checks"
             />
             <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
               <Legend color="oklch(0.65 0.15 158)" label="Captured" />
               <Legend color="oklch(0.72 0.11 195)" label="Available" />
             </div>
+
           </>
         }
       >
