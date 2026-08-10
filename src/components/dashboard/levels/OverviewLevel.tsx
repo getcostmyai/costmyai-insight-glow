@@ -60,10 +60,15 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       // Dispatch 172. "Refused" now means measured and refused. Workloads no
       // instrument covers are reported as unmeasured, not as failures.
       detail: `${stats.qualityCertified} certified · ${stats.qualityRefusedMeasured ?? stats.qualityRefused} refused${
+        (stats.qualityRefusedNoCandidate ?? 0) > 0
+          ? ` · ${stats.qualityRefusedNoCandidate} nothing cheaper`
+          : ""
+      }${
         (stats.qualityRefusedUnmeasurable ?? 0) > 0
           ? ` · ${stats.qualityRefusedUnmeasurable} not measurable`
           : ""
       }`,
+
       value: stats.qualityEvaluated,
       unit: "workloads evaluated",
       tone: "saving" as const,

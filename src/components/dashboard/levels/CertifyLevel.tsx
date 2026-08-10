@@ -108,7 +108,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Patterns checked"
               value={`${evaluated}`}
-              sub={`${data.stats.qualityCertified} certified · ${refusedMeasured} refused${unmeasurable > 0 ? ` · ${unmeasurable} not measurable` : ""}`}
+              sub={`${data.stats.qualityCertified} certified · ${refusedMeasured} refused${noCandidate > 0 ? ` · ${noCandidate} nothing cheaper` : ""}${unmeasurable > 0 ? ` · ${unmeasurable} not measurable` : ""}`}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
