@@ -123,7 +123,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           <>
             <OpportunityRing
               saving={certifyIdentified}
-              spend={live.spend}
+              spend={data.totals.spend}
               period={activeRange.long}
               label="Certified saving"
             />
