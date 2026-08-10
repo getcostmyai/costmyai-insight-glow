@@ -102,82 +102,112 @@ export function HeroStat({
   const ref = useRef<HTMLDivElement | null>(null);
   const textRef = useRef<HTMLSpanElement | null>(null);
   const scaleRef = useRef(1);
-  const [scale, setScale] = useState(1);
+
+  /**
+   * A deterministic first step by character count — a 15-character range never
+   * fits a four-up column at any width — with the measured correction applied
+   * on top of it.
+   */
+  const base = `clamp(0.8rem,${value.length > 13 ? 0.72 : value.length > 8 ? 0.9 : 1.05}vw,${value.length > 13 ? 0.86 : value.length > 8 ? 1.05 : 1.25}rem)`;
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     /**
-     * Why this is a convergence loop and not one measurement.
+     * Two things this loop deliberately does not do.
      *
-     * The tight band (~1000–1200px, where the four-up hero grid gives each
-     * number its narrowest column) clipped because a single measurement is
-     * never trustworthy here: it can be taken while the text is already
-     * shrunk (making the ratio relative instead of absolute), before the web
-     * font swaps in (fallback metrics are narrower than Inter's), and glyph
-     * advances round per character so a proportional ratio still lands a
-     * pixel long. So the element measures itself, applies a scale, then
-     * re-measures what actually rendered and corrects — up to a few passes,
-     * which is enough to converge and cheap because it stops as soon as the
-     * text fits.
+     * It does not subtract padding or border: the node carries none — its box
+     * already *is* the content box (measured at 1024px: rect 60.33px, and
+     * rect minus computed padding and border also 60.33px; the `pr-2 pl-4`
+     * and `border-l` belong to the parent cell). Room was never the wrong
+     * number.
+     *
+     * And it does not route the correction through React state. That was the
+     * real defect: the size was set with `setState`, so the next frame's
+     * measurement read the *previous* render and the loop corrected against a
+     * stale width — which is why the tight band (~1000–1200px, where the
+     * four-up hero grid is narrowest) settled a few pixels long. The size is
+     * written straight to the node, so every re-measure sees what is actually
+     * on screen. A font swap resizes the span, which the observer catches.
      */
     let frame = 0;
     let cancelled = false;
+    let lastRoom = -1;
 
-    const apply = (next: number) => {
+    const write = (next: number) => {
+      const node = ref.current;
+      if (!node) return false;
       const clamped = Math.min(1, Math.max(0.55, next));
-      if (Math.abs(clamped - scaleRef.current) < 0.005) return false;
+      if (Math.abs(clamped - scaleRef.current) < 0.002) return false;
       scaleRef.current = clamped;
-      setScale(clamped);
+      node.style.fontSize = `calc(${base} * ${clamped})`;
       return true;
     };
 
-    /** Correct against what is on screen right now, then look again. */
+    /**
+     * Shrink against what is on screen right now, one frame at a time.
+     *
+     * There is deliberately no "estimate at the base size" shortcut any more.
+     * That estimate measured ~9% narrow every time (at 1024px it predicted
+     * 73.2px for text that renders 79.7px at the same size), so it kept
+     * resetting the number back up to a size that clips — and because the
+     * span was observed, every correction re-triggered the bad estimate and
+     * the last word always went to it. Only the post-render measurement is
+     * trustworthy, so only it is used.
+     */
     const refine = (passes: number) => {
       if (cancelled || passes <= 0) return;
       frame = requestAnimationFrame(() => {
         const node = ref.current;
         const text = textRef.current;
-        if (!node || !text) return;
+        if (!node || !text || cancelled) return;
         const room = node.getBoundingClientRect().width - 1;
         const rendered = text.getBoundingClientRect().width;
-        if (rendered > room && room > 0) {
-          if (apply(scaleRef.current * (room / rendered))) refine(passes - 1);
+        if (room > 0 && rendered > room) {
+          /* A touch of overshoot: the pure ratio converges only a few percent
+             per pass in the narrowest column, which used to exhaust the budget
+             before the text fitted. */
+          if (write(scaleRef.current * (room / rendered) * 0.97)) refine(passes - 1);
         }
       });
     };
 
-    /** First guess, taken at the unscaled size so the ratio is absolute. */
+    /** Start from full size, then converge down to whatever the column allows. */
     const fit = () => {
       const node = ref.current;
-      const text = textRef.current;
-      if (!node || !text) return;
-      const base = `clamp(0.8rem,${value.length > 13 ? 0.72 : value.length > 8 ? 0.9 : 1.05}vw,${value.length > 13 ? 0.86 : value.length > 8 ? 1.05 : 1.25}rem)`;
-      const prev = node.style.fontSize;
-      node.style.fontSize = base;
-      const room = node.getBoundingClientRect().width - 1;
-      const needed = text.getBoundingClientRect().width;
-      node.style.fontSize = prev;
-      if (room <= 0) return;
-      apply(needed > room ? room / needed : 1);
-      refine(4);
+      if (!node) return;
+      scaleRef.current = 0;
+      write(1);
+      refine(24);
     };
 
     fit();
-    const ro = new ResizeObserver(fit);
+    /* Only a genuine column-width change re-runs the fit. Watching the text
+       itself would be self-triggering: shrinking it fires the observer. */
+    const ro = new ResizeObserver(() => {
+      const node = ref.current;
+      if (!node) return;
+      const room = Math.round(node.getBoundingClientRect().width);
+      if (room === lastRoom) return;
+      lastRoom = room;
+      fit();
+    });
     ro.observe(el);
     if (el.parentElement) ro.observe(el.parentElement);
+    /* A font swap changes glyph widths without changing the column, so the
+       observer above will not see it — the font events do. */
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
     fonts?.ready.then(fit).catch(() => {});
+    fonts?.addEventListener?.("loadingdone", fit);
+
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
       ro.disconnect();
+      fonts?.removeEventListener?.("loadingdone", fit);
     };
-  }, [value]);
 
-
-
+  }, [value, base]);
 
   return (
     <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-2 pl-4">
@@ -190,21 +220,15 @@ export function HeroStat({
         style={{
           color: accent,
           fontVariantNumeric: "tabular-nums",
-          /*
-           * Two guards, because measurement alone proved timing-dependent in
-           * the tight band: a deterministic step down by character count
-           * (a 15-character range never fits a four-up column at any width),
-           * and the measured scale on top of it for anything the step misses.
-           */
-          fontSize: `calc(clamp(0.8rem,${value.length > 13 ? 0.72 : value.length > 8 ? 0.9 : 1.05}vw,${value.length > 13 ? 0.86 : value.length > 8 ? 1.05 : 1.25}rem) * ${scale})`,
+          fontSize: base,
         }}
-
         title={value}
       >
         <span ref={textRef} className="inline-block">
           {value}
         </span>
       </div>
+
 
 
 
