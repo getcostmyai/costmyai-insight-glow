@@ -58,6 +58,21 @@ export interface WorkspaceBilling {
    * never as the thing that does the refusing.
    */
   canManage: boolean;
+  /**
+   * On what authority the level is granted: a paying subscription, explicit
+   * platform-admin staff access, or nothing (Compare).
+   */
+  accessSource: "free" | "subscription" | "platform_admin";
+  /**
+   * A subscription that exists for this workspace but was written in the other
+   * payment environment, so it cannot and must not unlock anything here. Null
+   * in the normal case.
+   */
+  otherEnvironmentSubscription: {
+    environment: "sandbox" | "live";
+    plan: PlanTier;
+    status: string;
+  } | null;
 }
 
 export const getWorkspaceBilling = createServerFn({ method: "POST" })
@@ -68,14 +83,18 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<WorkspaceBilling> => {
     const { loadPlanState } = await import("./billing/guard.server");
+    const { resolveAccess } = await import("./billing/entitlement");
     const [state, manager] = await Promise.all([
       loadPlanState(context.supabase, data.orgId, data.environment),
       context.supabase.rpc("is_org_manager", { _org_id: data.orgId }),
     ]);
+    const access = resolveAccess(state.plan, state.subscription, state.isPlatformAdmin);
     return {
       orgId: data.orgId,
       recordedPlan: state.plan,
-      effectivePlan: effectivePlan(state.plan, state.subscription),
+      effectivePlan: access.plan,
+      accessSource: access.source,
+      otherEnvironmentSubscription: state.otherEnv,
       status: state.subscription?.status ?? null,
       currentPeriodEnd: state.subscription?.currentPeriodEnd ?? null,
       cancelAtPeriodEnd: state.subscription?.cancelAtPeriodEnd ?? false,
