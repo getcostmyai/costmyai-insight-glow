@@ -174,6 +174,10 @@ export function HeroStat({
 
 
     fit();
+    /* One re-fit after the first paint: on a fresh route the column can still
+       be laying out when the effect runs, and a fit against a zero-width box
+       leaves the number at full size. */
+    frame = requestAnimationFrame(fit);
     /* Only a genuine column-width change re-runs the fit. Watching the text
        itself would be self-triggering: shrinking it fires the observer. */
     const ro = new ResizeObserver(() => {
