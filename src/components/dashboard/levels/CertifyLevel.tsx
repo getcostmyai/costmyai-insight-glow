@@ -48,6 +48,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   // Real dollars over the window on screen, never a monthly projection.
   const benchmarkSaving = levelSaving(data, "quality_match");
   const arbitrageSaving = levelSaving(data, "host_arbitrage");
+  // The two checks this level is responsible for, deduped per workload by the
+  // server. Never the three-mechanism total: Certify cannot see the third.
+  const certifyIdentified = data.certifySavings.identified;
+
   const refused = data.stats.qualityRefused;
   const evaluated = data.stats.qualityEvaluated;
   const certifyRate = certificationRate(data.stats);
