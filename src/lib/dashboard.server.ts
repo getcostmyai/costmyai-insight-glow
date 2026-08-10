@@ -895,6 +895,29 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   ]);
 
   /**
+   * Certify's own denominator-free figure: what the two checks Certify is
+   * responsible for found, and nothing else.
+   *
+   * Certify cannot see or sell the right-size check, so putting the
+   * three-mechanism total on its page credited the level with money it did not
+   * find. Same helper, same dedupe rule, two lists — `identified` is the full
+   * deduped opportunity regardless of plan, which is what the ring shows.
+   */
+  const certifyTotals = aggregateSavings([
+    ...result.hostArbitrage.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: arbitrageLevel.unlocked,
+    })),
+    ...result.qualityMatched.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: qualityLevel.unlocked,
+    })),
+  ]);
+
+
+  /**
    * Everything running right now is saving money, whatever day it was switched
    * on — but only the part of that saving which falls inside the window counts
    * here, so the captured figure shrinks with the window exactly like the
