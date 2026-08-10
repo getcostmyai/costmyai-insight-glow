@@ -895,6 +895,29 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   ]);
 
   /**
+   * Certify's own denominator-free figure: what the two checks Certify is
+   * responsible for found, and nothing else.
+   *
+   * Certify cannot see or sell the right-size check, so putting the
+   * three-mechanism total on its page credited the level with money it did not
+   * find. Same helper, same dedupe rule, two lists — `identified` is the full
+   * deduped opportunity regardless of plan, which is what the ring shows.
+   */
+  const certifyTotals = aggregateSavings([
+    ...result.hostArbitrage.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: arbitrageLevel.unlocked,
+    })),
+    ...result.qualityMatched.map((r) => ({
+      key: wl(r),
+      saving: r.savingUsd,
+      unlocked: qualityLevel.unlocked,
+    })),
+  ]);
+
+
+  /**
    * Everything running right now is saving money, whatever day it was switched
    * on — but only the part of that saving which falls inside the window counts
    * here, so the captured figure shrinks with the window exactly like the
@@ -1165,6 +1188,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       /** Labelled run-rate. Never mix this into a window total. */
       activeMonthlyRate,
     },
+    /**
+     * Arbitrage + benchmark only, deduped per workload. Certify's ring.
+     * `identified` is plan-independent; `available` is what this plan can act on.
+     */
+    certifySavings: {
+      available: certifyTotals.available,
+      locked: certifyTotals.locked,
+      identified: round2(certifyTotals.available + certifyTotals.locked),
+      overlapUsd: certifyTotals.overlapUsd,
+      overlapCount: certifyTotals.overlapCount,
+    },
+
     /**
      * One month-end forecast on every tab: month-to-date actual plus a
      * trailing 7-day level, weekly factors when the pattern is real, a damped

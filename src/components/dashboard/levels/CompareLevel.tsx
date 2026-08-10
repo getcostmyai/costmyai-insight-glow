@@ -1,23 +1,22 @@
 import {
   HeroStat,
   LevelHero,
-  Legend,
   RangeToggle,
   SectionTitle,
   asSwitchRow,
 } from "@/components/dashboard/primitives";
-import { SavingsRing } from "@/components/dashboard/SavingsRing";
+import { OpportunityRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import {
   HeroUpsell,
   LevelEmpty,
   LevelLocked,
-  NextLevelUpsell,
 } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { levelCount, levelSaving } from "@/lib/dashboard/figures";
+
 
 /**
  * Compare — same model, cheaper host. The free level.
@@ -84,15 +83,15 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.85 0.1 300)"
             />
             <HeroStat
-              label="Cheaper-host switches"
+              label="Cheaper hosts identified"
               value={`${rows.length}`}
-              sub="certified, zero quality risk"
+              sub="identical weights, zero quality risk"
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat
               label={`Available · ${activeRange.long}`}
               value={usd(available, 0)}
-              sub="what these switches would have saved"
+              sub="what moving to those hosts would have saved"
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
@@ -111,18 +110,20 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         }
         aside={
           <>
-            <SavingsRing
-              captured={data.savings.captured}
-              available={data.savings.available}
+            <OpportunityRing
+              saving={available}
+              spend={windowSpend}
               period={activeRange.long}
+              label="Cheaper hosts"
             />
-            <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
-              <Legend color="oklch(0.65 0.15 158)" label="Captured" />
-              <Legend color="oklch(0.72 0.11 195)" label="Available" />
-            </div>
+            <p className="mx-auto mt-4 max-w-[16rem] text-center text-xs text-white/70">
+              Share of your spend the cheaper-host check found money in. Acting on it is a
+              Rightsize action.
+            </p>
           </>
         }
       />
+
 
       <HeroUpsell
         to={scope === "demo" ? "/demo/certify" : "/workspace/certify"}

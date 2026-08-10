@@ -205,13 +205,10 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.85 0.1 300)"
             />
             <HeroStat
-              label={
-                forecast.suppressed
-                  ? "Projected month-end · unavailable"
-                  : forecast.isRange
-                    ? "Projected month-end · range"
-                    : "Projected month-end"
-              }
+              /* One short label. The qualifier lives in the subtext: appending
+                 "· range" / "· unavailable" made the label longer than its
+                 column at every width, so it clipped even on a 27" screen. */
+              label="Projected month-end"
               value={
                 forecast.suppressed || forecast.monthEndUsd === null
                   ? "—"
@@ -221,13 +218,16 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
               }
               sub={
                 forecast.suppressed
-                  ? (forecast.suppressionReason ?? "not enough data to project")
-                  : forecast.reasons.length > 0
-                    ? forecast.reasons[0]
-                    : `${usd(forecast.mtdUsd, 0)} so far + ${forecast.remainingDays} day${forecast.remainingDays === 1 ? "" : "s"} at your 7-day rate`
+                  ? `Unavailable — ${forecast.suppressionReason ?? "not enough data to project"}`
+                  : forecast.isRange
+                    ? `Range — ${forecast.reasons[0] ?? "the data does not support a single number"}`
+                    : forecast.reasons.length > 0
+                      ? forecast.reasons[0]
+                      : `${usd(forecast.mtdUsd, 0)} so far + ${forecast.remainingDays} day${forecast.remainingDays === 1 ? "" : "s"} at your 7-day rate`
               }
               accent="oklch(0.9 0.03 285)"
             />
+
 
             <HeroStat
               label="Blended cost / 1M tok"

@@ -1,21 +1,20 @@
 import {
   HeroStat,
   LevelHero,
-  Legend,
   RangeToggle,
   SectionTitle,
   asSwitchRow,
 } from "@/components/dashboard/primitives";
-import { SavingsRing } from "@/components/dashboard/SavingsRing";
+import { OpportunityRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import {
   HeroUpsell,
   LevelEmpty,
   LevelLocked,
-  NextLevelUpsell,
   ObjectiveSelect,
 } from "@/components/dashboard/LevelState";
+
 import { ArbitrageList, NonQualifyingList } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
@@ -49,6 +48,10 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   // Real dollars over the window on screen, never a monthly projection.
   const benchmarkSaving = levelSaving(data, "quality_match");
   const arbitrageSaving = levelSaving(data, "host_arbitrage");
+  // The two checks this level is responsible for, deduped per workload by the
+  // server. Never the three-mechanism total: Certify cannot see the third.
+  const certifyIdentified = data.certifySavings.identified;
+
   const refused = data.stats.qualityRefused;
   const evaluated = data.stats.qualityEvaluated;
   const certifyRate = certificationRate(data.stats);
@@ -96,9 +99,9 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat
-              label="Workloads evaluated"
+              label="Patterns checked"
               value={`${evaluated}`}
-              sub={`${data.stats.qualityCertified} certified`}
+              sub={`${data.stats.qualityCertified} certified · ${refused} refused`}
               accent="oklch(0.82 0.16 155)"
             />
             <HeroStat
@@ -118,17 +121,19 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         }
         aside={
           <>
-            <SavingsRing
-              captured={data.savings.captured}
-              available={data.savings.available}
+            <OpportunityRing
+              saving={certifyIdentified}
+              spend={live.spend}
               period={activeRange.long}
+              label="Certified saving"
             />
-            <div className="mt-4 flex justify-center gap-5 text-xs text-white/70">
-              <Legend color="oklch(0.65 0.15 158)" label="Captured" />
-              <Legend color="oklch(0.72 0.11 195)" label="Available" />
-            </div>
+            <p className="mx-auto mt-4 max-w-[16rem] text-center text-xs text-white/70">
+              Cheaper-host and benchmark savings together, each workload counted once, over the
+              spend they were found in.
+            </p>
           </>
         }
+
       />
 
       <HeroUpsell

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Loader2, Pause, Play, Undo2 } from "lucide-react";
 
 import { ranges, type RangeKey } from "@/lib/dashboard-queries";
@@ -92,18 +92,60 @@ export function HeroStat({
    * plus a clamped, non-wrapping number keeps a long spend figure inside its
    * own column instead of bleeding into the neighbouring card.
    */
+  /**
+   * A long value gets a smaller step rather than an ellipsis. Character count
+   * alone cannot decide that: the column is a grid fraction, so the same
+   * figure fits in Rightsize's four-up row and clips in Govern's tighter one.
+   * So the number measures itself and shrinks only as far as it must, down to
+   * a floor, and re-measures whenever its column resizes.
+   */
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      setScale(1);
+      requestAnimationFrame(() => {
+        const node = ref.current;
+        if (!node) return;
+        /* The number's own box is the real room: the column adds padding, so
+           measuring the parent overstates it by a few pixels and still clips. */
+        const room = node.clientWidth;
+        const needed = node.scrollWidth;
+        if (needed > room && room > 0) {
+          setScale(Math.max(0.55, (room / needed) * 0.98));
+        }
+      });
+
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => ro.disconnect();
+  }, [value]);
+
   return (
-    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-3 pl-4">
+    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-2 pl-4">
       <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
         {label}
       </p>
       <div
-        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums text-[clamp(0.8rem,1.05vw,1.25rem)] leading-none"
-        style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
+        ref={ref}
+        className="num min-w-0 self-end overflow-hidden whitespace-nowrap -tracking-tight tabular-nums leading-none"
+        style={{
+          color: accent,
+          fontVariantNumeric: "tabular-nums",
+          fontSize: `calc(clamp(0.8rem,1.05vw,1.25rem) * ${scale})`,
+        }}
         title={value}
       >
         {value}
       </div>
+
+
+
 
       <p className="self-start text-[11px] break-words text-white/55">{sub}</p>
     </div>
