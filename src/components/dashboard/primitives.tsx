@@ -134,52 +134,44 @@ export function HeroStat({
     let cancelled = false;
     let lastRoom = -1;
 
-    const write = (next: number) => {
-      const node = ref.current;
-      if (!node) return false;
-      const clamped = Math.min(1, Math.max(0.55, next));
-      if (Math.abs(clamped - scaleRef.current) < 0.002) return false;
+    const write = (node: HTMLDivElement, next: number) => {
+      const clamped = Math.min(1, Math.max(0.5, next));
       scaleRef.current = clamped;
-      node.style.fontSize = `calc(${base} * ${clamped})`;
-      return true;
+      node.style.fontSize = clamped >= 1 ? base : `calc(${base} * ${clamped})`;
     };
 
     /**
-     * Shrink against what is on screen right now, one frame at a time.
+     * Shrink against what is on screen, in one synchronous pass.
      *
-     * There is deliberately no "estimate at the base size" shortcut any more.
-     * That estimate measured ~9% narrow every time (at 1024px it predicted
-     * 73.2px for text that renders 79.7px at the same size), so it kept
-     * resetting the number back up to a size that clips — and because the
-     * span was observed, every correction re-triggered the bad estimate and
-     * the last word always went to it. Only the post-render measurement is
-     * trustworthy, so only it is used.
+     * There is deliberately no "estimate at the base size" shortcut: that
+     * estimate measured ~9% narrow every time (at 1024px it predicted 73.2px
+     * for text that renders 79.7px at that size), so it kept resetting the
+     * number back up to a size that clips. And the correction deliberately
+     * does not wait for animation frames or React state: both made the result
+     * depend on when the measurement landed, which is why the same width
+     * sometimes passed and sometimes clipped by a pixel or two. Writing the
+     * size and reading the box back forces a synchronous layout, so each
+     * iteration sees the true rendered width and the loop finishes before
+     * paint.
      */
-    const refine = (passes: number) => {
-      if (cancelled || passes <= 0) return;
-      frame = requestAnimationFrame(() => {
-        const node = ref.current;
-        const text = textRef.current;
-        if (!node || !text || cancelled) return;
-        const room = node.getBoundingClientRect().width - 1;
-        const rendered = text.getBoundingClientRect().width;
-        if (room > 0 && rendered > room) {
-          /* A touch of overshoot: the pure ratio converges only a few percent
-             per pass in the narrowest column, which used to exhaust the budget
-             before the text fitted. */
-          if (write(scaleRef.current * (room / rendered) * 0.97)) refine(passes - 1);
-        }
-      });
-    };
-
-    /** Start from full size, then converge down to whatever the column allows. */
     const fit = () => {
       const node = ref.current;
-      if (!node) return;
-      scaleRef.current = 0;
-      write(1);
-      refine(24);
+      const text = textRef.current;
+      if (!node || !text || cancelled) return;
+      write(node, 1);
+      for (let pass = 0; pass < 12; pass++) {
+        const room = node.getBoundingClientRect().width - 1;
+        const rendered = text.getBoundingClientRect().width;
+        if (room <= 0 || rendered <= room) break;
+        const next = scaleRef.current * (room / rendered) * 0.99;
+        if (next <= 0.5) {
+          write(node, 0.5);
+          break;
+        }
+        write(node, next);
+      }
     };
+
 
     fit();
     /* Only a genuine column-width change re-runs the fit. Watching the text
