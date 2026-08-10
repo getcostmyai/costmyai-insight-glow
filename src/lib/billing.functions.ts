@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import type { PlanTier } from "./engine/types";
 import { PAID_PLANS, priceIdFor, type BillingInterval } from "./billing/catalog";
-import { effectivePlan, type SubscriptionState } from "./billing/entitlement";
+import { type SubscriptionState } from "./billing/entitlement";
 
 /**
  * Billing for the four levels.
