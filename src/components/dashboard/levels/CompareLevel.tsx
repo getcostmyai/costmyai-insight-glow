@@ -59,7 +59,12 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
   const onCheapestHost = Math.max(0, measuredSpend - available);
-  const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : 100;
+  // Dispatch 172. With no measured spend there is no coverage to report. The
+  // old fallback printed "100% of your spend already optimal" to a workspace we
+  // had priced nothing for, which is a claim of optimality made from zero
+  // evidence. Absence of data is rendered as absence of data.
+  const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : null;
+
   const certifySaving = levelSaving(data, "quality_match");
   const certifyCount = levelCount(data, "quality_match");
 
@@ -110,10 +115,15 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
             />
             <HeroStat
               label="On cheapest host"
-              value={`${Math.round(coveragePct)}%`}
-              sub="of your spend already optimal"
+              value={coveragePct === null ? "—" : `${Math.round(coveragePct)}%`}
+              sub={
+                coveragePct === null
+                  ? "not enough priced traffic yet to judge"
+                  : "of your spend already optimal"
+              }
               accent="oklch(0.9 0.03 285)"
             />
+
           </>
         }
         aside={

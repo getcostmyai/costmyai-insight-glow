@@ -247,10 +247,15 @@ describe("round 3 spec", () => {
     }
   });
 
-  it("item 9 · workspace nav is upsell-only, demo shows all five levels", () => {
-    expect(SIDEBAR).toContain('scope === "demo"\n      ? LEVELS');
-    expect(SIDEBAR).toContain("planAtLeast(meta.requiredPlan, plan)");
+  // Dispatch 172 reverses item 9's original rule. Hiding levels below the
+  // customer's plan meant a paying customer could not navigate to something
+  // they are entitled to except by guessing the URL. Every level is listed for
+  // every workspace now; the gate stays server-side, not in the nav.
+  it("item 9 · nav lists every level for every workspace, never hides entitled ones", () => {
+    expect(SIDEBAR).toContain("const visibleLevels = LEVELS;");
+    expect(SIDEBAR).not.toContain('scope === "demo"\n      ? LEVELS');
   });
+
 
   it("item 11 · hero stat cards share one baseline per row via subgrid", () => {
     expect(PRIMITIVES).toContain("row-span-3 grid min-w-0 grid-rows-subgrid");

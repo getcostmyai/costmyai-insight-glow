@@ -75,18 +75,13 @@ export function DashboardSidebar({
   account?: AccountKey;
 }) {
   const paths = PATHS[scope];
-  // The demo walks the whole product, so it lists every level. A real
-  // workspace sees the level it pays for and the ones above it — the nav is an
-  // upsell path, never a way back down.
-  const visibleLevels =
-    scope === "demo"
-      ? LEVELS
-      : LEVELS.filter(
-          (meta) =>
-            meta.requiredPlan === null ||
-            meta.key === level ||
-            planAtLeast(meta.requiredPlan, plan),
-        );
+  // Dispatch 172. Every level is listed for every workspace. Hiding the levels
+  // below the current plan meant a paying customer could not navigate to
+  // something they are entitled to except by guessing the URL; the levels above
+  // the plan stay listed as the upsell path they always were, and the real gate
+  // is the server-side plan check, not the nav.
+  const visibleLevels = LEVELS;
+
 
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
