@@ -110,13 +110,15 @@ export function HeroStat({
       requestAnimationFrame(() => {
         const node = ref.current;
         if (!node) return;
-        const parent = node.parentElement;
-        const room = parent ? parent.clientWidth : node.clientWidth;
+        /* The number's own box is the real room: the column adds padding, so
+           measuring the parent overstates it by a few pixels and still clips. */
+        const room = node.clientWidth;
         const needed = node.scrollWidth;
         if (needed > room && room > 0) {
-          setScale(Math.max(0.55, room / needed));
+          setScale(Math.max(0.55, (room / needed) * 0.98));
         }
       });
+
     };
     fit();
     const ro = new ResizeObserver(fit);
