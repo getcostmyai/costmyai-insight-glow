@@ -367,6 +367,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     storedObjectives,
     subscription,
     pricingSnapshot,
+    platformAdmin,
+
   ] =
     await Promise.all([
       fetchAllRows((f, t) =>
