@@ -101,19 +101,24 @@ export function HeroStat({
   const dense = value.length > 12;
 
   return (
-    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-3 pl-4">
+    <div className="row-span-3 grid min-w-0 grid-rows-subgrid gap-1 border-l border-white/15 pr-2 pl-4">
       <p className="self-start text-[11px] font-semibold tracking-widest text-white/55 uppercase">
         {label}
       </p>
       <div
-        className={`num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums leading-none ${
-          dense ? "text-[clamp(0.65rem,0.72vw,0.9rem)]" : "text-[clamp(0.8rem,1.05vw,1.25rem)]"
-        }`}
-        style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
+        className="num min-w-0 self-end overflow-hidden text-ellipsis whitespace-nowrap -tracking-tight tabular-nums leading-none"
+        style={{
+          color: accent,
+          fontVariantNumeric: "tabular-nums",
+          /* Inline so the two steps are guaranteed to exist at runtime rather
+             than depending on both arbitrary utilities being generated. */
+          fontSize: dense ? "clamp(0.62rem,0.68vw,0.85rem)" : "clamp(0.8rem,1.05vw,1.25rem)",
+        }}
         title={value}
       >
         {value}
       </div>
+
 
 
       <p className="self-start text-[11px] break-words text-white/55">{sub}</p>
