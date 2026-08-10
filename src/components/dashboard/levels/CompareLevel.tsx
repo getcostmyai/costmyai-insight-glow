@@ -1,23 +1,22 @@
 import {
   HeroStat,
   LevelHero,
-  Legend,
   RangeToggle,
   SectionTitle,
   asSwitchRow,
 } from "@/components/dashboard/primitives";
-import { SavingsRing } from "@/components/dashboard/SavingsRing";
+import { OpportunityRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import {
   HeroUpsell,
   LevelEmpty,
   LevelLocked,
-  NextLevelUpsell,
 } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { levelCount, levelSaving } from "@/lib/dashboard/figures";
+
 
 /**
  * Compare — same model, cheaper host. The free level.
