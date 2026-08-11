@@ -2,7 +2,13 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 import { effectivePlan, type SubscriptionState } from "../billing/entitlement";
 import { paymentsEnvironment } from "../billing/env.server";
-import { DEFAULT_AUTONOMOUS_POLICY, evaluateAutonomous } from "./autonomous";
+import {
+  DEFAULT_AUTONOMOUS_POLICY,
+  evaluateAutonomous,
+  workloadKey,
+  type ActiveDestination,
+} from "./autonomous";
+
 import type { ObjectiveRow } from "./objectives";
 import { runPipeline } from "./pipeline";
 import type {
