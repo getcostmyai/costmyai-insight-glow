@@ -126,7 +126,11 @@ export function SwitchCard({
           tense: the row states what those tiers really produced, and routes
           the intent to the level that owns execution.
         */}
-        <SwitchAction execution={discovery ? undefined : row.execution}>
+        <SwitchAction
+          execution={discovery ? undefined : row.execution}
+          /* Dispatch 197: an active-but-unmoved switch is armed, not "once active". */
+          mode={pendingTraffic ? "armed" : "prospective"}
+        >
         {pendingTraffic ? (
           // State, not action: the switch exists, the traffic does not yet.
           // Ahead of every other branch, because it is the truth about the row.

@@ -291,7 +291,16 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
         </div>
       </div>
       {/* Dispatch 159: the state is a subtitle of the control it explains. */}
-      <SwitchAction execution={best.execution} dark align="left">
+      <SwitchAction
+        execution={best.execution}
+        mode={
+          ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost)
+            ? "armed"
+            : "prospective"
+        }
+        dark
+        align="left"
+      >
       {ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost) ? (
         /* Same rule as the rows below: state before action. */
         <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white/85">
@@ -398,7 +407,11 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                   <span className="text-xs text-muted-foreground">
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
                   </span>
-                  <SwitchAction execution={o.execution} className="ml-auto">
+                  <SwitchAction
+                    execution={o.execution}
+                    mode={ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? "armed" : "prospective"}
+                    className="ml-auto"
+                  >
                   {ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? (
                     // The right-size switch is running; the traffic is not on
                     // it yet, so the waste above is still real.
@@ -542,7 +555,7 @@ function ActiveSwitchCard({
       {/* Dispatch 159: attached to the controls it describes. */}
       <ExecutionSubtitle
         execution={s.execution}
-        mode="live"
+        mode={rerouting ? "live" : "armed"}
         align="left"
         className="mt-3 border-t border-border pt-3"
       />
