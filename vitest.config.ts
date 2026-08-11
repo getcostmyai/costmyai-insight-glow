@@ -16,13 +16,15 @@ import viteConfig from "./vite.config";
  * still fails; a test that is merely queued behind other network calls no
  * longer reports itself as a broken feature.
  */
-export default mergeConfig(
+export default defineConfig(async (env) => {
+  // The app's vite config is a callback (it resolves plugins per-mode), so it
+  // has to be invoked before it can be merged.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  viteConfig as any,
-  defineConfig({
+  const base = await (viteConfig as any)(env);
+  return mergeConfig(base, {
     test: {
       testTimeout: 60_000,
       hookTimeout: 120_000,
     },
-  }),
-);
+  });
+});
