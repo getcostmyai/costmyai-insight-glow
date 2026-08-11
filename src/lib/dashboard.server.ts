@@ -101,6 +101,11 @@ export interface SwitchOpportunity {
    * Same resolver as the running switches: one source, many consumers.
    */
   execution?: SwitchExecution;
+  /**
+   * Dispatch 193. DISPLAY ONLY. Attached after ranking and never read by the
+   * engine, the gates or any sort comparator.
+   */
+  friction?: FrictionBadge;
 }
 
 /** A switch the autonomous gate would run unattended. */
@@ -412,7 +417,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       fetchAllRows((f, t) =>
         supabase
           .from("model_catalog")
-          .select("model_key, display_name, vendor, tier")
+          .select("model_key, display_name, vendor, tier, modality, context_window, is_reasoning")
           .eq("is_active", true)
           .range(f, t),
       ).then((data) => ({ data, error: null })),
