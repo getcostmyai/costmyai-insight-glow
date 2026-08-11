@@ -42,7 +42,10 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
 
   return (
     <section className="border-y border-border bg-card">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 sm:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 sm:px-8">
+        <h2 className="text-center text-base font-semibold tracking-[-0.02em] sm:text-lg">
+          Works with your AI ecosystem.
+        </h2>
         <div className="flex items-center justify-center">
           <LiveStat value={stats.providerCount} label="Providers priced, synced continuously" />
         </div>
