@@ -10,8 +10,9 @@ import { describe, expect, it } from "vitest";
 const HOME = readFileSync("src/routes/index.tsx", "utf8");
 
 describe("front-page competitive positioning", () => {
-  it("names Auriko and contrasts internal reports with independent benchmarks", () => {
-    expect(HOME).toMatch(/Auriko/);
+  it("names no competitor and contrasts internal reports with independent benchmarks", () => {
+    expect(HOME).not.toMatch(/Auriko/i);
+    expect(HOME).toMatch(/other AI-spend tools|some routers/i);
     expect(HOME).toMatch(/internal report/i);
     expect(HOME).toMatch(/independent benchmark/i);
     expect(HOME).toMatch(/independent, third-party verification/i);

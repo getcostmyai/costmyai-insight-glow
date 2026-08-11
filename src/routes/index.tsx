@@ -667,10 +667,10 @@ function Neutrality() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold tracking-tight">
-                  Why we refuse to match a headline from Auriko.
+                  Why we refuse to match a headline number from other AI-spend tools.
                 </h3>
                 <p className="mt-2 text-[15px] leading-relaxed opacity-85">
-                  Tools like Auriko advertise cost reduction by citing their own internal reports —
+                  Some routers advertise cost reduction by citing their own internal reports —
                   not independent, third-party verification. CostMyAI will not certify a switch we
                   cannot prove against a published, independent benchmark. A global routing dial
                   that silently reroutes traffic might move most of your workloads; we would refuse
