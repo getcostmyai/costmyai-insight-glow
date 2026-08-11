@@ -542,9 +542,11 @@ function ActiveSwitchCard({
       {/* Dispatch 159: attached to the controls it describes. */}
       <ExecutionSubtitle
         execution={s.execution}
+        mode="live"
         align="left"
         className="mt-3 border-t border-border pt-3"
       />
+
     </div>
   );
 }

@@ -87,21 +87,42 @@ const providerName = (host: string) =>
     .map((p) => (p.length <= 3 ? p.toUpperCase() : p[0]!.toUpperCase() + p.slice(1)))
     .join(" ");
 
-export function executionCopy(x: SwitchExecution): ExecutionCopy {
+/**
+ * Dispatch 196. Whether this switch is already running or is only a candidate.
+ *
+ * The `automatic` state is a statement about *execution mechanics* — the
+ * container rewrites the request itself, no further setup — and never about
+ * who decided to switch. Read in the present tense next to a candidate that
+ * nobody has activated, "Rerouting automatically" reads as "the system decided
+ * this on its own", which is a Govern-only claim and false everywhere else.
+ * The tense follows the mode; the autonomy language stays on Govern's own
+ * surfaces, where a human really was not in the loop.
+ */
+export type ExecutionMode = "live" | "prospective";
+
+export function executionCopy(x: SwitchExecution, mode: ExecutionMode = "prospective"): ExecutionCopy {
   const provider = providerName(x.toHost);
 
   if (x.state === "automatic") {
     return {
       state: "automatic",
       tone: "automatic",
-      label: "Rerouting automatically",
-      hint: "Live on matching requests. Reversible whenever you pause it.",
+      label: mode === "live" ? "Rerouting now — no further setup" : "Reroutes automatically once active",
+      hint:
+        mode === "live"
+          ? "Your container is rewriting matching requests. Reversible whenever you pause it."
+          : "Nothing to set up on your side once you activate it. Reversible whenever you pause it.",
       detail:
         `Same provider, same credential: your container rewrites the model on each matching ` +
-        `request and sends it to ${provider} itself. Nothing for you to do, and it reverses ` +
-        `the moment you pause it.`,
+        `request and sends it to ${provider} itself. ` +
+        (mode === "live"
+          ? `That is happening now because this switch was activated — activating it is a ` +
+            `decision, not something CostMyAI made for you. It reverses the moment you pause it.`
+          : `Activating it is your decision; once activated there is no further setup, and it ` +
+            `reverses the moment you pause it.`),
     };
   }
+
 
   if (x.state === "not_available_yet") {
     return {
