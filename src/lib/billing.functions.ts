@@ -73,6 +73,19 @@ export interface WorkspaceBilling {
     plan: PlanTier;
     status: string;
   } | null;
+  /**
+   * A plan change the provider has already scheduled for the end of the current
+   * period — a downgrade, an upgrade, or an interval switch booked through a
+   * subscription schedule. Read from the provider, never inferred: the billing
+   * page must not show today's price as if nothing changes when the next
+   * invoice will be for a different level.
+   */
+  scheduledChange: {
+    plan: PlanTier;
+    interval: BillingInterval;
+    monthlyUsd: number;
+    effectiveIso: string;
+  } | null;
 }
 
 export const getWorkspaceBilling = createServerFn({ method: "POST" })
