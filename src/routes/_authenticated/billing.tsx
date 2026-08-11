@@ -249,7 +249,7 @@ function BillingPage() {
               }
             />
             <Fact
-              label={billing.data?.cancelAtPeriodEnd ? "Access until" : "Renews"}
+              label={periodLabel(status, billing.data?.cancelAtPeriodEnd ?? false, current)}
               value={billing.data?.currentPeriodEnd ? fmtDate(billing.data.currentPeriodEnd) : "—"}
             />
             <Fact
@@ -258,10 +258,33 @@ function BillingPage() {
             />
           </div>
         </div>
-        {billing.data?.cancelAtPeriodEnd ? (
+        {/* A booked plan change is real, already-agreed state. Showing only
+            today's price would misrepresent the next invoice. */}
+        {billing.data?.scheduledChange ? (
+          <p className="mt-4 rounded-xl bg-muted/50 p-3 text-sm text-foreground">
+            Currently <span className="font-semibold">{PLAN_META[current].label}</span>,{" "}
+            {usd(PLAN_META[current].monthly, 0)}/mo — switches to{" "}
+            <span className="font-semibold">
+              {PLAN_META[billing.data.scheduledChange.plan].label}
+            </span>
+            , {usd(billing.data.scheduledChange.monthlyUsd, 0)}/mo on{" "}
+            {fmtDate(billing.data.scheduledChange.effectiveIso)}
+            {billing.data.scheduledChange.interval === "yearly" ? " (billed yearly)" : ""}.
+          </p>
+        ) : null}
+        {billing.data?.cancelAtPeriodEnd && status !== "canceled" ? (
           <p className="mt-4 rounded-xl bg-opportunity-soft p-3 text-sm text-opportunity">
             This subscription is set to cancel. You keep {PLAN_META[current].label} until the date
             above, then the workspace returns to Compare.
+          </p>
+        ) : null}
+        {status === "canceled" ? (
+          <p className="mt-4 rounded-xl bg-opportunity-soft p-3 text-sm text-opportunity">
+            This subscription is cancelled and will not renew.{" "}
+            {billing.data?.currentPeriodEnd &&
+            new Date(billing.data.currentPeriodEnd).getTime() > Date.now()
+              ? `You keep ${PLAN_META[current].label} until the date above, then the workspace returns to Compare.`
+              : "The paid period has ended, so the workspace is on Compare."}
           </p>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-3">
