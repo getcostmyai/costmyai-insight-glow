@@ -482,8 +482,11 @@ function BuiltFor() {
                   <p className="text-xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-gradient-brand sm:text-2xl">
                     {p.title}
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground sm:text-base">
                     {p.pain}
+                  </p>
+                  <p className="mt-1.5 text-sm font-medium leading-relaxed text-primary sm:text-base">
+                    {p.resolution}
                   </p>
                 </div>
                 <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary" />
