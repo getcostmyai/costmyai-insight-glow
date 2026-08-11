@@ -1210,6 +1210,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       /** Real dollars applied unattended inside the window. */
       captured: autonomousCaptured,
       lastAutonomousAt: lastAutonomousAt ? new Date(lastAutonomousAt).toISOString() : null,
+      /**
+       * Dispatch 187. The cooldown is per workload, so the page is told which
+       * workloads are actually frozen and when the first one thaws. An
+       * org-wide "last change" no longer describes what the gate does, and is
+       * never presented as if it did.
+       */
+      cooldown: {
+        scope: "workload" as const,
+        frozen: cooldownFrozen,
+        nextEndsAt: cooldownNextEndsAt,
+        nextWorkload: cooldownNextWorkload,
+      },
       eligible: governEligible,
       refusals: governRefusals,
       /** Real dollars over the window; the run-rate stays available separately. */
@@ -1217,8 +1229,11 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       eligibleMonthly: round2(governEligible.reduce((s, c) => s + c.monthlySaving, 0)),
       policy: {
         minMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.minMonthlySavingUsd,
+        exitMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.exitMonthlySavingUsd,
+        retargetImprovementPct: DEFAULT_AUTONOMOUS_POLICY.retargetImprovementPct,
         cooldownHours: DEFAULT_AUTONOMOUS_POLICY.cooldownHours,
       },
+
     },
 
     composition,
