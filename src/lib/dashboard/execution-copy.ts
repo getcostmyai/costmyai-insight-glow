@@ -98,30 +98,55 @@ const providerName = (host: string) =>
  * The tense follows the mode; the autonomy language stays on Govern's own
  * surfaces, where a human really was not in the loop.
  */
-export type ExecutionMode = "live" | "prospective";
+/**
+ * Dispatch 197 adds a third tense between the two. A switch can be *active*
+ * while no matching request has arrived yet: the container is armed, nothing
+ * has been rerouted. Calling that "once active" contradicts the pending badge
+ * on the same card ("Switch active — traffic not yet moved"); calling it
+ * "rerouting now" claims traffic that has not moved. "As matching requests
+ * arrive" is the only honest tense for it. "Once active" is reserved for a
+ * switch that genuinely is not turned on at all.
+ */
+export type ExecutionMode = "live" | "armed" | "prospective";
 
 export function executionCopy(x: SwitchExecution, mode: ExecutionMode = "prospective"): ExecutionCopy {
   const provider = providerName(x.toHost);
 
   if (x.state === "automatic") {
+    const label =
+      mode === "live"
+        ? "Rerouting now — no further setup"
+        : mode === "armed"
+          ? "Reroutes automatically as matching requests arrive"
+          : "Reroutes automatically once active";
+    const hint =
+      mode === "live"
+        ? "Your container is rewriting matching requests. Reversible whenever you pause it."
+        : mode === "armed"
+          ? "This switch is on. Your container rewrites each matching request as it arrives. Reversible whenever you pause it."
+          : "Nothing to set up on your side once you activate it. Reversible whenever you pause it.";
+    const tail =
+      mode === "live"
+        ? `That is happening now because this switch was activated — activating it is a ` +
+          `decision, not something CostMyAI made for you. It reverses the moment you pause it.`
+        : mode === "armed"
+          ? `This switch is already activated — that was your decision, not one CostMyAI made ` +
+            `for you — and no matching request has arrived yet. Nothing further is needed, and ` +
+            `it reverses the moment you pause it.`
+          : `Activating it is your decision; once activated there is no further setup, and it ` +
+            `reverses the moment you pause it.`;
     return {
       state: "automatic",
       tone: "automatic",
-      label: mode === "live" ? "Rerouting now — no further setup" : "Reroutes automatically once active",
-      hint:
-        mode === "live"
-          ? "Your container is rewriting matching requests. Reversible whenever you pause it."
-          : "Nothing to set up on your side once you activate it. Reversible whenever you pause it.",
+      label,
+      hint,
       detail:
         `Same provider, same credential: your container rewrites the model on each matching ` +
         `request and sends it to ${provider} itself. ` +
-        (mode === "live"
-          ? `That is happening now because this switch was activated — activating it is a ` +
-            `decision, not something CostMyAI made for you. It reverses the moment you pause it.`
-          : `Activating it is your decision; once activated there is no further setup, and it ` +
-            `reverses the moment you pause it.`),
+        tail,
     };
   }
+
 
 
   if (x.state === "not_available_yet") {
