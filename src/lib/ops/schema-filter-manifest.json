@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-11T06:23:17.125Z",
+  "generatedAt": "2026-08-11T15:41:22.035Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -32,7 +32,14 @@
     },
     {
       "file": "src/lib/billing.functions.ts",
-      "line": 228,
+      "line": 105,
+      "table": "organizations",
+      "filters": [],
+      "snippet": ".from(\"organizations\") .select(\"stripe_subscription_id\") .eq(\"id\", data.orgId)"
+    },
+    {
+      "file": "src/lib/billing.functions.ts",
+      "line": 256,
       "table": "subscriptions",
       "filters": [
         "org_id"
@@ -41,7 +48,7 @@
     },
     {
       "file": "src/lib/billing.functions.ts",
-      "line": 286,
+      "line": 314,
       "table": "subscriptions",
       "filters": [
         "org_id"
@@ -111,7 +118,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 379,
+      "line": 396,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -120,16 +127,16 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 391,
+      "line": 408,
       "table": "host_prices",
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_rea"
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 403,
+      "line": 420,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -138,7 +145,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 409,
+      "line": 426,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -147,16 +154,16 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 414,
+      "line": 431,
       "table": "model_catalog",
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier\") .eq(\"is_active\", true)"
+      "snippet": ".from(\"model_catalog\") .select(\"model_key, display_name, vendor, tier, modality, context_window, is_reasoning\""
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 420,
+      "line": 437,
       "table": "switches",
       "filters": [
         "org_id",
@@ -166,7 +173,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 427,
+      "line": 444,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -175,7 +182,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 434,
+      "line": 451,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -184,7 +191,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 440,
+      "line": 457,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -193,7 +200,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 446,
+      "line": 463,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -203,7 +210,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 457,
+      "line": 474,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -212,7 +219,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 686,
+      "line": 766,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -221,7 +228,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 701,
+      "line": 781,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -230,7 +237,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 832,
+      "line": 912,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -239,7 +246,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 855,
+      "line": 935,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -248,7 +255,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 863,
+      "line": 943,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
@@ -290,7 +297,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_rea"
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
@@ -321,16 +328,16 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 199,
+      "line": 205,
       "table": "usage_rollups",
       "filters": [
         "org_id"
       ],
-      "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, "
+      "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read"
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 210,
+      "line": 216,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -339,7 +346,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 214,
+      "line": 220,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -349,7 +356,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 381,
+      "line": 393,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -358,7 +365,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 404,
+      "line": 416,
       "table": "switches",
       "filters": [
         "org_id",
@@ -373,11 +380,11 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_a"
+      "snippet": ".from(\"host_prices\") // Cache rates are read so the estimator prices from the same rate card // as the engine."
     },
     {
       "file": "src/lib/estimator/estimate.server.ts",
-      "line": 22,
+      "line": 29,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -386,14 +393,14 @@
     },
     {
       "file": "src/lib/estimator/estimate.server.ts",
-      "line": 28,
+      "line": 35,
       "table": "benchmarks",
       "filters": [],
       "snippet": ".from(\"benchmarks\").select(\"model_key, suite, task_class, score\").range(f, t)"
     },
     {
       "file": "src/lib/estimator/estimate.server.ts",
-      "line": 31,
+      "line": 38,
       "table": "benchmark_margins",
       "filters": [],
       "snippet": ".from(\"benchmark_margins\").select(\"suite, task_class, margin\").range(f, t)"
@@ -475,26 +482,26 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 206,
+      "line": 212,
       "table": "usage_events",
       "filters": [
         "org_id",
         "status"
       ],
-      "snippet": ".from(\"usage_events\") .select(\"occurred_at, model_key, host, task_hint, input_tokens, output_tokens, latency_m"
+      "snippet": ".from(\"usage_events\") .select(\"occurred_at, model_key, host, task_hint, input_tokens, output_tokens, cache_rea"
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 218,
+      "line": 224,
       "table": "host_prices",
       "filters": [
         "is_fixture"
       ],
-      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_f"
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_rea"
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 233,
+      "line": 242,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -819,7 +826,7 @@
       "filters": [
         "org_id"
       ],
-      "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, "
+      "snippet": ".from(\"usage_rollups\") .select( \"model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read"
     },
     {
       "file": "src/lib/pipeline.functions.ts",
@@ -828,7 +835,7 @@
       "filters": [
         "is_active"
       ],
-      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_la"
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_rea"
     },
     {
       "file": "src/lib/pipeline.functions.ts",
@@ -882,7 +889,7 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 192,
+      "line": 200,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -891,7 +898,7 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 466,
+      "line": 482,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -900,17 +907,17 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 125,
+      "line": 134,
       "table": "host_prices",
       "filters": [
         "is_active",
         "is_fixture"
       ],
-      "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_f"
+      "snippet": ".from(\"host_prices\") .select( \"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_rea"
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 150,
+      "line": 169,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -919,7 +926,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 255,
+      "line": 281,
       "table": "switches",
       "filters": [
         "org_id",
@@ -929,7 +936,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 291,
+      "line": 317,
       "table": "switches",
       "filters": [
         "org_id"
