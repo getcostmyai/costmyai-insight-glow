@@ -343,8 +343,15 @@ function Architecture() {
         <SectionHead
           eyebrow="Architecture"
           title="Runs in your environment. Sees only metadata."
-          lead="The Verification Engine sits in your stack as middleware. Requests pass through unchanged; only token counts and model names leave your environment. Never prompt content."
+          lead="Connect in minutes. Nothing to migrate, nothing to rewrite."
         />
+        <Reveal delay={60} className="mx-auto mt-5 max-w-3xl text-center">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            The Verification Engine sits in your stack as middleware. Requests pass through
+            unchanged; only token counts and model names leave your environment. Never prompt
+            content.
+          </p>
+        </Reveal>
         <Reveal delay={80} className="mt-14">
           <ArchitectureDiagram />
         </Reveal>
@@ -788,7 +795,7 @@ function ClosingCta() {
         <div className="absolute inset-0 texture-dots opacity-20" aria-hidden />
         <div className="relative">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Stop absorbing your AI spend. Start governing it.
+            Ship faster. Spend less. Never get blindsided by a price change.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed opacity-90">
             Connect once and get a complete, defensible breakdown of every workload in under 60
