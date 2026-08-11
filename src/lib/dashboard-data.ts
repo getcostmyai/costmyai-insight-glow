@@ -2,6 +2,8 @@ import type { SwitchExecution } from "@/lib/dashboard/execution-copy";
 export type SwitchKind = "host" | "quality";
 
 /** Shape the switch cards render. Populated live by the pipeline, never hardcoded. */
+import type { FrictionBadge } from "@/lib/switching/friction";
+
 export interface SwitchRow {
   fromModel: string;
   fromHost: string;
@@ -20,6 +22,8 @@ export interface SwitchRow {
   qualityDelta?: number | null;
   /** Dispatch 157. What pressing the action would really do. Server-decided. */
   execution?: SwitchExecution;
+  /** Dispatch 193. Display-only switching-friction tier. Never read by the engine. */
+  friction?: FrictionBadge;
 }
 
 /**

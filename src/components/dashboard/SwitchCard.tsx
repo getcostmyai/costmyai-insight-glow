@@ -4,6 +4,7 @@ import type { SwitchRow } from "@/lib/dashboard-data";
 import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
 import { usd } from "@/lib/dashboard-data";
 import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNote";
+import { FrictionTierBadge } from "@/components/dashboard/FrictionTierBadge";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
@@ -83,6 +84,11 @@ export function SwitchCard({
                 <ShieldCheck className="size-3" /> Certified
               </span>
             )}
+            {/*
+              Dispatch 193. Display only: this badge is rendered next to the
+              verdict, never consulted by the ranking that produced it.
+            */}
+            <FrictionTierBadge friction={row.friction} />
           </div>
           {row.kind === "quality" && row.note ? (
             <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">
