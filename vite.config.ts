@@ -33,17 +33,7 @@ export default defineConfig({
     plugins: [wasm()],
     ssr: { noExternal: ["workers-og"] },
     optimizeDeps: { exclude: ["workers-og"] },
-    /**
-     * Dispatch 205. The integration suites talk to the real database over the
-     * network. Vitest's 5s default is fine for a file run alone and is not fine
-     * when a dozen network-bound files run concurrently — which is why the same
-     * code passed in isolation and failed in the full run. The failures were
-     * scheduling, not logic; this removes the ambiguity permanently.
-     */
-    test: {
-      testTimeout: 60_000,
-      hookTimeout: 120_000,
-    },
+
 
   },
 });
