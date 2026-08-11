@@ -424,27 +424,37 @@ const PERSONAS = [
   {
     icon: User,
     title: "Solo founder",
-    pain: "Your first real AI invoice arrived and it was scary.",
+    pain: "\u201cOne invoice, a dozen features, and no idea which one is burning the budget.\u201d",
+    resolution:
+      "See exactly which feature or model call is driving the cost \u2014 and the cheaper way to run it.",
   },
   {
     icon: Users,
     title: "Small team",
-    pain: "Nobody here owns finance, so nobody owns the AI line item.",
+    pain: "\u201cWhoever shipped the feature picked the model, and nobody's checked since.\u201d",
+    resolution:
+      "Continuous tracking with nobody assigned to it \u2014 what changed, and what to fix, every time.",
   },
   {
     icon: Layers,
     title: "Agency",
-    pain: "You carry client AI spend and have to justify every dollar of it.",
+    pain: "\u201cClient work runs through your own infrastructure, and every model call eats into a thin margin.\u201d",
+    resolution:
+      "Cut the underlying compute cost \u2014 yours and every client's \u2014 straight back into your margin.",
   },
   {
     icon: Rocket,
     title: "Scale-up",
-    pain: "AI is now a top-three cost and the board has started asking.",
+    pain: "\u201cNew features, more demand, more teams shipping \u2014 spend grows from every direction at once.\u201d",
+    resolution:
+      "One place tracking every workload as it grows, with exactly what to cut and by how much.",
   },
   {
     icon: Building2,
     title: "Enterprise",
-    pain: "Every team picks its own model and no one standard governs any of it.",
+    pain: "\u201cSpend is standardized, but nobody can put a confident number on next quarter.\u201d",
+    resolution:
+      "A forecast you can defend, and controls that never force a team off their model.",
   },
 ];
 
