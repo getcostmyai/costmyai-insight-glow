@@ -174,13 +174,13 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Minimum to act"
                 value={usd(govern.policy.minMonthlySavingUsd, 0)}
-                sub="per switch, per month"
+                sub={`per switch, per month · a running switch is only given up below ${usd(govern.policy.exitMonthlySavingUsd, 0)}/mo, and a different destination has to beat the one running by ${govern.policy.retargetImprovementPct}%`}
                 accent="oklch(0.86 0.09 265)"
               />
-              {/* Dispatch 172. This tile read as a live timer while it was only
-                  ever printing a policy constant. It now says which it is: a
-                  real remaining countdown when a cooldown is genuinely running,
-                  and an explicitly labelled policy figure when it is not. */}
+              {/* Dispatch 187. The cooldown is per workload, so this tile no
+                  longer prints one org-wide "last change": it says how many
+                  workloads are inside their own window, which one thaws first,
+                  and that the rest are unaffected. */}
               {cooldownRemainingHours !== null ? (
                 <HeroStat
                   label="Cooldown remaining"
@@ -191,8 +191,9 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                   }
                   sub={
                     <>
-                      until the next unattended change · last change{" "}
-                      <LocalTime iso={govern.lastAutonomousAt!} />
+                      on {govern.cooldown.nextWorkload} · {govern.cooldown.frozen} workload
+                      {govern.cooldown.frozen === 1 ? "" : "s"} waiting, every other workload is
+                      free to act · thaws <LocalTime iso={govern.cooldown.nextEndsAt!} />
                     </>
                   }
                   accent="oklch(0.9 0.03 285)"
@@ -201,19 +202,11 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 <HeroStat
                   label="Cooldown policy"
                   value={`${govern.policy.cooldownHours}h`}
-                  sub={
-                    govern.lastAutonomousAt ? (
-                      <>
-                        between unattended changes · not in cooldown · last change{" "}
-                        <LocalTime iso={govern.lastAutonomousAt} />
-                      </>
-                    ) : (
-                      "between unattended changes · no autonomous change yet"
-                    )
-                  }
+                  sub="per workload between unattended changes · no workload is waiting right now"
                   accent="oklch(0.9 0.03 285)"
                 />
               )}
+
 
             </HeroStatRow>
           </div>
