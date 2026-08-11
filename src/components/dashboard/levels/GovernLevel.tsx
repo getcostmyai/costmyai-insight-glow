@@ -46,16 +46,19 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
   const mech = mechanismSavings(ctl);
   const govern = data.govern;
   /**
-   * Hours left on a cooldown that is actually running, or null when none is.
-   * Derived from the real last unattended change, not from the policy constant.
+   * Dispatch 187. The cooldown is scoped to one workload — (workspace, model,
+   * host) — not to the whole workspace, so this can no longer be a single
+   * org-wide "last change" timestamp: one workload being frozen says nothing
+   * about the other sixteen. What is shown instead is how many workloads are
+   * actually inside their window and when the first of them thaws.
    */
   const cooldownRemainingHours = (() => {
-    if (!govern.lastAutonomousAt) return null;
-    const endsAt =
-      Date.parse(govern.lastAutonomousAt) + govern.policy.cooldownHours * 3_600_000;
+    const endsAt = govern.cooldown.nextEndsAt ? Date.parse(govern.cooldown.nextEndsAt) : null;
+    if (endsAt === null) return null;
     const left = endsAt - Date.now();
     return left > 0 ? left / 3_600_000 : null;
   })();
+
 
   const meta = PLAN_META["govern"];
   const autonomyOn = govern.unlocked && govern.enabled;
