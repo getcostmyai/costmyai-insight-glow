@@ -97,11 +97,25 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<WorkspaceBilling> => {
     const { loadPlanState } = await import("./billing/guard.server");
     const { resolveAccess } = await import("./billing/entitlement");
-    const [state, manager] = await Promise.all([
+    const { loadScheduledChange } = await import("./billing/schedule.server");
+    const [state, manager, orgRow] = await Promise.all([
       loadPlanState(context.supabase, data.orgId, data.environment),
       context.supabase.rpc("is_org_manager", { _org_id: data.orgId }),
+      context.supabase
+        .from("organizations")
+        .select("stripe_subscription_id")
+        .eq("id", data.orgId)
+        .maybeSingle(),
     ]);
     const access = resolveAccess(state.plan, state.subscription, state.isPlatformAdmin);
+
+    // Only ask the provider when there is a live subscription to ask about.
+    const subscriptionId = orgRow.data?.stripe_subscription_id ?? null;
+    const scheduledChange =
+      state.subscription && subscriptionId
+        ? await loadScheduledChange(subscriptionId, data.environment)
+        : null;
+
     return {
       orgId: data.orgId,
       recordedPlan: state.plan,
@@ -112,6 +126,7 @@ export const getWorkspaceBilling = createServerFn({ method: "POST" })
       currentPeriodEnd: state.subscription?.currentPeriodEnd ?? null,
       cancelAtPeriodEnd: state.subscription?.cancelAtPeriodEnd ?? false,
       canManage: manager.data === true,
+      scheduledChange,
     };
 
   });
