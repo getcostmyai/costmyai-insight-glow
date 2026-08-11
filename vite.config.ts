@@ -33,5 +33,7 @@ export default defineConfig({
     plugins: [wasm()],
     ssr: { noExternal: ["workers-og"] },
     optimizeDeps: { exclude: ["workers-og"] },
+
+
   },
 });
