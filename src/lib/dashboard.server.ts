@@ -979,15 +979,46 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       .map((s) => new Date(s.activated_at).getTime())
       .sort((a, b) => b - a)[0] ?? null;
 
+  /**
+   * Dispatch 187. The cooldown is per workload, so the page reads it per
+   * workload too: one map of clocks keyed by (from_model, from_host), and one
+   * map of incumbent destinations for the re-target margin. The old single
+   * org-wide timestamp would now describe something the gate no longer does.
+   */
+  const wlKey = (fromModel: string, fromHost: string) => workloadKey(orgId, fromModel, fromHost);
+  const workloadCooldowns = new Map<string, number>();
+  const workloadIncumbents = new Map<string, ActiveDestination>();
+  for (const s of switches.data ?? []) {
+    if (s.status !== "active") continue;
+    const key = wlKey(String(s.from_model), String(s.from_host));
+    const activeDays = Math.max(
+      1,
+      Math.floor((now - new Date(s.activated_at as string).getTime()) / DAY_MS),
+    );
+    workloadIncumbents.set(key, {
+      toModel: String(s.to_model),
+      toHost: String(s.to_host),
+      monthlySavingUsd: round2((Number(s.saved_usd) / activeDays) * 30),
+    });
+    if (s.autonomous && s.activated_at) {
+      const at = new Date(s.activated_at).getTime();
+      if (at > (workloadCooldowns.get(key) ?? 0)) workloadCooldowns.set(key, at);
+    }
+  }
+
   const governPolicy = { ...DEFAULT_AUTONOMOUS_POLICY, enabled: true };
   const governEligible: GovernCandidate[] = [];
   const governRefusals: GovernRefusal[] = [];
   for (const rec of [...result.hostArbitrage, ...result.qualityMatched, ...result.oversized]) {
     if (!rec.toModel || !rec.toHost) continue;
+    const key = wlKey(rec.fromModel, rec.fromHost);
+    const cooledAt = workloadCooldowns.get(key) ?? null;
     const verdict = evaluateAutonomous(rec, governPolicy, {
       now: new Date(now),
-      lastAutonomousChangeAt: lastAutonomousAt ? new Date(lastAutonomousAt) : null,
+      lastAutonomousChangeAt: cooledAt ? new Date(cooledAt) : null,
+      active: workloadIncumbents.get(key) ?? null,
     });
+
     const base = {
       kind: rec.kind,
       fromModel: rec.fromModel,
