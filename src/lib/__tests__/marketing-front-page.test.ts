@@ -25,14 +25,14 @@ describe("front-page competitive positioning", () => {
     expect(HOME).toMatch(/refusal and the reason/i);
   });
 
-  it("places the Auriko differentiator inside the Neutrality Charter section", () => {
+  it("places the anonymized differentiator inside the Neutrality Charter section", () => {
     const charterIndex = HOME.indexOf("Neutrality Charter");
-    const aurikoIndex = HOME.indexOf("Auriko");
+    const calloutIndex = HOME.indexOf("other AI-spend tools");
     expect(charterIndex).toBeGreaterThan(-1);
-    expect(aurikoIndex).toBeGreaterThan(-1);
+    expect(calloutIndex).toBeGreaterThan(-1);
     // The callout must appear after the section header and before the next major section.
-    expect(aurikoIndex).toBeGreaterThan(charterIndex);
-    const nextSection = HOME.indexOf("/* -------------------------------- 10 · faq", aurikoIndex);
-    expect(nextSection).toBeGreaterThan(aurikoIndex);
+    expect(calloutIndex).toBeGreaterThan(charterIndex);
+    const nextSection = HOME.indexOf("/* -------------------------------- 10 · faq", calloutIndex);
+    expect(nextSection).toBeGreaterThan(calloutIndex);
   });
 });
