@@ -276,7 +276,15 @@ async function evaluateOrg(
     ["rightsize", result.oversized],
   ];
 
-  const lastAutonomous = await lastAutonomousChange(org.id);
+  /**
+   * Dispatch 187. Both guards are now scoped to the workload, not the
+   * workspace: the cooldown clock and the incumbent destination are looked up
+   * per (org, from_model, from_host) — the same identity the database's
+   * one-active-switch constraint already uses.
+   */
+  const cooldowns = await lastAutonomousChangeByWorkload(org.id);
+  const incumbents = await activeDestinations(org.id);
+
   const cycleStart = new Date().toISOString();
 
   for (const [kind, recs] of batches) {
