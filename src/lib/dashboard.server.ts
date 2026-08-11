@@ -1009,6 +1009,28 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     }
   }
 
+  /**
+   * Which workloads are genuinely inside their own 72h window right now, and
+   * which one thaws first. Everything not in this list is free to act.
+   */
+  const cooldownWindows = [...workloadCooldowns.entries()]
+    .map(([key, at]) => ({
+      key,
+      endsAt: at + DEFAULT_AUTONOMOUS_POLICY.cooldownHours * 3_600_000,
+    }))
+    .filter((c) => c.endsAt > now)
+    .sort((a, b) => a.endsAt - b.endsAt);
+  const cooldownFrozen = cooldownWindows.length;
+  const cooldownNextEndsAt = cooldownWindows[0]
+    ? new Date(cooldownWindows[0].endsAt).toISOString()
+    : null;
+  /** "model on host" — the workload identity, not an org-wide timestamp. */
+  const cooldownNextWorkload = cooldownWindows[0]
+    ? cooldownWindows[0].key.split("|").slice(1).join(" on ")
+    : null;
+
+
+
   const governPolicy = { ...DEFAULT_AUTONOMOUS_POLICY, enabled: true };
   const governEligible: GovernCandidate[] = [];
   const governRefusals: GovernRefusal[] = [];
