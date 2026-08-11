@@ -91,7 +91,16 @@ interface BasisRow {
   events: number;
   input_tokens: number;
   output_tokens: number;
+  /**
+   * Dispatch 204. The cache mix that actually occurred on the rerouted
+   * traffic. It is a property of the WORKLOAD, so the same mix is priced on
+   * both sides of the comparison — cheaply where the destination caches, at
+   * full input rate where it does not.
+   */
+  cache_read_tokens: number | null;
+  cache_write_tokens: number | null;
 }
+
 
 /**
  * Read every rerouted, successful event in a workspace and total the observed
@@ -123,7 +132,9 @@ export async function computeSwitchSavings(
   const priceRows = await fetchAllRows<PriceRow>((f, t) =>
     db
       .from("host_prices")
-      .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
+      .select(
+        "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching",
+      )
       .eq("is_fixture", false)
       .eq("is_active", true)
       .range(f, t),
@@ -136,9 +147,17 @@ export async function computeSwitchSavings(
         ...p,
         input_usd_per_mtok: Number(p.input_usd_per_mtok),
         output_usd_per_mtok: Number(p.output_usd_per_mtok),
+        // Null stays null. Coercing an absent cache rate to 0 here would
+        // hand every non-caching host a free cached prefix and manufacture a
+        // saving that no invoice would ever show.
+        cache_read_usd_per_mtok:
+          p.cache_read_usd_per_mtok == null ? null : Number(p.cache_read_usd_per_mtok),
+        cache_write_usd_per_mtok:
+          p.cache_write_usd_per_mtok == null ? null : Number(p.cache_write_usd_per_mtok),
       } as PriceRow,
     ]),
   );
+
 
   /**
    * The same resolution the rollups use. Real containers report provider-native
@@ -193,9 +212,16 @@ export async function computeSwitchSavings(
     }
 
     row.events += count;
-    row.counterfactualUsd += costOf(before, Number(g.input_tokens), Number(g.output_tokens));
-    row.actualUsd += costOf(after, Number(g.input_tokens), Number(g.output_tokens));
+    // One mix, two rate cards. This is the line that makes a move onto a host
+    // with worse cache economics show up as the smaller saving it really is.
+    const mix = {
+      readTokens: Number(g.cache_read_tokens ?? 0),
+      writeTokens: Number(g.cache_write_tokens ?? 0),
+    };
+    row.counterfactualUsd += costOf(before, Number(g.input_tokens), Number(g.output_tokens), mix);
+    row.actualUsd += costOf(after, Number(g.input_tokens), Number(g.output_tokens), mix);
     acc.set(switchId, row);
+
   }
 
 

@@ -19,6 +19,8 @@ export function aggregateRollups(rows: RollupRow[], days: number): UsageAggregat
         requests: 0,
         input_tokens: 0,
         output_tokens: 0,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
         cost_usd: 0,
         days,
         _p50: [],
@@ -27,6 +29,10 @@ export function aggregateRollups(rows: RollupRow[], days: number): UsageAggregat
     existing.requests += r.requests;
     existing.input_tokens += r.inputTokens;
     existing.output_tokens += r.outputTokens;
+    // Carried so the aggregate can be repriced against any candidate host's
+    // rate card, not just the one that produced it.
+    existing.cache_read_tokens = (existing.cache_read_tokens ?? 0) + (r.cacheReadTokens ?? 0);
+    existing.cache_write_tokens = (existing.cache_write_tokens ?? 0) + (r.cacheWriteTokens ?? 0);
     existing.cost_usd += r.costUsd;
     if (r.outputP50 > 0) existing._p50.push(r.outputP50);
     if (r.outputP95 > 0) existing._p95.push(r.outputP95);

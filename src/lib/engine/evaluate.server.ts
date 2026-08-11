@@ -99,7 +99,7 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
       supabaseAdmin
         .from("host_prices")
         .select(
-          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope",
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching, median_latency_ms, median_ttft_ms, output_tps, latency_scope",
         )
         // Delisted rows keep their last observed price for audit. Quoting one
         // as a switch destination would recommend a host that no longer sells
@@ -138,6 +138,12 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
     ...p,
     input_usd_per_mtok: Number(p.input_usd_per_mtok),
     output_usd_per_mtok: Number(p.output_usd_per_mtok),
+    // Null must survive the cast. `Number(null)` is 0, which would tell the
+    // engine this host serves cached input for free and invent a saving.
+    cache_read_usd_per_mtok:
+      p.cache_read_usd_per_mtok == null ? null : Number(p.cache_read_usd_per_mtok),
+    cache_write_usd_per_mtok:
+      p.cache_write_usd_per_mtok == null ? null : Number(p.cache_write_usd_per_mtok),
     median_latency_ms: p.median_latency_ms == null ? null : Number(p.median_latency_ms),
     median_ttft_ms: p.median_ttft_ms == null ? null : Number(p.median_ttft_ms),
     output_tps: p.output_tps == null ? null : Number(p.output_tps),
@@ -198,7 +204,7 @@ async function evaluateOrg(
       supabaseAdmin
         .from("usage_rollups")
         .select(
-          "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95",
         )
         .eq("org_id", org.id)
         .eq("granularity", "day")
@@ -233,12 +239,18 @@ async function evaluateOrg(
       requests: 0,
       input_tokens: 0,
       output_tokens: 0,
+      // Dispatch 204. Kept per workload so a candidate host is priced against
+      // the cache mix this workload actually exhibits, not a flat assumption.
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
       cost_usd: 0,
       days: EVALUATION_WINDOW_DAYS,
     };
     agg.requests += Number(r.requests);
     agg.input_tokens += Number(r.input_tokens);
     agg.output_tokens += Number(r.output_tokens);
+    agg.cache_read_tokens = (agg.cache_read_tokens ?? 0) + Number(r.cache_read_tokens ?? 0);
+    agg.cache_write_tokens = (agg.cache_write_tokens ?? 0) + Number(r.cache_write_tokens ?? 0);
     agg.cost_usd += Number(r.cost_usd);
     byWorkload.set(key, agg);
 

@@ -182,8 +182,16 @@ export async function syncOpenRouterPricing(): Promise<PriceSyncReport | { skipp
       region: "global",
       input_usd_per_mtok: e.referenceInput,
       output_usd_per_mtok: e.referenceOutput,
+      // The aggregate row is a cross-provider reference price, not a real
+      // endpoint. Averaging cache rates across hosts that cache on different
+      // terms would be a number nobody could be billed, so this row asserts no
+      // cache pricing at all and prices cached input at the full rate.
+      cache_read_usd_per_mtok: null,
+      cache_write_usd_per_mtok: null,
+      supports_prompt_caching: false,
       price_source: AGGREGATE_SOURCE,
       source_priority: AGGREGATE_PRIORITY,
+
       external_id: e.external_id,
     }));
 
@@ -354,6 +362,14 @@ async function writePrices(
         region: p.region,
         input_usd_per_mtok: p.input_usd_per_mtok,
         output_usd_per_mtok: p.output_usd_per_mtok,
+        // Dispatch 204. Written on every sync, including back to null when a
+        // host withdraws a cache rate: a stale discount left behind on a row
+        // whose upstream no longer publishes it would keep understating that
+        // host's real cost indefinitely.
+        cache_read_usd_per_mtok: p.cache_read_usd_per_mtok,
+        cache_write_usd_per_mtok: p.cache_write_usd_per_mtok,
+        supports_prompt_caching: p.supports_prompt_caching,
+
         price_source: p.price_source,
         source_priority: p.source_priority,
         external_id: p.external_id,

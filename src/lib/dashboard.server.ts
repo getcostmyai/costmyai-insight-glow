@@ -272,7 +272,12 @@ interface RollupRow {
   requests: number | string;
   input_tokens: number | string;
   output_tokens: number | string;
+  // Optional: buckets written before cache capture existed carry neither, and
+  // must keep repricing to exactly the figure they always produced.
+  cache_read_tokens?: number | string | null;
+  cache_write_tokens?: number | string | null;
   cost_usd: number | string;
+
   output_p50?: number | string | null;
   output_p95?: number | string | null;
 }
@@ -294,12 +299,18 @@ function aggregateUsage(rows: RollupRow[], days: number): UsageAggregate[] {
       requests: 0,
       input_tokens: 0,
       output_tokens: 0,
+      // Dispatch 204. Kept per workload so a candidate host is priced against
+      // the cache mix this workload actually exhibits, not a flat assumption.
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
       cost_usd: 0,
       days,
     };
     agg.requests += Number(r.requests);
     agg.input_tokens += Number(r.input_tokens);
     agg.output_tokens += Number(r.output_tokens);
+    agg.cache_read_tokens = (agg.cache_read_tokens ?? 0) + Number(r.cache_read_tokens ?? 0);
+    agg.cache_write_tokens = (agg.cache_write_tokens ?? 0) + Number(r.cache_write_tokens ?? 0);
     agg.cost_usd += Number(r.cost_usd);
     byWorkload.set(key, agg);
 
@@ -384,7 +395,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         supabase
           .from("usage_rollups")
           .select(
-            "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+            "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95",
           )
           .eq("org_id", orgId)
           .eq("granularity", granularity)
@@ -396,7 +407,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         supabase
           .from("host_prices")
           .select(
-            "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms, median_ttft_ms, output_tps, latency_scope, verified_at",
+            "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching, median_latency_ms, median_ttft_ms, output_tps, latency_scope, verified_at",
           )
           // Delisted rows would let the engine recommend a host that no longer
           // sells the model, and a single page would hide most of the market

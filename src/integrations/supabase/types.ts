@@ -412,6 +412,8 @@ export type Database = {
       }
       host_prices: {
         Row: {
+          cache_read_usd_per_mtok: number | null
+          cache_write_usd_per_mtok: number | null
           external_id: string | null
           host: string
           host_label: string
@@ -434,10 +436,13 @@ export type Database = {
           source: string | null
           source_priority: number
           source_run_id: string | null
+          supports_prompt_caching: boolean
           throughput_tps: number | null
           verified_at: string
         }
         Insert: {
+          cache_read_usd_per_mtok?: number | null
+          cache_write_usd_per_mtok?: number | null
           external_id?: string | null
           host: string
           host_label: string
@@ -460,10 +465,13 @@ export type Database = {
           source?: string | null
           source_priority?: number
           source_run_id?: string | null
+          supports_prompt_caching?: boolean
           throughput_tps?: number | null
           verified_at?: string
         }
         Update: {
+          cache_read_usd_per_mtok?: number | null
+          cache_write_usd_per_mtok?: number | null
           external_id?: string | null
           host?: string
           host_label?: string
@@ -486,6 +494,7 @@ export type Database = {
           source?: string | null
           source_priority?: number
           source_run_id?: string | null
+          supports_prompt_caching?: boolean
           throughput_tps?: number | null
           verified_at?: string
         }
@@ -1933,6 +1942,8 @@ export type Database = {
       }
       usage_events: {
         Row: {
+          cache_read_tokens: number
+          cache_write_tokens: number
           created_at: string
           envelope_skeleton: Json | null
           fallback_reason: string | null
@@ -1957,6 +1968,8 @@ export type Database = {
           task_hint: string
         }
         Insert: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
           created_at?: string
           envelope_skeleton?: Json | null
           fallback_reason?: string | null
@@ -1981,6 +1994,8 @@ export type Database = {
           task_hint?: string
         }
         Update: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
           created_at?: string
           envelope_skeleton?: Json | null
           fallback_reason?: string | null
@@ -2017,6 +2032,8 @@ export type Database = {
       usage_rollups: {
         Row: {
           bucket_start: string
+          cache_read_tokens: number
+          cache_write_tokens: number
           cost_usd: number
           granularity: string
           host: string
@@ -2033,6 +2050,8 @@ export type Database = {
         }
         Insert: {
           bucket_start: string
+          cache_read_tokens?: number
+          cache_write_tokens?: number
           cost_usd?: number
           granularity?: string
           host: string
@@ -2049,6 +2068,8 @@ export type Database = {
         }
         Update: {
           bucket_start?: string
+          cache_read_tokens?: number
+          cache_write_tokens?: number
           cost_usd?: number
           granularity?: string
           host?: string
@@ -2375,6 +2396,8 @@ export type Database = {
       switch_savings_basis: {
         Args: { _org_id: string; _switch_ids?: string[] }
         Returns: {
+          cache_read_tokens: number
+          cache_write_tokens: number
           events: number
           host: string
           input_tokens: number

@@ -37,6 +37,19 @@ export const ingestEventSchema = z
     task_hint: z.enum(TASK_HINTS).default(UNKNOWN_TASK_HINT),
     input_tokens: z.number().int().min(0).max(10_000_000),
     output_tokens: z.number().int().min(0).max(10_000_000),
+    /**
+     * Dispatch 204. Prompt-cache counters, both SUBSETS of `input_tokens` — a
+     * cached read is an input token billed at a different rate, not an extra
+     * token. Optional and defaulted to 0, so every event a pre-204 container
+     * sends stays valid unchanged.
+     *
+     * The subset relationship is enforced below rather than assumed: an event
+     * claiming more cached tokens than input tokens is refused, because pricing
+     * it would mean charging a negative number of uncached tokens.
+     */
+    cache_read_tokens: z.number().int().min(0).max(10_000_000).default(0),
+    cache_write_tokens: z.number().int().min(0).max(10_000_000).default(0),
+
     latency_ms: z.number().int().min(0).max(3_600_000).nullable().optional(),
     status: z.enum(["ok", "error"]).default("ok"),
     /**
@@ -107,7 +120,19 @@ export const ingestEventSchema = z
   .refine((e) => !e.fallback_reason || (e.rerouted === true && Boolean(e.route_reason)), {
     message: "fallback_reason requires a rerouted event carrying route_reason",
     path: ["fallback_reason"],
+  })
+  /**
+   * Dispatch 204. The cache counters are subsets of the input count, and the
+   * cost function relies on that: it bills `input - read - write` at the full
+   * rate. An event that breaks the invariant would produce a negative uncached
+   * term and a nonsense bill, so it is refused at the door rather than clamped
+   * silently into something that merely looks plausible.
+   */
+  .refine((e) => e.cache_read_tokens + e.cache_write_tokens <= e.input_tokens, {
+    message: "cache_read_tokens + cache_write_tokens must not exceed input_tokens",
+    path: ["cache_read_tokens"],
   });
+
 
 
 /** Payload version. Present on every batch; unknown versions are refused. */

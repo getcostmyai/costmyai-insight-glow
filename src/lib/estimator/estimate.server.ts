@@ -13,7 +13,14 @@ export async function readEstimatorCatalog(): Promise<EstimatorCatalog> {
     fetchAllRows((f, t) =>
       supabase
         .from("host_prices")
-        .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
+        // Cache rates are read so the estimator prices from the same rate card
+        // as the engine. The public estimator has no observed cache mix to
+        // apply, so it prices every token at the base rate — deliberately the
+        // conservative side, since it can only understate a saving here.
+        .select(
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching",
+        )
+
         .eq("is_active", true)
         .range(f, t),
     ),
