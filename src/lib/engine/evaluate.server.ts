@@ -317,7 +317,13 @@ async function evaluateOrg(
         // a manager has deliberately switched autonomous mode on. The plan on
         // its own has never been consent to change routing unattended.
         { ...DEFAULT_AUTONOMOUS_POLICY, enabled: plan === "govern" && org.autonomous_enabled },
-        { now: new Date(), lastAutonomousChangeAt: lastAutonomous },
+        {
+          now: new Date(),
+          lastAutonomousChangeAt:
+            cooldowns.get(workloadKey(org.id, rec.fromModel, rec.fromHost)) ?? null,
+          active: incumbents.get(workloadKey(org.id, rec.fromModel, rec.fromHost)) ?? null,
+        },
+
       );
       if (!verdict.allowed) {
         ctx.report.autonomousRefusals[verdict.reason] =
