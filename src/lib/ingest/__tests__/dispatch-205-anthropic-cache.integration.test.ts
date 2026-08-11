@@ -40,7 +40,8 @@ const APP = process.env["CONNECTOR_TEST_APP_URL"] ?? "http://localhost:8080";
 const ANTHROPIC_KEY = process.env["ANTHROPIC_API_KEY"];
 /** Priced in our own catalog WITH cache rates, so the cost can be checked. */
 const MODEL = "claude-haiku-4-5";
-const PORT = 8793;
+/** Chosen by the OS: a fixed port collides when the whole suite runs at once. */
+let PORT = 0;
 
 function keyFetch(key: string): typeof fetch {
   return (input, init) => {
@@ -75,11 +76,17 @@ let gateway: ReturnType<typeof createGateway>;
  * Haiku). Short of it the provider silently declines and reports zero, which
  * would make this proof pass vacuously — so the prompt is comfortably over.
  */
-const SYSTEM_PROMPT = Array.from(
-  { length: 700 },
-  (_, i) =>
-    `Rule ${i}: when reconciling an invoice line, treat the provider's own reported token counts as authoritative and never re-derive them locally.`,
-).join("\n");
+const SYSTEM_PROMPT = [
+  // Unique per run. Anthropic's cache outlives a test run by minutes, so a
+  // fixed prefix makes the FIRST call of the second run a cache read and the
+  // "cache was written" assertion fail on a system that is working perfectly.
+  `Run ${stamp}.`,
+  ...Array.from(
+    { length: 700 },
+    (_, i) =>
+      `Rule ${i}: when reconciling an invoice line, treat the provider's own reported token counts as authoritative and never re-derive them locally.`,
+  ),
+].join("\n");
 
 async function messages(body: unknown) {
   const res = await fetch(`http://127.0.0.1:${PORT}/v1/messages`, {
@@ -148,11 +155,12 @@ beforeAll(async () => {
       COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
       COSTMYAI_BASE_URL: APP,
       COSTMYAI_SPOOL_DIR: mkdtempSync(join(tmpdir(), "costmyai-cache-")),
-      COSTMYAI_PORT: String(PORT),
+      COSTMYAI_PORT: "0",
       COSTMYAI_FLUSH_INTERVAL_MS: "600000",
     }),
   );
-  await new Promise<void>((resolve) => gateway.server.listen(PORT, resolve));
+  await new Promise<void>((resolve) => gateway.server.listen(0, resolve));
+  PORT = (gateway.server.address() as { port: number }).port;
 }, 120_000);
 
 afterAll(async () => {
