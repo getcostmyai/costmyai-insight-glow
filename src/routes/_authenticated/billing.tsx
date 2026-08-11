@@ -52,9 +52,15 @@ const fmtDate = (iso: string) =>
  * label for every state told a customer the opposite of the truth, so the
  * label is derived from the real provider status instead.
  */
-function periodLabel(status: string | null, cancelAtPeriodEnd: boolean, plan: PlanTier): string {
+function periodLabel(
+  status: string | null,
+  cancelAtPeriodEnd: boolean,
+  plan: PlanTier,
+  periodEndIso: string | null,
+): string {
+  const ended = periodEndIso !== null && new Date(periodEndIso).getTime() <= Date.now();
   if (plan === "compare") return "Renews";
-  if (status === "canceled") return "Access ends";
+  if (status === "canceled") return ended ? "Access ended" : "Access ends";
   if (status === "incomplete_expired" || status === "unpaid") return "Access ended";
   if (cancelAtPeriodEnd) return "Access until";
   if (status === "past_due") return "Payment retried until";
@@ -266,7 +272,12 @@ function BillingPage() {
               }
             />
             <Fact
-              label={periodLabel(status, billing.data?.cancelAtPeriodEnd ?? false, current)}
+              label={periodLabel(
+                status,
+                billing.data?.cancelAtPeriodEnd ?? false,
+                current,
+                billing.data?.currentPeriodEnd ?? null,
+              )}
               value={billing.data?.currentPeriodEnd ? fmtDate(billing.data.currentPeriodEnd) : "—"}
             />
             <Fact
