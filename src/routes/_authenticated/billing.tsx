@@ -45,6 +45,23 @@ export const Route = createFileRoute("/_authenticated/billing")({
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
+/**
+ * What the period-end date actually means for this subscription.
+ *
+ * A cancelled subscription does not renew — it ends. Reusing one "Renews"
+ * label for every state told a customer the opposite of the truth, so the
+ * label is derived from the real provider status instead.
+ */
+function periodLabel(status: string | null, cancelAtPeriodEnd: boolean, plan: PlanTier): string {
+  if (plan === "compare") return "Renews";
+  if (status === "canceled") return "Access ends";
+  if (status === "incomplete_expired" || status === "unpaid") return "Access ended";
+  if (cancelAtPeriodEnd) return "Access until";
+  if (status === "past_due") return "Payment retried until";
+  if (status === "trialing") return "Trial converts";
+  return "Renews";
+}
+
 function BillingPage() {
   const { session_id: sessionId } = Route.useSearch();
   const navigate = useNavigate();
