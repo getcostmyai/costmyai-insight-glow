@@ -79,9 +79,17 @@ export interface ProxyEvent {
   task_hint: string;
   input_tokens: number;
   output_tokens: number;
+  /**
+   * Dispatch 204. Subsets of `input_tokens` that the provider served from, or
+   * wrote into, its prompt cache. Absent when the provider reported no cache
+   * activity, so an uncached event is byte-identical to a pre-204 one.
+   */
+  cache_read_tokens?: number;
+  cache_write_tokens?: number;
   latency_ms: number;
   status: "ok" | "error";
   parse_status: "parsed" | "tokens_only" | "unparsed";
+
   /**
    * Dispatch 155. Present only on a request this container actually rewrote.
    * Absent — not false — on every untouched request, so an unrerouted event is
@@ -414,6 +422,12 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     parse_status: args.reading?.parseStatus ?? "unparsed",
     idempotency_key: args.uuid(),
   };
+  // Dispatch 204. Sent only when the provider actually reported cache activity,
+  // so an uncached call keeps the exact byte-for-byte payload it sent before
+  // this change and older containers stay valid against the same endpoint.
+  if (args.reading?.cacheReadTokens) event.cache_read_tokens = args.reading.cacheReadTokens;
+  if (args.reading?.cacheWriteTokens) event.cache_write_tokens = args.reading.cacheWriteTokens;
+
   if (args.reroute) {
     event.rerouted = true;
     event.original_model_key = args.reroute.originalModel.slice(0, 120);

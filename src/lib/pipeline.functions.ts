@@ -30,7 +30,7 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
       supabase
         .from("usage_rollups")
         .select(
-          "model_key, host, task_hint, requests, input_tokens, output_tokens, cost_usd, output_p50, output_p95",
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95",
         )
         .eq("org_id", context.demoOrgId)
         .eq("granularity", data.days === 1 ? "hour" : "day")
@@ -38,7 +38,7 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
       supabase
         .from("host_prices")
         .select(
-          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, median_latency_ms",
+          "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching, median_latency_ms",
         )
         .eq("is_active", true),
       // Retired fixture rows stay in the table for audit, but the engine must
@@ -74,12 +74,16 @@ export const getPipelineSnapshot = createServerFn({ method: "GET" })
         requests: 0,
         input_tokens: 0,
         output_tokens: 0,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
         cost_usd: 0,
         days: data.days,
       };
       existing.requests += Number(r.requests);
       existing.input_tokens += Number(r.input_tokens);
       existing.output_tokens += Number(r.output_tokens);
+      existing.cache_read_tokens = (existing.cache_read_tokens ?? 0) + Number(r.cache_read_tokens ?? 0);
+      existing.cache_write_tokens = (existing.cache_write_tokens ?? 0) + Number(r.cache_write_tokens ?? 0);
       existing.cost_usd += Number(r.cost_usd);
       byWorkload.set(key, existing);
 

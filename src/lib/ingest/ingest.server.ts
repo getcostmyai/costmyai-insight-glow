@@ -88,9 +88,15 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
     host: e.host,
     task_hint: e.task_hint,
     input_tokens: e.input_tokens,
+    // Dispatch 204. Subsets of input_tokens, persisted so the row can be
+    // repriced later against a corrected cache rate without re-reading an
+    // envelope we deliberately do not keep.
+    cache_read_tokens: e.cache_read_tokens,
+    cache_write_tokens: e.cache_write_tokens,
     // A failed upstream call consumed the prompt and returned nothing; we do
     // not take the caller's word for it costing output tokens.
     output_tokens: e.status === "error" ? 0 : e.output_tokens,
+
     latency_ms: e.latency_ms ?? null,
     status: e.status,
     // Provenance of the counts above: read off the provider's envelope,
@@ -204,7 +210,7 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
     (f, t) =>
       db
         .from("usage_events")
-        .select("occurred_at, model_key, host, task_hint, input_tokens, output_tokens, latency_ms, status")
+        .select("occurred_at, model_key, host, task_hint, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, latency_ms, status")
         .eq("org_id", orgId)
         .gte("occurred_at", from.toISOString())
         .lt("occurred_at", to.toISOString())
@@ -216,7 +222,10 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
   const priceRows = await fetchAllRows((from_, to_) =>
     db
       .from("host_prices")
-      .select("model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok")
+      .select(
+        "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching",
+      )
+
       .eq("is_fixture", false)
       .range(from_, to_),
   );
@@ -258,6 +267,9 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
       taskHint: r.task_hint,
       inputTokens: r.input_tokens,
       outputTokens: r.output_tokens,
+      cacheReadTokens: r.cache_read_tokens ?? 0,
+      cacheWriteTokens: r.cache_write_tokens ?? 0,
+
       latencyMs: r.latency_ms ?? 0,
       status: r.status === "error" ? "error" : "ok",
     };
@@ -283,9 +295,12 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
       requests: b.requests,
       input_tokens: b.inputTokens,
       output_tokens: b.outputTokens,
+      cache_read_tokens: b.cacheReadTokens,
+      cache_write_tokens: b.cacheWriteTokens,
       cost_usd: b.costUsd,
       output_p50: b.outputP50,
       output_p95: b.outputP95,
+
     }));
 
   /**
@@ -317,5 +332,9 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
 
 /** Cost of a single priced event, for callers that want to preview a batch. */
 export function previewCost(price: PriceRow, e: IngestEvent): number {
-  return costOf(price, e.input_tokens, e.status === "error" ? 0 : e.output_tokens);
+  return costOf(price, e.input_tokens, e.status === "error" ? 0 : e.output_tokens, {
+    readTokens: e.cache_read_tokens,
+    writeTokens: e.cache_write_tokens,
+  });
 }
+

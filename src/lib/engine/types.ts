@@ -52,6 +52,17 @@ export interface PriceRow {
   host_label: string;
   input_usd_per_mtok: number;
   output_usd_per_mtok: number;
+  /**
+   * Dispatch 204. Prompt-cache rates, per million tokens, as published by the
+   * host. Null means "this host does not price cached input separately", which
+   * is a different statement from zero: zero is OpenAI charging nothing to
+   * write a cache entry, null is a host with no caching product at all. The
+   * cost function treats null as "bill it at the full input rate", which is
+   * exactly what such a host does to a prefix another host would have cached.
+   */
+  cache_read_usd_per_mtok?: number | null;
+  cache_write_usd_per_mtok?: number | null;
+  supports_prompt_caching?: boolean | null;
   /** Measured median end-to-end latency. Null when the feed has not measured it. */
   median_latency_ms?: number | null;
   /** Measured median time to first token, in ms. */
@@ -61,6 +72,7 @@ export interface PriceRow {
   /** Whether the latency above was measured on this endpoint or across the model's hosts. */
   latency_scope?: "host" | "model" | null;
 }
+
 
 
 export interface BenchmarkRow {
@@ -94,6 +106,13 @@ export interface UsageAggregate {
   requests: number;
   input_tokens: number;
   output_tokens: number;
+  /**
+   * Dispatch 204. Subsets of `input_tokens`, never additions to it. Absent on
+   * aggregates built before cache capture existed, which price exactly as they
+   * did before: every input token at the full rate.
+   */
+  cache_read_tokens?: number;
+  cache_write_tokens?: number;
   cost_usd: number;
   /** Number of days the aggregate covers, used to normalise to a month. */
   days: number;
@@ -101,6 +120,7 @@ export interface UsageAggregate {
   output_p50?: number | null;
   output_p95?: number | null;
 }
+
 
 /** Clause 07 — what the workspace is optimising for. */
 export interface Objective {

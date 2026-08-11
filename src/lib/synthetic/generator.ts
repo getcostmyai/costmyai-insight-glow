@@ -92,9 +92,21 @@ export interface SyntheticEvent {
   taskHint: string;
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Dispatch 204. Prompt-cache subsets of `inputTokens`.
+   *
+   * This type is shared with the REAL ingest rollup path, which is why the
+   * fields live here rather than only on the demo generator. The synthetic
+   * generator itself never sets them — see the note on `generateEvents` —
+   * so demo traffic remains flat-priced and is not quietly presented as
+   * though it exercised cache modelling.
+   */
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
   latencyMs: number;
   status: "ok" | "error";
 }
+
 
 export interface GenerateOptions {
   workload: SizedWorkload;
@@ -118,7 +130,17 @@ export interface GenerateOptions {
  * is requested: the containing hour is generated and then filtered. That is
  * what makes the live ticker a genuine continuation of the same curve rather
  * than a second, differently-shaped source of traffic.
+ *
+ * Dispatch 204, stated plainly because it would otherwise be invisible: this
+ * generator emits NO cache counters, so every synthetic event prices at the
+ * flat input rate exactly as it did before cache modelling existed. Demo
+ * traffic therefore does not demonstrate the cache-aware math. That is the
+ * deliberate choice — inventing a cache-hit rate would put a fabricated
+ * discount on a screen customers read as measurement — but it means demo
+ * figures must never be cited as evidence that cache pricing works. The real
+ * proof is real cached traffic, not this.
  */
+
 export function generateEvents({
   workload,
   from,
@@ -204,10 +226,14 @@ export interface RollupRow {
   requests: number;
   inputTokens: number;
   outputTokens: number;
+  /** Dispatch 204. Summed cache subsets of `inputTokens` for the bucket. */
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
   costUsd: number;
   outputP50: number;
   outputP95: number;
 }
+
 
 /**
  * Aggregate events into rollups. Cost is priced through the engine's single
@@ -236,6 +262,8 @@ export function rollupEvents(
           requests: 0,
           inputTokens: 0,
           outputTokens: 0,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
           costUsd: 0,
           outputP50: 0,
           outputP95: 0,
@@ -247,15 +275,26 @@ export function rollupEvents(
     entry.row.requests += 1;
     entry.row.inputTokens += e.inputTokens;
     entry.row.outputTokens += e.outputTokens;
+    entry.row.cacheReadTokens += e.cacheReadTokens ?? 0;
+    entry.row.cacheWriteTokens += e.cacheWriteTokens ?? 0;
     if (e.status === "ok") entry.outputs.push(e.outputTokens);
   }
 
   const rows: RollupRow[] = [];
   for (const { row, outputs } of buckets.values()) {
     const price = priceFor(row.modelKey, row.host);
-    row.costUsd = price ? costOf(price, row.inputTokens, row.outputTokens) : 0;
+    // The bucket's own cache mix, priced at the host's own cache rates. A
+    // bucket with no cache activity produces the identical number this line
+    // produced before Dispatch 204.
+    row.costUsd = price
+      ? costOf(price, row.inputTokens, row.outputTokens, {
+          readTokens: row.cacheReadTokens,
+          writeTokens: row.cacheWriteTokens,
+        })
+      : 0;
     outputs.sort((a, b) => a - b);
     row.outputP50 = percentile(outputs, 50);
+
     row.outputP95 = percentile(outputs, 95);
     rows.push(row);
   }

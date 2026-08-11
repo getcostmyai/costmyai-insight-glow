@@ -3,21 +3,79 @@ import type { PriceRow, UsageAggregate } from "./types";
 export const DAYS_IN_MONTH = 30;
 
 /**
+ * Cached portions of a workload's input. Both are SUBSETS of the input count
+ * passed alongside them — see the ingest contract, which refuses events that
+ * break that invariant.
+ */
+export interface CacheMix {
+  readTokens?: number;
+  writeTokens?: number;
+}
+
+/**
  * THE cost function. Every check in the engine prices through this and nothing
  * else — C3 in the audit was three divergent formulas producing three different
  * "savings" for the same switch.
+ *
+ * Dispatch 204 makes it cache-aware. The shape is:
+ *
+ *   (input - read - write) * input_rate     uncached input, full price
+ *   + read  * cache_read_rate               served from cache, discounted
+ *   + write * cache_write_rate              written into cache, often a premium
+ *   + output * output_rate
+ *
+ * The `cache` argument is optional and omitting it reproduces the pre-204
+ * number exactly, which is what keeps every previously-locked figure stable
+ * for traffic that carried no cache counters.
+ *
+ * The rate fallbacks matter more than they look. A host with no caching
+ * product has null rates, and null here means the full input rate — because
+ * that host really would bill the whole prefix as new input. This is the term
+ * that makes a same-model move from a caching host to a non-caching one show
+ * as the cost INCREASE it is, instead of the wash the flat formula reported.
  */
-export function costOf(price: PriceRow, inputTokens: number, outputTokens: number): number {
+export function costOf(
+  price: PriceRow,
+  inputTokens: number,
+  outputTokens: number,
+  cache?: CacheMix,
+): number {
+  const read = Math.max(0, cache?.readTokens ?? 0);
+  const write = Math.max(0, cache?.writeTokens ?? 0);
+  // Defensive, not decorative: a caller assembling a mix by hand could hand us
+  // more cached tokens than input tokens, and billing a negative remainder
+  // would understate spend rather than fail.
+  const uncached = Math.max(0, inputTokens - read - write);
+  const cappedCached = Math.min(read + write, inputTokens);
+  const billedRead = Math.min(read, cappedCached);
+  const billedWrite = cappedCached - billedRead;
+
+  const readRate = price.cache_read_usd_per_mtok ?? price.input_usd_per_mtok;
+  const writeRate = price.cache_write_usd_per_mtok ?? price.input_usd_per_mtok;
+
   return (
-    (inputTokens / 1_000_000) * price.input_usd_per_mtok +
+    (uncached / 1_000_000) * price.input_usd_per_mtok +
+    (billedRead / 1_000_000) * readRate +
+    (billedWrite / 1_000_000) * writeRate +
     (outputTokens / 1_000_000) * price.output_usd_per_mtok
   );
 }
 
-/** Cost of running one workload's observed token mix at a given price point. */
+/**
+ * Cost of running one workload's observed token mix at a given price point.
+ *
+ * This is the function that carries the cache mix ACROSS hosts, and that is
+ * the whole point of it: the same workload, with the same cacheable prefix,
+ * priced at whatever the candidate host charges for that prefix. The mix
+ * belongs to the workload, the rates belong to the host.
+ */
 export function costOfUsage(price: PriceRow, u: UsageAggregate): number {
-  return costOf(price, u.input_tokens, u.output_tokens);
+  return costOf(price, u.input_tokens, u.output_tokens, {
+    readTokens: u.cache_read_tokens,
+    writeTokens: u.cache_write_tokens,
+  });
 }
+
 
 export function toMonthly(value: number, days: number): number {
   if (days <= 0) return 0;

@@ -50,7 +50,21 @@ export interface OrArchitecture {
 export interface OrPricing {
   prompt?: string | null;
   completion?: string | null;
+  /**
+   * Dispatch 204. Prompt-cache rates, per token, in the same string form as
+   * `prompt` and `completion`. Present on roughly 60% of endpoints — the feed
+   * has always carried them and we simply never read them, which is why cached
+   * traffic was priced as though every input token was new.
+   *
+   * Absent is not zero. An endpoint that omits these has not told us it caches
+   * for free; it has told us nothing, and the row is left null so the cost
+   * function falls back to the full input rate rather than inventing a
+   * discount.
+   */
+  input_cache_read?: string | null;
+  input_cache_write?: string | null;
 }
+
 
 export interface OrModel {
   id: string;
@@ -94,10 +108,19 @@ export interface PriceEntry {
   region: string;
   input_usd_per_mtok: number;
   output_usd_per_mtok: number;
+  /**
+   * Dispatch 204. Null means the endpoint published no cache rate, which the
+   * cost function reads as "bills the full input rate". Only a real published
+   * number ever produces a discount.
+   */
+  cache_read_usd_per_mtok: number | null;
+  cache_write_usd_per_mtok: number | null;
+  supports_prompt_caching: boolean;
   price_source: string;
   source_priority: number;
   external_id: string;
 }
+
 
 export interface SkippedEntry {
   id: string;
@@ -247,6 +270,12 @@ export function transformEndpoints(
     }
 
     const host = hostSlug(label);
+    // Read only what the endpoint actually published. `perMtok` already
+    // distinguishes an absent price from a zero one, which is exactly the
+    // distinction that matters here: OpenAI genuinely charges 0 to write a
+    // cache entry, and a host that says nothing must not be given that deal.
+    const cacheRead = perMtok(e.pricing?.input_cache_read);
+    const cacheWrite = perMtok(e.pricing?.input_cache_write);
     const row: PriceEntry = {
       model_key: modelKey,
       host,
@@ -254,10 +283,16 @@ export function transformEndpoints(
       region: "global",
       input_usd_per_mtok: input,
       output_usd_per_mtok: output,
+      cache_read_usd_per_mtok: cacheRead,
+      cache_write_usd_per_mtok: cacheWrite,
+      // A published cache rate of any kind is the endpoint asserting it has a
+      // caching product. No rate, no claim.
+      supports_prompt_caching: cacheRead != null || cacheWrite != null,
       price_source: OPENROUTER_SOURCE,
       source_priority: SOURCE_PRIORITY.openrouter,
       external_id: `${modelKey}|${host}`,
     };
+
 
     const existing = best.get(host);
     if (!existing || input + output < existing.input_usd_per_mtok + existing.output_usd_per_mtok) {

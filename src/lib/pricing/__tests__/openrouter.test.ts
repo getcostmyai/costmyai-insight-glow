@@ -155,10 +155,14 @@ describe("diffPrice", () => {
     region: "global",
     input_usd_per_mtok: 2,
     output_usd_per_mtok: 8,
+    cache_read_usd_per_mtok: null,
+    cache_write_usd_per_mtok: null,
+    supports_prompt_caching: false,
     price_source: "openrouter",
     source_priority: 50,
     external_id: "m|h",
   };
+
 
   it("records a first sighting as new", () => {
     expect(diffPrice(next, undefined)?.change_kind).toBe("new");

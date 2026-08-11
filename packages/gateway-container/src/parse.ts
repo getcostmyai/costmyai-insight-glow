@@ -11,8 +11,13 @@ import { envelopeSkeleton } from "./skeleton.js";
  *
  *  1 — five shapes (openai, anthropic, gemini, cohere, bedrock)
  *  2 — Dispatch 104: tencent added, wrapper envelopes unwrapped (Cloudflare)
+ *  3 — Dispatch 204: prompt-cache counters read alongside the base counters.
+ *      A bump, not a new shape: the same envelopes now yield strictly more of
+ *      what the provider already told us, so the retroactive sweep repairs
+ *      cached traffic that was metered as though every input token was new.
  */
-export const PARSER_REVISION = 2;
+export const PARSER_REVISION = 3;
+
 
 /**
  * Response-envelope parsing.
@@ -39,6 +44,25 @@ export type ShapeId =
 export interface UsageReading {
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Dispatch 204. Input tokens the provider served from its prompt cache, and
+   * input tokens it charged to WRITE into that cache.
+   *
+   * THE INVARIANT, and the whole reason these are normalised here rather than
+   * downstream: both are SUBSETS of `inputTokens`. A cached read is an input
+   * token billed at the cache rate, not an extra token.
+   *
+   * Providers disagree about this, which is exactly the kind of difference
+   * that must die at the parser rather than propagate into the money:
+   *   - OpenAI, Gemini, DeepSeek report cache counts INSIDE the prompt total,
+   *     so the total is left alone and the subset is recorded.
+   *   - Anthropic and Bedrock Converse report them BESIDE a prompt total that
+   *     excludes them, so they are added into `inputTokens` here. That is a
+   *     correction: before this revision a cached Anthropic call under-reported
+   *     its own billable input by the entire cached prefix.
+   */
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
   model: string | null;
   shape: ShapeId;
   parseStatus: ParseStatus;
@@ -53,6 +77,8 @@ export interface UsageReading {
 const EMPTY: UsageReading = {
   inputTokens: 0,
   outputTokens: 0,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
   model: null,
   shape: "unknown",
   parseStatus: "unparsed",
@@ -62,11 +88,70 @@ function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
 }
 
+/** First readable number among candidate key names, or null. Order matters. */
+function firstNum(source: Record<string, unknown> | null, keys: string[]): number | null {
+  if (!source) return null;
+  for (const key of keys) {
+    const found = num(source[key]);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
 }
+
+/**
+ * Clamp the cache subsets so the invariant above holds no matter what a
+ * provider sends. A malformed envelope claiming more cached tokens than input
+ * tokens must never produce a negative uncached remainder downstream, because
+ * the cost function would then quietly bill a negative number of tokens.
+ */
+function withCache(
+  reading: Omit<UsageReading, "cacheReadTokens" | "cacheWriteTokens">,
+  read: number | null,
+  write: number | null,
+  /** True when the provider reports the counts beside, not inside, the total. */
+  exclusive = false,
+): UsageReading {
+  const r = Math.max(0, read ?? 0);
+  const w = Math.max(0, write ?? 0);
+  const inputTokens = exclusive ? reading.inputTokens + r + w : reading.inputTokens;
+  const capped = Math.min(r + w, inputTokens);
+  // Reads are preserved ahead of writes when clamping: a read is the cheap
+  // half, and over-claiming the cheap half is the direction that costs us
+  // money rather than the customer.
+  const cacheReadTokens = Math.min(r, capped);
+  return {
+    ...reading,
+    inputTokens,
+    cacheReadTokens,
+    cacheWriteTokens: Math.max(0, capped - cacheReadTokens),
+  };
+}
+
+/**
+ * Cache counter key names, per provider's real documented envelope.
+ *
+ * INCLUSIVE — counted inside the prompt total:
+ *   OpenAI      usage.prompt_tokens_details.cached_tokens
+ *   DeepSeek    usage.prompt_cache_hit_tokens        (OpenAI-shaped envelope)
+ *   Gemini      usageMetadata.cachedContentTokenCount
+ * EXCLUSIVE — reported beside a prompt total that omits them:
+ *   Anthropic   usage.cache_read_input_tokens / cache_creation_input_tokens
+ *   Bedrock     usage.cacheReadInputTokens   / cacheWriteInputTokens
+ *
+ * Cohere publishes no prompt-caching product and its billed_units carry no
+ * cache field, so its branch reads nothing and honestly reports zero rather
+ * than guessing at a key that does not exist. Tencent Hunyuan's TC3 Usage is
+ * read defensively for a cached-token key: if a deployment sends one it is
+ * used, and if not the reading is a plain zero — never an inferred number.
+ */
+const OPENAI_CACHE_READ_KEYS = ["cached_tokens", "cache_read_input_tokens"];
+
 
 /**
  * The real distinct shapes across the tracked providers, enumerated against the
@@ -88,35 +173,56 @@ export function readUsage(payload: unknown): UsageReading {
     const pt = num(usage["prompt_tokens"]);
     const ct = num(usage["completion_tokens"]);
     if (pt !== null || ct !== null) {
-      return { inputTokens: pt ?? 0, outputTokens: ct ?? 0, model, shape: "openai", parseStatus: "parsed" };
+      // Cache counts live in `prompt_tokens_details.cached_tokens` on OpenAI
+      // and its compatible layers, and DeepSeek hangs
+      // `prompt_cache_hit_tokens` off `usage` directly. Both are already
+      // inside `prompt_tokens`, so the total is not touched.
+      const details = asRecord(usage["prompt_tokens_details"]);
+      const cached =
+        firstNum(details, OPENAI_CACHE_READ_KEYS) ?? num(usage["prompt_cache_hit_tokens"]);
+      // Cache writes: OpenAI does not charge for them, Azure and some
+      // compatible layers report one when they do.
+      const written =
+        firstNum(details, ["cache_write_tokens", "cache_creation_tokens"]) ??
+        num(usage["cache_creation_input_tokens"]);
+      return withCache(
+        { inputTokens: pt ?? 0, outputTokens: ct ?? 0, model, shape: "openai", parseStatus: "parsed" },
+        cached,
+        written,
+      );
     }
 
     // 2. Anthropic native (also Anthropic-on-Bedrock and -on-Vertex).
     const it = num(usage["input_tokens"]);
     const ot = num(usage["output_tokens"]);
     if (it !== null || ot !== null) {
-      return {
-        inputTokens: it ?? 0,
-        outputTokens: ot ?? 0,
-        model,
-        shape: "anthropic",
-        parseStatus: "parsed",
-      };
+      // Anthropic reports the two cache counters as SIBLINGS of input_tokens,
+      // and input_tokens excludes them. Folded into the total here, so a
+      // cached call no longer reports a fraction of the input it was billed
+      // for. `exclusive` is what makes that addition happen.
+      return withCache(
+        { inputTokens: it ?? 0, outputTokens: ot ?? 0, model, shape: "anthropic", parseStatus: "parsed" },
+        num(usage["cache_read_input_tokens"]),
+        num(usage["cache_creation_input_tokens"]),
+        true,
+      );
     }
 
     // 5. AWS Bedrock Converse: camelCase counters under the same key.
     const bi = num(usage["inputTokens"]);
     const bo = num(usage["outputTokens"]);
     if (bi !== null || bo !== null) {
-      return {
-        inputTokens: bi ?? 0,
-        outputTokens: bo ?? 0,
-        model,
-        shape: "bedrock",
-        parseStatus: "parsed",
-      };
+      // Converse mirrors Anthropic's convention: cacheReadInputTokens and
+      // cacheWriteInputTokens sit beside an inputTokens that omits them.
+      return withCache(
+        { inputTokens: bi ?? 0, outputTokens: bo ?? 0, model, shape: "bedrock", parseStatus: "parsed" },
+        num(usage["cacheReadInputTokens"]),
+        num(usage["cacheWriteInputTokens"]),
+        true,
+      );
     }
   }
+
 
   // 6. Tencent Hunyuan's TC3 envelope: PascalCase counters under `Usage`.
   //    Found by the Dispatch 104 enumeration — the one provider in the live
@@ -127,19 +233,28 @@ export function readUsage(payload: unknown): UsageReading {
     const ct = num(tencent["CompletionTokens"]);
     if (pt !== null || ct !== null) {
       const response = asRecord(root["Response"]);
-      return {
-        inputTokens: pt ?? 0,
-        outputTokens: ct ?? 0,
-        model:
-          typeof root["Model"] === "string"
-            ? (root["Model"] as string)
-            : typeof response?.["Model"] === "string"
-              ? (response["Model"] as string)
-              : model,
-        shape: "tencent",
-        parseStatus: "parsed",
-      };
+      // Tencent publishes no cache counter we have confirmed against a live
+      // call. Candidate PascalCase keys are read if a deployment sends one,
+      // and the reading stays a plain zero if not — an absent number, never
+      // an inferred one.
+      return withCache(
+        {
+          inputTokens: pt ?? 0,
+          outputTokens: ct ?? 0,
+          model:
+            typeof root["Model"] === "string"
+              ? (root["Model"] as string)
+              : typeof response?.["Model"] === "string"
+                ? (response["Model"] as string)
+                : model,
+          shape: "tencent",
+          parseStatus: "parsed",
+        },
+        firstNum(tencent, ["CachedTokens", "PromptCacheHitTokens"]),
+        null,
+      );
     }
+
   }
 
   // 3. Google / Gemini native (generateContent and Vertex).
@@ -157,14 +272,23 @@ export function readUsage(payload: unknown): UsageReading {
     if (pt !== null || ct !== null || total !== null) {
       const input = pt ?? 0;
       const generated = ct !== null || thoughts !== null ? (ct ?? 0) + (thoughts ?? 0) : null;
-      return {
-        inputTokens: input,
-        outputTokens: generated ?? (total !== null ? Math.max(0, total - input) : 0),
-        model: typeof root["modelVersion"] === "string" ? (root["modelVersion"] as string) : model,
-        shape: "gemini",
-        parseStatus: "parsed",
-      };
+      // Google's cachedContentTokenCount is already inside promptTokenCount,
+      // so this records the subset and leaves the total alone. Google charges
+      // for cache storage by the hour rather than per written token, so there
+      // is no write counter on the response to read.
+      return withCache(
+        {
+          inputTokens: input,
+          outputTokens: generated ?? (total !== null ? Math.max(0, total - input) : 0),
+          model: typeof root["modelVersion"] === "string" ? (root["modelVersion"] as string) : model,
+          shape: "gemini",
+          parseStatus: "parsed",
+        },
+        num(meta["cachedContentTokenCount"]),
+        null,
+      );
     }
+
   }
 
 
@@ -181,15 +305,21 @@ export function readUsage(payload: unknown): UsageReading {
     const it = num(billed["input_tokens"]);
     const ot = num(billed["output_tokens"]);
     if (it !== null || ot !== null) {
+      // Cohere ships no prompt-caching product and billed_units carries no
+      // cache field. Zero here is a real "this provider does not offer it",
+      // not a gap — and it stays zero until Cohere publishes one.
       return {
         inputTokens: it ?? 0,
         outputTokens: ot ?? 0,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
         model,
         shape: "cohere",
         parseStatus: "parsed",
       };
     }
   }
+
 
   // Wrapper envelopes: Cloudflare Workers AI returns { success, result: { ... } }
   // with the real payload one level down. Unwrap once and re-read, so the
@@ -208,11 +338,14 @@ export function readUsage(payload: unknown): UsageReading {
   if (found)
     return {
       ...found,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
       model,
       shape: "heuristic",
       parseStatus: "tokens_only",
       skeleton: envelopeSkeleton(root),
     };
+
 
   return { ...EMPTY, model, skeleton: envelopeSkeleton(root) };
 }
@@ -320,13 +453,19 @@ export class StreamUsageCollector {
       }
       // Anthropic reports input at the start and output at the end; take the
       // maximum of each rather than letting the last frame overwrite the first.
+      // The cache counters ride with input for the same reason: on a streamed
+      // Anthropic call they appear once, in `message_start`, and the closing
+      // `message_delta` frame would otherwise zero them back out.
       best = {
         ...best,
         inputTokens: Math.max(best.inputTokens, reading.inputTokens),
         outputTokens: Math.max(best.outputTokens, reading.outputTokens),
+        cacheReadTokens: Math.max(best.cacheReadTokens, reading.cacheReadTokens),
+        cacheWriteTokens: Math.max(best.cacheWriteTokens, reading.cacheWriteTokens),
         parseStatus: best.parseStatus === "parsed" ? "parsed" : reading.parseStatus,
         shape: best.shape === "heuristic" ? reading.shape : best.shape,
       };
+
     }
     if (!best) return { ...EMPTY, model, skeleton };
     if (best.parseStatus === "parsed") return { ...best, model: best.model ?? model, skeleton: undefined };
