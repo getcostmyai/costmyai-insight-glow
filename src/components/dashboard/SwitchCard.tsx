@@ -117,7 +117,16 @@ export function SwitchCard({
             />
           </div>
         </div>
-        <SwitchAction execution={row.execution}>
+        {/*
+          Dispatch 196. Compare and Certify identify and certify; they never
+          execute (see `discovery` above). Passing them an execution state made
+          them render "Rerouting automatically" beside a card that offers no
+          activation at all — a present-tense execution claim about a candidate
+          nobody has activated. Discovery rows carry no execution copy, in any
+          tense: the row states what those tiers really produced, and routes
+          the intent to the level that owns execution.
+        */}
+        <SwitchAction execution={discovery ? undefined : row.execution}>
         {pendingTraffic ? (
           // State, not action: the switch exists, the traffic does not yet.
           // Ahead of every other branch, because it is the truth about the row.
@@ -126,14 +135,20 @@ export function SwitchCard({
             {PENDING_SWITCH_LABEL}
           </span>
         ) : discovery ? (
-          <Link
-            to={discoveryHref ?? "/pricing"}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Certified — switch via Rightsize
-            <ArrowUpRight className="size-3.5" />
-          </Link>
+          <div className="flex flex-col items-end gap-1 text-right">
+            <Link
+              to={discoveryHref ?? "/pricing"}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Certified — switch via Rightsize
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+            <p className="max-w-56 text-[11px] leading-snug text-muted-foreground/80">
+              Found and certified here. Nothing on this level moves traffic.
+            </p>
+          </div>
         ) : readOnly ? (
+
           // The demo is read-only whatever else was passed in: this branch is
           // deliberately ahead of onActivate so no caller can reintroduce a
           // live action or an "Activate in your workspace" CTA on /demo.

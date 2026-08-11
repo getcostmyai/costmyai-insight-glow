@@ -1,8 +1,9 @@
 import { Ban, CheckCircle2, KeyRound, MousePointerClick, PlugZap } from "lucide-react";
 import type { ComponentType } from "react";
 
-import type { ExecutionTone, SwitchExecution } from "@/lib/dashboard/execution-copy";
+import type { ExecutionMode, ExecutionTone, SwitchExecution } from "@/lib/dashboard/execution-copy";
 import { executionCopy } from "@/lib/dashboard/execution-copy";
+
 
 /**
  * Dispatch 157/159. The one renderer for "what would this switch actually do".
@@ -53,15 +54,18 @@ const ICON: Record<ExecutionTone, ComponentType<{ className?: string }>> = {
 
 export function ExecutionBadge({
   execution,
+  mode = "prospective",
   dark = false,
   className = "",
 }: {
   execution?: SwitchExecution;
+  /** Dispatch 196. "live" only for a switch that is already running. */
+  mode?: ExecutionMode;
   dark?: boolean;
   className?: string;
 }) {
   if (!execution) return null;
-  const c = executionCopy(execution);
+  const c = executionCopy(execution, mode);
   const Icon = ICON[c.tone];
   return (
     <span
@@ -82,22 +86,24 @@ export function ExecutionBadge({
  */
 export function ExecutionSubtitle({
   execution,
+  mode = "prospective",
   dark = false,
   align = "right",
   className = "",
 }: {
   execution?: SwitchExecution;
+  mode?: ExecutionMode;
   dark?: boolean;
   align?: "left" | "right";
   className?: string;
 }) {
   if (!execution) return null;
-  const c = executionCopy(execution);
+  const c = executionCopy(execution, mode);
   return (
     <div
       className={`flex flex-col gap-1.5 ${align === "right" ? "items-end text-right" : "items-start text-left"} ${className}`}
     >
-      <ExecutionBadge execution={execution} dark={dark} />
+      <ExecutionBadge execution={execution} mode={mode} dark={dark} />
       <p
         title={c.detail}
         className={`max-w-56 text-[11px] leading-snug ${dark ? "text-white/60" : HINT_TONE[c.tone]}`}
@@ -114,12 +120,14 @@ export function ExecutionSubtitle({
  */
 export function SwitchAction({
   execution,
+  mode = "prospective",
   dark = false,
   align = "right",
   className = "",
   children,
 }: {
   execution?: SwitchExecution;
+  mode?: ExecutionMode;
   dark?: boolean;
   align?: "left" | "right";
   className?: string;
@@ -130,27 +138,30 @@ export function SwitchAction({
       className={`flex flex-col gap-2 ${align === "right" ? "items-end" : "items-start"} ${className}`}
     >
       {children}
-      <ExecutionSubtitle execution={execution} dark={dark} align={align} />
+      <ExecutionSubtitle execution={execution} mode={mode} dark={dark} align={align} />
     </div>
   );
 }
 
 export function ExecutionNote({
   execution,
+  mode = "prospective",
   className = "",
 }: {
   execution?: SwitchExecution;
+  mode?: ExecutionMode;
   className?: string;
 }) {
   if (!execution) return null;
-  const c = executionCopy(execution);
+  const c = executionCopy(execution, mode);
   return (
     <div className={className}>
-      <ExecutionBadge execution={execution} />
+      <ExecutionBadge execution={execution} mode={mode} />
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{c.detail}</p>
     </div>
   );
 }
+
 
 /**
  * What the action on a row should say once execution is known. A switch that
