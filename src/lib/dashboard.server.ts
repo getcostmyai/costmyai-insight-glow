@@ -1,8 +1,11 @@
 import {
   DEFAULT_AUTONOMOUS_POLICY,
   evaluateAutonomous,
+  workloadKey,
+  type ActiveDestination,
   type AutonomousVerdict,
 } from "./engine/autonomous";
+
 import type { ObjectiveRow } from "./engine/objectives";
 import { runPipeline } from "./engine/pipeline";
 import type {
@@ -979,15 +982,68 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       .map((s) => new Date(s.activated_at).getTime())
       .sort((a, b) => b - a)[0] ?? null;
 
+  /**
+   * Dispatch 187. The cooldown is per workload, so the page reads it per
+   * workload too: one map of clocks keyed by (from_model, from_host), and one
+   * map of incumbent destinations for the re-target margin. The old single
+   * org-wide timestamp would now describe something the gate no longer does.
+   */
+  const wlKey = (fromModel: string, fromHost: string) => workloadKey(orgId, fromModel, fromHost);
+  const workloadCooldowns = new Map<string, number>();
+  const workloadIncumbents = new Map<string, ActiveDestination>();
+  for (const s of switches.data ?? []) {
+    if (s.status !== "active") continue;
+    const key = wlKey(String(s.from_model), String(s.from_host));
+    const activeDays = Math.max(
+      1,
+      Math.floor((now - new Date(s.activated_at as string).getTime()) / DAY_MS),
+    );
+    workloadIncumbents.set(key, {
+      toModel: String(s.to_model),
+      toHost: String(s.to_host),
+      monthlySavingUsd: round2((Number(s.saved_usd) / activeDays) * 30),
+    });
+    if (s.autonomous && s.activated_at) {
+      const at = new Date(s.activated_at).getTime();
+      if (at > (workloadCooldowns.get(key) ?? 0)) workloadCooldowns.set(key, at);
+    }
+  }
+
+  /**
+   * Which workloads are genuinely inside their own 72h window right now, and
+   * which one thaws first. Everything not in this list is free to act.
+   */
+  const cooldownWindows = [...workloadCooldowns.entries()]
+    .map(([key, at]) => ({
+      key,
+      endsAt: at + DEFAULT_AUTONOMOUS_POLICY.cooldownHours * 3_600_000,
+    }))
+    .filter((c) => c.endsAt > now)
+    .sort((a, b) => a.endsAt - b.endsAt);
+  const cooldownFrozen = cooldownWindows.length;
+  const cooldownNextEndsAt = cooldownWindows[0]
+    ? new Date(cooldownWindows[0].endsAt).toISOString()
+    : null;
+  /** "model on host" — the workload identity, not an org-wide timestamp. */
+  const cooldownNextWorkload = cooldownWindows[0]
+    ? cooldownWindows[0].key.split("|").slice(1).join(" on ")
+    : null;
+
+
+
   const governPolicy = { ...DEFAULT_AUTONOMOUS_POLICY, enabled: true };
   const governEligible: GovernCandidate[] = [];
   const governRefusals: GovernRefusal[] = [];
   for (const rec of [...result.hostArbitrage, ...result.qualityMatched, ...result.oversized]) {
     if (!rec.toModel || !rec.toHost) continue;
+    const key = wlKey(rec.fromModel, rec.fromHost);
+    const cooledAt = workloadCooldowns.get(key) ?? null;
     const verdict = evaluateAutonomous(rec, governPolicy, {
       now: new Date(now),
-      lastAutonomousChangeAt: lastAutonomousAt ? new Date(lastAutonomousAt) : null,
+      lastAutonomousChangeAt: cooledAt ? new Date(cooledAt) : null,
+      active: workloadIncumbents.get(key) ?? null,
     });
+
     const base = {
       kind: rec.kind,
       fromModel: rec.fromModel,
@@ -1176,6 +1232,18 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       /** Real dollars applied unattended inside the window. */
       captured: autonomousCaptured,
       lastAutonomousAt: lastAutonomousAt ? new Date(lastAutonomousAt).toISOString() : null,
+      /**
+       * Dispatch 187. The cooldown is per workload, so the page is told which
+       * workloads are actually frozen and when the first one thaws. An
+       * org-wide "last change" no longer describes what the gate does, and is
+       * never presented as if it did.
+       */
+      cooldown: {
+        scope: "workload" as const,
+        frozen: cooldownFrozen,
+        nextEndsAt: cooldownNextEndsAt,
+        nextWorkload: cooldownNextWorkload,
+      },
       eligible: governEligible,
       refusals: governRefusals,
       /** Real dollars over the window; the run-rate stays available separately. */
@@ -1183,8 +1251,11 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       eligibleMonthly: round2(governEligible.reduce((s, c) => s + c.monthlySaving, 0)),
       policy: {
         minMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.minMonthlySavingUsd,
+        exitMonthlySavingUsd: DEFAULT_AUTONOMOUS_POLICY.exitMonthlySavingUsd,
+        retargetImprovementPct: DEFAULT_AUTONOMOUS_POLICY.retargetImprovementPct,
         cooldownHours: DEFAULT_AUTONOMOUS_POLICY.cooldownHours,
       },
+
     },
 
     composition,
