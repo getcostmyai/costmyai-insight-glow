@@ -45,6 +45,29 @@ export const Route = createFileRoute("/_authenticated/billing")({
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
+/**
+ * What the period-end date actually means for this subscription.
+ *
+ * A cancelled subscription does not renew — it ends. Reusing one "Renews"
+ * label for every state told a customer the opposite of the truth, so the
+ * label is derived from the real provider status instead.
+ */
+function periodLabel(
+  status: string | null,
+  cancelAtPeriodEnd: boolean,
+  plan: PlanTier,
+  periodEndIso: string | null,
+): string {
+  const ended = periodEndIso !== null && new Date(periodEndIso).getTime() <= Date.now();
+  if (plan === "compare") return "Renews";
+  if (status === "canceled") return ended ? "Access ended" : "Access ends";
+  if (status === "incomplete_expired" || status === "unpaid") return "Access ended";
+  if (cancelAtPeriodEnd) return "Access until";
+  if (status === "past_due") return "Payment retried until";
+  if (status === "trialing") return "Trial converts";
+  return "Renews";
+}
+
 function BillingPage() {
   const { session_id: sessionId } = Route.useSearch();
   const navigate = useNavigate();
@@ -249,7 +272,12 @@ function BillingPage() {
               }
             />
             <Fact
-              label={billing.data?.cancelAtPeriodEnd ? "Access until" : "Renews"}
+              label={periodLabel(
+                status,
+                billing.data?.cancelAtPeriodEnd ?? false,
+                current,
+                billing.data?.currentPeriodEnd ?? null,
+              )}
               value={billing.data?.currentPeriodEnd ? fmtDate(billing.data.currentPeriodEnd) : "—"}
             />
             <Fact
@@ -258,10 +286,33 @@ function BillingPage() {
             />
           </div>
         </div>
-        {billing.data?.cancelAtPeriodEnd ? (
+        {/* A booked plan change is real, already-agreed state. Showing only
+            today's price would misrepresent the next invoice. */}
+        {billing.data?.scheduledChange ? (
+          <p className="mt-4 rounded-xl bg-muted/50 p-3 text-sm text-foreground">
+            Currently <span className="font-semibold">{PLAN_META[current].label}</span>,{" "}
+            {usd(PLAN_META[current].monthly, 0)}/mo — switches to{" "}
+            <span className="font-semibold">
+              {PLAN_META[billing.data.scheduledChange.plan].label}
+            </span>
+            , {usd(billing.data.scheduledChange.monthlyUsd, 0)}/mo on{" "}
+            {fmtDate(billing.data.scheduledChange.effectiveIso)}
+            {billing.data.scheduledChange.interval === "yearly" ? " (billed yearly)" : ""}.
+          </p>
+        ) : null}
+        {billing.data?.cancelAtPeriodEnd && status !== "canceled" ? (
           <p className="mt-4 rounded-xl bg-opportunity-soft p-3 text-sm text-opportunity">
             This subscription is set to cancel. You keep {PLAN_META[current].label} until the date
             above, then the workspace returns to Compare.
+          </p>
+        ) : null}
+        {status === "canceled" ? (
+          <p className="mt-4 rounded-xl bg-opportunity-soft p-3 text-sm text-opportunity">
+            This subscription is cancelled and will not renew.{" "}
+            {billing.data?.currentPeriodEnd &&
+            new Date(billing.data.currentPeriodEnd).getTime() > Date.now()
+              ? `You keep ${PLAN_META[current].label} until the date above, then the workspace returns to Compare.`
+              : "The paid period has ended, so the workspace is on Compare."}
           </p>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-3">
