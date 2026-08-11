@@ -362,17 +362,61 @@ async function evaluateOrg(
   if (retired.error) throw new Error(`retiring stale recommendations failed: ${retired.error.message}`);
 }
 
-async function lastAutonomousChange(orgId: string): Promise<Date | null> {
+/**
+ * The last unattended change per workload.
+ *
+ * Dispatch 187. `activated_autonomous` events carry a switch id; the switch
+ * carries the workload identity. Reading it this way means one churning
+ * workload serves its own 72h and every other workload in the workspace stays
+ * free to act.
+ */
+async function lastAutonomousChangeByWorkload(orgId: string): Promise<Map<string, Date>> {
   const { data } = await supabaseAdmin
     .from("switch_events")
-    .select("created_at")
+    .select("created_at, switches!inner(from_model, from_host)")
     .eq("org_id", orgId)
     .eq("event", "activated_autonomous")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data?.created_at ? new Date(data.created_at) : null;
+    .order("created_at", { ascending: false });
+
+  const out = new Map<string, Date>();
+  for (const row of (data ?? []) as Array<{
+    created_at: string;
+    switches: { from_model: string; from_host: string } | null;
+  }>) {
+    const s = row.switches;
+    if (!s || !row.created_at) continue;
+    const key = workloadKey(orgId, s.from_model, s.from_host);
+    // Rows arrive newest first, so the first sighting of a workload is its last change.
+    if (!out.has(key)) out.set(key, new Date(row.created_at));
+  }
+  return out;
 }
+
+/** What each workload is already switched to, and what that switch is really saving. */
+async function activeDestinations(orgId: string): Promise<Map<string, ActiveDestination>> {
+  const { data } = await supabaseAdmin
+    .from("switches")
+    .select("from_model, from_host, to_model, to_host, saved_usd, activated_at")
+    .eq("org_id", orgId)
+    .eq("status", "active");
+
+  const out = new Map<string, ActiveDestination>();
+  for (const s of data ?? []) {
+    const activeDays = Math.max(
+      1,
+      Math.floor((Date.now() - new Date(s.activated_at as string).getTime()) / DAY_MS),
+    );
+    out.set(workloadKey(orgId, s.from_model as string, s.from_host as string), {
+      toModel: s.to_model as string,
+      toHost: s.to_host as string,
+      // Measured dollars, annualised to a monthly rate the same way every
+      // other surface does it — never a projection of what it might save.
+      monthlySavingUsd: Math.round((Number(s.saved_usd) / activeDays) * 30 * 100) / 100,
+    });
+  }
+  return out;
+}
+
 
 /**
  * The outcome of one scheduled run, as the ledger records it.
