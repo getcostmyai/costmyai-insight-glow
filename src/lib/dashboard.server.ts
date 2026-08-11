@@ -43,6 +43,7 @@ import {
 import { createPublicServerClient, DEMO_ORG_ID } from "./supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { creditableUsd } from "@/lib/switching/credit";
+import { frictionBadge, type FrictionBadge } from "@/lib/switching/friction";
 
 import { resolveProviderGates } from "./ingest/routing.server";
 import { shapeForHost } from "./ingest/provider-shapes";
@@ -101,6 +102,11 @@ export interface SwitchOpportunity {
    * Same resolver as the running switches: one source, many consumers.
    */
   execution?: SwitchExecution;
+  /**
+   * Dispatch 193. DISPLAY ONLY. Attached after ranking and never read by the
+   * engine, the gates or any sort comparator.
+   */
+  friction?: FrictionBadge;
 }
 
 /** A switch the autonomous gate would run unattended. */
@@ -412,7 +418,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       fetchAllRows((f, t) =>
         supabase
           .from("model_catalog")
-          .select("model_key, display_name, vendor, tier")
+          .select("model_key, display_name, vendor, tier, modality, context_window, is_reasoning")
           .eq("is_active", true)
           .range(f, t),
       ).then((data) => ({ data, error: null })),
@@ -661,6 +667,69 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const hostArbitrage = arbitrageLevel.items;
   const qualityMatched = qualityLevel.items;
   const oversized = oversizedLevel.items;
+
+  /**
+   * Dispatch 193 — the switching-friction badge. DISPLAY ONLY.
+   *
+   * Computed HERE on purpose: after `gateLevel` has already ranked and gated
+   * every list above. The comparator inside `gateLevel` reads `r.saving` and
+   * nothing else, so the badge cannot influence order, inclusion or
+   * certification — it is a property attached to rows that are already final.
+   */
+  const capabilityByModel = new Map(
+    (models.data ?? []).map((m) => [
+      String(m.model_key),
+      {
+        modality: (m as { modality?: string | null }).modality ?? null,
+        contextWindow: (m as { context_window?: number | null }).context_window ?? null,
+        isReasoning: (m as { is_reasoning?: boolean | null }).is_reasoning ?? null,
+      },
+    ]),
+  );
+  /**
+   * Observed peak request size per workload. Read through the caller's own
+   * client, so a public/anonymous read simply gets nothing and the badge says
+   * "not measured" rather than inventing a context figure.
+   */
+  const workloadPeaks = new Map<string, { peakTotalTokens: number | null; events: number }>();
+  {
+    const { data: peakRows } = await supabase.rpc("workload_context_peaks", {
+      _org_id: orgId,
+      _since: windowStart,
+    });
+    for (const r of (peakRows ?? []) as Array<{
+      model_key: string;
+      host: string;
+      task_hint: string;
+      peak_total_tokens: number | null;
+      events: number | null;
+    }>) {
+      workloadPeaks.set(`${r.model_key}|${r.host}|${r.task_hint}`, {
+        peakTotalTokens: r.peak_total_tokens == null ? null : Number(r.peak_total_tokens),
+        events: Number(r.events ?? 0),
+      });
+    }
+  }
+  const withFriction = (rows: SwitchOpportunity[], sameModel: boolean): SwitchOpportunity[] =>
+    rows.map((o) => ({
+      ...o,
+      friction: frictionBadge({
+        fromHost: o.fromHost,
+        toHost: o.toHost,
+        fromModel: o.fromModel,
+        toModel: o.toModel,
+        sameModel,
+        signals: workloadPeaks.get(`${o.fromModel}|${o.fromHost}|${o.taskHint}`) ?? null,
+        from: capabilityByModel.get(o.fromModel) ?? null,
+        to: capabilityByModel.get(o.toModel) ?? null,
+      }),
+    }));
+  const hostArbitrageRows = withFriction(hostArbitrage, true);
+  const qualityMatchedRows = withFriction(qualityMatched, false);
+  hostArbitrage.length = 0;
+  hostArbitrage.push(...hostArbitrageRows);
+  qualityMatched.length = 0;
+  qualityMatched.push(...qualityMatchedRows);
 
   /**
    * Every money figure below is a real sum over the selected window.

@@ -2430,6 +2430,16 @@ export type Database = {
           runs: number
         }[]
       }
+      workload_context_peaks: {
+        Args: { _org_id: string; _since: string }
+        Returns: {
+          events: number
+          host: string
+          model_key: string
+          peak_total_tokens: number
+          task_hint: string
+        }[]
+      }
     }
     Enums: {
       ai_use_case: "customer_facing" | "internal" | "both" | "other"

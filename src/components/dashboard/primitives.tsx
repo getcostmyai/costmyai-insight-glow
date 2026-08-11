@@ -28,6 +28,7 @@ export const asSwitchRow = (o: SwitchOpportunity, kind: SwitchRow["kind"]): Swit
   note: o.note,
   qualityDelta: o.qualityDelta,
   execution: o.execution,
+  friction: o.friction,
 });
 
 export function EmptyState({ text }: { text: string }) {
