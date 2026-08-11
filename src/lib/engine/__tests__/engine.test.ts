@@ -339,7 +339,53 @@ describe("autonomous gate (Govern)", () => {
     expect(v).toMatchObject({ allowed: false, reason: "cooldown_active" });
   });
 
+  // ---- Dispatch 187: hysteresis band and re-target margin -----------------
+
+  const small = { ...base, monthlySavingUsd: 22, savingUsd: 22 };
+  const live = { toModel: "b", toHost: "beta", monthlySavingUsd: 30 };
+
+  it("refuses to enter at $22/mo — under the $25 entry threshold", () => {
+    const v = evaluateAutonomous(small, on, { now: new Date() });
+    expect(v).toMatchObject({ allowed: false, reason: "saving_below_policy" });
+  });
+
+  it("keeps a switch already running at $22/mo — inside the band, above the $20 exit", () => {
+    const v = evaluateAutonomous(small, on, { now: new Date(), active: live });
+    expect(v.allowed).toBe(true);
+  });
+
+  it("gives up a running switch only once it falls under $20/mo", () => {
+    const v = evaluateAutonomous({ ...small, monthlySavingUsd: 19.5 }, on, {
+      now: new Date(),
+      active: live,
+    });
+    expect(v).toMatchObject({ allowed: false, reason: "saving_below_exit_floor" });
+  });
+
+  it("refuses to re-target for a 2% improvement over the switch already running", () => {
+    const v = evaluateAutonomous({ ...base, toModel: "c", monthlySavingUsd: 30.6 }, on, {
+      now: new Date(),
+      active: live,
+    });
+    expect(v).toMatchObject({ allowed: false, reason: "retarget_below_improvement" });
+  });
+
+  it("re-targets once the new destination beats the incumbent by 3%", () => {
+    const v = evaluateAutonomous({ ...base, toModel: "c", monthlySavingUsd: 31 }, on, {
+      now: new Date(),
+      active: live,
+    });
+    expect(v.allowed).toBe(true);
+  });
+
+  it("scopes the cooldown to the workload — a null clock is a free workload", () => {
+    expect(
+      evaluateAutonomous(base, on, { now: new Date(), lastAutonomousChangeAt: null }).allowed,
+    ).toBe(true);
+  });
+
   it("stays off when autonomous mode is disabled", () => {
+
     expect(evaluateAutonomous(base, DEFAULT_AUTONOMOUS_POLICY, { now: new Date() }).allowed).toBe(
       false,
     );
