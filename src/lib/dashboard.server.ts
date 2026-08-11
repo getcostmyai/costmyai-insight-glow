@@ -1,8 +1,11 @@
 import {
   DEFAULT_AUTONOMOUS_POLICY,
   evaluateAutonomous,
+  workloadKey,
+  type ActiveDestination,
   type AutonomousVerdict,
 } from "./engine/autonomous";
+
 import type { ObjectiveRow } from "./engine/objectives";
 import { runPipeline } from "./engine/pipeline";
 import type {
