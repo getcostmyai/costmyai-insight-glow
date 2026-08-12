@@ -93,7 +93,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
           switch when it holds quality, automatically in Govern.
         </Reveal>
 
-        <Reveal delay={200} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
             See if you are overpaying
             <ArrowRight className="h-4 w-4" />
