@@ -54,9 +54,6 @@ Mechanism words (metadata, gateway, routing grant) move down the page. The routi
 - Meta description in the route `head()` stays as is; it serves search, not the visitor, and the longer mechanism copy is correct there.
 - No other section is edited; the four value props already live in How It Works and the Estimator.
 
-## Open questions
+## Recommendation
 
-Answer before build:
-
-1. Where should the four value cards go — folded into the existing How It Works section, or dropped entirely because Estimator plus How It Works already cover them?
-2. Is the one-sentence subheadline the right level of detail, or do you want a second short sentence covering automatic switching?
+Drop the four cards from the hero and add automatic switching into the single subheadline with a comma. This keeps the hero to four clean beats: promise, proof of scale, action, trust line. The detailed mechanics stay below the fold where they already belong.
