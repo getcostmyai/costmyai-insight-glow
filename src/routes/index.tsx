@@ -125,10 +125,11 @@ function Hero({ stats }: { stats: MarketingStats }) {
                   format={(n) => Math.round(n).toLocaleString("en-US")}
                   className="block text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-6xl"
                 />
-                <p className="mt-3 inline-flex items-center gap-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
-                  <span className="mt-[0.25em] h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" aria-hidden />
-                  {s.label}
+                <p className="mt-3 inline-flex items-start gap-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
+                  <span className="mt-[0.45em] h-1.5 w-1.5 shrink-0 rounded-full bg-saving animate-pulse-dot" aria-hidden />
+                  <span>{s.label}</span>
                 </p>
+
               </Reveal>
             ))}
           </div>
