@@ -108,7 +108,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
           </a>
         </Reveal>
 
-        <Reveal delay={280} as="p" className="mt-5 text-sm text-muted-foreground">
+        <Reveal delay={280} as="p" className="mt-4 text-sm text-muted-foreground">
           Metadata only. Never your prompt content.
         </Reveal>
 
