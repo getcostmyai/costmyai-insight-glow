@@ -87,7 +87,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
         <Reveal
           delay={120}
           as="p"
-          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+          className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
           We watch what AI actually costs you, prove where the same quality costs less, and make the
           switch when it holds quality, automatically in Govern.
