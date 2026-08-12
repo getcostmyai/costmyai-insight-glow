@@ -108,18 +108,18 @@ function Hero({ stats }: { stats: MarketingStats }) {
           </a>
         </Reveal>
 
-        <Reveal delay={300} as="p" className="mt-6 text-sm text-muted-foreground">
+        <Reveal delay={280} as="p" className="mt-5 text-sm text-muted-foreground">
           Metadata only. Never your prompt content.
         </Reveal>
 
         {stats.live ? (
-          <div className="mt-20 grid grid-cols-3 gap-6 border-t border-border/60 pt-12 sm:gap-10">
+          <div className="mt-16 grid grid-cols-3 gap-6 border-t border-border/60 pt-10 sm:mt-20 sm:gap-10 sm:pt-12">
             {[
               { value: stats.modelCount, label: "Models tracked" },
               { value: stats.providerCount, label: "Providers priced" },
               { value: stats.priceChangesTracked, label: "Market price moves this month" },
             ].map((s, i) => (
-              <Reveal key={s.label} delay={380 + i * 90}>
+              <Reveal key={s.label} delay={360 + i * 90}>
                 <CountUp
                   value={s.value}
                   format={(n) => Math.round(n).toLocaleString("en-US")}
@@ -129,7 +129,6 @@ function Hero({ stats }: { stats: MarketingStats }) {
                   <span className="mt-[0.25em] h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" aria-hidden />
                   {s.label}
                 </p>
-
               </Reveal>
             ))}
           </div>
