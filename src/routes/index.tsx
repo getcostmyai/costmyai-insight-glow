@@ -127,7 +127,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
                 />
                 <p className="mt-3 inline-flex items-start gap-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
                   <span className="mt-[0.45em] h-1.5 w-1.5 shrink-0 rounded-full bg-saving animate-pulse-dot" aria-hidden />
-                  <span>{s.label}</span>
+                  <span className="text-left">{s.label}</span>
                 </p>
 
               </Reveal>
