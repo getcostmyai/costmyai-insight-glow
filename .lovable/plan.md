@@ -52,7 +52,7 @@ Mechanism words (metadata, gateway, routing grant) move down the page. The routi
 - All changes are inside `Hero()` in `src/routes/index.tsx`; no data, query or server change.
 - Removing the grid removes the only `lg:grid-cols-4` block in the hero; vertical rhythm gets re-tuned (`pt-28`/`pb-28` reduced) so the KPI row clears the fold at 1280x800.
 - Meta description in the route `head()` stays as is; it serves search, not the visitor, and the longer mechanism copy is correct there.
-- If the four cards move rather than disappear, that is a second small section edit in the same file.
+- No other section is edited; the four value props already live in How It Works and the Estimator.
 
 ## Open questions
 
