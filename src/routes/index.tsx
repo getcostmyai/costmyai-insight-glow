@@ -79,7 +79,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
   return (
     <section className="relative overflow-hidden wash-hero">
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-4xl px-5 pb-28 pt-28 text-center sm:px-8 sm:pb-36 sm:pt-40">
+      <div className="relative mx-auto max-w-4xl px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-16 sm:pt-24">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
           Stop overpaying <span className="text-gradient-brand">for AI.</span>
         </Reveal>
@@ -87,32 +87,13 @@ function Hero({ stats }: { stats: MarketingStats }) {
         <Reveal
           delay={120}
           as="p"
-          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+          className="mx-auto mt-5 max-w-2xl text-lg leading-snug text-muted-foreground sm:text-xl sm:leading-relaxed"
         >
-          CostMyAI reads your gateway metadata, forecasts your month-end AI bill from real usage,
-          proves cheaper options against real benchmarks, and switches only what holds quality.
-          Same-provider swaps run automatically with Govern; moving to a different provider waits
-          on your own routing grant.
-
+          We watch what AI actually costs you, prove where the same quality costs less, and make the
+          switch when it holds quality, automatically in Govern.
         </Reveal>
 
-        <Reveal delay={180} className="mx-auto mt-9 grid max-w-4xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { k: "Month-end forecast", v: "Your bill, before the invoice" },
-            { k: "Cheaper host", v: "Same model, lower price" },
-            { k: "Cheaper model", v: "Benchmarks the same" },
-            { k: "Smaller model", v: "Same result, less compute" },
-          ].map((m) => (
-
-            <div key={m.k} className="border-t border-border pt-3">
-              <p className="text-sm font-semibold tracking-[-0.01em]">{m.k}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{m.v}</p>
-            </div>
-          ))}
-        </Reveal>
-
-
-        <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
+        <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
             See if you are overpaying
             <ArrowRight className="h-4 w-4" />
@@ -127,18 +108,18 @@ function Hero({ stats }: { stats: MarketingStats }) {
           </a>
         </Reveal>
 
-        <Reveal delay={300} as="p" className="mt-6 text-sm text-muted-foreground">
+        <Reveal delay={280} as="p" className="mt-3 text-sm text-muted-foreground">
           Metadata only. Never your prompt content.
         </Reveal>
 
         {stats.live ? (
-          <div className="mt-20 grid grid-cols-3 gap-6 border-t border-border/60 pt-12 sm:gap-10">
+          <div className="mt-8 grid grid-cols-3 gap-6 border-t border-border/60 pt-4 sm:mt-12 sm:gap-10 sm:pt-6">
             {[
               { value: stats.modelCount, label: "Models tracked" },
               { value: stats.providerCount, label: "Providers priced" },
               { value: stats.priceChangesTracked, label: "Market price moves this month" },
             ].map((s, i) => (
-              <Reveal key={s.label} delay={380 + i * 90}>
+              <Reveal key={s.label} delay={360 + i * 90}>
                 <CountUp
                   value={s.value}
                   format={(n) => Math.round(n).toLocaleString("en-US")}
@@ -148,7 +129,6 @@ function Hero({ stats }: { stats: MarketingStats }) {
                   <span className="mt-[0.25em] h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" aria-hidden />
                   {s.label}
                 </p>
-
               </Reveal>
             ))}
           </div>
