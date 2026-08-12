@@ -296,18 +296,18 @@ export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: Rep
 
 export function HeroCta() {
   return (
-    <div className="mt-8 flex flex-wrap items-center gap-5">
-      <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
+    <div className="mt-8 flex flex-wrap items-center gap-3">
+      <Link to="/auth" className="btn-gradient px-6 py-3 text-[15px]">
         Start free
+        <ArrowRight className="h-4 w-4" />
       </Link>
       <a
         href={BOOK_DEMO_URL}
         target="_blank"
         rel="noreferrer noopener"
-        className="inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-70"
+        className="btn-quiet px-6 py-3 text-[15px]"
       >
         Book a Demo
-        <ArrowRight className="h-4 w-4" />
       </a>
     </div>
   );
