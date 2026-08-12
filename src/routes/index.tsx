@@ -136,7 +136,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
             {[
               { value: stats.modelCount, label: "Models tracked" },
               { value: stats.providerCount, label: "Providers priced" },
-              { value: stats.priceChangesTracked, label: "Price moves this month" },
+              { value: stats.priceChangesTracked, label: "Market price moves this month" },
             ].map((s, i) => (
               <Reveal key={s.label} delay={380 + i * 90}>
                 <CountUp
@@ -144,13 +144,15 @@ function Hero({ stats }: { stats: MarketingStats }) {
                   format={(n) => Math.round(n).toLocaleString("en-US")}
                   className="block text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-6xl"
                 />
-                <p className="mt-3 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
+                <p className="mt-3 inline-flex items-center gap-1.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[0.7rem]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" aria-hidden />
                   {s.label}
                 </p>
               </Reveal>
             ))}
           </div>
         ) : null}
+
       </div>
     </section>
   );
