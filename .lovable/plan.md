@@ -21,7 +21,7 @@ Keep the hero to four beats: headline, one-sentence promise, proof of scale, act
 
 Mechanism words (metadata, gateway, routing grant) move down the page. The routing-consent nuance already has a proper home in How It Works and Architecture; the metadata promise stays in the hero as the short trust line.
 
-**3. The four-card grid — cut from the hero.** It duplicates the subheadline. The same four ideas (forecast, cheaper host, cheaper model, smaller model) are the actual spine of the page below, so they get one clean home instead of a preview plus a repeat. Options for where the four cards land are in Open questions.
+**3. The four-card grid — cut from the hero entirely.** It duplicates the subheadline. The same four ideas (forecast, cheaper host, cheaper model, smaller model) are already the spine of the page below: the Estimator proves the first three interactively, and How It Works explains each mode in order. The hero does not need a preview of a preview.
 
 **4. CTAs — unchanged in function, tightened in label.** Primary "See if you are overpaying" stays; it is the single best action on the page. Secondary "Book a Demo" stays.
 
