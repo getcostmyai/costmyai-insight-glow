@@ -36,7 +36,7 @@ Mechanism words (metadata, gateway, routing grant) move down the page. The routi
 
   We watch what AI actually costs you, prove where the
   same quality costs less, and make the switch when it
-  holds up.
+  holds quality, automatically in Govern.
 
       [ See if you are overpaying ]  [ Book a Demo ]
 
