@@ -113,7 +113,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
         </Reveal>
 
         {stats.live ? (
-          <div className="mt-12 grid grid-cols-3 gap-6 border-t border-border/60 pt-8 sm:mt-16 sm:gap-10 sm:pt-10">
+          <div className="mt-10 grid grid-cols-3 gap-6 border-t border-border/60 pt-6 sm:mt-14 sm:gap-10 sm:pt-8">
             {[
               { value: stats.modelCount, label: "Models tracked" },
               { value: stats.providerCount, label: "Providers priced" },
