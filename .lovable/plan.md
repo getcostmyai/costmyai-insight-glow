@@ -17,9 +17,9 @@ Keep the hero to four beats: headline, one-sentence promise, proof of scale, act
 
 **2. Subheadline — one sentence, outcome first.** Replace the four-sentence paragraph with a single line in the same style as the rest of the site:
 
-> We watch what AI actually costs you, prove where the same quality costs less, and make the switch when it holds up.
+> We watch what AI actually costs you, prove where the same quality costs less, and make the switch when it holds quality, automatically in Govern.
 
-Mechanism words (metadata, gateway, Govern, routing grant) move down the page. The routing-consent nuance already has a proper home in How It Works and Architecture; the metadata promise stays in the hero as the short trust line.
+Mechanism words (metadata, gateway, routing grant) move down the page. The routing-consent nuance already has a proper home in How It Works and Architecture; the metadata promise stays in the hero as the short trust line.
 
 **3. The four-card grid — cut from the hero.** It duplicates the subheadline. The same four ideas (forecast, cheaper host, cheaper model, smaller model) are the actual spine of the page below, so they get one clean home instead of a preview plus a repeat. Options for where the four cards land are in Open questions.
 
