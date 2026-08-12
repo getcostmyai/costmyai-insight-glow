@@ -79,7 +79,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
   return (
     <section className="relative overflow-hidden wash-hero">
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-4xl px-5 pb-24 pt-28 text-center sm:px-8 sm:pb-28 sm:pt-36">
+      <div className="relative mx-auto max-w-4xl px-5 pb-20 pt-24 text-center sm:px-8 sm:pb-24 sm:pt-32">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
           Stop overpaying <span className="text-gradient-brand">for AI.</span>
         </Reveal>
