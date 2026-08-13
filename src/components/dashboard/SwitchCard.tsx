@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, Clock, Copy, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
 import {
+  MOVED_SWITCH_LABEL,
   PENDING_SWITCH_LABEL,
   isSameTarget,
   supersededLabel,
@@ -152,7 +153,11 @@ export function SwitchCard({
           // Ahead of every other branch, because it is the truth about the row.
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-2 text-xs font-medium text-primary">
             <Clock className="size-3.5" />
-            {armed ? PENDING_SWITCH_LABEL : supersededLabel(activeSwitch!)}
+            {armed
+              ? activeSwitch!.moved
+                ? MOVED_SWITCH_LABEL
+                : PENDING_SWITCH_LABEL
+              : supersededLabel(activeSwitch!)}
           </span>
         ) : discovery ? (
 

@@ -17,6 +17,8 @@ import type { ActiveSwitchRow } from "@/lib/dashboard.server";
 export interface ActiveSwitchTarget {
   toModel: string;
   toHost: string;
+  /** The switch has already booked saving, so its traffic has begun to move. */
+  moved: boolean;
 }
 
 export interface PendingSwitchIndex {
@@ -52,11 +54,19 @@ export function pendingSwitchIndex(rows: ActiveSwitchRow[]): PendingSwitchIndex 
   const froms = new Map<string, ActiveSwitchTarget>();
   const fromTos = new Set<string>();
   for (const r of rows) {
+    // Disclosure covers every running switch, moved or not: a row that stays
+    // silent because its workload's switch has begun booking saving is still
+    // presenting a superseded candidate as untouched.
+    if (!froms.has(fromKey(r.fromModel, r.fromHost))) {
+      froms.set(fromKey(r.fromModel, r.fromHost), {
+        toModel: r.toModel,
+        toHost: r.toHost,
+        moved: r.saved > 0,
+      });
+    }
+    // "Not yet moved" stays defined by accrued saving, for the armed wording.
     if (r.saved > 0) continue;
     pairs.add(pairKey(r.fromModel, r.fromHost, r.toModel, r.toHost));
-    if (!froms.has(fromKey(r.fromModel, r.fromHost))) {
-      froms.set(fromKey(r.fromModel, r.fromHost), { toModel: r.toModel, toHost: r.toHost });
-    }
     fromTos.add(fromToKey(r.fromModel, r.fromHost, r.toModel));
   }
   return {
@@ -80,7 +90,12 @@ export const isSameTarget = (
  * not borrow the armed sentence.
  */
 export const supersededLabel = (active: ActiveSwitchTarget) =>
-  `Already switched to ${active.toModel} — traffic not yet moved`;
+  active.moved
+    ? `Already switched to ${active.toModel}`
+    : `Already switched to ${active.toModel} — traffic not yet moved`;
+
+/** The row's own destination is running and has begun moving traffic. */
+export const MOVED_SWITCH_LABEL = "Switch active — traffic already moving";
 
 
 /** One wording, used by every surface that can show the state. */

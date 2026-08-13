@@ -15,7 +15,7 @@ import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
-import { PENDING_SWITCH_LABEL, isSameTarget, supersededLabel } from "@/lib/dashboard/pending-switch";
+import { MOVED_SWITCH_LABEL, PENDING_SWITCH_LABEL, isSameTarget, supersededLabel } from "@/lib/dashboard/pending-switch";
 import {
   ExecutionSubtitle,
   SwitchAction,
@@ -305,7 +305,11 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
         /* Same rule as the rows below: state before action. */
         <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white/85">
           <Clock className="size-4" />
-          {bestArmed ? PENDING_SWITCH_LABEL : supersededLabel(bestActive)}
+          {bestArmed
+            ? bestActive.moved
+              ? MOVED_SWITCH_LABEL
+              : PENDING_SWITCH_LABEL
+            : supersededLabel(bestActive)}
         </span>
       ) : canAct ? (
         <button
@@ -426,7 +430,11 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                     // 212: disclose it even when it targets another model.
                     <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-opportunity/40 bg-opportunity/10 px-3.5 py-1.5 text-[11px] font-semibold text-opportunity">
                       <Clock className="size-3" />
-                      {rsArmed(o) ? PENDING_SWITCH_LABEL : supersededLabel(rsActive(o)!)}
+                      {rsArmed(o)
+                        ? rsActive(o)!.moved
+                          ? MOVED_SWITCH_LABEL
+                          : PENDING_SWITCH_LABEL
+                        : supersededLabel(rsActive(o)!)}
                     </span>
                   ) : canAct ? (
                     <button
