@@ -141,11 +141,11 @@ export function SwitchCard({
           the intent to the level that owns execution.
         */}
         <SwitchAction
-          execution={discovery ? undefined : row.execution}
+          execution={discovery || superseded ? undefined : row.execution}
           /* Dispatch 197: an active-but-unmoved switch is armed, not "once active". */
           /* Dispatch 212: only the running destination is armed; a superseded
              alternative carries no execution copy at all. */
-          mode={armed ? "armed" : superseded ? undefined : "prospective"}
+          mode={armed ? "armed" : "prospective"}
         >
         {armed || superseded ? (
           // State, not action: the switch exists, the traffic does not yet.
