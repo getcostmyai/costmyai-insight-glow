@@ -76,12 +76,7 @@ export function ArbitrageList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
-                pendingTraffic={ctl.pending.pair(
-                  row.fromModel,
-                  row.fromHost,
-                  row.toModel,
-                  row.toHost,
-                )}
+                activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery
@@ -156,12 +151,7 @@ export function BenchmarkList({
                 ctaLabel={ctaLabel}
                 discovery={discovery}
                 discoveryHref={rightsizeHref}
-                pendingTraffic={ctl.pending.pair(
-                  row.fromModel,
-                  row.fromHost,
-                  row.toModel,
-                  row.toHost,
-                )}
+                activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
                   canAct && !discovery

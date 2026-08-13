@@ -1,7 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, Clock, Copy, Loader2, ShieldCheck } from "lucide-react";
 import type { SwitchRow } from "@/lib/dashboard-data";
-import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
+import {
+  MOVED_SWITCH_LABEL,
+  PENDING_SWITCH_LABEL,
+  isSameTarget,
+  supersededLabel,
+  type ActiveSwitchTarget,
+} from "@/lib/dashboard/pending-switch";
+
 import { usd } from "@/lib/dashboard-data";
 import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNote";
 import { FrictionTierBadge } from "@/components/dashboard/FrictionTierBadge";
@@ -21,7 +28,7 @@ export function SwitchCard({
   discovery = false,
   discoveryHref,
   readOnly = false,
-  pendingTraffic = false,
+  activeSwitch = null,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
@@ -46,12 +53,20 @@ export function SwitchCard({
   /** The public demo is a showcase: the action renders as a label, not a link. */
   readOnly?: boolean;
   /**
-   * A switch is already running for this pair, but the workload's traffic has
-   * not moved yet, so the spend — and therefore the opportunity — is still on
-   * the rollups. The row states that instead of offering an action.
+   * Dispatch 212. The switch already running for this workload, if any, with
+   * its real destination — not a boolean about this row's own destination.
+   *
+   * A switch can be running while the workload's traffic has not moved yet, so
+   * the spend, and therefore the opportunity, is still on the rollups. The row
+   * stays and states its real state. When the running switch targets something
+   * other than this row proposes, the row says *that* rather than claiming to
+   * be armed.
    */
-  pendingTraffic?: boolean;
+  activeSwitch?: ActiveSwitchTarget | null;
 }) {
+  const armed = isSameTarget(activeSwitch, row.toModel, row.toHost);
+  const superseded = !!activeSwitch && !armed;
+
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
       <div className="flex w-full min-w-0 items-center gap-4">
@@ -127,18 +142,25 @@ export function SwitchCard({
           the intent to the level that owns execution.
         */}
         <SwitchAction
-          execution={discovery ? undefined : row.execution}
+          execution={discovery || superseded ? undefined : row.execution}
           /* Dispatch 197: an active-but-unmoved switch is armed, not "once active". */
-          mode={pendingTraffic ? "armed" : "prospective"}
+          /* Dispatch 212: only the running destination is armed; a superseded
+             alternative carries no execution copy at all. */
+          mode={armed ? "armed" : "prospective"}
         >
-        {pendingTraffic ? (
+        {armed || superseded ? (
           // State, not action: the switch exists, the traffic does not yet.
           // Ahead of every other branch, because it is the truth about the row.
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-2 text-xs font-medium text-primary">
             <Clock className="size-3.5" />
-            {PENDING_SWITCH_LABEL}
+            {armed
+              ? activeSwitch!.moved
+                ? MOVED_SWITCH_LABEL
+                : PENDING_SWITCH_LABEL
+              : supersededLabel(activeSwitch!)}
           </span>
         ) : discovery ? (
+
           <div className="flex flex-col items-end gap-1 text-right">
             <Link
               to={discoveryHref ?? "/pricing"}

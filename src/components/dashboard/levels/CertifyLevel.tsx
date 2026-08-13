@@ -234,6 +234,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
                   rank={i + 1}
                   discovery
                   discoveryHref={rightsizeHref}
+                  /* Dispatch 212: List B disclosed nothing at all before this. */
+                  activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 />
 
               );
