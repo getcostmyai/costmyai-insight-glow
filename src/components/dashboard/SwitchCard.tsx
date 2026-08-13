@@ -27,7 +27,7 @@ export function SwitchCard({
   discovery = false,
   discoveryHref,
   readOnly = false,
-  pendingTraffic = false,
+  activeSwitch = null,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
@@ -52,12 +52,20 @@ export function SwitchCard({
   /** The public demo is a showcase: the action renders as a label, not a link. */
   readOnly?: boolean;
   /**
-   * A switch is already running for this pair, but the workload's traffic has
-   * not moved yet, so the spend — and therefore the opportunity — is still on
-   * the rollups. The row states that instead of offering an action.
+   * Dispatch 212. The switch already running for this workload, if any, with
+   * its real destination — not a boolean about this row's own destination.
+   *
+   * A switch can be running while the workload's traffic has not moved yet, so
+   * the spend, and therefore the opportunity, is still on the rollups. The row
+   * stays and states its real state. When the running switch targets something
+   * other than this row proposes, the row says *that* rather than claiming to
+   * be armed.
    */
-  pendingTraffic?: boolean;
+  activeSwitch?: ActiveSwitchTarget | null;
 }) {
+  const armed = isSameTarget(activeSwitch, row.toModel, row.toHost);
+  const superseded = !!activeSwitch && !armed;
+
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
       <div className="flex w-full min-w-0 items-center gap-4">
