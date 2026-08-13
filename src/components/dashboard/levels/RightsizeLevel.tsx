@@ -262,6 +262,10 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
   const key = isArb
     ? `host:${best.fromModel}|${best.fromHost}|${best.toHost}|${best.taskHint}`
     : `quality:${best.fromModel}|${best.toModel}|${best.taskHint}`;
+  // Dispatch 212: workload-scoped, so a switch to another destination is
+  // disclosed here instead of leaving this control looking untouched.
+  const bestActive = ctl.pending.activeFrom(best.fromModel, best.fromHost);
+  const bestArmed = isSameTarget(bestActive, best.toModel, best.toHost);
 
   return (
     <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-2xl bg-white/10 p-5 backdrop-blur">
@@ -353,6 +357,14 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
   const level = data.levels.rightsize;
   const rsKey = (o: { model: string; hostKey: string; task: string }) =>
     `rightsize:${o.model}|${o.hostKey}|${o.task}`;
+  // Dispatch 212: right-sizing names a target model, so "armed" still ignores
+  // the host — but any running switch off the workload must be disclosed.
+  const rsActive = (o: { model: string; hostKey: string }) =>
+    ctl.pending.activeFrom(o.model, o.hostKey);
+  const rsArmed = (o: { model: string; hostKey: string; toModel?: string | null }) => {
+    const a = rsActive(o);
+    return !!a && !!o.toModel && a.toModel.trim().toLowerCase() === o.toModel.trim().toLowerCase();
+  };
 
   return (
     <section>
