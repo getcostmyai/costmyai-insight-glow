@@ -15,7 +15,7 @@ import { UsageSection } from "@/components/dashboard/DashboardShell";
 import { GovernUpsell, LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import { TransparencyLists } from "@/components/dashboard/TransparencyLists";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
-import { PENDING_SWITCH_LABEL } from "@/lib/dashboard/pending-switch";
+import { PENDING_SWITCH_LABEL, isSameTarget, supersededLabel } from "@/lib/dashboard/pending-switch";
 import {
   ExecutionSubtitle,
   SwitchAction,
@@ -292,20 +292,16 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
       </div>
       {/* Dispatch 159: the state is a subtitle of the control it explains. */}
       <SwitchAction
-        execution={best.execution}
-        mode={
-          ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost)
-            ? "armed"
-            : "prospective"
-        }
+        execution={bestActive && !bestArmed ? undefined : best.execution}
+        mode={bestArmed ? "armed" : "prospective"}
         dark
         align="left"
       >
-      {ctl.pending.pair(best.fromModel, best.fromHost, best.toModel, best.toHost) ? (
+      {bestActive ? (
         /* Same rule as the rows below: state before action. */
         <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white/85">
           <Clock className="size-4" />
-          {PENDING_SWITCH_LABEL}
+          {bestArmed ? PENDING_SWITCH_LABEL : supersededLabel(bestActive)}
         </span>
       ) : canAct ? (
         <button
@@ -408,16 +404,17 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
                   </span>
                   <SwitchAction
-                    execution={o.execution}
-                    mode={ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? "armed" : "prospective"}
+                    execution={rsActive(o) && !rsArmed(o) ? undefined : o.execution}
+                    mode={rsArmed(o) ? "armed" : "prospective"}
                     className="ml-auto"
                   >
-                  {ctl.pending.fromTo(o.model, o.hostKey, o.toModel!) ? (
-                    // The right-size switch is running; the traffic is not on
-                    // it yet, so the waste above is still real.
+                  {rsActive(o) ? (
+                    // The workload already has a running switch; the traffic is
+                    // not on it yet, so the waste above is still real. Dispatch
+                    // 212: disclose it even when it targets another model.
                     <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-opportunity/40 bg-opportunity/10 px-3.5 py-1.5 text-[11px] font-semibold text-opportunity">
                       <Clock className="size-3" />
-                      {PENDING_SWITCH_LABEL}
+                      {rsArmed(o) ? PENDING_SWITCH_LABEL : supersededLabel(rsActive(o)!)}
                     </span>
                   ) : canAct ? (
                     <button
