@@ -14,7 +14,6 @@ import {
   ActiveSwitchesSection,
   MechanismStats,
   mechanismSavings,
-  mechanismSentence,
   OversizedSection,
   TopSwitchControl,
 } from "@/components/dashboard/levels/RightsizeLevel";
@@ -104,7 +103,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
             </>
           )
         }
-        sub={`All three mechanisms run on your traffic: ${mechanismSentence(mech)} ${govern.running} switch${govern.running === 1 ? " is" : "es are"} already running unattended from earlier autonomous runs; separately, ${govern.eligible.length} newly certified switch${govern.eligible.length === 1 ? "" : "es"} not yet acted on clear the autonomous gate. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended. Applied unattended means same-provider swaps today: a switch to a different provider still waits until you allow routing to it, and Bedrock and Vertex are not executed by us at all yet.`}
+        sub={`All three mechanisms run on your traffic, each workload shown once with its alternatives collapsed under the one decision. ${govern.running} switch${govern.running === 1 ? " is" : "es are"} already running unattended from earlier autonomous runs; separately, ${govern.eligible.length} newly certified switch${govern.eligible.length === 1 ? "" : "es"} not yet acted on clear the autonomous gate. ${govern.refusals.length} do not, and will always wait for you — a switch that cannot be proven unattended is never applied unattended. Applied unattended means same-provider swaps today: a switch to a different provider still waits until you allow routing to it, and Bedrock and Vertex are not executed by us at all yet.`}
         stats={
           /* Two bands: everything Rightsize shows, then what autonomy adds.
              Govern is Rightsize plus autonomy, so it must never show less. */

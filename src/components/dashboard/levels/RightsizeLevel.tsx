@@ -21,6 +21,8 @@ import {
   SwitchAction,
   actionLabelFor,
 } from "@/components/dashboard/ExecutionNote";
+import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
+import { groupFor, isBestRow } from "@/lib/dashboard/group";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
@@ -86,22 +88,18 @@ export function mechanismSavings(ctl: DashboardController): MechanismSavings {
   };
 }
 
-/**
- * The two sentences that reconcile every headline figure on screen:
- *   arbitrage + benchmark + rightsize − overlap = available
- *   available + captured                        = identified
- * Stated in that order so no figure on the page is asserted without its
- * arithmetic being visible next to it.
+/*
+ * Dispatch 213. The per-mechanism reconciliation sentence used to live here:
+ * "$X arbitrage + $Y benchmark + $Z rightsize, less $O double-counted across N
+ * shared workloads…". It existed only because one workload could appear as
+ * three separate cards, so the overlap had to be explained away in prose.
+ *
+ * Cards are now merged per workload — the alternatives collapse under the one
+ * decision they belong to — so there is no double count left on screen to
+ * reconcile. The copy is removed rather than rewritten: an explanation of an
+ * overlap the reader can no longer see is noise, not honesty. The per-list
+ * headers stay, as a statement of how the money was found.
  */
-export function mechanismSentence(m: MechanismSavings): string {
-  return `${usd(m.arbitrage, 0)} arbitrage + ${usd(m.benchmark, 0)} benchmark + ${usd(
-    m.rightsize,
-    0,
-  )} rightsize, less ${usd(m.overlapUsd, 0)} counted twice across ${m.overlapCount} shared workload${
-    m.overlapCount === 1 ? "" : "s"
-  }, is ${usd(m.available, 0)} still available; plus ${usd(m.captured, 0)} already captured by switches you are running makes ${usd(m.identified, 0)} identified.`;
-}
-
 
 /** The three mechanism cards, in the same visual pattern Certify uses. */
 export function MechanismStats({ mech }: { mech: MechanismSavings }) {
@@ -157,7 +155,7 @@ export function RightsizeLevel({ ctl }: { ctl: DashboardController }) {
             <span className="text-white/80">left on the table.</span>
           </>
         }
-        sub={`${usd(savings.captured, 0)} captured and ${usd(savings.available, 0)} available never overlap: a switch only books savings once its traffic has moved, and once it moves that workload stops appearing as an opportunity. Your plan runs all three mechanisms over the ${activeRange.long} of your own traffic: ${mechanismSentence(mech)} No projections, and each workload counted once. Activating is one click and reversible.`}
+        sub={`${usd(savings.captured, 0)} captured and ${usd(savings.available, 0)} available never overlap: a switch only books savings once its traffic has moved, and once it moves that workload stops appearing as an opportunity. Your plan runs all three mechanisms over the ${activeRange.long} of your own traffic, and every workload is shown once, as a single decision with its alternatives collapsed underneath. No projections, and each workload counted once. Activating is one click and reversible.`}
         stats={
           <>
             <HeroStat
@@ -363,6 +361,23 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
     `rightsize:${o.model}|${o.hostKey}|${o.task}`;
   // Dispatch 212: right-sizing names a target model, so "armed" still ignores
   // the host — but any running switch off the workload must be disclosed.
+  /**
+   * Dispatch 213. One card per workload: an oversized card is drawn only when
+   * right-sizing is that workload's best option, or when it names no target at
+   * all (a pure waste disclosure, which no other mechanism can represent).
+   */
+  const oversizedRows = data.oversized.filter(
+    (o) =>
+      !o.toModel ||
+      isBestRow(
+        groupFor(data.workloadGroups, {
+          fromModel: o.model,
+          fromHost: o.hostKey,
+          taskHint: o.task,
+        }),
+        { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey },
+      ),
+  );
   const rsActive = (o: { model: string; hostKey: string }) =>
     ctl.pending.activeFrom(o.model, o.hostKey);
   const rsArmed = (o: { model: string; hostKey: string; toModel?: string | null }) => {
@@ -388,11 +403,11 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
           what="oversized workload"
           evaluated={data.stats.workloads}
         />
-      ) : data.oversized.length === 0 ? (
+      ) : oversizedRows.length === 0 ? (
         <LevelEmpty state={data.dataState} kind="rightsize" />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {data.oversized.map((o) => (
+          {oversizedRows.map((o) => (
             <div
               key={`${o.model}-${o.host}-${o.task}`}
               className="rounded-2xl border border-opportunity/25 bg-opportunity-soft p-5"
@@ -476,6 +491,14 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
               {errorFor(rsKey(o)) ? (
                 <p className="mt-2 text-xs text-destructive">{errorFor(rsKey(o))}</p>
               ) : null}
+              <WorkloadAlternatives
+                group={groupFor(data.workloadGroups, {
+                  fromModel: o.model,
+                  fromHost: o.hostKey,
+                  taskHint: o.task,
+                })}
+                period={activeRange.long}
+              />
             </div>
           ))}
         </div>

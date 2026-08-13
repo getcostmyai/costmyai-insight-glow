@@ -16,6 +16,8 @@ import {
 } from "@/components/dashboard/LevelState";
 
 import { ArbitrageList, NonQualifyingList } from "@/components/dashboard/TransparencyLists";
+import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
+import { groupFor, isBestRow } from "@/lib/dashboard/group";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { certificationRate, levelCount, levelSaving } from "@/lib/dashboard/figures";
@@ -43,7 +45,18 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   } = ctl;
   const level = data.levels.quality_match;
   const rightsize = data.levels.rightsize;
-  const rows = data.qualityMatched;
+  const all = data.qualityMatched;
+  /** Dispatch 213: one merged card per workload, alternatives collapsed under it. */
+  const rows = all.filter((r) =>
+    isBestRow(
+      groupFor(data.workloadGroups, {
+        fromModel: r.fromModel,
+        fromHost: r.fromHost,
+        taskHint: r.taskHint,
+      }),
+      { kind: "quality_match", toModel: r.toModel, toHost: r.toHost },
+    ),
+  );
 
   // Real dollars over the window on screen, never a monthly projection.
   const benchmarkSaving = levelSaving(data, "quality_match");
@@ -68,20 +81,14 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const rightsizeSaving = levelSaving(data, "rightsize");
   const rightsizeCount = levelCount(data, "rightsize");
 
-  /**
-   * The arithmetic behind Certify's ring, stated rather than implied:
-   *   arbitrage + benchmark − overlap = identified
-   * Every figure comes from `certifySavings`, which is deduped over these two
-   * lists only — never sliced out of the three-mechanism total, which also
-   * carries right-size money Certify cannot see.
+  /*
+   * Dispatch 213. The the shared-workload double-count sentence
+   * sentence is gone: Certify's two lists no longer render the same workload
+   * twice, so there is no double count on screen for the prose to reconcile.
+   * The ring still shows the deduped `certifySavings.identified` figure — what
+   * is counted did not change, only how it is laid out.
    */
-  const overlapUsd = data.certifySavings.overlapUsd;
-  const overlapCount = data.certifySavings.overlapCount;
-  const certifyArithmetic = `${usd(arbitrageSaving, 0)} arbitrage + ${usd(benchmarkSaving, 0)} benchmark${
-    overlapCount > 0
-      ? `, less ${usd(overlapUsd, 0)} counted twice across ${overlapCount} shared workload${overlapCount === 1 ? "" : "s"},`
-      : `, with no workload found by both,`
-  } is ${usd(certifyIdentified, 0)} identified on this level.`;
+  const certifyArithmetic = `${usd(arbitrageSaving, 0)} from cheaper hosts and ${usd(benchmarkSaving, 0)} from certified model swaps is ${usd(certifyIdentified, 0)} identified on this level, each workload counted once.`;
 
   return (
     <>
@@ -193,7 +200,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           eyebrow="List B · benchmark saves"
           title="Cheaper model, same measured quality"
           hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before we recommend the swap.`}
-          badge={`${rows.length} certified`}
+          badge={`${all.length} certified`}
           badgeTone="saving"
           aside={
             <div className="flex flex-col items-start gap-1 sm:items-end">
@@ -227,8 +234,8 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             {rows.map((row, i) => {
               const key = `quality:${row.fromModel}|${row.toModel}|${row.taskHint}`;
               return (
+                <div key={key} className="space-y-2">
                 <SwitchCard
-                  key={key}
                   row={asSwitchRow(row, "quality")}
                   period={activeRange.long}
                   rank={i + 1}
@@ -237,7 +244,16 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
                   /* Dispatch 212: List B disclosed nothing at all before this. */
                   activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 />
-
+                <WorkloadAlternatives
+                  group={groupFor(data.workloadGroups, {
+                    fromModel: row.fromModel,
+                    fromHost: row.fromHost,
+                    taskHint: row.taskHint,
+                  })}
+                  period={activeRange.long}
+                  upsellHref={scope === "demo" ? "/demo/rightsize" : "/workspace/rightsize"}
+                />
+                </div>
               );
             })}
           </div>

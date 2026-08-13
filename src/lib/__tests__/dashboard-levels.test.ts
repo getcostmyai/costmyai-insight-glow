@@ -304,13 +304,37 @@ describe("round 4 · per-mechanism hero KPIs", () => {
     }
   });
 
-  it("states the dedup reconciliation next to the mechanism cards", () => {
-    const src = read("components/dashboard/levels/RightsizeLevel.tsx");
-    expect(src).toContain("mechanismSentence");
-    expect(src).toContain("counted twice across");
-    expect(LEVEL_FILES.rightsize).toContain("mechanismSentence(mech)");
-    expect(LEVEL_FILES.govern).toContain("mechanismSentence(mech)");
+  /**
+   * Dispatch 213 replaced this pin. Cards are merged per workload, so no page
+   * renders one workload twice and there is no overlap left on screen for a
+   * reconciliation sentence to explain. The pin now asserts the removal, so a
+   * future edit cannot quietly reintroduce prose about a double count that the
+   * layout no longer produces.
+   */
+  it("no longer explains an on-screen double count, because there is none", () => {
+    for (const [key, src] of Object.entries(LEVEL_FILES)) {
+      expect(src, `${key} still renders mechanismSentence`).not.toMatch(
+        /mechanismSentence\(/,
+      );
+      expect(src, `${key} still says "counted twice"`).not.toMatch(/counted twice/);
+    }
   });
+
+  it("every opportunity list renders one card per workload", () => {
+    const lists = {
+      compare: LEVEL_FILES.compare,
+      certify: LEVEL_FILES.certify,
+      rightsize: LEVEL_FILES.rightsize,
+      transparency: read("components/dashboard/TransparencyLists.tsx"),
+    };
+    for (const [key, src] of Object.entries(lists)) {
+      expect(src, `${key} does not filter to the workload's best option`).toContain("isBestRow(");
+      expect(src, `${key} does not render collapsed alternatives`).toContain(
+        "<WorkloadAlternatives",
+      );
+    }
+  });
+
 
   it("mechanism figures are window sums, never run-rates", () => {
     const src = read("components/dashboard/levels/RightsizeLevel.tsx");

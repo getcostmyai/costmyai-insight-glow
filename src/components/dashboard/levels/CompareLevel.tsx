@@ -13,6 +13,8 @@ import {
   LevelEmpty,
   LevelLocked,
 } from "@/components/dashboard/LevelState";
+import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
+import { groupFor, isBestRow } from "@/lib/dashboard/group";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { levelCount, levelSaving } from "@/lib/dashboard/figures";
@@ -39,7 +41,22 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   } = ctl;
   const level = data.levels.host_arbitrage;
   const certify = data.levels.quality_match;
-  const rows = data.hostArbitrage;
+  const all = data.hostArbitrage;
+  /**
+   * Dispatch 213. One card per workload — the row is drawn only when it holds
+   * that workload's best option, and everything else found on the same
+   * workload collapses underneath it.
+   */
+  const rows = all.filter((r) =>
+    isBestRow(
+      groupFor(data.workloadGroups, {
+        fromModel: r.fromModel,
+        fromHost: r.fromHost,
+        taskHint: r.taskHint,
+      }),
+      { kind: "host_arbitrage", toModel: r.toModel, toHost: r.toHost },
+    ),
+  );
 
   // One number, one source: the controller's shared live counter. The hero and
   // the gateway usage widget below read the same object, so they cannot drift
@@ -56,7 +73,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   // Real dollars over the window on screen. Both sides of every ratio below are
   // the same window, so a shorter tab can never report more money than a longer one.
   const available = levelSaving(data, "host_arbitrage");
-  const bestPct = rows.length > 0 ? Math.max(...rows.map((r) => r.savingPct)) : 0;
+  const bestPct = all.length > 0 ? Math.max(...all.map((r) => r.savingPct)) : 0;
   // Everything the arbitrage check did not flag is already on a host we cannot beat.
   const onCheapestHost = Math.max(0, measuredSpend - available);
   // Dispatch 172. With no measured spend there is no coverage to report. The
@@ -97,7 +114,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
             />
             <HeroStat
               label="Cheaper hosts identified"
-              value={`${rows.length}`}
+              value={`${all.length}`}
               sub="identical weights, zero quality risk"
               accent="oklch(0.83 0.11 195)"
             />
@@ -160,7 +177,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           eyebrow={`Ranked by saving · ${activeRange.long}`}
           title="Same model, cheaper host"
           hint="Identical model weights, a cheaper provider. Zero quality risk."
-          badge={`${rows.length} certified`}
+          badge={`${all.length} certified`}
           badgeTone="saving"
         />
         {!level.unlocked ? (
@@ -179,8 +196,8 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
             {rows.map((row, i) => {
               const key = `host:${row.fromModel}|${row.fromHost}|${row.toHost}|${row.taskHint}`;
               return (
+                <div key={key} className="space-y-2">
                 <SwitchCard
-                  key={key}
                   row={asSwitchRow(row, "host")}
                   period={activeRange.long}
                   rank={i + 1}
@@ -189,6 +206,16 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                   /* Dispatch 212: disclose the workload's running switch here too. */
                   activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 />
+                <WorkloadAlternatives
+                  group={groupFor(data.workloadGroups, {
+                    fromModel: row.fromModel,
+                    fromHost: row.fromHost,
+                    taskHint: row.taskHint,
+                  })}
+                  period={activeRange.long}
+                  upsellHref={scope === "demo" ? "/demo/certify" : "/workspace/certify"}
+                />
+                </div>
               );
             })}
           </div>

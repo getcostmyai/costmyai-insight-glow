@@ -32,6 +32,7 @@ import {
   type ObjectiveSelection,
 } from "./dashboard/objective";
 import { gateLevel, nextPlan } from "./dashboard/plan";
+import { groupByWorkload, type WorkloadGroup } from "./dashboard/group";
 import { resolveAccess, type SubscriptionState } from "./billing/entitlement";
 import { paymentsEnvironment } from "./billing/env.server";
 import {
@@ -643,37 +644,26 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   });
 
   // ---- Plan gating: the check always runs, the detail is what a plan buys ----
-  const arbitrageLevel = gateLevel(
-    "host_arbitrage",
-    plan,
-    result.hostArbitrage.map(toOpportunity),
-    (r) => r.saving,
+  const arbitrageAll = result.hostArbitrage.map(toOpportunity);
+  const qualityAll = result.qualityMatched.map(toOpportunity);
+  const oversizedAll = result.oversized.map(
+    (r): OversizedWorkload => ({
+      model: r.fromModel,
+      host: r.fromHostLabel || r.fromHost,
+      hostKey: r.fromHost,
+      task: r.taskHint,
+      toModel: r.toModel,
+      wasted: round2(r.savingUsd),
+      wastedMonthly: round2(r.monthlySavingUsd),
+      savingPct: pct1(r.savingPct),
+      note: r.note,
+      execution: executionFor({ fromHost: r.fromHost, toHost: r.toHost ?? r.fromHost }),
+    }),
   );
-  const qualityLevel = gateLevel(
-    "quality_match",
-    plan,
-    result.qualityMatched.map(toOpportunity),
-    (r) => r.saving,
-  );
-  const oversizedLevel = gateLevel(
-    "rightsize",
-    plan,
-    result.oversized.map(
-      (r): OversizedWorkload => ({
-        model: r.fromModel,
-        host: r.fromHostLabel || r.fromHost,
-        hostKey: r.fromHost,
-        task: r.taskHint,
-        toModel: r.toModel,
-        wasted: round2(r.savingUsd),
-        wastedMonthly: round2(r.monthlySavingUsd),
-        savingPct: pct1(r.savingPct),
-        note: r.note,
-        execution: executionFor({ fromHost: r.fromHost, toHost: r.toHost ?? r.fromHost }),
-      }),
-    ),
-    (o) => o.wasted,
-  );
+  const arbitrageLevel = gateLevel("host_arbitrage", plan, arbitrageAll, (r) => r.saving);
+  const qualityLevel = gateLevel("quality_match", plan, qualityAll, (r) => r.saving);
+  const oversizedLevel = gateLevel("rightsize", plan, oversizedAll, (o) => o.wasted);
+
 
   const hostArbitrage = arbitrageLevel.items;
   const qualityMatched = qualityLevel.items;
@@ -741,6 +731,79 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   hostArbitrage.push(...hostArbitrageRows);
   qualityMatched.length = 0;
   qualityMatched.push(...qualityMatchedRows);
+
+  /**
+   * Dispatch 213 — one card per workload. DISPLAY ORGANISATION ONLY.
+   *
+   * Built HERE, at the same point as the friction badge and for the same
+   * reason: `gateLevel` has already ranked and gated every list, so grouping
+   * cannot change what was found, what it is worth or who may see it. It only
+   * decides where the one card for a workload is drawn and what collapses
+   * underneath it. No aggregate on this snapshot reads it.
+   *
+   * Locked findings cross the boundary as a count and a plan name only.
+   */
+  const workloadGroups = groupByWorkload({
+    unlocked: [
+      ...(arbitrageLevel.unlocked ? hostArbitrage : []).map((o) => ({
+        workload: { fromModel: o.fromModel, fromHost: o.fromHost, taskHint: o.taskHint },
+        option: {
+          kind: "host_arbitrage" as const,
+          toModel: o.toModel,
+          toHost: o.toHost,
+          toHostLabel: o.toHostLabel,
+          saving: o.saving,
+          savingPct: o.savingPct,
+        },
+      })),
+      ...(qualityLevel.unlocked ? qualityMatched : []).map((o) => ({
+        workload: { fromModel: o.fromModel, fromHost: o.fromHost, taskHint: o.taskHint },
+        option: {
+          kind: "quality_match" as const,
+          toModel: o.toModel,
+          toHost: o.toHost,
+          toHostLabel: o.toHostLabel,
+          saving: o.saving,
+          savingPct: o.savingPct,
+        },
+      })),
+      ...(oversizedLevel.unlocked ? oversized : [])
+        .filter((o) => !!o.toModel)
+        .map((o) => ({
+          workload: { fromModel: o.model, fromHost: o.hostKey, taskHint: o.task },
+          option: {
+            kind: "rightsize" as const,
+            toModel: o.toModel as string,
+            toHost: o.hostKey,
+            toHostLabel: o.host,
+            saving: o.wasted,
+            savingPct: o.savingPct,
+          },
+        })),
+    ],
+    locked: [
+      ...(arbitrageLevel.unlocked
+        ? []
+        : arbitrageAll.map((o) => ({
+            workload: { fromModel: o.fromModel, fromHost: o.fromHost, taskHint: o.taskHint },
+            requiredPlan: arbitrageLevel.requiredPlan,
+          }))),
+      ...(qualityLevel.unlocked
+        ? []
+        : qualityAll.map((o) => ({
+            workload: { fromModel: o.fromModel, fromHost: o.fromHost, taskHint: o.taskHint },
+            requiredPlan: qualityLevel.requiredPlan,
+          }))),
+      ...(oversizedLevel.unlocked
+        ? []
+        : oversizedAll.map((o) => ({
+            workload: { fromModel: o.model, fromHost: o.hostKey, taskHint: o.task },
+            requiredPlan: oversizedLevel.requiredPlan,
+          }))),
+    ],
+  });
+
+
 
   /**
    * Every money figure below is a real sum over the selected window.
@@ -1267,6 +1330,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     nonQualifying,
 
     hostArbitrage,
+    /** Dispatch 213: one entry per workload, best option first. Display only. */
+    workloadGroups: workloadGroups satisfies WorkloadGroup[],
+
     qualityMatched,
     oversized,
     levels: {

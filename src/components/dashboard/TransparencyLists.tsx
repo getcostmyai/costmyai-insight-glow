@@ -1,6 +1,8 @@
 import { ArrowRight, Clock, ShieldOff } from "lucide-react";
 
 import { SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
+import { groupFor, isBestRow } from "@/lib/dashboard/group";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -45,9 +47,26 @@ export function ArbitrageList({
 }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
     ctl;
-  const rows = data.hostArbitrage;
-  // Real dollars over the window on screen — the same sum the hero shows.
-  const total = rows.reduce((s, r) => s + r.saving, 0);
+  const all = data.hostArbitrage;
+  // Real dollars over the window on screen — the same sum the hero shows. The
+  // total counts every finding; the cards below merge them per workload, so
+  // this header states how the money was found, not how many cards there are.
+  const total = all.reduce((s, r) => s + r.saving, 0);
+  /**
+   * Dispatch 213. One card per workload: a row is drawn only when it carries
+   * that workload's best option. Anything else it found collapses underneath
+   * the winning card instead of standing as a second card for one decision.
+   */
+  const rows = all.filter((r) =>
+    isBestRow(
+      groupFor(data.workloadGroups, {
+        fromModel: r.fromModel,
+        fromHost: r.fromHost,
+        taskHint: r.taskHint,
+      }),
+      { kind: "host_arbitrage", toModel: r.toModel, toHost: r.toHost },
+    ),
+  );
 
   return (
     <section>
@@ -55,7 +74,7 @@ export function ArbitrageList({
         eyebrow="List A · arbitrage saves"
         title="Same model, cheaper host"
         hint="Identical model weights on a different provider. No benchmark is needed — the output is the same model's output."
-        badge={`${usd(total, 0)} · ${activeRange.long} · ${rows.length}`}
+        badge={`${usd(total, 0)} · ${activeRange.long} · ${all.length} found`}
         badgeTone="saving"
       />
       {rows.length === 0 ? (
@@ -65,8 +84,8 @@ export function ArbitrageList({
           {rows.map((row, i) => {
             const key = `host:${row.fromModel}|${row.fromHost}|${row.toHost}|${row.taskHint}`;
             return (
+              <div key={key} className="space-y-2">
               <SwitchCard
-                key={key}
                 row={asSwitchRow(row, "host")}
                 period={activeRange.long}
                 rank={i + 1}
@@ -93,6 +112,16 @@ export function ArbitrageList({
                     : undefined
                 }
               />
+              <WorkloadAlternatives
+                group={groupFor(data.workloadGroups, {
+                  fromModel: row.fromModel,
+                  fromHost: row.fromHost,
+                  taskHint: row.taskHint,
+                })}
+                period={activeRange.long}
+                upsellHref={rightsizeHref}
+              />
+              </div>
             );
           })}
         </div>
@@ -112,8 +141,18 @@ export function BenchmarkList({
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
     ctl;
   const level = data.levels.quality_match;
-  const rows = data.qualityMatched;
-  const total = rows.reduce((s, r) => s + r.saving, 0);
+  const all = data.qualityMatched;
+  const total = all.reduce((s, r) => s + r.saving, 0);
+  const rows = all.filter((r) =>
+    isBestRow(
+      groupFor(data.workloadGroups, {
+        fromModel: r.fromModel,
+        fromHost: r.fromHost,
+        taskHint: r.taskHint,
+      }),
+      { kind: "quality_match", toModel: r.toModel, toHost: r.toHost },
+    ),
+  );
 
   return (
     <section>
@@ -121,7 +160,7 @@ export function BenchmarkList({
         eyebrow="List B · benchmark saves"
         title="Cheaper model, same measured quality"
         hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before the swap is offered.`}
-        badge={`${usd(total, 0)} · ${activeRange.long} · ${rows.length}`}
+        badge={`${usd(total, 0)} · ${activeRange.long} · ${all.length} found`}
         badgeTone="saving"
       />
       {!level.unlocked ? (
@@ -140,8 +179,8 @@ export function BenchmarkList({
           {rows.map((row, i) => {
             const key = `quality:${row.fromModel}|${row.toModel}|${row.taskHint}`;
             return (
+              <div key={key} className="space-y-2">
               <SwitchCard
-                key={key}
                 row={asSwitchRow(row, "quality")}
                 period={activeRange.long}
                 rank={i + 1}
@@ -168,6 +207,16 @@ export function BenchmarkList({
                     : undefined
                 }
               />
+              <WorkloadAlternatives
+                group={groupFor(data.workloadGroups, {
+                  fromModel: row.fromModel,
+                  fromHost: row.fromHost,
+                  taskHint: row.taskHint,
+                })}
+                period={activeRange.long}
+                upsellHref={rightsizeHref}
+              />
+              </div>
             );
           })}
         </div>
