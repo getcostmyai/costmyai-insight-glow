@@ -186,6 +186,8 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                   rank={i + 1}
                   discovery
                   discoveryHref={rightsizeHref}
+                  /* Dispatch 212: disclose the workload's running switch here too. */
+                  activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 />
               );
             })}
