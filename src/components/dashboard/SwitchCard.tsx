@@ -143,16 +143,19 @@ export function SwitchCard({
         <SwitchAction
           execution={discovery ? undefined : row.execution}
           /* Dispatch 197: an active-but-unmoved switch is armed, not "once active". */
-          mode={pendingTraffic ? "armed" : "prospective"}
+          /* Dispatch 212: only the running destination is armed; a superseded
+             alternative carries no execution copy at all. */
+          mode={armed ? "armed" : superseded ? undefined : "prospective"}
         >
-        {pendingTraffic ? (
+        {armed || superseded ? (
           // State, not action: the switch exists, the traffic does not yet.
           // Ahead of every other branch, because it is the truth about the row.
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-2 text-xs font-medium text-primary">
             <Clock className="size-3.5" />
-            {PENDING_SWITCH_LABEL}
+            {armed ? PENDING_SWITCH_LABEL : supersededLabel(activeSwitch!)}
           </span>
         ) : discovery ? (
+
           <div className="flex flex-col items-end gap-1 text-right">
             <Link
               to={discoveryHref ?? "/pricing"}
