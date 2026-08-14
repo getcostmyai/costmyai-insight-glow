@@ -225,8 +225,20 @@ export function BenchmarkList({
   );
 }
 
-/** List C — evaluated, and deliberately not turned into a recommendation. */
-export function NonQualifyingList({ ctl }: { ctl: DashboardController }) {
+/**
+ * List C — evaluated, and deliberately not turned into a recommendation.
+ *
+ * Dispatch 217: `discovery` silences the running-switch disclosure entirely.
+ * Compare and Certify never reference execution, so on those levels this row
+ * states the verdict and nothing about traffic.
+ */
+export function NonQualifyingList({
+  ctl,
+  discovery = false,
+}: {
+  ctl: DashboardController;
+  discovery?: boolean;
+}) {
   const rows = ctl.data.nonQualifying;
   /** Zero workloads means nothing was evaluated — not that everything passed. */
   const evaluated = ctl.data.stats.workloads;
