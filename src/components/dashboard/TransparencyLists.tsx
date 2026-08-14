@@ -225,7 +225,7 @@ export function BenchmarkList({
                   taskHint: row.taskHint,
                 })}
                 period={activeRange.long}
-                upsellHref={rightsizeHref}
+                upsellHref={teaserHref ?? undefined}
               />
               </div>
             );
