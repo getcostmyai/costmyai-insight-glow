@@ -25,8 +25,15 @@ import { nonQualifyingEmptyCopy } from "@/lib/dashboard/zero-data-copy";
 export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
   return (
     <>
-      <ArbitrageList ctl={ctl} />
-      <BenchmarkList ctl={ctl} />
+      {/**
+       * Dispatch 221. Rightsize and Govern render the full transparency lists.
+       * Locked alternatives are unreachable there today, but if a future plan
+       * gates a mechanism above Rightsize we must not hard-link back to
+       * Rightsize (self-link on Rightsize, backward link on Govern). Suppress
+       * the href so locked teasers render as plain disclosure, not a route.
+       */}
+      <ArbitrageList ctl={ctl} upsellHref={null} />
+      <BenchmarkList ctl={ctl} upsellHref={null} />
       <NonQualifyingList ctl={ctl} />
     </>
   );
