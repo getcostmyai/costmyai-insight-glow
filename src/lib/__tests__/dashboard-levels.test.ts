@@ -203,7 +203,7 @@ describe("round 3 spec", () => {
     // component being on the page is what this test is about.
     expect(LEVEL_FILES.certify).toMatch(/<ArbitrageList ctl=\{ctl\}/);
     expect(LEVEL_FILES.certify).toContain("List B · benchmark saves");
-    expect(LEVEL_FILES.certify).toContain("<NonQualifyingList ctl={ctl} />");
+    expect(LEVEL_FILES.certify).toContain("<NonQualifyingList ctl={ctl} discovery />");
   });
 
   it("item 4 · List C prints the engine's own verdict per row, not one canned line", () => {

@@ -260,7 +260,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         )}
       </section>
 
-      <NonQualifyingList ctl={ctl} />
+      <NonQualifyingList ctl={ctl} discovery />
 
       <section className="card-surface p-6">
         <p className="eyebrow">Why some candidates are refused</p>

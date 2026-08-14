@@ -64,8 +64,15 @@ export function SwitchCard({
    */
   activeSwitch?: ActiveSwitchTarget | null;
 }) {
-  const armed = isSameTarget(activeSwitch, row.toModel, row.toHost);
-  const superseded = !!activeSwitch && !armed;
+  /*
+   * Dispatch 217. Discovery tiers never reference execution, in any tense or
+   * form. The execution-subtitle path was already gated (Dispatch 196); this
+   * state pill was a second, independent path that bypassed it. Both are
+   * silenced by the same flag now, so a genuinely running switch produces no
+   * execution language on Compare or Certify.
+   */
+  const armed = !discovery && isSameTarget(activeSwitch, row.toModel, row.toHost);
+  const superseded = !discovery && !!activeSwitch && !armed;
 
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
