@@ -204,7 +204,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                   discovery
                   /* Dispatch 219. Compare's page-level banner already points to Certify. */
                   showDiscoveryUpsell={false}
-                  discoveryHref={rightsizeHref}
+                  /* Dispatch 221. discoveryHref is dead because the upsell is suppressed. */
                   /* Dispatch 212: disclose the workload's running switch here too. */
                   activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 />

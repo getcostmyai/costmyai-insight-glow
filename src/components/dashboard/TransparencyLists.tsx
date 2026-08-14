@@ -25,8 +25,15 @@ import { nonQualifyingEmptyCopy } from "@/lib/dashboard/zero-data-copy";
 export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
   return (
     <>
-      <ArbitrageList ctl={ctl} />
-      <BenchmarkList ctl={ctl} />
+      {/**
+       * Dispatch 221. Rightsize and Govern render the full transparency lists.
+       * Locked alternatives are unreachable there today, but if a future plan
+       * gates a mechanism above Rightsize we must not hard-link back to
+       * Rightsize (self-link on Rightsize, backward link on Govern). Suppress
+       * the href so locked teasers render as plain disclosure, not a route.
+       */}
+      <ArbitrageList ctl={ctl} upsellHref={null} />
+      <BenchmarkList ctl={ctl} upsellHref={null} />
       <NonQualifyingList ctl={ctl} />
     </>
   );
@@ -41,12 +48,19 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
 export function ArbitrageList({
   ctl,
   discovery = false,
+  upsellHref,
 }: {
   ctl: DashboardController;
   discovery?: boolean;
+  /**
+   * Dispatch 221. Override the locked-teaser destination. `null` suppresses
+   * the link entirely; omit to keep the Certify → Rightsize default.
+   */
+  upsellHref?: string | null;
 }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
     ctl;
+  const teaserHref = upsellHref === undefined ? rightsizeHref : upsellHref;
   const all = data.hostArbitrage;
   // Real dollars over the window on screen — the same sum the hero shows. The
   // total counts every finding; the cards below merge them per workload, so
@@ -119,7 +133,7 @@ export function ArbitrageList({
                   taskHint: row.taskHint,
                 })}
                 period={activeRange.long}
-                upsellHref={rightsizeHref}
+                upsellHref={teaserHref ?? undefined}
               />
               </div>
             );
@@ -134,12 +148,16 @@ export function ArbitrageList({
 export function BenchmarkList({
   ctl,
   discovery = false,
+  upsellHref,
 }: {
   ctl: DashboardController;
   discovery?: boolean;
+  /** Dispatch 221. See ArbitrageList. */
+  upsellHref?: string | null;
 }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
     ctl;
+  const teaserHref = upsellHref === undefined ? rightsizeHref : upsellHref;
   const level = data.levels.quality_match;
   const all = data.qualityMatched;
   const total = all.reduce((s, r) => s + r.saving, 0);
@@ -214,7 +232,7 @@ export function BenchmarkList({
                   taskHint: row.taskHint,
                 })}
                 period={activeRange.long}
-                upsellHref={rightsizeHref}
+                upsellHref={teaserHref ?? undefined}
               />
               </div>
             );
