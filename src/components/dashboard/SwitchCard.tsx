@@ -26,6 +26,7 @@ export function SwitchCard({
   ctaLabel,
   period,
   discovery = false,
+  showDiscoveryUpsell = true,
   discoveryHref,
   readOnly = false,
   activeSwitch = null,
