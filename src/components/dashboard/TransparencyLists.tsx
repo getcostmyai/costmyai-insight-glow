@@ -126,7 +126,7 @@ export function ArbitrageList({
                   taskHint: row.taskHint,
                 })}
                 period={activeRange.long}
-                upsellHref={rightsizeHref}
+                upsellHref={teaserHref ?? undefined}
               />
               </div>
             );
