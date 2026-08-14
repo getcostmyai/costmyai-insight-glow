@@ -41,12 +41,19 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
 export function ArbitrageList({
   ctl,
   discovery = false,
+  upsellHref,
 }: {
   ctl: DashboardController;
   discovery?: boolean;
+  /**
+   * Dispatch 221. Override the locked-teaser destination. `null` suppresses
+   * the link entirely; omit to keep the Certify → Rightsize default.
+   */
+  upsellHref?: string | null;
 }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
     ctl;
+  const teaserHref = upsellHref === undefined ? rightsizeHref : upsellHref;
   const all = data.hostArbitrage;
   // Real dollars over the window on screen — the same sum the hero shows. The
   // total counts every finding; the cards below merge them per workload, so
