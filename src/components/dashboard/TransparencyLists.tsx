@@ -141,12 +141,16 @@ export function ArbitrageList({
 export function BenchmarkList({
   ctl,
   discovery = false,
+  upsellHref,
 }: {
   ctl: DashboardController;
   discovery?: boolean;
+  /** Dispatch 221. See ArbitrageList. */
+  upsellHref?: string | null;
 }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange, rightsizeHref } =
     ctl;
+  const teaserHref = upsellHref === undefined ? rightsizeHref : upsellHref;
   const level = data.levels.quality_match;
   const all = data.qualityMatched;
   const total = all.reduce((s, r) => s + r.saving, 0);
