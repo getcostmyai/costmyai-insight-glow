@@ -154,3 +154,34 @@ export function isBestRow(
     norm(group.best.toHost) === norm(row.toHost)
   );
 }
+
+/**
+ * Dispatch 223 — Compare's arbitrage-only view of a workload group.
+ *
+ * Compare sells one mechanism: the same model on a cheaper host. Anything the
+ * other two mechanisms found on the same workload — a benchmarked swap, a
+ * right-size — is a different product, and Compare may show no trace of it:
+ * no dollar figure, no model name, and not even a count behind an "Unlock"
+ * link. The count teaser is correct on Certify (Dispatch 211–212) because that
+ * page's reader has already bought the tier below it; on Compare it would
+ * advertise findings the page itself is not entitled to describe.
+ *
+ * This is the single place that rule is enforced. Compare passes every group
+ * through here — both for `isBestRow` and for the collapsed alternatives — so
+ * the page cannot regain a non-arbitrage row through some other call site.
+ */
+export function arbitrageOnlyGroup(group: WorkloadGroup | null): WorkloadGroup | null {
+  if (!group) return null;
+  const options = [group.best, ...group.alternatives]
+    .filter((o) => o.kind === "host_arbitrage")
+    .sort((a, b) => b.saving - a.saving);
+  const best = options[0];
+  if (!best) return null;
+  return {
+    key: group.key,
+    workload: group.workload,
+    best,
+    alternatives: options.slice(1),
+    locked: [],
+  };
+}
