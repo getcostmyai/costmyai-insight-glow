@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { groupByWorkload, groupFor, isBestRow, type WorkloadOption } from "../group";
+import { arbitrageOnlyGroup, groupByWorkload, groupFor, isBestRow, type WorkloadOption } from "../group";
 
 const W = { fromModel: "a/big", fromHost: "azure", taskHint: "chat" };
 const W2 = { fromModel: "b/small", fromHost: "openai", taskHint: "code" };
