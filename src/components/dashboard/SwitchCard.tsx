@@ -26,6 +26,7 @@ export function SwitchCard({
   ctaLabel,
   period,
   discovery = false,
+  showDiscoveryUpsell = true,
   discoveryHref,
   readOnly = false,
   activeSwitch = null,
@@ -49,6 +50,11 @@ export function SwitchCard({
    * that the level itself cannot honour.
    */
   discovery?: boolean;
+  /**
+   * Dispatch 219. Compare already has a page-level Certify upsell, so its
+   * per-card discovery link is removed. Certify keeps the Rightsize link.
+   */
+  showDiscoveryUpsell?: boolean;
   discoveryHref?: string;
   /** The public demo is a showcase: the action renders as a label, not a link. */
   readOnly?: boolean;
@@ -167,19 +173,20 @@ export function SwitchCard({
               : supersededLabel(activeSwitch!)}
           </span>
         ) : discovery ? (
-
-          <div className="flex flex-col items-end gap-1 text-right">
-            <Link
-              to={discoveryHref ?? "/pricing"}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Certified — switch via Rightsize
-              <ArrowUpRight className="size-3.5" />
-            </Link>
-            <p className="max-w-56 text-[11px] leading-snug text-muted-foreground/80">
-              Found and certified here. Nothing on this level moves traffic.
-            </p>
-          </div>
+          showDiscoveryUpsell ? (
+            <div className="flex flex-col items-end gap-1 text-right">
+              <Link
+                to={discoveryHref ?? "/pricing"}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Certified — switch via Rightsize
+                <ArrowUpRight className="size-3.5" />
+              </Link>
+              <p className="max-w-56 text-[11px] leading-snug text-muted-foreground/80">
+                Found and certified here. Nothing on this level moves traffic.
+              </p>
+            </div>
+          ) : null
         ) : readOnly ? (
 
           // The demo is read-only whatever else was passed in: this branch is

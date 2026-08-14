@@ -202,6 +202,8 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                   period={activeRange.long}
                   rank={i + 1}
                   discovery
+                  /* Dispatch 219. Compare's page-level banner already points to Certify. */
+                  showDiscoveryUpsell={false}
                   discoveryHref={rightsizeHref}
                   /* Dispatch 212: disclose the workload's running switch here too. */
                   activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
