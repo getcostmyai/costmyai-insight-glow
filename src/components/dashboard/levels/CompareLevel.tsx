@@ -14,7 +14,7 @@ import {
   LevelLocked,
 } from "@/components/dashboard/LevelState";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
-import { groupFor, isBestRow } from "@/lib/dashboard/group";
+import { arbitrageOnlyGroup, groupFor, isBestRow } from "@/lib/dashboard/group";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
 import { usd } from "@/lib/dashboard-data";
 import { levelCount, levelSaving } from "@/lib/dashboard/figures";
@@ -47,9 +47,16 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
    * that workload's best option, and everything else found on the same
    * workload collapses underneath it.
    */
+  /**
+   * Dispatch 223. Compare sees an arbitrage-only view of every group, so both
+   * the "is this the best row" decision and the collapsed alternatives below
+   * are computed from arbitrage findings alone.
+   */
+  const compareGroup = (w: { fromModel: string; fromHost: string; taskHint: string }) =>
+    arbitrageOnlyGroup(groupFor(data.workloadGroups, w));
   const rows = all.filter((r) =>
     isBestRow(
-      groupFor(data.workloadGroups, {
+      compareGroup({
         fromModel: r.fromModel,
         fromHost: r.fromHost,
         taskHint: r.taskHint,
@@ -209,13 +216,12 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
                   activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 />
                 <WorkloadAlternatives
-                  group={groupFor(data.workloadGroups, {
+                  group={compareGroup({
                     fromModel: row.fromModel,
                     fromHost: row.fromHost,
                     taskHint: row.taskHint,
                   })}
                   period={activeRange.long}
-                  upsellHref={scope === "demo" ? "/demo/certify" : "/workspace/certify"}
                 />
                 </div>
               );
