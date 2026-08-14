@@ -275,7 +275,7 @@ export function NonQualifyingList({
                   <span className="text-xs text-muted-foreground">no switch offered</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
-                {ctl.pending.from(r.fromModel, r.fromHost) ? (
+                {!discovery && ctl.pending.from(r.fromModel, r.fromHost) ? (
                   /*
                    * The generic pending label reads as a contradiction here:
                    * this row already says "no switch offered", meaning the
