@@ -50,6 +50,11 @@ export function SwitchCard({
    * that the level itself cannot honour.
    */
   discovery?: boolean;
+  /**
+   * Dispatch 219. Compare already has a page-level Certify upsell, so its
+   * per-card discovery link is removed. Certify keeps the Rightsize link.
+   */
+  showDiscoveryUpsell?: boolean;
   discoveryHref?: string;
   /** The public demo is a showcase: the action renders as a label, not a link. */
   readOnly?: boolean;
