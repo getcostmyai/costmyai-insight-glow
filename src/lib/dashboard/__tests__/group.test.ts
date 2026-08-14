@@ -95,3 +95,87 @@ describe("groupByWorkload (Dispatch 213)", () => {
     );
   });
 });
+
+describe("Dispatch 223 — Compare shows no trace of non-arbitrage findings", () => {
+  const groups = groupByWorkload({
+    unlocked: [
+      {
+        workload: { fromModel: "m", fromHost: "azure", taskHint: "chat" },
+        option: {
+          kind: "rightsize",
+          toModel: "small",
+          toHost: "azure",
+          toHostLabel: "Azure",
+          saving: 900,
+          savingPct: 40,
+        },
+      },
+      {
+        workload: { fromModel: "m", fromHost: "azure", taskHint: "chat" },
+        option: {
+          kind: "host_arbitrage",
+          toModel: "m",
+          toHost: "openai",
+          toHostLabel: "OpenAI",
+          saving: 500,
+          savingPct: 20,
+        },
+      },
+      {
+        workload: { fromModel: "m", fromHost: "azure", taskHint: "chat" },
+        option: {
+          kind: "quality_match",
+          toModel: "other",
+          toHost: "openai",
+          toHostLabel: "OpenAI",
+          saving: 300,
+          savingPct: 10,
+        },
+      },
+    ],
+    locked: [
+      { workload: { fromModel: "m", fromHost: "azure", taskHint: "chat" }, requiredPlan: "certify" },
+    ],
+  });
+
+  it("keeps only arbitrage options and drops locked teasers entirely", () => {
+    const view = arbitrageOnlyGroup(groups[0]);
+    expect(view).not.toBeNull();
+    expect(view!.best.kind).toBe("host_arbitrage");
+    expect(view!.alternatives).toEqual([]);
+    expect(view!.locked).toEqual([]);
+  });
+
+  it("re-points isBestRow at the best arbitrage option, so the row still renders", () => {
+    expect(isBestRow(groups[0], { kind: "host_arbitrage", toModel: "m", toHost: "openai" })).toBe(
+      false,
+    );
+    expect(
+      isBestRow(arbitrageOnlyGroup(groups[0]), {
+        kind: "host_arbitrage",
+        toModel: "m",
+        toHost: "openai",
+      }),
+    ).toBe(true);
+  });
+
+  it("returns null when a workload has no arbitrage finding at all", () => {
+    const noArb = groupByWorkload({
+      unlocked: [
+        {
+          workload: { fromModel: "z", fromHost: "azure", taskHint: "chat" },
+          option: {
+            kind: "rightsize",
+            toModel: "small",
+            toHost: "azure",
+            toHostLabel: "Azure",
+            saving: 10,
+            savingPct: 5,
+          },
+        },
+      ],
+      locked: [],
+    });
+    expect(arbitrageOnlyGroup(noArb[0])).toBeNull();
+  });
+});
