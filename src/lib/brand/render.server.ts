@@ -50,10 +50,13 @@ export function ensureWasm(origin: string): Promise<void> {
  * path that used to run everywhere, and the one that failed in production.
  */
 async function loadWasmInput(origin: string): Promise<WebAssembly.Module | Response> {
-  const mod = (await import("./resvg-wasm.server")).default;
-  if (mod instanceof WebAssembly.Module) return mod;
+  if (!import.meta.env.DEV) {
+    const mod = (await import("./resvg-wasm.server")).default;
+    if (mod instanceof WebAssembly.Module) return mod;
+  }
   return fetch(new URL(RESVG_WASM_PATH, origin));
 }
+
 
 
 let fontCache: Uint8Array[] | null = null;
