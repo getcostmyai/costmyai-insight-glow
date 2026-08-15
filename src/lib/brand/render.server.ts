@@ -23,18 +23,29 @@ export async function renderSvgToPng(
   const secret = process.env["RENDER_SHARED_SECRET"];
   if (!base || !secret) throw new Error("renderer service is not configured");
 
-  const res = await fetch(`${base.replace(/\/$/, "")}/render`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-render-secret": secret,
-    },
-    body: JSON.stringify({ svg, width }),
-  });
+  const endpoint = `${base.replace(/\/$/, "")}/render`;
+  const body = JSON.stringify({ svg, width });
 
-  if (!res.ok) {
-    throw new Error(`renderer service returned ${res.status} for ${new URL(res.url || base).host}`);
+  /*
+   * Two attempts, not one: a rolling deploy can leave a stale instance behind
+   * the same hostname for a while, and one bad hit should not cost the caller
+   * its PNG. Anything still failing after the retry throws, and the route falls
+   * back to serving the SVG.
+   */
+  let last = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-render-secret": secret },
+        body,
+      });
+      if (res.ok) return new Uint8Array(await res.arrayBuffer());
+      last = `renderer service returned ${res.status}`;
+    } catch (err) {
+      last = err instanceof Error ? err.message : String(err);
+    }
   }
-
-  return new Uint8Array(await res.arrayBuffer());
+  throw new Error(last);
 }
+
