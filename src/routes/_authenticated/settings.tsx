@@ -11,6 +11,10 @@ import {
   PROVIDER_PRESETS,
   ROLLING_WINDOW_DAYS,
   sdkBaseUrl,
+  sdkSnippet,
+  SNIPPET_LANGUAGES,
+  type SnippetLanguage,
+  verifySnippet,
 } from "@/lib/ingest/contract";
 
 
@@ -262,6 +266,7 @@ function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onDismiss:
 function Quickstart({ token }: { token: string | null }) {
   const shown = token ?? "cma_live_…";
   const [presetId, setPresetId] = useState(PROVIDER_PRESETS[0].id);
+  const [language, setLanguage] = useState<SnippetLanguage>("env");
   const preset = PROVIDER_PRESETS.find((p) => p.id === presetId) ?? PROVIDER_PRESETS[0];
 
   return (
@@ -305,9 +310,28 @@ function Quickstart({ token }: { token: string | null }) {
         </pre>
       </Step>
 
-      <Step n={2} title="Point your SDK at it">
-        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs">
-          {`export ${preset.sdkEnv}=${sdkBaseUrl(preset)}`}
+      <Step n={2} title="Point your client at it">
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          There is no CostMyAI SDK — none exists, and none is coming. Any HTTP client works,
+          because all that changes is the base URL your existing client already accepts.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {SNIPPET_LANGUAGES.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => setLanguage(l.id)}
+              className={`rounded-md border px-2.5 py-1 text-[11px] transition ${
+                l.id === language
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed">
+          {sdkSnippet(preset, language)}
         </pre>
         <p className="mt-2 text-xs text-muted-foreground">
           Nothing else changes. Your key, your models, your code paths — identical. Provider errors
@@ -317,18 +341,19 @@ function Quickstart({ token }: { token: string | null }) {
       </Step>
 
       <Step n={3} title="Verify it">
-        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs">
-          {`curl -s http://localhost:${preset.port}/healthz`}
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed">
+          {verifySnippet(preset)}
         </pre>
         <p className="mt-2 text-xs text-muted-foreground">
-          Reports the upstream it fronts, queue depth, last successful flush and last error. Make
-          one real call through your SDK, then check that{" "}
-          <span className="font-mono">queued</span> returns to 0 and{" "}
+          <span className="font-mono">/healthz</span> reports the upstream it fronts, queue depth,
+          last successful flush and last error. After the real call in step 2 of that block, check
+          that <span className="font-mono">queued</span> returns to 0 and{" "}
           <span className="font-mono">lastFlushAt</span> is recent. Your first events appear on the
           dashboard within about a minute. Events queue to disk if we're unreachable, so a CostMyAI
           outage never touches your inference path.
         </p>
       </Step>
+
 
       {/*
         Dispatch 104 enumerated six shapes across the tracked providers. A
