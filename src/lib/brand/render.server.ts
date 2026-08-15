@@ -31,7 +31,7 @@ export function ensureWasm(origin: string): Promise<void> {
   const g = globalThis as Record<string, unknown>;
   let ready = g[WASM_KEY] as Promise<void> | undefined;
   if (!ready) {
-    ready = initWasm(fetch(new URL(RESVG_WASM_PATH, origin)))
+    ready = initWasm(loadWasmInput(origin))
       .then(() => undefined)
       .catch((err: unknown) => {
         if (err instanceof Error && /already initialized/i.test(err.message)) return;
@@ -42,6 +42,22 @@ export function ensureWasm(origin: string): Promise<void> {
   }
   return ready;
 }
+
+/**
+ * The Worker runtime forbids compiling wasm from bytes at request time, so the
+ * bundled build hands us an already-compiled `WebAssembly.Module`. Dev has no
+ * such module binding, so it falls back to fetching the static asset — the same
+ * path that used to run everywhere, and the one that failed in production.
+ */
+async function loadWasmInput(origin: string): Promise<WebAssembly.Module | Response> {
+  if (!import.meta.env.DEV) {
+    const mod = (await import("./resvg-wasm.server")).default;
+    if (mod instanceof WebAssembly.Module) return mod;
+  }
+  return fetch(new URL(RESVG_WASM_PATH, origin));
+}
+
+
 
 let fontCache: Uint8Array[] | null = null;
 

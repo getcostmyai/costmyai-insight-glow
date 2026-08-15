@@ -97,7 +97,9 @@ export function buildShareSvg(card: ShareCard, monthKey: string): string {
   <rect x="72" y="536" width="1056" height="1" fill="${PALETTE.hairline}"/>
   <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">${esc(monthLabel)}</text>
   <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="${PALETTE.muted}">· final, frozen figures</text>
-  <text x="1128" y="580" text-anchor="end" font-family="Inter" font-size="22" font-weight="400" fill="${PALETTE.muted}">costmyai.com/intelligence/${esc(monthKey)}</text>
+  <text x="1128" y="574" text-anchor="end" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">Powered by CostMyAI</text>
+  <text x="1128" y="602" text-anchor="end" font-family="Inter" font-size="20" font-weight="400" fill="${PALETTE.muted}">costmyai.com/intelligence/${esc(monthKey)}</text>
+
 </svg>`;
 }
 

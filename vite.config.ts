@@ -15,6 +15,24 @@ import { computeFingerprint, gitHead } from "./scripts/audit/fingerprint.mjs";
 const build = computeFingerprint(process.cwd());
 const head = gitHead(process.cwd());
 
+/**
+ * The Worker runtime refuses to compile wasm from bytes at request time, so the
+ * resvg module arrives as a build-time `?module` import instead. Only Nitro's
+ * unwasm plugin understands that id; the intermediate SSR bundle cannot read it
+ * off disk, so it leaves the specifier external and Nitro resolves it into a
+ * real WebAssembly.Module binding for the Worker.
+ */
+const WASM_MODULE_RE = /\.wasm\?module$/;
+const deferWasmModuleToNitro = {
+  name: "costmyai:defer-wasm-module",
+  enforce: "pre" as const,
+  applyToEnvironment: (env: { name: string }) => env.name === "ssr",
+  resolveId(id: string) {
+    return WASM_MODULE_RE.test(id) ? { id, external: true as const } : null;
+  },
+};
+
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -30,7 +48,7 @@ export default defineConfig({
     },
     // workers-og ships Yoga/Resvg as .wasm side-files. Left externalised, the dev
     // SSR loader cannot resolve them; bundled, Vite needs an explicit wasm loader.
-    plugins: [wasm()],
+    plugins: [deferWasmModuleToNitro, wasm()],
     ssr: { noExternal: ["workers-og"] },
     optimizeDeps: { exclude: ["workers-og"] },
 
