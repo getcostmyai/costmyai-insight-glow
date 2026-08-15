@@ -7,25 +7,31 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import wasm from "vite-plugin-wasm";
 
+// Dispatch 88. Baked into the bundle so the running deployment can state which
+// tree it was built from; the stale-deploy detector recomputes the same hash
+// locally and compares. See scripts/audit/fingerprint.mjs.
+import { computeFingerprint, gitHead } from "./scripts/audit/fingerprint.mjs";
+
+const build = computeFingerprint(process.cwd());
+const head = gitHead(process.cwd());
+
 /**
  * The Worker runtime refuses to compile wasm from bytes at request time, so the
- * resvg module has to arrive as a build-time `?module` import that only Nitro's
- * unwasm plugin understands. Every other environment (client, SSR, prerender)
- * would try to read that id off disk and fail, and none of them ever rasterises
- * anything, so they get an inert stub instead.
+ * resvg module arrives as a build-time `?module` import instead. Only Nitro's
+ * unwasm plugin understands that id; the intermediate SSR bundle cannot read it
+ * off disk, so it leaves the specifier external and Nitro resolves it into a
+ * real WebAssembly.Module binding for the Worker.
  */
 const WASM_MODULE_RE = /\.wasm\?module$/;
 const deferWasmModuleToNitro = {
   name: "costmyai:defer-wasm-module",
   enforce: "pre" as const,
-  // The intermediate SSR bundle cannot load a `?module` wasm id, so it leaves the
-  // specifier alone. Nitro's own build then resolves it with unwasm and emits a
-  // real WebAssembly.Module binding for the Worker.
   applyToEnvironment: (env: { name: string }) => env.name === "ssr",
   resolveId(id: string) {
     return WASM_MODULE_RE.test(id) ? { id, external: true as const } : null;
   },
 };
+
 
 export default defineConfig({
   tanstackStart: {
