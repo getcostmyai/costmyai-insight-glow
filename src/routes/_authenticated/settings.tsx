@@ -10,6 +10,7 @@ import {
   dockerRunSnippet,
   PROVIDER_PRESETS,
   ROLLING_WINDOW_DAYS,
+  sdkBaseUrl,
   sdkSnippet,
   SNIPPET_LANGUAGES,
   type SnippetLanguage,
