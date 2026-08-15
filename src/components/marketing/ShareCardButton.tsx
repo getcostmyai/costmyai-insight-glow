@@ -123,7 +123,7 @@ export function ShareCardButton({
               aria-label={`Share on X: ${title}`}
               className={linkBase}
             >
-              <Twitter className="h-3.5 w-3.5" />
+              <XMark className="h-3.5 w-3.5" />
             </a>
           </TooltipTrigger>
           <TooltipContent side="top">
