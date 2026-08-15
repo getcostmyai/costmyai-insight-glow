@@ -11,9 +11,13 @@ export const Route = createFileRoute("/api/public/badge/$code")({
   server: {
     handlers: {
       GET: async ({ request, params }) => {
-        const { readPartnerBadge, renderBadgePng, badgeVerifyUrl, BADGE_CODE_RE } = await import(
-          "@/lib/partner-badge.server"
-        );
+        const {
+          readPartnerBadge,
+          renderBadgePng,
+          buildBadgeSvg,
+          badgeVerifyUrl,
+          BADGE_CODE_RE,
+        } = await import("@/lib/partner-badge.server");
         const code = params.code.replace(/\.png$/i, "");
         if (!BADGE_CODE_RE.test(code)) return new Response("Invalid code", { status: 400 });
 
@@ -33,7 +37,14 @@ export const Route = createFileRoute("/api/public/badge/$code")({
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("partner badge render failed", message);
-          return new Response(`Badge unavailable: ${message}`, { status: 500 });
+          // Same fallback contract as the share poster: vector over an error.
+          return new Response(buildBadgeSvg(badge, badgeVerifyUrl(origin, badge.code)), {
+            headers: {
+              "content-type": "image/svg+xml; charset=utf-8",
+              "cache-control": "public, max-age=300",
+              "x-costmyai-render": "svg-fallback",
+            },
+          });
         }
       },
     },

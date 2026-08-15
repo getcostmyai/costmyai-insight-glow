@@ -35,7 +35,16 @@ export const Route = createFileRoute("/api/public/og/intelligence/$month")({
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("share image render failed", message);
-          return new Response(`Share image unavailable: ${message}`, { status: 500 });
+          // Fallback: serve the same poster as vector. Browsers and Slack render
+          // it; some crawlers ignore SVG previews, but a live image beats a 500.
+          const { buildShareSvg } = await import("@/lib/intelligence/share-image.server");
+          return new Response(buildShareSvg(card, frozen.month), {
+            headers: {
+              "content-type": "image/svg+xml; charset=utf-8",
+              "cache-control": "public, max-age=300",
+              "x-costmyai-render": "svg-fallback",
+            },
+          });
         }
       },
     },
