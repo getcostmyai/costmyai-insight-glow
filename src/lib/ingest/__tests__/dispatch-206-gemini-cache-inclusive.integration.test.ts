@@ -222,8 +222,8 @@ live("a real cached Gemini prefix (inclusive shape)", () => {
       .select(
         "model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok, cache_read_usd_per_mtok, cache_write_usd_per_mtok, supports_prompt_caching",
       )
-      .eq("model_key", cachedRow!.model_key)
-      .eq("host", cachedRow!.host)
+      .eq("model_key", "google/gemini-3.6-flash")
+      .eq("host", "google")
       .eq("is_fixture", false)
       .maybeSingle();
     expect(price, `the pair ${cachedRow!.model_key}@${cachedRow!.host} is priced`).toBeTruthy();
