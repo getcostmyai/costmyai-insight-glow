@@ -65,7 +65,7 @@ export default defineConfig({
     },
     // workers-og ships Yoga/Resvg as .wasm side-files. Left externalised, the dev
     // SSR loader cannot resolve them; bundled, Vite needs an explicit wasm loader.
-    plugins: [deferWasmModuleToNitro, wasm()],
+    plugins: [inlineWasmModule, wasm()],
     ssr: { noExternal: ["workers-og"] },
     optimizeDeps: { exclude: ["workers-og"] },
 
