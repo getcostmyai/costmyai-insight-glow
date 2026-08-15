@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Image as ImageIcon, Link2, Linkedin, Share2, Twitter } from "lucide-react";
+import { Check, Image as ImageIcon, Link2, Linkedin, Share2 } from "lucide-react";
 
 import {
   Tooltip,
@@ -7,6 +7,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+/**
+ * lucide-react still ships the retired bird as `Twitter`, and the label next to
+ * it already says X. Rather than add a brand-icon dependency for one glyph, the
+ * X logomark is inlined here, drawn on the same 24-unit grid as the lucide icons
+ * beside it so it inherits `currentColor` and the same `h-3.5 w-3.5` sizing.
+ */
+function XMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
 
 /**
  * Per-card share control.
