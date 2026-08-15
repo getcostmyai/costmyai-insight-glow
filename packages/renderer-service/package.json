@@ -1,0 +1,13 @@
+{
+  "name": "@costmyai/renderer-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Off-worker SVG-to-PNG rasteriser. Cloudflare Workers cannot construct WebAssembly modules from bytes at request time, so brand rendering runs here on a real Node host with the native resvg binding.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}
