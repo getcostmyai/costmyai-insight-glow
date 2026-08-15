@@ -107,7 +107,7 @@ export function renderWidgetDocument(payload: WidgetPayload, opts: WidgetDocOpti
     </div>
     <div class="foot">
       <div class="dots" id="dots"></div>
-      <a class="via" id="via" href="${esc(home)}" target="_blank" rel="noopener">via <b>Cost<i>My</i>AI</b></a>
+      <a class="via" id="via" href="${esc(home)}" target="_blank" rel="noopener">Powered by <b>Cost<i>My</i>AI</b></a>
     </div>
   </div>
 <script nonce="${nonce}">
