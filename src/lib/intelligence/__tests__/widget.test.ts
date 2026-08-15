@@ -115,7 +115,7 @@ describe("widget document safety", () => {
     );
     expect(html).not.toContain("<img src=x");
     expect(html).toContain("\\u003c/script>");
-    expect(html).toContain("via <b>Cost<i>My</i>AI</b>"); // attribution is not optional
+    expect(html).toContain("Powered by <b>Cost<i>My</i>AI</b>"); // attribution is not optional
   });
 
   it("allows framing anywhere but nothing else", () => {
