@@ -18,8 +18,9 @@ const WASM_MODULE_RE = /\.wasm\?module$/;
 const stubWasmModuleOutsideWorker = {
   name: "costmyai:stub-wasm-module",
   enforce: "pre" as const,
-  applyToEnvironment: (env: { name: string }) => env.name !== "nitro",
-  resolveId(id: string) {
+  applyToEnvironment: (env: { name: string }) => { console.log("[wasmprobe] applyTo", env.name); return true; },
+  resolveId(this: any, id: string) {
+    if (WASM_MODULE_RE.test(id)) console.log("[wasmprobe] env=", this.environment?.name, "id=", id);
     return WASM_MODULE_RE.test(id) ? "\0costmyai-wasm-module-stub" : null;
   },
   load(id: string) {
