@@ -155,6 +155,18 @@ export interface ProviderPreset {
   sdkPath: string;
   /** A real call that proves the path end to end. */
   verifyPath: string;
+  /**
+   * Snippet templates. `{BASE}` is the container origin plus `sdkPath` (what
+   * the SDK is pointed at); `{ORIGIN}` is the bare container origin (what a
+   * raw HTTP call joins `verifyPath` onto). Held here so the Settings
+   * quickstart cannot drift from the preset it claims to describe.
+   */
+  python: string;
+  typescript: string;
+  /** Headers a raw call carries. The customer's own credential, never ours. */
+  curlHeaders: readonly string[];
+  /** A minimal, real request body for `verifyPath`. */
+  sampleBody: string;
 }
 
 export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
@@ -166,6 +178,11 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
     sdkEnv: "OPENAI_BASE_URL",
     sdkPath: "/v1",
     verifyPath: "/v1/chat/completions",
+    python: 'from openai import OpenAI\n\nclient = OpenAI(base_url="{BASE}")  # api_key unchanged',
+    typescript:
+      'import OpenAI from "openai";\n\nconst client = new OpenAI({ baseURL: "{BASE}" }); // apiKey unchanged',
+    curlHeaders: ["Authorization: Bearer $OPENAI_API_KEY", "content-type: application/json"],
+    sampleBody: '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"ping"}]}',
   },
   {
     id: "anthropic",
@@ -175,6 +192,16 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
     sdkEnv: "ANTHROPIC_BASE_URL",
     sdkPath: "",
     verifyPath: "/v1/messages",
+    python: 'from anthropic import Anthropic\n\nclient = Anthropic(base_url="{BASE}")  # api_key unchanged',
+    typescript:
+      'import Anthropic from "@anthropic-ai/sdk";\n\nconst client = new Anthropic({ baseURL: "{BASE}" }); // apiKey unchanged',
+    curlHeaders: [
+      "x-api-key: $ANTHROPIC_API_KEY",
+      "anthropic-version: 2023-06-01",
+      "content-type: application/json",
+    ],
+    sampleBody:
+      '{"model":"claude-sonnet-4-5","max_tokens":16,"messages":[{"role":"user","content":"ping"}]}',
   },
   {
     id: "google",
@@ -184,6 +211,12 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
     sdkEnv: "GOOGLE_GEMINI_BASE_URL",
     sdkPath: "",
     verifyPath: "/v1beta/models/gemini-2.5-flash:generateContent",
+    python:
+      'from google import genai\n\nclient = genai.Client(http_options={"base_url": "{BASE}"})  # api_key unchanged',
+    typescript:
+      'import { GoogleGenAI } from "@google/genai";\n\nconst client = new GoogleGenAI({ httpOptions: { baseUrl: "{BASE}" } }); // apiKey unchanged',
+    curlHeaders: ["x-goog-api-key: $GEMINI_API_KEY", "content-type: application/json"],
+    sampleBody: '{"contents":[{"parts":[{"text":"ping"}]}]}',
   },
   {
     id: "openai-compatible",
@@ -193,12 +226,88 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
     sdkEnv: "OPENAI_BASE_URL",
     sdkPath: "/openai/v1",
     verifyPath: "/openai/v1/chat/completions",
+    python: 'from openai import OpenAI\n\nclient = OpenAI(base_url="{BASE}")  # api_key unchanged',
+    typescript:
+      'import OpenAI from "openai";\n\nconst client = new OpenAI({ baseURL: "{BASE}" }); // apiKey unchanged',
+    curlHeaders: ["Authorization: Bearer $GROQ_API_KEY", "content-type: application/json"],
+    sampleBody: '{"model":"llama-3.3-70b-versatile","messages":[{"role":"user","content":"ping"}]}',
   },
 ] as const;
 
 export function sdkBaseUrl(preset: ProviderPreset, host = "localhost"): string {
   return `http://${host}:${preset.port}${preset.sdkPath}`;
 }
+
+/** The bare container origin, without the SDK path suffix. */
+export function containerOrigin(preset: ProviderPreset, host = "localhost"): string {
+  return `http://${host}:${preset.port}`;
+}
+
+/**
+ * The languages Step 2 offers. There is no CostMyAI SDK — every one of these is
+ * the customer's existing client with one line changed — so the list is about
+ * how they express a base URL, nothing more.
+ */
+export const SNIPPET_LANGUAGES = [
+  { id: "env", label: "Env var" },
+  { id: "python", label: "Python" },
+  { id: "typescript", label: "TypeScript" },
+  { id: "curl", label: "cURL" },
+] as const;
+export type SnippetLanguage = (typeof SNIPPET_LANGUAGES)[number]["id"];
+
+/** One renderer for every "point your client at the container" snippet. */
+export function sdkSnippet(
+  preset: ProviderPreset,
+  language: SnippetLanguage,
+  host = "localhost",
+): string {
+  const base = sdkBaseUrl(preset, host);
+  const origin = containerOrigin(preset, host);
+  const fill = (template: string) => template.replaceAll("{BASE}", base).replaceAll("{ORIGIN}", origin);
+  switch (language) {
+    case "env":
+      return `export ${preset.sdkEnv}=${base}`;
+    case "python":
+      return fill(preset.python);
+    case "typescript":
+      return fill(preset.typescript);
+    case "curl":
+      return workedCall(preset, host);
+  }
+}
+
+/** A real, paid call through the container — the customer's own credential. */
+export function workedCall(preset: ProviderPreset, host = "localhost"): string {
+  const origin = containerOrigin(preset, host);
+  const headers = preset.curlHeaders.map((h) => `  -H "${h}" \\`).join("\n");
+  return [
+    `curl -s ${origin}${preset.verifyPath} \\`,
+    headers,
+    `  -d '${preset.sampleBody}'`,
+  ].join("\n");
+}
+
+/**
+ * Step 3, end to end: health, a real call, health again. Lifted verbatim in
+ * shape from CONNECT.md so the page and the doc cannot disagree.
+ */
+export function verifySnippet(preset: ProviderPreset, host = "localhost"): string {
+  const origin = containerOrigin(preset, host);
+  const upstreamHost = new URL(preset.upstream).host;
+  return [
+    "# 1. The container is up and knows its upstream.",
+    `curl -s ${origin}/healthz`,
+    `# {"ok":true,"upstream":"${upstreamHost}","queued":0,"lastFlushAt":null,"lastError":null}`,
+    "",
+    "# 2. A real call through it, with YOUR key, exactly as you'd call the provider.",
+    workedCall(preset, host),
+    "",
+    "# 3. Metadata delivered: queued back to 0, lastFlushAt recent, lastError null.",
+    `curl -s ${origin}/healthz`,
+  ].join("\n");
+}
+
 
 /** The exact `docker run` a customer copies. One renderer, every call site. */
 export function dockerRunSnippet(
