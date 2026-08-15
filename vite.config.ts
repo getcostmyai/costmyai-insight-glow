@@ -15,26 +15,17 @@ import wasm from "vite-plugin-wasm";
  * anything, so they get an inert stub instead.
  */
 const WASM_MODULE_RE = /\.wasm\?module$/;
-const stubWasmModuleOutsideWorker = {
-  name: "costmyai:stub-wasm-module",
+const deferWasmModuleToNitro = {
+  name: "costmyai:defer-wasm-module",
   enforce: "pre" as const,
-  applyToEnvironment: (env: { name: string }) => { console.log("[wasmprobe] applyTo", env.name); return true; },
-  resolveId(this: any, id: string) {
-    if (WASM_MODULE_RE.test(id)) console.log("[wasmprobe] env=", this.environment?.name, "id=", id);
-    return WASM_MODULE_RE.test(id) ? "\0costmyai-wasm-module-stub" : null;
-  },
-  load(id: string) {
-    return id === "\0costmyai-wasm-module-stub" ? "export default null;" : null;
+  // The intermediate SSR bundle cannot load a `?module` wasm id, so it leaves the
+  // specifier alone. Nitro's own build then resolves it with unwasm and emits a
+  // real WebAssembly.Module binding for the Worker.
+  applyToEnvironment: (env: { name: string }) => env.name === "ssr",
+  resolveId(id: string) {
+    return WASM_MODULE_RE.test(id) ? { id, external: true as const } : null;
   },
 };
-
-// Dispatch 88. Baked into the bundle so the running deployment can state which
-// tree it was built from; the stale-deploy detector recomputes the same hash
-// locally and compares. See scripts/audit/fingerprint.mjs.
-import { computeFingerprint, gitHead } from "./scripts/audit/fingerprint.mjs";
-
-const build = computeFingerprint(process.cwd());
-const head = gitHead(process.cwd());
 
 export default defineConfig({
   tanstackStart: {
@@ -51,7 +42,7 @@ export default defineConfig({
     },
     // workers-og ships Yoga/Resvg as .wasm side-files. Left externalised, the dev
     // SSR loader cannot resolve them; bundled, Vite needs an explicit wasm loader.
-    plugins: [stubWasmModuleOutsideWorker, wasm()],
+    plugins: [deferWasmModuleToNitro, wasm()],
     ssr: { noExternal: ["workers-og"] },
     optimizeDeps: { exclude: ["workers-og"] },
 
