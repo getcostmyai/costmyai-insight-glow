@@ -10,7 +10,10 @@ import {
   dockerRunSnippet,
   PROVIDER_PRESETS,
   ROLLING_WINDOW_DAYS,
-  sdkBaseUrl,
+  sdkSnippet,
+  SNIPPET_LANGUAGES,
+  type SnippetLanguage,
+  verifySnippet,
 } from "@/lib/ingest/contract";
 
 
@@ -262,6 +265,7 @@ function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onDismiss:
 function Quickstart({ token }: { token: string | null }) {
   const shown = token ?? "cma_live_…";
   const [presetId, setPresetId] = useState(PROVIDER_PRESETS[0].id);
+  const [language, setLanguage] = useState<SnippetLanguage>("env");
   const preset = PROVIDER_PRESETS.find((p) => p.id === presetId) ?? PROVIDER_PRESETS[0];
 
   return (
