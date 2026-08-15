@@ -17,6 +17,7 @@ import wasm from "vite-plugin-wasm";
 const WASM_MODULE_RE = /\.wasm\?module$/;
 const stubWasmModuleOutsideWorker = {
   name: "costmyai:stub-wasm-module",
+  enforce: "pre" as const,
   applyToEnvironment: (env: { name: string }) => env.name !== "nitro",
   resolveId(id: string) {
     return WASM_MODULE_RE.test(id) ? "\0costmyai-wasm-module-stub" : null;
