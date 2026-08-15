@@ -33,7 +33,7 @@ export async function renderSvgToPng(
   });
 
   if (!res.ok) {
-    throw new Error(`renderer service returned ${res.status}`);
+    throw new Error(`renderer service returned ${res.status} for ${new URL(res.url || base).host}`);
   }
 
   return new Uint8Array(await res.arrayBuffer());
