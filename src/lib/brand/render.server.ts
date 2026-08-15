@@ -19,7 +19,7 @@ export async function renderSvgToPng(
   width: number,
   _origin?: string,
 ): Promise<Uint8Array> {
-  const base = "https://costmyai-renderer-does-not-exist.onrender.com";
+  const base = process.env["RENDERER_SERVICE_URL"];
   const secret = process.env["RENDER_SHARED_SECRET"];
   if (!base || !secret) throw new Error("renderer service is not configured");
 
