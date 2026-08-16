@@ -104,6 +104,17 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
     throw new Error(`subscriptions write failed: ${subscriptionWrite.error.message}`);
   }
 
+  // Read the level first, so the lead event can name the transition rather
+  // than only its destination.
+  const orgBefore = await getSupabase()
+    .from("organizations")
+    .select("plan, first_visitor_id, referred_by_partner_id")
+    .eq("id", orgId)
+    .maybeSingle();
+
+  const nextPlan = (grantsAccess(status, periodEnd)
+    ? plan
+    : "compare") as Database["public"]["Enums"]["plan_tier"];
 
   // The workspace record follows the subscription, in both directions. When
   // the paid period is genuinely over the workspace goes back to Compare —
@@ -111,9 +122,7 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
   const orgWrite = await getSupabase()
     .from("organizations")
     .update({
-      plan: (grantsAccess(status, periodEnd)
-        ? plan
-        : "compare") as Database["public"]["Enums"]["plan_tier"],
+      plan: nextPlan,
       stripe_customer_id:
         typeof subscription.customer === "string"
           ? subscription.customer
@@ -126,6 +135,23 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
 
   if (orgWrite.error) {
     throw new Error(`organizations write failed: ${orgWrite.error.message}`);
+  }
+
+  // No browser request behind a webhook, so the visitor comes from the column
+  // captured at signup. Only a genuine change is recorded — Stripe re-sends
+  // the same subscription state often, and a replay is not a transition.
+  if (orgBefore.data && orgBefore.data.plan !== nextPlan) {
+    const { recordAccountLeadEvent } = await import("@/lib/telemetry/lead-events.server");
+    await recordAccountLeadEvent("plan_changed", {
+      visitorId: orgBefore.data.first_visitor_id,
+      partnerId: orgBefore.data.referred_by_partner_id,
+      payload: {
+        org_id: orgId,
+        new_plan: nextPlan,
+        previous_plan: orgBefore.data.plan,
+        source: "stripe_webhook",
+      },
+    });
   }
 }
 
