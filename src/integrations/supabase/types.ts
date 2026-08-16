@@ -109,36 +109,6 @@ export type Database = {
         }
         Relationships: []
       }
-      bench_lead_events: {
-        Row: {
-          created_at: string
-          event_type: string
-          id: string
-          is_synthetic: boolean
-          payload: Json | null
-          referred_by_partner_id: string | null
-          visitor_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_type: string
-          id?: string
-          is_synthetic?: boolean
-          payload?: Json | null
-          referred_by_partner_id?: string | null
-          visitor_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          is_synthetic?: boolean
-          payload?: Json | null
-          referred_by_partner_id?: string | null
-          visitor_id?: string | null
-        }
-        Relationships: []
-      }
       benchmark_margins: {
         Row: {
           created_at: string

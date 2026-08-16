@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.bench_lead_events;
