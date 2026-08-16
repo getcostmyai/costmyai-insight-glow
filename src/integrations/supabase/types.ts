@@ -971,6 +971,7 @@ export type Database = {
           billing_interval: string
           created_at: string
           created_by: string | null
+          first_visitor_id: string | null
           id: string
           is_synthetic: boolean
           name: string
@@ -988,6 +989,7 @@ export type Database = {
           billing_interval?: string
           created_at?: string
           created_by?: string | null
+          first_visitor_id?: string | null
           id?: string
           is_synthetic?: boolean
           name: string
@@ -1005,6 +1007,7 @@ export type Database = {
           billing_interval?: string
           created_at?: string
           created_by?: string | null
+          first_visitor_id?: string | null
           id?: string
           is_synthetic?: boolean
           name?: string
