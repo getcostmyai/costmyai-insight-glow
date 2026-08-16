@@ -104,6 +104,9 @@ export function BlogArticle({ post }: { post: BlogPost }) {
             <p className="mt-8 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
               {formatPublished(post.published)} · {post.minutes} min read
             </p>
+            <div className="mt-5">
+              <BlogShareButton slug={post.slug} title={post.title} />
+            </div>
           </Reveal>
         </div>
       </header>
