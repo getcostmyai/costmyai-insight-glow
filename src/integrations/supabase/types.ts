@@ -584,7 +584,7 @@ export type Database = {
           id: string
           payload: Json | null
           referred_by_partner_id: string | null
-          visitor_id: string
+          visitor_id: string | null
         }
         Insert: {
           created_at?: string
@@ -592,7 +592,7 @@ export type Database = {
           id?: string
           payload?: Json | null
           referred_by_partner_id?: string | null
-          visitor_id: string
+          visitor_id?: string | null
         }
         Update: {
           created_at?: string
@@ -600,7 +600,7 @@ export type Database = {
           id?: string
           payload?: Json | null
           referred_by_partner_id?: string | null
-          visitor_id?: string
+          visitor_id?: string | null
         }
         Relationships: [
           {
