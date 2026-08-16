@@ -89,8 +89,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
           as="p"
           className="mx-auto mt-5 max-w-2xl text-lg leading-snug text-muted-foreground sm:text-xl sm:leading-relaxed"
         >
-          We watch what AI actually costs you, prove where the same quality costs less, and make the
-          switch when it holds quality, automatically in Govern.
+          Same results, lower bill. Nothing changes except the price.
         </Reveal>
 
         <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
