@@ -253,7 +253,7 @@ function StillMoving() {
   return (
     <section className="wash-section">
       <div className="mx-auto max-w-6xl border-y border-border px-5 py-24 sm:px-8 sm:py-32">
-        <Reveal className="max-w-4xl">
+        <Reveal className="mx-auto max-w-4xl text-center">
           <p className="eyebrow">Why this is a system, not an audit</p>
           <h2 className="mt-5 text-4xl font-semibold leading-[1.04] tracking-[-0.04em] sm:text-6xl">
             Nothing about AI pricing holds still.
@@ -261,7 +261,7 @@ function StillMoving() {
             Why would a{" "}
             <span className="text-gradient-brand">one-time audit</span>?
           </h2>
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Prices are cut in response to competitors, your own workloads get heavier as they
             mature, and the same model ID can bill differently next quarter with your code
             untouched. An audit tells you where you stood. We measure where you are.
