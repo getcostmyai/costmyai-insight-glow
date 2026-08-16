@@ -140,6 +140,37 @@ async function attributeFirstTouchReferral(
   return { attempted: true, attached };
 }
 
+/**
+ * Tie the new workspace to the visit that produced it.
+ *
+ * The visitor id is resolved from the very same request the referral cookie is
+ * read from, so a person who used the estimator before signing up keeps one
+ * identity across both. It is written onto the workspace once — the database
+ * refuses to change it afterwards — because every later transition (a plan
+ * change from a signed webhook, for instance) happens with no browser request
+ * in scope and has to join back through the stored column.
+ *
+ * Telemetry never fails the signup: a broken write here costs an observation,
+ * not a workspace.
+ */
+async function recordSignup(orgId: string) {
+  try {
+    const { recordLeadEvent } = await import("./telemetry/lead-events.server");
+    const { visitorId } = await recordLeadEvent("workspace_created", { org_id: orgId });
+    if (!visitorId) return;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("organizations")
+      .update({ first_visitor_id: visitorId })
+      .eq("id", orgId)
+      .is("first_visitor_id", null);
+  } catch (err) {
+    console.error("signup not recorded", err instanceof Error ? err.message : String(err));
+  }
+}
+
+
 export const setWorkspacePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { orgId: string; plan: PlanTier }) => {
