@@ -582,6 +582,7 @@ export type Database = {
           created_at: string
           event_type: string
           id: string
+          is_synthetic: boolean
           payload: Json | null
           referred_by_partner_id: string | null
           visitor_id: string | null
@@ -590,6 +591,7 @@ export type Database = {
           created_at?: string
           event_type: string
           id?: string
+          is_synthetic?: boolean
           payload?: Json | null
           referred_by_partner_id?: string | null
           visitor_id?: string | null
@@ -598,6 +600,7 @@ export type Database = {
           created_at?: string
           event_type?: string
           id?: string
+          is_synthetic?: boolean
           payload?: Json | null
           referred_by_partner_id?: string | null
           visitor_id?: string | null
@@ -2254,6 +2257,16 @@ export type Database = {
           },
         ]
       }
+      funnel_summary: {
+        Row: {
+          rate_from_previous_pct: number | null
+          stage: string | null
+          stage_order: number | null
+          visitors: number | null
+          window_days: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invite: { Args: { _invite_id: string }; Returns: string }
@@ -2297,6 +2310,15 @@ export type Database = {
         Returns: Json
       }
       create_organization: { Args: { _name: string }; Returns: string }
+      funnel_summary_for_partner: {
+        Args: { _partner_id: string; _window_days?: number }
+        Returns: {
+          rate_from_previous_pct: number
+          stage: string
+          stage_order: number
+          visitors: number
+        }[]
+      }
       has_org_role: {
         Args: {
           _org_id: string
