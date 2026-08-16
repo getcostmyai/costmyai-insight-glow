@@ -6,6 +6,8 @@ import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert, Sparkles } from
 
 import { estimateSavingFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { trackEstimatorEvent } from "@/lib/telemetry.functions";
+
 import {
   CONSERVATIVE_HIGH,
   CONSERVATIVE_LOW,
