@@ -18,8 +18,17 @@ export const estimateSavingFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }): Promise<EstimatorResult> => {
     const { estimateSaving } = await import("./estimator/estimate.server");
-    return estimateSaving(data);
+    const result = await estimateSaving(data);
+
+    // Completion is recorded here rather than from the page: the request is
+    // already in scope, and a refusal is a real outcome that must be counted
+    // exactly like a number.
+    const { recordLeadEvent } = await import("./telemetry/lead-events.server");
+    await recordLeadEvent("estimator_completed", { input: data, result });
+
+    return result;
   });
+
 
 export const estimatorOptionsQuery = () =>
   queryOptions({
