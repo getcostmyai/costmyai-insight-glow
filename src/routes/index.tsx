@@ -89,7 +89,9 @@ function Hero({ stats }: { stats: MarketingStats }) {
           as="p"
           className="mx-auto mt-5 max-w-2xl text-lg leading-snug text-muted-foreground sm:text-xl sm:leading-relaxed"
         >
-          Same results, lower bill. Nothing changes except the price.
+          You're likely overspending on AI.
+          <br />
+          We prove it. You save. You grow.
         </Reveal>
 
         <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
