@@ -225,7 +225,7 @@ export function Estimator() {
   };
 
   return (
-    <section id="estimator" className="scroll-mt-24 wash-section">
+    <section ref={sectionRef} id="estimator" className="scroll-mt-24 wash-section">
       <div className="mx-auto max-w-4xl px-5 py-20 sm:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Estimator</p>
@@ -344,7 +344,7 @@ export function Estimator() {
                       max={200000}
                       step={200}
                       value={spend}
-                      onChange={(e) => setSpend(Number(e.target.value))}
+                      onChange={(e) => { markEngaged(); setSpend(Number(e.target.value)); }}
                       aria-label="Monthly AI spend"
                       className="slider-brand mt-6 w-full cursor-pointer"
                       style={{
@@ -358,7 +358,7 @@ export function Estimator() {
                           <button
                             key={p}
                             type="button"
-                            onClick={() => setSpend(p)}
+                            onClick={() => { markEngaged(); setSpend(p); }}
                             className={`num rounded-full px-2.5 py-1 text-[11px] transition-colors duration-200 ${
                               spend === p
                                 ? "bg-primary-soft text-primary"
@@ -380,7 +380,7 @@ export function Estimator() {
                           <button
                             key={d.id}
                             type="button"
-                            onClick={() => setDistribution(d.id)}
+                            onClick={() => { markEngaged(); setDistribution(d.id); }}
                             className={`group rounded-2xl border px-3.5 py-3 text-left transition-all duration-200 hover:-translate-y-0.5 ${
                               on
                                 ? "border-primary/45 bg-primary-soft shadow-[0_6px_20px_-12px_var(--primary)]"
@@ -406,7 +406,7 @@ export function Estimator() {
                         <Chip
                           key={w.id}
                           active={workload === w.id}
-                          onClick={() => setWorkload(w.id)}
+                          onClick={() => { markEngaged(); setWorkload(w.id); }}
                         >
                           {w.label}
                         </Chip>
@@ -421,14 +421,14 @@ export function Estimator() {
                   <div>
                     <Label>Provider</Label>
                     <div className="flex max-h-[104px] flex-wrap gap-2 overflow-y-auto pr-1">
-                      <Chip active={provider === null} onClick={() => setProvider(null)}>
+                      <Chip active={provider === null} onClick={() => { markEngaged(); setProvider(null); }}>
                         Not sure
                       </Chip>
                       {(options?.providers ?? []).map((p) => (
                         <Chip
                           key={p.label}
                           active={provider === p.label}
-                          onClick={() => setProvider(p.label)}
+                          onClick={() => { markEngaged(); setProvider(p.label); }}
                         >
                           {p.label}
                         </Chip>
@@ -439,7 +439,7 @@ export function Estimator() {
                     </Label>
                     <select
                       value={modelKey ?? ""}
-                      onChange={(e) => setModelKey(e.target.value || null)}
+                      onChange={(e) => { markEngaged(); setModelKey(e.target.value || null); }}
                       className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-primary/50"
                     >
                       <option value="">No specific model</option>
