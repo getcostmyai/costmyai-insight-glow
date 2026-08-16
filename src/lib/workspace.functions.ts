@@ -185,11 +185,34 @@ export const setWorkspacePlan = createServerFn({ method: "POST" })
     return { orgId: data.orgId, plan: data.plan };
   })
   .handler(async ({ context, data }) => {
+    // Read the level before the change so the event records a real transition
+    // rather than just an end state. RLS-scoped: a non-member sees nothing.
+    const before = await context.supabase
+      .from("organizations")
+      .select("plan, first_visitor_id, referred_by_partner_id")
+      .eq("id", data.orgId)
+      .maybeSingle();
+
     // The database enforces owner-only; this is not a client-side check.
     const { error } = await context.supabase.rpc("set_org_plan", {
       _org_id: data.orgId,
       _plan: data.plan,
     });
     if (error) throw error;
+
+    if (before.data && before.data.plan !== data.plan) {
+      const { recordAccountLeadEvent } = await import("./telemetry/lead-events.server");
+      await recordAccountLeadEvent("plan_changed", {
+        visitorId: before.data.first_visitor_id,
+        partnerId: before.data.referred_by_partner_id,
+        payload: {
+          org_id: data.orgId,
+          new_plan: data.plan,
+          previous_plan: before.data.plan,
+          source: "self_service",
+        },
+      });
+    }
+
     return { plan: data.plan };
   });
