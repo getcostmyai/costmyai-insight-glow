@@ -99,8 +99,8 @@ export function BlogShareButton({
               className={linkBase}
               onClick={() => {
                 void navigator.clipboard?.writeText(url).then(() => {
-                  setCoppied(true);
-                  setTimeout(() => setCoppied(false), 2000);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
                 });
               }}
             >
