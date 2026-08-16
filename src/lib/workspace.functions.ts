@@ -98,6 +98,8 @@ export const createWorkspace = createServerFn({ method: "POST" })
 
     const referral = await attributeFirstTouchReferral(supabase, orgId as string);
 
+    await recordSignup(orgId as string);
+
     return { id: orgId as string, slug: slugify(data.name), referral };
   });
 
