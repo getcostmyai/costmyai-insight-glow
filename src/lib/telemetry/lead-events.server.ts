@@ -11,7 +11,40 @@ import {
   serializeVisitorCookie,
 } from "./visitor-cookie";
 
-export type LeadEventType = "estimator_viewed" | "estimator_engaged" | "estimator_completed";
+export type LeadEventType =
+  | "estimator_viewed"
+  | "estimator_engaged"
+  | "estimator_completed"
+  | "workspace_created"
+  | "plan_changed";
+
+/**
+ * Append one lead event for a transition that has no browser request behind it
+ * — a signed Stripe webhook, or any server-side path where the visitor cookie
+ * is simply not in scope. The visitor is carried by
+ * `organizations.first_visitor_id`, captured once at workspace creation, so
+ * the funnel still joins back to the anonymous visit without inventing an id
+ * here.
+ *
+ * Same swallow-everything rule as `recordLeadEvent`: telemetry never breaks
+ * the transition it is observing.
+ */
+export async function recordAccountLeadEvent(
+  eventType: LeadEventType,
+  args: { visitorId: string | null; partnerId: string | null; payload: unknown },
+): Promise<void> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("lead_events").insert({
+      event_type: eventType,
+      visitor_id: args.visitorId,
+      referred_by_partner_id: args.partnerId,
+      payload: (args.payload ?? null) as never,
+    });
+  } catch (err) {
+    console.error("lead event not recorded", err instanceof Error ? err.message : String(err));
+  }
+}
 
 /**
  * Resolve the visitor id for this request, minting one when the browser has
