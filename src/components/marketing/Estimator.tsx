@@ -127,6 +127,42 @@ export function Estimator() {
   const [modelKey, setModelKey] = useState<string | null>(null);
   const [distribution, setDistribution] = useState<DistributionId>("even");
 
+  /* ---------------------------- telemetry ----------------------------- */
+  /**
+   * Two events, each fired at most once per page load. "Viewed" means the
+   * estimator actually entered the viewport — it sits mid-page, so mounting is
+   * not seeing. "Engaged" means the visitor touched any input at all, fired on
+   * the first touch only rather than on every slider frame. Completion is
+   * recorded server-side inside the estimate call itself.
+   */
+  const track = useServerFn(trackEstimatorEvent);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const sentViewed = useRef(false);
+  const sentEngaged = useRef(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || sentViewed.current) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting) || sentViewed.current) return;
+        sentViewed.current = true;
+        io.disconnect();
+        void track({ data: { event: "estimator_viewed" } }).catch(() => {});
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [track]);
+
+  const markEngaged = () => {
+    if (sentEngaged.current) return;
+    sentEngaged.current = true;
+    void track({ data: { event: "estimator_engaged" } }).catch(() => {});
+  };
+
+
   const mutation = useMutation({
     mutationFn: () =>
       run({ data: { monthlySpendUsd: spend, provider, workload, modelKey, distribution } }),
