@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 
+import { BlogShareButton } from "@/components/marketing/BlogShareButton";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import {
@@ -103,6 +104,9 @@ export function BlogArticle({ post }: { post: BlogPost }) {
             <p className="mt-8 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
               {formatPublished(post.published)} · {post.minutes} min read
             </p>
+            <div className="mt-5">
+              <BlogShareButton slug={post.slug} title={post.title} />
+            </div>
           </Reveal>
         </div>
       </header>
