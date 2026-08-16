@@ -1,0 +1,1 @@
+ALTER TABLE public.lead_events ALTER COLUMN visitor_id DROP NOT NULL;

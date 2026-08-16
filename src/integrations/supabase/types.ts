@@ -584,7 +584,7 @@ export type Database = {
           id: string
           payload: Json | null
           referred_by_partner_id: string | null
-          visitor_id: string
+          visitor_id: string | null
         }
         Insert: {
           created_at?: string
@@ -592,7 +592,7 @@ export type Database = {
           id?: string
           payload?: Json | null
           referred_by_partner_id?: string | null
-          visitor_id: string
+          visitor_id?: string | null
         }
         Update: {
           created_at?: string
@@ -600,7 +600,7 @@ export type Database = {
           id?: string
           payload?: Json | null
           referred_by_partner_id?: string | null
-          visitor_id?: string
+          visitor_id?: string | null
         }
         Relationships: [
           {
@@ -971,6 +971,7 @@ export type Database = {
           billing_interval: string
           created_at: string
           created_by: string | null
+          first_visitor_id: string | null
           id: string
           is_synthetic: boolean
           name: string
@@ -988,6 +989,7 @@ export type Database = {
           billing_interval?: string
           created_at?: string
           created_by?: string | null
+          first_visitor_id?: string | null
           id?: string
           is_synthetic?: boolean
           name: string
@@ -1005,6 +1007,7 @@ export type Database = {
           billing_interval?: string
           created_at?: string
           created_by?: string | null
+          first_visitor_id?: string | null
           id?: string
           is_synthetic?: boolean
           name?: string

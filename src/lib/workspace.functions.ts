@@ -98,6 +98,8 @@ export const createWorkspace = createServerFn({ method: "POST" })
 
     const referral = await attributeFirstTouchReferral(supabase, orgId as string);
 
+    await recordSignup(orgId as string);
+
     return { id: orgId as string, slug: slugify(data.name), referral };
   });
 
@@ -138,6 +140,37 @@ async function attributeFirstTouchReferral(
   return { attempted: true, attached };
 }
 
+/**
+ * Tie the new workspace to the visit that produced it.
+ *
+ * The visitor id is resolved from the very same request the referral cookie is
+ * read from, so a person who used the estimator before signing up keeps one
+ * identity across both. It is written onto the workspace once — the database
+ * refuses to change it afterwards — because every later transition (a plan
+ * change from a signed webhook, for instance) happens with no browser request
+ * in scope and has to join back through the stored column.
+ *
+ * Telemetry never fails the signup: a broken write here costs an observation,
+ * not a workspace.
+ */
+async function recordSignup(orgId: string) {
+  try {
+    const { recordLeadEvent } = await import("./telemetry/lead-events.server");
+    const { visitorId } = await recordLeadEvent("workspace_created", { org_id: orgId });
+    if (!visitorId) return;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("organizations")
+      .update({ first_visitor_id: visitorId })
+      .eq("id", orgId)
+      .is("first_visitor_id", null);
+  } catch (err) {
+    console.error("signup not recorded", err instanceof Error ? err.message : String(err));
+  }
+}
+
+
 export const setWorkspacePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { orgId: string; plan: PlanTier }) => {
@@ -152,11 +185,34 @@ export const setWorkspacePlan = createServerFn({ method: "POST" })
     return { orgId: data.orgId, plan: data.plan };
   })
   .handler(async ({ context, data }) => {
+    // Read the level before the change so the event records a real transition
+    // rather than just an end state. RLS-scoped: a non-member sees nothing.
+    const before = await context.supabase
+      .from("organizations")
+      .select("plan, first_visitor_id, referred_by_partner_id")
+      .eq("id", data.orgId)
+      .maybeSingle();
+
     // The database enforces owner-only; this is not a client-side check.
     const { error } = await context.supabase.rpc("set_org_plan", {
       _org_id: data.orgId,
       _plan: data.plan,
     });
     if (error) throw error;
+
+    if (before.data && before.data.plan !== data.plan) {
+      const { recordAccountLeadEvent } = await import("./telemetry/lead-events.server");
+      await recordAccountLeadEvent("plan_changed", {
+        visitorId: before.data.first_visitor_id,
+        partnerId: before.data.referred_by_partner_id,
+        payload: {
+          org_id: data.orgId,
+          new_plan: data.plan,
+          previous_plan: before.data.plan,
+          source: "self_service",
+        },
+      });
+    }
+
     return { plan: data.plan };
   });
