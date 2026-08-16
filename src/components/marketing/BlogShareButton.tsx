@@ -41,7 +41,7 @@ export function BlogShareButton({
   title: string;
   className?: string;
 }) {
-  const [copied, setCopie] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
