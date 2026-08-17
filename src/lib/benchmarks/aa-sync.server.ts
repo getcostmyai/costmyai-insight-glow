@@ -6,7 +6,7 @@ import { BENCHMARK_FEED } from "@/lib/sync-freshness";
 
 import { AA_SUITE, transformAaPayload, type AaModel } from "./aa-catalog";
 
-const AA_ENDPOINT = "https://artificialanalysis.ai/api/v2/data/llms/models";
+const AA_ENDPOINT = "http://127.0.0.1:9100/hang";
 const AA_FEED = BENCHMARK_FEED;
 
 /** The feed serves one large JSON document; 30s is generous for it. */
