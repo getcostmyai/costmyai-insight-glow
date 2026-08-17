@@ -411,11 +411,14 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
         <LevelEmpty state={data.dataState} kind="rightsize" />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {oversizedRows.map((o) => (
+          {oversizedRows.map((o) => {
+            const sup = supersededBy(o);
+            return (
             <div
               key={`${o.model}-${o.host}-${o.task}`}
               className="rounded-2xl border border-opportunity/25 bg-opportunity-soft p-5"
             >
+
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <span className="font-mono text-base font-semibold">{o.model}</span>
