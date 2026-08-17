@@ -2,8 +2,17 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CalendarCheck, ClipboardList, Loader2, Mail, Phone } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarCheck,
+  ClipboardList,
+  Loader2,
+  Mail,
+  Phone,
+  UserPlus,
+} from "lucide-react";
 
+import { createPartner } from "@/lib/partner-create.functions";
 import {
   approveAndProvisionPartner,
   listPartnerApplications,
@@ -70,6 +79,8 @@ function ReviewQueue() {
         pending of <span className="num tabular-nums">{rows.length}</span>.
       </p>
 
+      <CreatePartnerCard />
+
       {rows.length === 0 ? (
         <p className="mt-10 text-sm text-muted-foreground">No applications yet.</p>
       ) : (
@@ -89,6 +100,133 @@ function ReviewQueue() {
   );
 }
 
+/**
+ * Manual partner creation. This is the supported path for partners we already
+ * know: it normalizes the email to the exact string claim_partner_membership()
+ * matches on, refuses an empty one, warns before a second active partner reuses
+ * an address, and sends the welcome email in the same step.
+ */
+function CreatePartnerCard() {
+  const create = useServerFn(createPartner);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+
+  async function submit(allowDuplicate: boolean) {
+    setBusy(true);
+    setError(null);
+    if (!allowDuplicate) setWarning(null);
+    try {
+      const result = await create({
+        data: { name, email, referralCode: code, allowDuplicate },
+      });
+      if (result.duplicate) {
+        setWarning(result.message);
+        return;
+      }
+      setWarning(null);
+      setDone(
+        `${result.referralCode} created for ${result.email}. ` +
+          (result.welcome.sent
+            ? "Welcome email sent."
+            : `Welcome email not sent: ${result.welcome.reason}`),
+      );
+      setName("");
+      setEmail("");
+      setCode("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create the partner.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <UserPlus className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold">Create a partner</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="rounded-full border border-border px-3.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+        >
+          {open ? "Close" : "Open"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            The contact email is the exact address the partner must sign up with. Anything else
+            will not link to this account.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Partner name"
+              className="min-w-[10rem] flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Contact email"
+              inputMode="email"
+              className="min-w-[12rem] flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Referral code (optional)"
+              className="min-w-[10rem] rounded-xl border border-border bg-background px-3 py-2 text-sm uppercase outline-none focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={() => submit(false)}
+              disabled={busy || !name.trim() || !email.trim()}
+              className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {busy ? "…" : "Create & send welcome"}
+            </button>
+          </div>
+
+          {warning && (
+            <div className="rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+              {warning}
+              <button
+                type="button"
+                onClick={() => submit(true)}
+                disabled={busy}
+                className="ml-2 rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-background disabled:opacity-60"
+              >
+                Create anyway
+              </button>
+            </div>
+          )}
+          {error && (
+            <p className="rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive">
+              {error}
+            </p>
+          )}
+          {done && (
+            <p className="rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+              {done}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Row = Awaited<ReturnType<typeof listPartnerApplications>>[number];
 
 function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void }) {
@@ -97,6 +235,7 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
   const [note, setNote] = useState(row.reviewerNote ?? "");
   const [busy, setBusy] = useState<ApplicationStatus | "provision" | null>(null);
   const [provisioned, setProvisioned] = useState<string | null>(null);
+  const [welcomeNote, setWelcomeNote] = useState<string | null>(null);
   const [provisionError, setProvisionError] = useState<string | null>(null);
 
   async function apply(status: ApplicationStatus) {
@@ -115,6 +254,11 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
     try {
       const result = await provision({ data: { id: row.id } });
       setProvisioned(result.referral_code);
+      setWelcomeNote(
+        result.welcome.sent
+          ? `Welcome email sent to ${result.welcome.email}.`
+          : `Welcome email not sent: ${result.welcome.reason}`,
+      );
       onChanged();
     } catch (err) {
       setProvisionError(err instanceof Error ? err.message : "Could not activate the partner.");
@@ -199,6 +343,7 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
           Partner account is live. Referral code{" "}
           <span className="font-semibold text-foreground">{provisioned}</span>. They see it after
           signing in at /partner/login with {row.email}.
+          {welcomeNote ? <span className="block mt-1">{welcomeNote}</span> : null}
         </p>
       )}
       {provisionError && (
