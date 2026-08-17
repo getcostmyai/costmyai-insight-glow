@@ -62,6 +62,8 @@ import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './rou
 import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin/leads'
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1SwitchesRouteImport } from './routes/api/public/v1/switches'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
@@ -354,6 +356,16 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWidgetIntelligenceRoute =
   ApiPublicWidgetIntelligenceRouteImport.update({
     id: '/api/public/widget/intelligence',
@@ -522,6 +534,8 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -591,6 +605,8 @@ export interface FileRoutesByTo {
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -665,6 +681,8 @@ export interface FileRoutesById {
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -739,6 +757,8 @@ export interface FileRouteTypes {
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/api/public/og/intelligence/$month'
   fileRoutesByTo: FileRoutesByTo
@@ -808,6 +828,8 @@ export interface FileRouteTypes {
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/api/public/og/intelligence/$month'
   id:
@@ -881,6 +903,8 @@ export interface FileRouteTypes {
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/api/public/og/intelligence/$month'
   fileRoutesById: FileRoutesById
@@ -932,6 +956,8 @@ export interface RootRouteChildren {
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
   ApiPublicV1SwitchesRoute: typeof ApiPublicV1SwitchesRoute
   ApiPublicWidgetIntelligenceRoute: typeof ApiPublicWidgetIntelligenceRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
 }
@@ -1309,6 +1335,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/widget/intelligence': {
       id: '/api/public/widget/intelligence'
       path: '/api/public/widget/intelligence'
@@ -1569,6 +1609,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
   ApiPublicV1SwitchesRoute: ApiPublicV1SwitchesRoute,
   ApiPublicWidgetIntelligenceRoute: ApiPublicWidgetIntelligenceRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
 }
