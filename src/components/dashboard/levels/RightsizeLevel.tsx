@@ -374,14 +374,21 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
    * line saying where the better option lives and what it is worth.
    */
   const oversizedRows = data.oversized;
-  const supersededBy = (o: { model: string; hostKey: string; task: string; toModel?: string | null }) => {
+  const supersededBy = (o: {
+    model: string;
+    hostKey: string;
+    task: string;
+    toModel?: string | null;
+    toHost?: string | null;
+  }) => {
     if (!o.toModel) return null;
     const group = groupFor(data.workloadGroups, {
       fromModel: o.model,
       fromHost: o.hostKey,
       taskHint: o.task,
     });
-    if (isBestRow(group, { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey })) return null;
+    if (isBestRow(group, { kind: "rightsize", toModel: o.toModel, toHost: o.toHost ?? o.hostKey }))
+      return null;
     return group ? group.best : null;
   };
 
@@ -472,7 +479,10 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                           fromModel: o.model,
                           fromHost: o.hostKey,
                           toModel: o.toModel!,
-                          toHost: o.hostKey,
+                          // The recommended model's real host, not the source
+                          // host. Cross-provider targets are gated by phase,
+                          // not disguised as same-host swaps.
+                          toHost: o.toHost ?? o.hostKey,
                           taskHint: o.task,
                         })
                       }

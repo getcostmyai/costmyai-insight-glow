@@ -125,9 +125,18 @@ export const activateOpportunity = createServerFn({ method: "POST" })
           note: o.note,
           qualityDelta: null,
           toModel: o.toModel ?? "",
-          // Right-sizing swaps the model, never the provider: the destination
-          // host is the workload's own, not whatever the client posted.
-          toHost: o.hostKey,
+          // Dispatch 231. The destination host is the one the ENGINE resolved
+          // for the recommended model, re-derived here from the snapshot — not
+          // the workload's own host, and not whatever the client posted.
+          //
+          // Pinning to the source host was the defect: `findOversized` ranks
+          // the cheapest model at the required tier across every priced host,
+          // so the target is often on another provider. Writing it as a
+          // same-host swap made `phaseFor` call it Phase 1 and mark it
+          // executable, and the container would then have asked the source
+          // provider for a model it does not serve. A cross-host right-size is
+          // a Phase 2 switch and must be gated as one.
+          toHost: o.toHost ?? o.hostKey,
         };
       }
     } else {

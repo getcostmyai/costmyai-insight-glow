@@ -169,10 +169,25 @@ export const REFUSAL_LABEL: Record<string, string> = {
 export interface OversizedWorkload {
   model: string;
   host: string;
-  /** Raw provider key behind the label — right-sizing stays on the same host. */
+  /** Raw provider key behind the label — the workload's OWN host. */
   hostKey: string;
   task: string;
   toModel: string | null;
+  /**
+   * Dispatch 231. The host the recommended model actually lives on, carried
+   * through from the engine instead of being assumed equal to `hostKey`.
+   *
+   * `findOversized` picks the cheapest model at the required tier across every
+   * priced host, so the target is frequently on another provider. This row
+   * used to drop that field, and every consumer downstream — the activation
+   * writer included — substituted the source host, which produced a switch
+   * telling a container to ask one provider for another provider's model. The
+   * phase gate then classified the same switch as cross-provider. Three
+   * components, three answers. The engine's answer is the only measured one,
+   * so it is the one that travels.
+   */
+  toHost: string | null;
+  toHostLabel: string | null;
   /** Real dollars this workload wasted inside the selected window. */
   wasted: number;
   /** The same waste as a labelled 30-day run-rate, for the ledger and Govern. */
@@ -653,6 +668,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       hostKey: r.fromHost,
       task: r.taskHint,
       toModel: r.toModel,
+      toHost: r.toHost ?? null,
+      toHostLabel: r.toHostLabel ?? null,
       wasted: round2(r.savingUsd),
       wastedMonthly: round2(r.monthlySavingUsd),
       savingPct: pct1(r.savingPct),
@@ -774,8 +791,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
           option: {
             kind: "rightsize" as const,
             toModel: o.toModel as string,
-            toHost: o.hostKey,
-            toHostLabel: o.host,
+            toHost: o.toHost ?? o.hostKey,
+            toHostLabel: o.toHostLabel ?? o.host,
             saving: o.wasted,
             savingPct: o.savingPct,
           },
