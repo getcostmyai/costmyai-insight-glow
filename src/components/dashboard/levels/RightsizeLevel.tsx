@@ -353,6 +353,18 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
   );
 }
 
+/** Where a superseding option is actually actionable, and what it is. */
+const SUPERSEDE_PAGE: Record<MechanismKind, string> = {
+  host_arbitrage: "Compare",
+  quality_match: "Certify",
+  rightsize: "Rightsize",
+};
+const SUPERSEDE_ACTION: Record<MechanismKind, string> = {
+  host_arbitrage: "same model on a cheaper host",
+  quality_match: "quality-match",
+  rightsize: "right-size",
+};
+
 /** Frontier models doing economy-tier work, with the switch that fixes it. */
 export function OversizedSection({ ctl }: { ctl: DashboardController }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
