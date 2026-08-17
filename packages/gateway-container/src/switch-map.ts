@@ -44,6 +44,10 @@ export interface SwitchMapStatus {
   executable: number;
   lastError: string | null;
   lastErrorAt: string | null;
+  /** Destinations this container holds a customer-granted key for. */
+  grantedHosts: string[];
+  grantsAsserted: boolean;
+  lastGrantError: string | null;
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -54,6 +58,9 @@ export class SwitchMap {
   private lastError: string | null = null;
   private lastErrorAtMs: number | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  /** Hosts whose grant this container has already asserted this process. */
+  private assertedHosts: string | null = null;
+  private lastGrantError: string | null = null;
 
   constructor(
     private readonly config: ContainerConfig,
@@ -100,7 +107,52 @@ export class SwitchMap {
       executable: fresh ? (this.plan?.switches.filter((s) => s.executable).length ?? 0) : 0,
       lastError: this.lastError,
       lastErrorAt: this.lastErrorAtMs === null ? null : new Date(this.lastErrorAtMs).toISOString(),
+      grantedHosts: Object.keys(this.config.routeKeys).sort(),
+      grantsAsserted: this.assertedHosts !== null,
+      lastGrantError: this.lastGrantError,
     };
+  }
+
+  /**
+   * Dispatch 231. Tell the server which destinations this container holds a
+   * customer-granted credential for.
+   *
+   * Only host NAMES travel — the schema on the other side is strict and has no
+   * field a key could occupy, and this method never touches the values. A
+   * failure is recorded and retried on the next poll; it never affects traffic,
+   * and it never grants anything locally, because the container executes
+   * decisions rather than making them.
+   */
+  async assertGrants(): Promise<boolean> {
+    const hosts = Object.keys(this.config.routeKeys).sort();
+    if (hosts.length === 0) return false;
+    const signature = hosts.join(",");
+    if (this.assertedHosts === signature) return true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), POLL_TIMEOUT_MS);
+    try {
+      const response = await this.fetchImpl(`${this.config.baseUrl}${INGEST_PATHS.switches}`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.config.ingestToken}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ v: 2, hosts, container_id: this.config.containerId }),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        this.lastGrantError = `grant assertion ${response.status}`;
+        return false;
+      }
+      this.assertedHosts = signature;
+      this.lastGrantError = null;
+      return true;
+    } catch (err) {
+      this.lastGrantError = err instanceof Error ? err.message : String(err);
+      return false;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   /**
@@ -108,6 +160,11 @@ export class SwitchMap {
    * not an incident for the customer's traffic. Returns true on a plan refresh.
    */
   async refresh(): Promise<boolean> {
+    // Grants first: a plan fetched before the server knows what this container
+    // holds would report a Phase 2 destination as ungranted for one whole
+    // interval, and the customer would read that as the product ignoring the
+    // variable they just set.
+    await this.assertGrants();
     const url = `${this.config.baseUrl}${INGEST_PATHS.switches}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), POLL_TIMEOUT_MS);
