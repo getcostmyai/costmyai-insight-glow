@@ -58,5 +58,5 @@ export async function readMyFunnel(
       visitors: Number(r.visitors),
       ratePct: r.rate_from_previous_pct === null ? null : Number(r.rate_from_previous_pct),
     }))
-    .sort((a, b) => a.stageOrder - b.stageOrder);
+    .sort((a: FunnelStageRow, b: FunnelStageRow) => a.stageOrder - b.stageOrder);
 }
