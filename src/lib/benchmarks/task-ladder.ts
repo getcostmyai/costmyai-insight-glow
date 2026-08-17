@@ -176,7 +176,25 @@ export function resolveLadder(
         "This traffic arrived without a task label — the connector reads only the endpoint and the model name, never your prompts — so there is no instrument to certify a quality-equivalent switch against. Cheaper-host switches on the same model are unaffected.",
     };
   }
+  /*
+   * Correction to the four-cell canon (Dispatch, 17 Aug 2026).
+   *
+   * The validity x discrimination matrix has four cells but only THREE code
+   * paths, deliberately. Validity is evaluated first and short-circuits: when
+   * no evaluation measures this kind of work, there is no instrument whose
+   * separation could be read, so "Invalid + Saturated" and "Invalid +
+   * Discriminating" are the same fact stated twice and return an identical
+   * verdict, detail string and empty `tried` list.
+   *
+   * Kept indistinguishable on purpose. Distinguishing them would require
+   * reporting the separation of an instrument we have just ruled inadmissible
+   * for this task, which reads to a customer or a support agent as "we
+   * measured you against X and X was fine" when we measured nothing at all.
+   * That is the exact class of borrowed-instrument claim the ladder exists to
+   * prevent. An engineering call, not a product one.
+   */
   if (!normalized || TASK_LADDERS[normalized].length === 0) {
+
     return {
       field: null,
       rung: -1,
