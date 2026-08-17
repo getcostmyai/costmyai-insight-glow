@@ -61,6 +61,7 @@ import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
 import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin/leads'
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1SwitchesRouteImport } from './routes/api/public/v1/switches'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
@@ -347,6 +348,12 @@ const AuthenticatedAdminJobsRoute = AuthenticatedAdminJobsRouteImport.update({
   path: '/admin/jobs',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWidgetIntelligenceRoute =
   ApiPublicWidgetIntelligenceRouteImport.update({
     id: '/api/public/widget/intelligence',
@@ -515,6 +522,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRoutesByTo {
@@ -583,6 +591,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRoutesById {
@@ -656,6 +665,7 @@ export interface FileRoutesById {
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRouteTypes {
@@ -729,6 +739,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
+    | '/lovable/email/transactional/preview'
     | '/api/public/og/intelligence/$month'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -797,6 +808,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
+    | '/lovable/email/transactional/preview'
     | '/api/public/og/intelligence/$month'
   id:
     | '__root__'
@@ -869,6 +881,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
+    | '/lovable/email/transactional/preview'
     | '/api/public/og/intelligence/$month'
   fileRoutesById: FileRoutesById
 }
@@ -919,6 +932,7 @@ export interface RootRouteChildren {
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
   ApiPublicV1SwitchesRoute: typeof ApiPublicV1SwitchesRoute
   ApiPublicWidgetIntelligenceRoute: typeof ApiPublicWidgetIntelligenceRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
 }
 
@@ -1288,6 +1302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminJobsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/widget/intelligence': {
       id: '/api/public/widget/intelligence'
       path: '/api/public/widget/intelligence'
@@ -1548,6 +1569,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
   ApiPublicV1SwitchesRoute: ApiPublicV1SwitchesRoute,
   ApiPublicWidgetIntelligenceRoute: ApiPublicWidgetIntelligenceRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
 }
 export const routeTree = rootRouteImport
