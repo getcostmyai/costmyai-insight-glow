@@ -23,6 +23,7 @@ import {
 } from "@/components/dashboard/ExecutionNote";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
 import { groupFor, isBestRow } from "@/lib/dashboard/group";
+import type { MechanismKind } from "@/lib/dashboard/group";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
@@ -353,6 +354,18 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
   );
 }
 
+/** Where a superseding option is actually actionable, and what it is. */
+const SUPERSEDE_PAGE: Record<MechanismKind, string> = {
+  host_arbitrage: "Compare",
+  quality_match: "Certify",
+  rightsize: "Rightsize",
+};
+const SUPERSEDE_ACTION: Record<MechanismKind, string> = {
+  host_arbitrage: "same model on a cheaper host",
+  quality_match: "quality-match",
+  rightsize: "right-size",
+};
+
 /** Frontier models doing economy-tier work, with the switch that fixes it. */
 export function OversizedSection({ ctl }: { ctl: DashboardController }) {
   const { data, canAct, activate, busy, errorFor, ctaHref, ctaLabel, activeRange } = ctl;
@@ -362,22 +375,26 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
   // Dispatch 212: right-sizing names a target model, so "armed" still ignores
   // the host — but any running switch off the workload must be disclosed.
   /**
-   * Dispatch 213. One card per workload: an oversized card is drawn only when
-   * right-sizing is that workload's best option, or when it names no target at
-   * all (a pure waste disclosure, which no other mechanism can represent).
+   * Dispatch 230. One *actionable* card per workload.
+   *
+   * Every oversized workload the engine found renders a card — the badge and
+   * the hero total count the raw set, so suppressing rows here understated the
+   * page's own finding. A workload whose money is better claimed by another
+   * mechanism still renders, but disclosure-only: no activate button, and a
+   * line saying where the better option lives and what it is worth.
    */
-  const oversizedRows = data.oversized.filter(
-    (o) =>
-      !o.toModel ||
-      isBestRow(
-        groupFor(data.workloadGroups, {
-          fromModel: o.model,
-          fromHost: o.hostKey,
-          taskHint: o.task,
-        }),
-        { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey },
-      ),
-  );
+  const oversizedRows = data.oversized;
+  const supersededBy = (o: { model: string; hostKey: string; task: string; toModel?: string | null }) => {
+    if (!o.toModel) return null;
+    const group = groupFor(data.workloadGroups, {
+      fromModel: o.model,
+      fromHost: o.hostKey,
+      taskHint: o.task,
+    });
+    if (isBestRow(group, { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey })) return null;
+    return group ? group.best : null;
+  };
+
   const rsActive = (o: { model: string; hostKey: string }) =>
     ctl.pending.activeFrom(o.model, o.hostKey);
   const rsArmed = (o: { model: string; hostKey: string; toModel?: string | null }) => {
@@ -407,11 +424,14 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
         <LevelEmpty state={data.dataState} kind="rightsize" />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {oversizedRows.map((o) => (
+          {oversizedRows.map((o) => {
+            const sup = supersededBy(o);
+            return (
             <div
               key={`${o.model}-${o.host}-${o.task}`}
               className="rounded-2xl border border-opportunity/25 bg-opportunity-soft p-5"
             >
+
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <span className="font-mono text-base font-semibold">{o.model}</span>
@@ -429,7 +449,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 </span>
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
-              {o.toModel ? (
+              {o.toModel && !sup ? (
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-opportunity/20 pt-3">
                   <span className="text-xs text-muted-foreground">
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
@@ -487,7 +507,32 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                   </SwitchAction>
 
                 </div>
+              ) : sup ? (
+                /**
+                 * Disclosure-only. The waste above is real and still counted,
+                 * but the dollars are claimed by a better option on another
+                 * page — so this card names where, and offers no button that
+                 * would activate the same money twice.
+                 */
+                <div className="mt-4 border-t border-opportunity/20 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Already addressed under{" "}
+                    <span className="font-semibold text-foreground">
+                      {SUPERSEDE_PAGE[sup.kind]}
+                    </span>{" "}
+                    — {SUPERSEDE_ACTION[sup.kind]} to{" "}
+                    <span className="font-mono text-foreground">{sup.toModel}</span>
+                    {sup.toHostLabel || sup.toHost ? (
+                      <span> on {sup.toHostLabel || sup.toHost}</span>
+                    ) : null}
+                    , <span className="num text-saving">{usd(sup.saving, 2)}</span>.
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Counted once, here and there — activate it where it is best.
+                  </p>
+                </div>
               ) : null}
+
               {errorFor(rsKey(o)) ? (
                 <p className="mt-2 text-xs text-destructive">{errorFor(rsKey(o))}</p>
               ) : null}
@@ -500,7 +545,9 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 period={activeRange.long}
               />
             </div>
-          ))}
+            );
+          })}
+
         </div>
       )}
     </section>
