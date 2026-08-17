@@ -23,6 +23,7 @@ import {
 } from "@/components/dashboard/ExecutionNote";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
 import { groupFor, isBestRow } from "@/lib/dashboard/group";
+import type { MechanismKind } from "@/lib/dashboard/group";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
