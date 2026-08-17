@@ -272,7 +272,7 @@ function ReferralFunnel() {
               </tr>
             </thead>
             <tbody>
-              {(funnel.data ?? []).map((r) => (
+              {(funnel.data ?? []).map((r: FunnelStageRow) => (
                 <tr key={r.stage} className="border-t border-border">
                   <td className="py-2 pr-4">{stageLabel(r.stage)}</td>
                   <td className="py-2 pr-4 font-semibold tabular-nums">{r.visitors}</td>
