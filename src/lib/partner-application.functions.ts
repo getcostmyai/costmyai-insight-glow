@@ -67,8 +67,17 @@ export const approveAndProvisionPartner = createServerFn({ method: "POST" })
       { _application_id: data.id },
     );
     if (error) throw error;
-    return result as { partner_id: string; referral_code: string; created: boolean };
+    const provisioned = result as { partner_id: string; referral_code: string; created: boolean };
+
+    // The partner still has to sign up with the exact address they applied
+    // with, or claim_partner_membership() silently links nothing. The welcome
+    // email is what tells them that. Idempotent, so a re-run does not resend.
+    const { sendPartnerWelcome } = await import("./partner-welcome.server");
+    const welcome = await sendPartnerWelcome(provisioned.partner_id, { fromApplication: true });
+
+    return { ...provisioned, welcome };
   });
+
 
 /**
  * Links the signed-in account to a partner account provisioned for the same

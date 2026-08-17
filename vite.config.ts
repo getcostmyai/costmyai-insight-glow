@@ -5,7 +5,16 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import wasm from "vite-plugin-wasm";
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
+
+// Server routes (email sending) read non-VITE_ env vars at runtime.
+const serverEnv = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
+Object.assign(process.env, serverEnv);
 
 // Dispatch 88. Baked into the bundle so the running deployment can state which
 // tree it was built from; the stale-deploy detector recomputes the same hash
@@ -31,6 +40,15 @@ export default defineConfig({
     // workers-og ships Yoga/Resvg as .wasm side-files. Left externalised, the dev
     // SSR loader cannot resolve them; bundled, Vite needs an explicit wasm loader.
     plugins: [wasm()],
+    resolve: {
+      // React Email's htmlparser2 path needs entities v4.5.0; nested v7 copies
+      // drop ./lib/decode.js and break SSR.
+      alias: {
+        "entities/lib/decode.js": path.resolve(rootDir, "node_modules/entities/lib/decode.js"),
+        "entities/lib/encode.js": path.resolve(rootDir, "node_modules/entities/lib/encode.js"),
+        entities: path.resolve(rootDir, "node_modules/entities"),
+      },
+    },
     ssr: { noExternal: ["workers-og"] },
     optimizeDeps: { exclude: ["workers-og"] },
 
