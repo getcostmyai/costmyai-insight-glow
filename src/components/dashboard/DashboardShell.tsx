@@ -254,7 +254,11 @@ export function UsageSection({ ctl }: { ctl: DashboardController }) {
         {data.coverage.untrackedModels > 0
           ? `${data.coverage.untrackedModels} model${data.coverage.untrackedModels === 1 ? "" : "s"} excluded from the spend total — no pricing data available. `
           : "Every model in this window has live pricing coverage. "}
-        Prices verified {data.coverage.pricesSyncedAgo}.
+        Prices verified {data.coverage.pricesSyncedAgo}. Benchmarks verified{" "}
+        {data.coverage.benchmarksSyncedAgo}
+        {data.coverage.benchmarksStale
+          ? " — stale, so no new quality certification is issued until the benchmark feed reports again."
+          : "."}
       </p>
 
     </section>
