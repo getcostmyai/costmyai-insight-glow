@@ -155,6 +155,10 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
           </p>
         </section>
 
+        <ReferralFunnel />
+
+
+
         <section className="mt-6 rounded-2xl border border-border bg-card p-6">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
