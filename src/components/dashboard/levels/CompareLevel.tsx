@@ -7,6 +7,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { OpportunityRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
+import { supersededOption } from "@/components/dashboard/SupersededNote";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import {
   HeroUpsell,
@@ -54,16 +55,17 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
    */
   const compareGroup = (w: { fromModel: string; fromHost: string; taskHint: string }) =>
     arbitrageOnlyGroup(groupFor(data.workloadGroups, w));
-  const rows = all.filter((r) =>
-    isBestRow(
-      compareGroup({
-        fromModel: r.fromModel,
-        fromHost: r.fromHost,
-        taskHint: r.taskHint,
-      }),
+  /**
+   * Dispatch 231. Every arbitrage finding the badge counts renders a card;
+   * a row that is not its workload's best arbitrage option renders
+   * disclosure-only, pointing at the option on this page that wins it.
+   */
+  const rows = all;
+  const supersededFor = (r: { fromModel: string; fromHost: string; taskHint: string; toModel: string; toHost: string }) =>
+    supersededOption(
+      compareGroup({ fromModel: r.fromModel, fromHost: r.fromHost, taskHint: r.taskHint }),
       { kind: "host_arbitrage", toModel: r.toModel, toHost: r.toHost },
-    ),
-  );
+    );
 
   // One number, one source: the controller's shared live counter. The hero and
   // the gateway usage widget below read the same object, so they cannot drift
@@ -121,7 +123,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
             />
             <HeroStat
               label="Cheaper hosts identified"
-              value={`${all.length}`}
+              value={`${levelCount(data, "host_arbitrage")}`}
               sub="identical weights, zero quality risk"
               accent="oklch(0.83 0.11 195)"
             />
@@ -184,7 +186,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           eyebrow={`Ranked by saving · ${activeRange.long}`}
           title="Same model, cheaper host"
           hint="Identical model weights, a cheaper provider. Zero quality risk."
-          badge={`${all.length} certified`}
+          badge={`${levelCount(data, "host_arbitrage")} certified`}
           badgeTone="saving"
         />
         {!level.unlocked ? (
@@ -202,9 +204,12 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
           <div className="space-y-3">
             {rows.map((row, i) => {
               const key = `host:${row.fromModel}|${row.fromHost}|${row.toHost}|${row.taskHint}`;
+              const sup = supersededFor(row);
               return (
                 <div key={key} className="space-y-2">
                 <SwitchCard
+                  supersededBy={sup}
+                  supersededHere
                   row={asSwitchRow(row, "host")}
                   period={activeRange.long}
                   rank={i + 1}

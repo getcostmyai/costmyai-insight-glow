@@ -2,7 +2,9 @@ import { ArrowRight, Clock, ShieldOff } from "lucide-react";
 
 import { SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
-import { groupFor, isBestRow } from "@/lib/dashboard/group";
+import { groupFor } from "@/lib/dashboard/group";
+import { supersededOption } from "@/components/dashboard/SupersededNote";
+import { levelCount, levelSaving } from "@/lib/dashboard/figures";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -62,25 +64,31 @@ export function ArbitrageList({
     ctl;
   const teaserHref = upsellHref === undefined ? rightsizeHref : upsellHref;
   const all = data.hostArbitrage;
-  // Real dollars over the window on screen — the same sum the hero shows. The
-  // total counts every finding; the cards below merge them per workload, so
-  // this header states how the money was found, not how many cards there are.
-  const total = all.reduce((s, r) => s + r.saving, 0);
   /**
-   * Dispatch 213. One card per workload: a row is drawn only when it carries
-   * that workload's best option. Anything else it found collapses underneath
-   * the winning card instead of standing as a second card for one decision.
+   * Dispatch 231. Badge money and badge count come from the shared figures
+   * path, never a local reduce: when the level is locked the array is empty by
+   * design and only `levelSaving`/`levelCount` know the real numbers behind
+   * the paywall. A local sum printed "$0 · 0 found" above a panel stating the
+   * true figure.
    */
-  const rows = all.filter((r) =>
-    isBestRow(
+  const total = levelSaving(data, "host_arbitrage");
+  const found = levelCount(data, "host_arbitrage");
+  /**
+   * Dispatch 213 grouped findings per workload; Dispatch 231 stops the
+   * grouping from deleting cards. Every finding the badge counted is drawn.
+   * A row that does not hold its workload's best option renders
+   * disclosure-only, cross-referenced to where the money is actionable.
+   */
+  const rows = all;
+  const supersededFor = (r: { fromModel: string; fromHost: string; taskHint: string; toModel: string; toHost: string }) =>
+    supersededOption(
       groupFor(data.workloadGroups, {
         fromModel: r.fromModel,
         fromHost: r.fromHost,
         taskHint: r.taskHint,
       }),
       { kind: "host_arbitrage", toModel: r.toModel, toHost: r.toHost },
-    ),
-  );
+    );
 
   return (
     <section>
@@ -88,18 +96,31 @@ export function ArbitrageList({
         eyebrow="List A · arbitrage saves"
         title="Same model, cheaper host"
         hint="Identical model weights on a different provider. No benchmark is needed — the output is the same model's output."
-        badge={`${usd(total, 0)} · ${activeRange.long} · ${all.length} found`}
+        badge={`${usd(total, 0)} · ${activeRange.long} · ${found} found`}
         badgeTone="saving"
       />
-      {rows.length === 0 ? (
+      {!data.levels.host_arbitrage.unlocked ? (
+        /* Parity with List B: a locked level shows its real count and money. */
+        <LevelLocked
+          requiredPlan={data.levels.host_arbitrage.requiredPlan}
+          count={data.levels.host_arbitrage.lockedCount}
+          saving={data.levels.host_arbitrage.lockedSaving}
+          period={activeRange.long}
+          what="cheaper-host"
+          evaluated={data.stats.workloads}
+        />
+      ) : rows.length === 0 ? (
         <LevelEmpty state={data.dataState} kind="host_arbitrage" />
       ) : (
         <div className="space-y-3">
           {rows.map((row, i) => {
             const key = `host:${row.fromModel}|${row.fromHost}|${row.toHost}|${row.taskHint}`;
+            const sup = supersededFor(row);
             return (
               <div key={key} className="space-y-2">
               <SwitchCard
+                supersededBy={sup}
+                supersededHere={sup?.kind === "host_arbitrage"}
                 row={asSwitchRow(row, "host")}
                 period={activeRange.long}
                 rank={i + 1}
@@ -112,7 +133,7 @@ export function ArbitrageList({
                 activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
-                  canAct && !discovery
+                  canAct && !discovery && !sup
                     ? () =>
                         activate.mutate({
                           key,
@@ -160,17 +181,19 @@ export function BenchmarkList({
   const teaserHref = upsellHref === undefined ? rightsizeHref : upsellHref;
   const level = data.levels.quality_match;
   const all = data.qualityMatched;
-  const total = all.reduce((s, r) => s + r.saving, 0);
-  const rows = all.filter((r) =>
-    isBestRow(
+  /** Dispatch 231: shared figures path, so a locked level states its real money. */
+  const total = levelSaving(data, "quality_match");
+  const found = levelCount(data, "quality_match");
+  const rows = all;
+  const supersededFor = (r: { fromModel: string; fromHost: string; taskHint: string; toModel: string; toHost: string }) =>
+    supersededOption(
       groupFor(data.workloadGroups, {
         fromModel: r.fromModel,
         fromHost: r.fromHost,
         taskHint: r.taskHint,
       }),
       { kind: "quality_match", toModel: r.toModel, toHost: r.toHost },
-    ),
-  );
+    );
 
   return (
     <section>
@@ -178,7 +201,7 @@ export function BenchmarkList({
         eyebrow="List B · benchmark saves"
         title="Cheaper model, same measured quality"
         hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before the swap is offered.`}
-        badge={`${usd(total, 0)} · ${activeRange.long} · ${all.length} found`}
+        badge={`${usd(total, 0)} · ${activeRange.long} · ${found} found`}
         badgeTone="saving"
       />
       {!level.unlocked ? (
@@ -196,9 +219,12 @@ export function BenchmarkList({
         <div className="space-y-3">
           {rows.map((row, i) => {
             const key = `quality:${row.fromModel}|${row.toModel}|${row.taskHint}`;
+            const sup = supersededFor(row);
             return (
               <div key={key} className="space-y-2">
               <SwitchCard
+                supersededBy={sup}
+                supersededHere={sup?.kind === "quality_match"}
                 row={asSwitchRow(row, "quality")}
                 period={activeRange.long}
                 rank={i + 1}
@@ -211,7 +237,7 @@ export function BenchmarkList({
                 activeSwitch={ctl.pending.activeFrom(row.fromModel, row.fromHost)}
                 readOnly={ctl.demoReadOnly}
                 onActivate={
-                  canAct && !discovery
+                  canAct && !discovery && !sup
                     ? () =>
                         activate.mutate({
                           key,
