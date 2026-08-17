@@ -1,0 +1,919 @@
+{
+  "$schema_note": "Golden certification dataset. Every row under `real` was read from the live CostMyAI ledger on the captured_at date. Nothing here is generated.",
+  "captured_at": "2026-08-17",
+  "source": "public.benchmarks / public.benchmark_margins / public.host_prices / public.usage_rollups, is_fixture = false, is_active = true",
+  "pinning_rule": "Tests assert on `instruments[*].separation` (a population-derived measurement) and on verdicts, never on individual raw scores. An AA sync that moves one model's score must not break this file; only a change that moves an instrument's spread across SEPARATION_THRESHOLD should.",
+  "instruments": {
+    "terminalbench_v2_1": {
+      "separation": 85.768,
+      "scored_models": 77,
+      "min_score": 3.371,
+      "max_score": 89.139,
+      "suite": "aa:terminalbench_v2_1",
+      "margin": 10.368
+    },
+    "scicode": {
+      "separation": 43.2,
+      "scored_models": 143,
+      "min_score": 17,
+      "max_score": 60.2,
+      "suite": "aa:scicode",
+      "margin": 5.222
+    },
+    "hle": {
+      "separation": 53.7,
+      "scored_models": 143,
+      "min_score": 1.8,
+      "max_score": 55.5,
+      "suite": "aa:hle",
+      "margin": 1.607
+    },
+    "gpqa": {
+      "separation": 60,
+      "scored_models": 144,
+      "min_score": 34.9,
+      "max_score": 94.9,
+      "suite": "aa:gpqa",
+      "margin": 5.901
+    },
+    "tau_banking": {
+      "separation": 50.309,
+      "scored_models": 77,
+      "min_score": 1.031,
+      "max_score": 51.34,
+      "suite": "aa:tau_banking",
+      "margin": 8.146
+    },
+    "lcr": {
+      "separation": 83.333,
+      "scored_models": 134,
+      "min_score": 0,
+      "max_score": 83.333,
+      "suite": "aa:lcr",
+      "margin": 9.698
+    }
+  },
+  "scores": [
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 81
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 13.2
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 67.333
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 47
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 90.8
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 38.6
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 74.333
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 49.9
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "suite": "aa:tau_banking",
+      "task_class": "tau_banking",
+      "score": 39.381
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "suite": "aa:terminalbench_v2_1",
+      "task_class": "terminalbench_v2_1",
+      "score": 78.652
+    },
+    {
+      "model_key": "openai/gpt-4",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 34.9
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 87.3
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 28.5
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 76.667
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 43.3
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "suite": "aa:tau_banking",
+      "task_class": "tau_banking",
+      "score": 15.876
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "suite": "aa:terminalbench_v2_1",
+      "task_class": "terminalbench_v2_1",
+      "score": 52.434
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 91.1
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 39.5
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 78.333
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 52.5
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "suite": "aa:tau_banking",
+      "task_class": "tau_banking",
+      "score": 31.134
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "suite": "aa:terminalbench_v2_1",
+      "task_class": "terminalbench_v2_1",
+      "score": 80.899
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 78.2
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 19.6
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 51
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 38.9
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "suite": "aa:tau_banking",
+      "task_class": "tau_banking",
+      "score": 12.784
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "suite": "aa:terminalbench_v2_1",
+      "task_class": "terminalbench_v2_1",
+      "score": 26.217
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 53.5
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 4.1
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 0
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 28
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "suite": "aa:gpqa",
+      "task_class": "gpqa",
+      "score": 73.7
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "suite": "aa:hle",
+      "task_class": "hle",
+      "score": 10.1
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "suite": "aa:lcr",
+      "task_class": "lcr",
+      "score": 42.333
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "suite": "aa:scicode",
+      "task_class": "scicode",
+      "score": 32.3
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "suite": "aa:tau_banking",
+      "task_class": "tau_banking",
+      "score": 5.361
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "suite": "aa:terminalbench_v2_1",
+      "task_class": "terminalbench_v2_1",
+      "score": 38.202
+    }
+  ],
+  "prices": [
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "host": "amazon-bedrock",
+      "host_label": "Amazon Bedrock",
+      "input_usd_per_mtok": 5,
+      "output_usd_per_mtok": 25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "host": "anthropic",
+      "host_label": "Anthropic",
+      "input_usd_per_mtok": 5,
+      "output_usd_per_mtok": 25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "host": "azure",
+      "host_label": "Azure",
+      "input_usd_per_mtok": 5,
+      "output_usd_per_mtok": 25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "host": "google",
+      "host_label": "Google",
+      "input_usd_per_mtok": 5,
+      "output_usd_per_mtok": 25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "anthropic/claude-opus-4.5",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 5,
+      "output_usd_per_mtok": 25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "alibaba",
+      "host_label": "Alibaba",
+      "input_usd_per_mtok": 0.134,
+      "output_usd_per_mtok": 0.268,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "atlascloud",
+      "host_label": "AtlasCloud",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "azure",
+      "host_label": "Azure",
+      "input_usd_per_mtok": 0.21,
+      "output_usd_per_mtok": 0.56,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "baidu",
+      "host_label": "Baidu",
+      "input_usd_per_mtok": 0.0756,
+      "output_usd_per_mtok": 0.1512,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "cloudflare",
+      "host_label": "Cloudflare",
+      "input_usd_per_mtok": 0.44,
+      "output_usd_per_mtok": 1.32,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "coreweave",
+      "host_label": "CoreWeave",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "deepinfra",
+      "host_label": "DeepInfra",
+      "input_usd_per_mtok": 0.09,
+      "output_usd_per_mtok": 0.18,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "deepseek",
+      "host_label": "DeepSeek",
+      "input_usd_per_mtok": 0.22,
+      "output_usd_per_mtok": 0.66,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "digitalocean",
+      "host_label": "DigitalOcean",
+      "input_usd_per_mtok": 0.0679,
+      "output_usd_per_mtok": 0.168,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "gmicloud",
+      "host_label": "GMICloud",
+      "input_usd_per_mtok": 0.084,
+      "output_usd_per_mtok": 0.168,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "mancer-2",
+      "host_label": "Mancer 2",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.45,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "novita",
+      "host_label": "Novita",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 0.0742,
+      "output_usd_per_mtok": 0.1484,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "parasail",
+      "host_label": "Parasail",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "phala",
+      "host_label": "Phala",
+      "input_usd_per_mtok": 0.2,
+      "output_usd_per_mtok": 0.4,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "sail-research",
+      "host_label": "Sail Research",
+      "input_usd_per_mtok": 0.09,
+      "output_usd_per_mtok": 0.18,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "siliconflow",
+      "host_label": "SiliconFlow",
+      "input_usd_per_mtok": 0.13,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "streamlake",
+      "host_label": "StreamLake",
+      "input_usd_per_mtok": 0.0742,
+      "output_usd_per_mtok": 0.1484,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "deepseek/deepseek-v4-flash",
+      "host": "venice",
+      "host_label": "Venice",
+      "input_usd_per_mtok": 0.138,
+      "output_usd_per_mtok": 0.275,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-4",
+      "host": "azure",
+      "host_label": "Azure",
+      "input_usd_per_mtok": 30,
+      "output_usd_per_mtok": 60,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-4",
+      "host": "openai",
+      "host_label": "OpenAI",
+      "input_usd_per_mtok": 30,
+      "output_usd_per_mtok": 60,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-4",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 30,
+      "output_usd_per_mtok": 60,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "host": "azure",
+      "host_label": "Azure",
+      "input_usd_per_mtok": 1.25,
+      "output_usd_per_mtok": 10,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "host": "openai",
+      "host_label": "OpenAI",
+      "input_usd_per_mtok": 0.625,
+      "output_usd_per_mtok": 5,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.1",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 1.25,
+      "output_usd_per_mtok": 10,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "host": "amazon-bedrock",
+      "host_label": "Amazon Bedrock",
+      "input_usd_per_mtok": 0.22,
+      "output_usd_per_mtok": 1.32,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "host": "azure",
+      "host_label": "Azure",
+      "input_usd_per_mtok": 0.2,
+      "output_usd_per_mtok": 1.2,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "host": "openai",
+      "host_label": "OpenAI",
+      "input_usd_per_mtok": 0.1,
+      "output_usd_per_mtok": 0.6,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-5.6-luna",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 0.2,
+      "output_usd_per_mtok": 1.2,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "akashml",
+      "host_label": "AkashML",
+      "input_usd_per_mtok": 0.037,
+      "output_usd_per_mtok": 0.49,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "amazon-bedrock",
+      "host_label": "Amazon Bedrock",
+      "input_usd_per_mtok": 0.15,
+      "output_usd_per_mtok": 0.6,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "baseten",
+      "host_label": "BaseTen",
+      "input_usd_per_mtok": 0.1,
+      "output_usd_per_mtok": 0.5,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "cerebras",
+      "host_label": "Cerebras",
+      "input_usd_per_mtok": 0.35,
+      "output_usd_per_mtok": 0.75,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "coreweave",
+      "host_label": "CoreWeave",
+      "input_usd_per_mtok": 0.03,
+      "output_usd_per_mtok": 0.17,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "deepinfra",
+      "host_label": "DeepInfra",
+      "input_usd_per_mtok": 0.037,
+      "output_usd_per_mtok": 0.17,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "digitalocean",
+      "host_label": "DigitalOcean",
+      "input_usd_per_mtok": 0.055,
+      "output_usd_per_mtok": 0.385,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "google",
+      "host_label": "Google",
+      "input_usd_per_mtok": 0.09,
+      "output_usd_per_mtok": 0.36,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "groq",
+      "host_label": "Groq",
+      "input_usd_per_mtok": 0.15,
+      "output_usd_per_mtok": 0.6,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "mancer-2",
+      "host_label": "Mancer 2",
+      "input_usd_per_mtok": 0.08,
+      "output_usd_per_mtok": 0.5,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "mara",
+      "host_label": "Mara",
+      "input_usd_per_mtok": 0.15,
+      "output_usd_per_mtok": 0.75,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "nebius",
+      "host_label": "Nebius",
+      "input_usd_per_mtok": 0.15,
+      "output_usd_per_mtok": 0.6,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "novita",
+      "host_label": "Novita",
+      "input_usd_per_mtok": 0.05,
+      "output_usd_per_mtok": 0.25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 0.03,
+      "output_usd_per_mtok": 0.17,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "parasail",
+      "host_label": "Parasail",
+      "input_usd_per_mtok": 0.1,
+      "output_usd_per_mtok": 0.75,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "phala",
+      "host_label": "Phala",
+      "input_usd_per_mtok": 0.15,
+      "output_usd_per_mtok": 0.6,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "sambanova",
+      "host_label": "SambaNova",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.95,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "siliconflow",
+      "host_label": "SiliconFlow",
+      "input_usd_per_mtok": 0.05,
+      "output_usd_per_mtok": 0.45,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/gpt-oss-120b",
+      "host": "together",
+      "host_label": "Together",
+      "input_usd_per_mtok": 0.15,
+      "output_usd_per_mtok": 0.6,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/o1-pro",
+      "host": "openai",
+      "host_label": "OpenAI",
+      "input_usd_per_mtok": 150,
+      "output_usd_per_mtok": 600,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "openai/o1-pro",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 150,
+      "output_usd_per_mtok": 600,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "host": "deepinfra",
+      "host_label": "DeepInfra",
+      "input_usd_per_mtok": 0.08,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "host": "groq",
+      "host_label": "Groq",
+      "input_usd_per_mtok": 0.29,
+      "output_usd_per_mtok": 0.59,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "host": "nebius",
+      "host_label": "Nebius",
+      "input_usd_per_mtok": 0.1,
+      "output_usd_per_mtok": 0.3,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 0.08,
+      "output_usd_per_mtok": 0.28,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-32b",
+      "host": "siliconflow",
+      "host_label": "SiliconFlow",
+      "input_usd_per_mtok": 0.14,
+      "output_usd_per_mtok": 0.57,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "host": "alibaba",
+      "host_label": "Alibaba",
+      "input_usd_per_mtok": 0.3,
+      "output_usd_per_mtok": 1.5,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "host": "novita",
+      "host_label": "Novita",
+      "input_usd_per_mtok": 0.2,
+      "output_usd_per_mtok": 1.5,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "host": "openrouter",
+      "host_label": "OpenRouter",
+      "input_usd_per_mtok": 0.12,
+      "output_usd_per_mtok": 0.8,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "host": "parasail",
+      "host_label": "Parasail",
+      "input_usd_per_mtok": 0.12,
+      "output_usd_per_mtok": 0.8,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "qwen/qwen3-coder-next",
+      "host": "streamlake",
+      "host_label": "StreamLake",
+      "input_usd_per_mtok": 0.18,
+      "output_usd_per_mtok": 0.9,
+      "median_latency_ms": null
+    }
+  ],
+  "usage": [
+    {
+      "task_hint": "classification",
+      "model_key": "openai/gpt-5.6-luna",
+      "host": "azure",
+      "requests": 1234254,
+      "input_tokens": 1094254414,
+      "output_tokens": 60684762,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 587.1,
+      "days": 30
+    },
+    {
+      "task_hint": "classification",
+      "model_key": "qwen/qwen3-32b",
+      "host": "groq",
+      "requests": 2020402,
+      "input_tokens": 2041211652,
+      "output_tokens": 125445244,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 665.96,
+      "days": 30
+    },
+    {
+      "task_hint": "code",
+      "model_key": "qwen/qwen3-coder-next",
+      "host": "alibaba",
+      "requests": 1173564,
+      "input_tokens": 5940335312,
+      "output_tokens": 1177530911,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 3548.4,
+      "days": 30
+    },
+    {
+      "task_hint": "generation",
+      "model_key": "openai/gpt-4",
+      "host": "azure",
+      "requests": 17198,
+      "input_tokens": 43279447,
+      "output_tokens": 16078184,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 2263.07,
+      "days": 30
+    },
+    {
+      "task_hint": "generation",
+      "model_key": "openai/gpt-5.1",
+      "host": "azure",
+      "requests": 177810,
+      "input_tokens": 594577006,
+      "output_tokens": 298497578,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 3728.2,
+      "days": 30
+    },
+    {
+      "task_hint": "generation",
+      "model_key": "openai/o1-pro",
+      "host": "openai",
+      "requests": 1355,
+      "input_tokens": 7823907,
+      "output_tokens": 3753801,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 3425.87,
+      "days": 30
+    },
+    {
+      "task_hint": "unknown",
+      "model_key": "anthropic/claude-haiku-4.5",
+      "host": "anthropic",
+      "requests": 8,
+      "input_tokens": 128,
+      "output_tokens": 166,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0,
+      "days": 30
+    },
+    {
+      "task_hint": "unknown",
+      "model_key": "anthropic/claude-sonnet-4.5",
+      "host": "anthropic",
+      "requests": 4,
+      "input_tokens": 64,
+      "output_tokens": 116,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0,
+      "days": 30
+    }
+  ],
+  "empty_ladder_tasks": [
+    "translation",
+    "prediction",
+    "recommendation",
+    "monitoring",
+    "simulation"
+  ]
+}
