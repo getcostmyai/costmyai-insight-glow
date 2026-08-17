@@ -532,7 +532,9 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 period={activeRange.long}
               />
             </div>
-          ))}
+            );
+          })}
+
         </div>
       )}
     </section>
