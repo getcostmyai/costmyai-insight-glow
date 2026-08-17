@@ -291,6 +291,14 @@
   ],
   "prices": [
     {
+      "model_key": "anthropic/claude-haiku-4.5",
+      "host": "anthropic",
+      "host_label": "Anthropic",
+      "input_usd_per_mtok": 1,
+      "output_usd_per_mtok": 5,
+      "median_latency_ms": null
+    },
+    {
       "model_key": "anthropic/claude-opus-4.5",
       "host": "amazon-bedrock",
       "host_label": "Amazon Bedrock",
@@ -328,6 +336,14 @@
       "host_label": "OpenRouter",
       "input_usd_per_mtok": 5,
       "output_usd_per_mtok": 25,
+      "median_latency_ms": null
+    },
+    {
+      "model_key": "anthropic/claude-sonnet-4.5",
+      "host": "anthropic",
+      "host_label": "Anthropic",
+      "input_usd_per_mtok": 3,
+      "output_usd_per_mtok": 15,
       "median_latency_ms": null
     },
     {
