@@ -70,6 +70,38 @@ export function optionKey(o: WorkloadOption): string {
   return `${o.kind}|${norm(o.toModel)}|${norm(o.toHost)}`;
 }
 
+/**
+ * Dollar-equality tolerance. One cent — the same tolerance the forecast bounds
+ * already use for money comparisons (`forecast.ts`), not a new epsilon.
+ */
+export const DOLLAR_TOLERANCE = 0.01;
+
+/**
+ * Tie-break between mechanisms that save the same money.
+ *
+ * Two options can land on the identical dollar figure through ordinary
+ * token-price math. Before this, the winner was whichever list happened to be
+ * pushed into `groupByWorkload` first (arbitrage → quality → rightsize), so
+ * right-size always lost ties and always rendered disclosure-only. Insertion
+ * order is not a product rule.
+ *
+ * The rule: equal money, lowest switching risk wins. A right-size stays inside
+ * the same model family and needs no quality re-verification, so it beats a
+ * benchmarked swap onto a different model. A benchmarked swap is the most
+ * expensive to adopt, so it loses every tie.
+ */
+const TIEBREAK_RANK: Record<MechanismKind, number> = {
+  rightsize: 0,
+  host_arbitrage: 1,
+  quality_match: 2,
+};
+
+/** Saving-descending, with equal dollars resolved by switching risk. */
+export function compareOptions(a: WorkloadOption, b: WorkloadOption): number {
+  if (Math.abs(a.saving - b.saving) > DOLLAR_TOLERANCE) return b.saving - a.saving;
+  return TIEBREAK_RANK[a.kind] - TIEBREAK_RANK[b.kind];
+}
+
 export interface GroupInput {
   /** Options the current plan may see in full. */
   unlocked: Array<{ workload: WorkloadRef; option: WorkloadOption }>;
