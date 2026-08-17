@@ -2,6 +2,7 @@ import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { AA_INTELLIGENCE_SUITE } from "@/lib/benchmarks/aa-catalog";
 import { isRealEndpoint } from "@/lib/pricing/aggregate";
+import { PRICING_FEED, pricingIsLive } from "@/lib/sync-freshness";
 
 
 
@@ -85,6 +86,7 @@ export async function readCatalog(): Promise<CatalogPayload> {
     supabase
       .from("pricing_snapshots")
       .select("synced_at")
+      .eq("feed", PRICING_FEED)
       .eq("status", "ok")
       .order("synced_at", { ascending: false })
       .limit(1)
@@ -158,7 +160,9 @@ export async function readCatalog(): Promise<CatalogPayload> {
       a.localeCompare(b),
     ),
 
-    live: Boolean(snapshot.data?.synced_at),
+    // "Live" is a claim about now, not about history: a feed that last answered
+    // hours ago is stale, however many successful runs preceded it.
+    live: pricingIsLive(snapshot.data?.synced_at ?? null),
   };
 }
 

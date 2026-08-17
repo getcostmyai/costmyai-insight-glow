@@ -1,6 +1,7 @@
 import { createPublicServerClient } from "./supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
 import { countRealProviders, isRealEndpoint } from "@/lib/pricing/aggregate";
+import { PRICING_FEED, pricingIsLive } from "@/lib/sync-freshness";
 
 
 /**
@@ -38,7 +39,7 @@ export interface MarketingStats {
   trackingSince: string | null;
   /** Provider display names, only for hosts backed by a real live price row. */
   providers: string[];
-  /** True only when a pricing sync has actually completed successfully. */
+  /** True only when a pricing sync completed successfully RECENTLY (age-bounded). */
   live: boolean;
 }
 
@@ -63,6 +64,7 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
     supabase
       .from("pricing_snapshots")
       .select("synced_at, status")
+      .eq("feed", PRICING_FEED)
       .eq("status", "ok")
       .order("synced_at", { ascending: false })
       .limit(1)
@@ -98,6 +100,7 @@ export async function readMarketingStats(now: number = Date.now()): Promise<Mark
     priceChangesTracked: changes.count ?? 0,
     trackingSince: firstObservation.data?.observed_at ?? null,
     providers,
-    live: Boolean(snapshot.data?.synced_at),
+    // Bounded by age, not by "a sync succeeded once": see sync-freshness.ts.
+    live: pricingIsLive(snapshot.data?.synced_at ?? null, now),
   };
 }
