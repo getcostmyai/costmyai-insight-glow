@@ -20,8 +20,7 @@ async function report(label: string) {
     benchmarksSyncedAgo: dash.coverage.benchmarksSyncedAgo,
     benchmarksStale: dash.coverage.benchmarksStale,
     pricesSyncedAgo: dash.coverage.pricesSyncedAgo,
-    certified: dash.engine?.stats?.qualityCertified,
-    refusedUnmeasurable: dash.engine?.stats?.qualityRefusedUnmeasurable,
+    evaluations: dash.coverage.evaluations,
   });
 }
 
