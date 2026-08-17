@@ -6,21 +6,27 @@ const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVI
 
 const { readCatalog } = await import("@/lib/catalog/catalog.server");
 const { readMarketingStats } = await import("@/lib/marketing.server");
-const { buildDashboardSnapshot } = await import("@/lib/dashboard.server");
+const { benchmarksAreCertifiable, BENCHMARK_FEED } = await import("@/lib/sync-freshness");
+
+async function lastBenchmarkSync() {
+  const { data } = await admin
+    .from("pricing_snapshots")
+    .select("synced_at")
+    .eq("feed", BENCHMARK_FEED)
+    .eq("status", "ok")
+    .order("synced_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.synced_at ?? null;
+}
 
 async function report(label: string) {
-  const [cat, mkt, dash] = await Promise.all([
-    readCatalog(),
-    readMarketingStats(),
-    buildDashboardSnapshot({ days: 30 }),
-  ]);
+  const [cat, mkt, bench] = await Promise.all([readCatalog(), readMarketingStats(), lastBenchmarkSync()]);
   console.log(label, {
     catalogLive: cat.live,
     marketingLive: mkt.live,
-    benchmarksSyncedAgo: dash.coverage.benchmarksSyncedAgo,
-    benchmarksStale: dash.coverage.benchmarksStale,
-    pricesSyncedAgo: dash.coverage.pricesSyncedAgo,
-    evaluations: dash.coverage.evaluations,
+    lastBenchmarkSync: bench,
+    benchmarksCertifiable: benchmarksAreCertifiable(bench, Date.now()),
   });
 }
 
