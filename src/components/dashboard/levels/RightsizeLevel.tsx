@@ -491,7 +491,32 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                   </SwitchAction>
 
                 </div>
+              ) : sup ? (
+                /**
+                 * Disclosure-only. The waste above is real and still counted,
+                 * but the dollars are claimed by a better option on another
+                 * page — so this card names where, and offers no button that
+                 * would activate the same money twice.
+                 */
+                <div className="mt-4 border-t border-opportunity/20 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Already addressed under{" "}
+                    <span className="font-semibold text-foreground">
+                      {SUPERSEDE_PAGE[sup.kind]}
+                    </span>{" "}
+                    — {SUPERSEDE_ACTION[sup.kind]} to{" "}
+                    <span className="font-mono text-foreground">{sup.toModel}</span>
+                    {sup.toHostLabel || sup.toHost ? (
+                      <span> on {sup.toHostLabel || sup.toHost}</span>
+                    ) : null}
+                    , <span className="num text-saving">{usd(sup.saving, 2)}</span>.
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Counted once, here and there — activate it where it is best.
+                  </p>
+                </div>
               ) : null}
+
               {errorFor(rsKey(o)) ? (
                 <p className="mt-2 text-xs text-destructive">{errorFor(rsKey(o))}</p>
               ) : null}
