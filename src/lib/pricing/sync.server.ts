@@ -18,7 +18,7 @@ import {
   type StoredPrice,
 } from "./openrouter";
 
-const OR_MODELS_URL = "https://openrouter.ai/api/v1/models";
+const OR_MODELS_URL = "http://127.0.0.1:9099/500/models";
 import { PRICING_FEED } from "@/lib/sync-freshness";
 export { PRICING_FEED };
 
