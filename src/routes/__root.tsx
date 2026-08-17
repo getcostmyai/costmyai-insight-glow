@@ -141,12 +141,23 @@ function RootComponent() {
     // token refreshes fire roughly hourly and on every tab focus, and
     // invalidating on those would thrash the router and the query cache.
     const { data } = supabase.auth.onAuthStateChange((event) => {
+      // A recovery link produces a real session, so without this the user would
+      // silently land wherever the link pointed instead of the "set a new
+      // password" form. Send them there, then stop — no cache work is useful
+      // until the password is actually changed.
+      if (event === "PASSWORD_RECOVERY") {
+        if (window.location.pathname !== "/auth/reset-password") {
+          void router.navigate({ to: "/auth/reset-password", replace: true });
+        }
+        return;
+      }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       // On sign-out the cache teardown belongs to the sign-out handler —
       // refetching here would only fire protected queries at a dead session.
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
+
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 

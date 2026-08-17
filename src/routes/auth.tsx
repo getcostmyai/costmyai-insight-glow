@@ -52,6 +52,28 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  async function sendReset() {
+    setError(null);
+    if (!email) {
+      setError("Enter your email address first, then tap Forgot password.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the reset email.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   useEffect(() => {
     // OAuth can return to this public route after a full-page redirect. Read the
@@ -163,7 +185,24 @@ function AuthPage() {
           Cost<span className="text-primary">My</span>AI
         </a>
 
-        {checkEmail ? (
+        {resetSent ? (
+          <div className="rounded-2xl border border-border bg-card p-8 text-center">
+            <Mail className="mx-auto h-6 w-6 text-primary" />
+            <h1 className="mt-4 text-base font-semibold">Check your email</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              If an account exists for {email}, we sent a link to set a new password. It expires
+              after one hour.
+            </p>
+            <button
+              type="button"
+              onClick={() => setResetSent(false)}
+              className="mt-6 w-full text-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              Back to sign in
+            </button>
+          </div>
+        ) : checkEmail ? (
+
           <div className="rounded-2xl border border-border bg-card p-8 text-center">
             <Mail className="mx-auto h-6 w-6 text-primary" />
             <h1 className="mt-4 text-base font-semibold">Confirm your email</h1>
@@ -230,6 +269,18 @@ function AuthPage() {
                 {!busy ? <ArrowRight className="h-4 w-4" /> : null}
               </button>
             </form>
+
+            {mode === "signin" ? (
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={busy}
+                className="mt-3 w-full text-center text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground disabled:opacity-60"
+              >
+                Forgot password?
+              </button>
+            ) : null}
+
 
             <button
               type="button"

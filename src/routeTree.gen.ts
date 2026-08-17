@@ -42,6 +42,7 @@ import { Route as DemoGovernRouteImport } from './routes/demo.govern'
 import { Route as DemoCompareRouteImport } from './routes/demo.compare'
 import { Route as DemoCertifyRouteImport } from './routes/demo.certify'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth_.reset-password'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -246,6 +247,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => BlogRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth_/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
   id: '/workspace',
@@ -487,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
@@ -558,6 +565,7 @@ export interface FileRoutesByTo {
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
@@ -634,6 +642,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
+  '/auth_/reset-password': typeof AuthResetPasswordRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
@@ -710,6 +719,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/workspace'
+    | '/auth/reset-password'
     | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
@@ -781,6 +791,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/settings'
     | '/team'
+    | '/auth/reset-password'
     | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
@@ -856,6 +867,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/workspace'
+    | '/auth_/reset-password'
     | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
@@ -927,6 +939,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StandardRoute: typeof StandardRoute
   TermsRoute: typeof TermsRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
@@ -1194,6 +1207,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/$slug'
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
+    }
+    '/auth_/reset-password': {
+      id: '/auth_/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/workspace': {
       id: '/_authenticated/workspace'
@@ -1580,6 +1600,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StandardRoute: StandardRoute,
   TermsRoute: TermsRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
