@@ -163,7 +163,24 @@ function AuthPage() {
           Cost<span className="text-primary">My</span>AI
         </a>
 
-        {checkEmail ? (
+        {resetSent ? (
+          <div className="rounded-2xl border border-border bg-card p-8 text-center">
+            <Mail className="mx-auto h-6 w-6 text-primary" />
+            <h1 className="mt-4 text-base font-semibold">Check your email</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              If an account exists for {email}, we sent a link to set a new password. It expires
+              after one hour.
+            </p>
+            <button
+              type="button"
+              onClick={() => setResetSent(false)}
+              className="mt-6 w-full text-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              Back to sign in
+            </button>
+          </div>
+        ) : checkEmail ? (
+
           <div className="rounded-2xl border border-border bg-card p-8 text-center">
             <Mail className="mx-auto h-6 w-6 text-primary" />
             <h1 className="mt-4 text-base font-semibold">Confirm your email</h1>
