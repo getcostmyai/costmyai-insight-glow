@@ -109,7 +109,7 @@ export function groupByWorkload(input: GroupInput): WorkloadGroup[] {
 
   const groups: WorkloadGroup[] = [];
   for (const [key, s] of byWorkload) {
-    const options = [...s.options.values()].sort((a, b) => b.saving - a.saving);
+    const options = [...s.options.values()].sort(compareOptions);
     const best = options[0];
     // A workload with nothing but locked findings has no card of its own: the
     // locked level already renders its own count-and-money summary.
