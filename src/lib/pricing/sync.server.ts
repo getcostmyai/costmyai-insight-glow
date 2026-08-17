@@ -19,7 +19,7 @@ import {
 } from "./openrouter";
 
 const OR_MODELS_URL = "https://openrouter.ai/api/v1/models";
-export const PRICING_FEED = "openrouter";
+export { PRICING_FEED } from "@/lib/sync-freshness";
 
 /**
  * Buying the model through OpenRouter itself is a real, purchasable option, so
