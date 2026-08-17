@@ -362,22 +362,26 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
   // Dispatch 212: right-sizing names a target model, so "armed" still ignores
   // the host — but any running switch off the workload must be disclosed.
   /**
-   * Dispatch 213. One card per workload: an oversized card is drawn only when
-   * right-sizing is that workload's best option, or when it names no target at
-   * all (a pure waste disclosure, which no other mechanism can represent).
+   * Dispatch 230. One *actionable* card per workload.
+   *
+   * Every oversized workload the engine found renders a card — the badge and
+   * the hero total count the raw set, so suppressing rows here understated the
+   * page's own finding. A workload whose money is better claimed by another
+   * mechanism still renders, but disclosure-only: no activate button, and a
+   * line saying where the better option lives and what it is worth.
    */
-  const oversizedRows = data.oversized.filter(
-    (o) =>
-      !o.toModel ||
-      isBestRow(
-        groupFor(data.workloadGroups, {
-          fromModel: o.model,
-          fromHost: o.hostKey,
-          taskHint: o.task,
-        }),
-        { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey },
-      ),
-  );
+  const oversizedRows = data.oversized;
+  const supersededBy = (o: { model: string; hostKey: string; task: string; toModel?: string | null }) => {
+    if (!o.toModel) return null;
+    const group = groupFor(data.workloadGroups, {
+      fromModel: o.model,
+      fromHost: o.hostKey,
+      taskHint: o.task,
+    });
+    if (isBestRow(group, { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey })) return null;
+    return group ? group.best : null;
+  };
+
   const rsActive = (o: { model: string; hostKey: string }) =>
     ctl.pending.activeFrom(o.model, o.hostKey);
   const rsArmed = (o: { model: string; hostKey: string; toModel?: string | null }) => {
