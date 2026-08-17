@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "costmyai-insight-glow"
+const SITE_NAME = "CostMyAI"
 const ROOT_DOMAIN = "costmyai.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
