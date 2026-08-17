@@ -18,6 +18,11 @@ import type {
   UsageAggregate,
 } from "./engine/types";
 import { relativeAgo } from "./freshness";
+import {
+  BENCHMARK_FEED,
+  PRICING_FEED,
+  benchmarksAreCertifiable,
+} from "./sync-freshness";
 import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import { forecastMonthEnd, FORECAST_RULES } from "./dashboard/forecast";
 import { syncGapDays } from "./dashboard/sync-health.server";
@@ -403,6 +408,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     storedObjectives,
     subscription,
     pricingSnapshot,
+    benchmarkSnapshot,
     platformAdmin,
 
   ] =
@@ -489,6 +495,17 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       supabase
         .from("pricing_snapshots")
         .select("synced_at")
+        // Both feeds write to this ledger; without the filter a benchmark run
+        // could be reported to the customer as "prices verified".
+        .eq("feed", PRICING_FEED)
+        .eq("status", "ok")
+        .order("synced_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("pricing_snapshots")
+        .select("synced_at")
+        .eq("feed", BENCHMARK_FEED)
         .eq("status", "ok")
         .order("synced_at", { ascending: false })
         .limit(1)
@@ -590,6 +607,11 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     margins: (margins.data ?? []).map((m) => ({ ...m, margin: Number(m.margin) })) as MarginRow[],
     models: (models.data ?? []) as ModelRow[],
     objectives: objectiveRows,
+    // The dashboard shows the same verdicts the scheduled writer reaches, so it
+    // has to fail closed on the same evidence bound.
+    staleEvidence: benchmarksAreCertifiable(benchmarkSnapshot.data?.synced_at ?? null, now)
+      ? null
+      : { lastSyncedAt: benchmarkSnapshot.data?.synced_at ?? null },
   });
 
   /**
@@ -1049,6 +1071,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     usage.filter((u) => !pricedPairs.has(`${u.model_key}|${u.host}`)).map((u) => u.model_key),
   );
   const lastPricingSync = pricingSnapshot.data?.synced_at ?? null;
+  const lastBenchmarkSync = benchmarkSnapshot.data?.synced_at ?? null;
 
   /**
    * ---- The money, added up once ------------------------------------------
@@ -1493,6 +1516,9 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     coverage: {
       untrackedModels: untracked.size,
       pricesSyncedAgo: relativeAgo(lastPricingSync, now),
+      /** Same disclosure for the other feed a certification depends on. */
+      benchmarksSyncedAgo: relativeAgo(lastBenchmarkSync, now),
+      benchmarksStale: !benchmarksAreCertifiable(lastBenchmarkSync, now),
       evaluations: (margins.data ?? []).length,
     },
   };
