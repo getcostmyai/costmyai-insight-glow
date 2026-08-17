@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Check, Copy, Handshake, TrendingUp } from "lucide-react";
+import { ArrowLeft, Check, Copy, Filter, Handshake, TrendingUp } from "lucide-react";
 
 import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
+import { getMyFunnel } from "@/lib/partner-funnel.functions";
+import { FUNNEL_WINDOWS, stageLabel, type FunnelStageRow, type FunnelWindow } from "@/lib/partner-funnel";
 
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 import { BrandKitCard } from "@/components/partner/BrandKitCard";

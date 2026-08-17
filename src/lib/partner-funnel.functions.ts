@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { FunnelStageRow, FunnelWindow } from "./partner-funnel.server";
+import type { FunnelStageRow, FunnelWindow } from "./partner-funnel";
 
 /**
  * Referral funnel for the signed-in partner. The window is the only input —
