@@ -6,11 +6,14 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
-  Link,
   Preview,
+  Section,
   Text,
 } from '@react-email/components'
+
+import * as s from './brand'
 
 interface InviteEmailProps {
   siteName: string
@@ -18,60 +21,36 @@ interface InviteEmailProps {
   confirmationUrl: string
 }
 
-export const InviteEmail = ({
-  siteName,
-  siteUrl,
-  confirmationUrl,
-}: InviteEmailProps) => (
+export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
-        <Text style={text}>
-          You've been invited to join{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+    <Preview>You've been invited to a CostMyAI workspace</Preview>
+    <Body style={s.main}>
+      <Container style={s.container}>
+        <Text style={s.brand}>CostMyAI</Text>
+
+        <Heading style={s.h1}>You've been invited</Heading>
+
+        <Text style={s.text}>
+          Someone has invited you to their CostMyAI workspace — where their real AI spend, proven
+          switches and savings live. Accept below to set up your account.
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Accept Invitation
-        </Button>
-        <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+
+        <Section style={{ margin: '24px 0' }}>
+          <Button style={s.button} href={confirmationUrl}>
+            Accept the invitation
+          </Button>
+        </Section>
+
+        <Hr style={s.hr} />
+
+        <Text style={s.small}>
+          Accept using this exact address — an invitation is matched to the address it was sent to.
         </Text>
+        <Text style={s.fallback}>Button not working? Paste this into your browser: {confirmationUrl}</Text>
       </Container>
     </Body>
   </Html>
 )
 
 export default InviteEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
