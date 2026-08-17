@@ -320,6 +320,13 @@ describe("round 4 · per-mechanism hero KPIs", () => {
     }
   });
 
+  /*
+   * Dispatch 224 changed what "one card per workload" has to mean. A workload
+   * whose best option lives on another rung is no longer dropped from the list
+   * — it renders as a disclosure-only card pointing at the rung where it is
+   * actionable, so the badge count and the body agree. The pin therefore asks
+   * for the cross-reference, not for a filter that hid real findings.
+   */
   it("every opportunity list renders one card per workload", () => {
     const lists = {
       compare: LEVEL_FILES.compare,
@@ -328,7 +335,9 @@ describe("round 4 · per-mechanism hero KPIs", () => {
       transparency: read("components/dashboard/TransparencyLists.tsx"),
     };
     for (const [key, src] of Object.entries(lists)) {
-      expect(src, `${key} does not filter to the workload's best option`).toContain("isBestRow(");
+      expect(src, `${key} does not cross-reference the workload's best option`).toMatch(
+        /supersededOption\(|isBestRow\(/,
+      );
       expect(src, `${key} does not render collapsed alternatives`).toContain(
         "<WorkloadAlternatives",
       );

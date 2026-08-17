@@ -19,7 +19,8 @@ import {
 } from "./openrouter";
 
 const OR_MODELS_URL = "https://openrouter.ai/api/v1/models";
-export const PRICING_FEED = "openrouter";
+import { PRICING_FEED } from "@/lib/sync-freshness";
+export { PRICING_FEED };
 
 /**
  * Buying the model through OpenRouter itself is a real, purchasable option, so
@@ -77,8 +78,30 @@ function adminClient() {
 
 type Admin = ReturnType<typeof adminClient>;
 
+/**
+ * Every upstream read is bounded. Before Dispatch 230 neither sync set a
+ * deadline, so an upstream that accepted the connection and then went quiet
+ * hung the worker until the platform killed it — leaving the run row stuck at
+ * `running` forever with no error recorded. 272 of those accumulated. A hang is
+ * a failure; it has to be caught and written down like one.
+ */
+export const UPSTREAM_TIMEOUT_MS = 20_000;
+
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { accept: "application/json" } });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch (err) {
+    const aborted = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+    throw new Error(
+      aborted
+        ? `OpenRouter ${url} timed out after ${UPSTREAM_TIMEOUT_MS}ms`
+        : `OpenRouter ${url} failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   if (!res.ok) throw new Error(`OpenRouter ${url} returned ${res.status}`);
   return (await res.json()) as T;
 }
@@ -101,7 +124,26 @@ async function isLocked(supabase: Admin): Promise<boolean> {
     .maybeSingle();
   if (!data) return false;
   if (data.finished_at) return false;
-  return Date.now() - new Date(data.synced_at).getTime() < RUN_LOCK_MS;
+  if (Date.now() - new Date(data.synced_at).getTime() < RUN_LOCK_MS) return true;
+
+  /*
+   * Older than the lock window and still unfinished: that run died mid-flight
+   * (a hang the platform killed, a redeploy) and will never write its own
+   * verdict. Close it out as timed_out so the ledger records a failure instead
+   * of leaving a row that claims to still be working.
+   */
+  await supabase
+    .from("pricing_snapshots")
+    .update({
+      status: "timed_out",
+      finished_at: new Date().toISOString(),
+      error_detail: "run exceeded the lock window without finishing; assumed dead",
+    })
+    .eq("feed", PRICING_FEED)
+    .eq("status", "running")
+    .is("finished_at", null)
+    .lt("synced_at", new Date(Date.now() - RUN_LOCK_MS).toISOString());
+  return false;
 }
 
 /**

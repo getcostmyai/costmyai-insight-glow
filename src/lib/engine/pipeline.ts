@@ -21,6 +21,12 @@ export interface EngineInput {
   margins: MarginRow[];
   models: ModelRow[];
   objectives?: ObjectiveRow[];
+  /**
+   * Non-null when the benchmark feed's last successful sync is older than one
+   * cadence — certification then refuses instead of certifying against
+   * evidence we cannot date.
+   */
+  staleEvidence?: { lastSyncedAt: string | null } | null;
 }
 
 export interface EngineOutput {
@@ -68,6 +74,7 @@ export function runPipeline(input: EngineInput): EngineOutput {
     input.benchmarks,
     input.margins,
     resolve,
+    input.staleEvidence ?? null,
   );
   const oversized = findOversized(input.usage, input.models, input.prices);
 

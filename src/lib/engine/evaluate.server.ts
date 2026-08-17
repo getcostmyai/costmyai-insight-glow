@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 import { effectivePlan, type SubscriptionState } from "../billing/entitlement";
+import { BENCHMARK_FEED, benchmarksAreCertifiable } from "../sync-freshness";
 import { paymentsEnvironment } from "../billing/env.server";
 import {
   DEFAULT_AUTONOMOUS_POLICY,
@@ -89,7 +90,7 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
   // an unpaged read silently hands the engine a partial market.
   const { fetchAllRows } = await import("../paginate.server");
 
-  const [orgs, prices, benchmarks, margins, models] = await Promise.all([
+  const [orgs, prices, benchmarks, margins, models, benchmarkSync] = await Promise.all([
     // The synthetic workspace is evaluated too. It is the only standing body of
     // realistic traffic we have, and skipping it meant the scheduled writer had
     // nothing to write against. Its output is stamped is_synthetic at the
@@ -128,6 +129,18 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
         .eq("is_active", true)
         .range(from, to),
     ).then((data) => ({ data, error: null })),
+    // Dispatch 230: certification is only allowed to run against evidence we
+    // can date. This is the last SUCCESSFUL benchmark sync, not the last row
+    // written — a table full of scores keeps looking healthy long after the
+    // feed behind it stopped answering.
+    supabaseAdmin
+      .from("pricing_snapshots")
+      .select("synced_at")
+      .eq("feed", BENCHMARK_FEED)
+      .eq("status", "ok")
+      .order("synced_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
 
@@ -158,6 +171,16 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
   })) as MarginRow[];
   const modelRows = (models.data ?? []) as ModelRow[];
 
+  const lastBenchmarkSync = benchmarkSync.data?.synced_at ?? null;
+  const staleEvidence = benchmarksAreCertifiable(lastBenchmarkSync)
+    ? null
+    : { lastSyncedAt: lastBenchmarkSync };
+  if (staleEvidence) {
+    console.warn(
+      `[evaluation:${trigger}] benchmark feed stale (last ok sync: ${lastBenchmarkSync ?? "never"}) — certification fails closed for this run`,
+    );
+  }
+
   const env = paymentsEnvironment();
 
   for (const org of (orgs.data ?? []) as OrgRow[]) {
@@ -170,6 +193,7 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
         benchmarks: benchmarkRows,
         margins: marginRows,
         models: modelRows,
+        staleEvidence,
         report,
       });
     } catch (err) {
@@ -192,6 +216,7 @@ async function evaluateOrg(
     benchmarks: BenchmarkRow[];
     margins: MarginRow[];
     models: ModelRow[];
+    staleEvidence: { lastSyncedAt: string | null } | null;
     report: EvaluationReport;
   },
 ): Promise<void> {
@@ -273,6 +298,7 @@ async function evaluateOrg(
     margins: ctx.margins,
     models: ctx.models,
     objectives: (objectives.data ?? []) as ObjectiveRow[],
+    staleEvidence: ctx.staleEvidence,
   });
 
   const subState: SubscriptionState | null = subscription.data

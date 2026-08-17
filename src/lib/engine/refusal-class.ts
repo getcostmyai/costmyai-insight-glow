@@ -28,6 +28,12 @@ const CLASS_OF: Record<RefusalReason, RefusalClass> = {
   no_baseline_price: "unmeasurable",
   no_baseline_score: "unmeasurable",
   no_valid_instrument: "unmeasurable",
+  /*
+   * The instrument exists, but the evidence behind it is older than one sync
+   * cadence, so nothing was measured recently enough to certify against. That
+   * is an absent measurement, not a failed one.
+   */
+  benchmark_data_stale: "unmeasurable",
   // The instrument exists but cannot separate the field, so it cannot defend
   // a switch either. That is an absent measurement, not a failed one.
   benchmark_not_discriminating: "unmeasurable",

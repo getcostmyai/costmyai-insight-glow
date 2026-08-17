@@ -137,6 +137,7 @@ export type RefusalReason =
   | "no_baseline_price"
   | "no_baseline_score"
   | "no_valid_instrument"
+  | "benchmark_data_stale"
   | "benchmark_not_discriminating"
   | "no_candidate_clears_bar"
   | "no_cheaper_candidate"

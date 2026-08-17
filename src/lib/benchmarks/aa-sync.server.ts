@@ -2,10 +2,15 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
 
+import { BENCHMARK_FEED } from "@/lib/sync-freshness";
+
 import { AA_SUITE, transformAaPayload, type AaModel } from "./aa-catalog";
 
 const AA_ENDPOINT = "https://artificialanalysis.ai/api/v2/data/llms/models";
-const AA_FEED = "artificial_analysis";
+const AA_FEED = BENCHMARK_FEED;
+
+/** The feed serves one large JSON document; 30s is generous for it. */
+export const AA_TIMEOUT_MS = 30_000;
 
 
 export interface SyncReport {
@@ -38,7 +43,22 @@ export async function syncArtificialAnalysis(): Promise<SyncReport> {
   const apiKey = process.env.ARTIFICIAL_ANALYSIS_API_KEY;
   if (!apiKey) throw new Error("ARTIFICIAL_ANALYSIS_API_KEY is not configured");
 
-  const res = await fetch(AA_ENDPOINT, { headers: { "x-api-key": apiKey } });
+  // Bounded like the pricing read: a silent upstream must surface as a
+  // recorded failure, not as a worker that disappears mid-run.
+  let res: Response;
+  try {
+    res = await fetch(AA_ENDPOINT, {
+      headers: { "x-api-key": apiKey },
+      signal: AbortSignal.timeout(AA_TIMEOUT_MS),
+    });
+  } catch (err) {
+    const aborted = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+    throw new Error(
+      aborted
+        ? `Artificial Analysis timed out after ${AA_TIMEOUT_MS}ms`
+        : `Artificial Analysis request failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   if (!res.ok) {
     throw new Error(`Artificial Analysis returned ${res.status}: ${await res.text()}`);
   }
