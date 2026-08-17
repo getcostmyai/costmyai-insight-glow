@@ -22,8 +22,8 @@ import {
   actionLabelFor,
 } from "@/components/dashboard/ExecutionNote";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
+import { SupersededNote } from "@/components/dashboard/SupersededNote";
 import { groupFor, isBestRow } from "@/lib/dashboard/group";
-import type { MechanismKind } from "@/lib/dashboard/group";
 import { usd } from "@/lib/dashboard-data";
 import { captureFigures, levelCount, levelSaving } from "@/lib/dashboard/figures";
 
@@ -355,16 +355,6 @@ export function TopSwitchControl({ ctl }: { ctl: DashboardController }) {
 }
 
 /** Where a superseding option is actually actionable, and what it is. */
-const SUPERSEDE_PAGE: Record<MechanismKind, string> = {
-  host_arbitrage: "Compare",
-  quality_match: "Certify",
-  rightsize: "Rightsize",
-};
-const SUPERSEDE_ACTION: Record<MechanismKind, string> = {
-  host_arbitrage: "same model on a cheaper host",
-  quality_match: "quality-match",
-  rightsize: "right-size",
-};
 
 /** Frontier models doing economy-tier work, with the switch that fixes it. */
 export function OversizedSection({ ctl }: { ctl: DashboardController }) {
@@ -408,7 +398,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
         eyebrow="Attention needed"
         title="Overpowered for the task"
         hint="Frontier-tier models running work an economy tier handles."
-        badge={`${data.oversized.length} workloads`}
+        badge={`${levelCount(data, "rightsize")} workloads`}
         badgeTone="opportunity"
       />
       {!level.unlocked ? (
@@ -514,23 +504,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                  * page — so this card names where, and offers no button that
                  * would activate the same money twice.
                  */
-                <div className="mt-4 border-t border-opportunity/20 pt-3">
-                  <p className="text-xs text-muted-foreground">
-                    Already addressed under{" "}
-                    <span className="font-semibold text-foreground">
-                      {SUPERSEDE_PAGE[sup.kind]}
-                    </span>{" "}
-                    — {SUPERSEDE_ACTION[sup.kind]} to{" "}
-                    <span className="font-mono text-foreground">{sup.toModel}</span>
-                    {sup.toHostLabel || sup.toHost ? (
-                      <span> on {sup.toHostLabel || sup.toHost}</span>
-                    ) : null}
-                    , <span className="num text-saving">{usd(sup.saving, 2)}</span>.
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Counted once, here and there — activate it where it is best.
-                  </p>
-                </div>
+                <SupersededNote option={sup} className="mt-4 border-t border-opportunity/20 pt-3" />
               ) : null}
 
               {errorFor(rsKey(o)) ? (

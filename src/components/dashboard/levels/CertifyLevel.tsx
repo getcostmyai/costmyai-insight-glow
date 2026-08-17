@@ -7,6 +7,7 @@ import {
 } from "@/components/dashboard/primitives";
 import { OpportunityRing } from "@/components/dashboard/SavingsRing";
 import { UsageSection } from "@/components/dashboard/DashboardShell";
+import { supersededOption } from "@/components/dashboard/SupersededNote";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import {
   HeroUpsell,
@@ -47,16 +48,21 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const rightsize = data.levels.rightsize;
   const all = data.qualityMatched;
   /** Dispatch 213: one merged card per workload, alternatives collapsed under it. */
-  const rows = all.filter((r) =>
-    isBestRow(
+  /**
+   * Dispatch 231. Every certified finding the badge counts renders a card.
+   * A workload whose money is better claimed elsewhere renders disclosure-only
+   * rather than vanishing under the count.
+   */
+  const rows = all;
+  const supersededFor = (r: { fromModel: string; fromHost: string; taskHint: string; toModel: string; toHost: string }) =>
+    supersededOption(
       groupFor(data.workloadGroups, {
         fromModel: r.fromModel,
         fromHost: r.fromHost,
         taskHint: r.taskHint,
       }),
       { kind: "quality_match", toModel: r.toModel, toHost: r.toHost },
-    ),
-  );
+    );
 
   // Real dollars over the window on screen, never a monthly projection.
   const benchmarkSaving = levelSaving(data, "quality_match");
@@ -200,7 +206,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           eyebrow="List B · benchmark saves"
           title="Cheaper model, same measured quality"
           hint={`Checked against ${data.coverage.evaluations} independent benchmark tests before we recommend the swap.`}
-          badge={`${all.length} certified`}
+          badge={`${levelCount(data, "quality_match")} certified`}
           badgeTone="saving"
           aside={
             <div className="flex flex-col items-start gap-1 sm:items-end">
@@ -233,9 +239,12 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
           <div className="space-y-3">
             {rows.map((row, i) => {
               const key = `quality:${row.fromModel}|${row.toModel}|${row.taskHint}`;
+              const sup = supersededFor(row);
               return (
                 <div key={key} className="space-y-2">
                 <SwitchCard
+                  supersededBy={sup}
+                  supersededHere={sup?.kind === "quality_match"}
                   row={asSwitchRow(row, "quality")}
                   period={activeRange.long}
                   rank={i + 1}

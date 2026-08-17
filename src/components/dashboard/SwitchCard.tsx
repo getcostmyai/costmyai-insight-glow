@@ -12,6 +12,8 @@ import {
 import { usd } from "@/lib/dashboard-data";
 import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNote";
 import { FrictionTierBadge } from "@/components/dashboard/FrictionTierBadge";
+import { SupersededNote } from "@/components/dashboard/SupersededNote";
+import type { WorkloadOption } from "@/lib/dashboard/group";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
@@ -30,6 +32,8 @@ export function SwitchCard({
   discoveryHref,
   readOnly = false,
   activeSwitch = null,
+  supersededBy = null,
+  supersededHere = false,
 }: {
   row: SwitchRow;
   /** The window the saving was measured over, e.g. "last 7 days". */
@@ -69,6 +73,14 @@ export function SwitchCard({
    * be armed.
    */
   activeSwitch?: ActiveSwitchTarget | null;
+  /**
+   * Dispatch 231. Another mechanism claims this workload's money. The row is
+   * still drawn — the section badge counted it — but it offers no action and
+   * names where the better option lives instead.
+   */
+  supersededBy?: WorkloadOption | null;
+  /** That better option is on this same page, so the note does not send anyone away. */
+  supersededHere?: boolean;
 }) {
   /*
    * Dispatch 217. Discovery tiers never reference execution, in any tense or
@@ -154,6 +166,9 @@ export function SwitchCard({
           tense: the row states what those tiers really produced, and routes
           the intent to the level that owns execution.
         */}
+        {supersededBy ? (
+          <SupersededNote option={supersededBy} here={supersededHere} className="max-w-72 text-right" />
+        ) : (
         <SwitchAction
           execution={discovery || superseded ? undefined : row.execution}
           /* Dispatch 197: an active-but-unmoved switch is armed, not "once active". */
@@ -216,6 +231,7 @@ export function SwitchCard({
           </Link>
         )}
         </SwitchAction>
+        )}
       </div>
     </div>
   );
