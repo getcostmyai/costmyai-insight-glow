@@ -52,6 +52,28 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  async function sendReset() {
+    setError(null);
+    if (!email) {
+      setError("Enter your email address first, then tap Forgot password.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the reset email.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   useEffect(() => {
     // OAuth can return to this public route after a full-page redirect. Read the
