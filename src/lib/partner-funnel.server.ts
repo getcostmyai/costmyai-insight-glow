@@ -1,27 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const FUNNEL_WINDOWS = [7, 30, 90] as const;
-export type FunnelWindow = (typeof FUNNEL_WINDOWS)[number];
-
-export interface FunnelStageRow {
-  stage: string;
-  stageOrder: number;
-  visitors: number;
-  ratePct: number | null;
-}
-
-const STAGE_LABELS: Record<string, string> = {
-  estimator_viewed: "Estimator viewed",
-  estimator_engaged: "Estimator engaged",
-  estimator_completed: "Estimator completed",
-  workspace_created: "Workspace created",
-  plan_changed: "Plan changed",
-  switch_activated: "Switch activated",
-};
-
-export function stageLabel(stage: string): string {
-  return STAGE_LABELS[stage] ?? stage.replace(/_/g, " ");
-}
+import type { FunnelStageRow, FunnelWindow } from "./partner-funnel";
 
 /**
  * The partner id is never taken from the request: it is resolved from the
@@ -52,11 +31,18 @@ export async function readMyFunnel(
   if (error) throw error;
 
   return (data ?? [])
-    .map((r: { stage: string; stage_order: number; visitors: number; rate_from_previous_pct: number | null }) => ({
-      stage: r.stage,
-      stageOrder: Number(r.stage_order),
-      visitors: Number(r.visitors),
-      ratePct: r.rate_from_previous_pct === null ? null : Number(r.rate_from_previous_pct),
-    }))
+    .map(
+      (r: {
+        stage: string;
+        stage_order: number;
+        visitors: number;
+        rate_from_previous_pct: number | null;
+      }): FunnelStageRow => ({
+        stage: r.stage,
+        stageOrder: Number(r.stage_order),
+        visitors: Number(r.visitors),
+        ratePct: r.rate_from_previous_pct === null ? null : Number(r.rate_from_previous_pct),
+      }),
+    )
     .sort((a: FunnelStageRow, b: FunnelStageRow) => a.stageOrder - b.stageOrder);
 }
