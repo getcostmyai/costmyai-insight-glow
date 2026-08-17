@@ -149,6 +149,14 @@ export function findQualityMatches(
   benchmarks: BenchmarkRow[],
   margins: MarginRow[],
   objectiveFor: (u: UsageAggregate) => Objective = () => DEFAULT_OBJECTIVE,
+  /**
+   * Set when the benchmark feed's last successful sync is older than one
+   * cadence. Certification then fails closed: the scores in the table may still
+   * be perfectly good, but we can no longer say they were produced recently
+   * enough to defend a switch made today, and an undated claim of equal quality
+   * is exactly the claim this engine refuses to make.
+   */
+  staleEvidence: { lastSyncedAt: string | null } | null = null,
 ): EquivalenceResult {
   const byModel = indexPrices(prices);
   const lookup = buildScoreLookup(benchmarks, margins);
@@ -163,6 +171,20 @@ export function findQualityMatches(
       reason,
       detail,
     });
+
+  if (staleEvidence) {
+    const when = staleEvidence.lastSyncedAt
+      ? `last measured ${staleEvidence.lastSyncedAt}`
+      : "never successfully measured";
+    for (const u of usage) {
+      refuse(
+        u,
+        "benchmark_data_stale",
+        `The independent benchmark feed is stale (${when}), so no equal-quality claim can be certified today.`,
+      );
+    }
+    return { recommendations: [], refusals };
+  }
 
   for (const u of usage) {
     const current = (byModel.get(u.model_key) ?? []).find((p) => p.host === u.host);
