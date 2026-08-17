@@ -231,6 +231,18 @@ function AuthPage() {
               </button>
             </form>
 
+            {mode === "signin" ? (
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={busy}
+                className="mt-3 w-full text-center text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground disabled:opacity-60"
+              >
+                Forgot password?
+              </button>
+            ) : null}
+
+
             <button
               type="button"
               onClick={() => {
