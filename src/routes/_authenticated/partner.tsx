@@ -214,6 +214,83 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
   );
 }
 
+/**
+ * Referral funnel, one row per stage, in the same card/table language as the
+ * commission ledger directly below it. Counts are distinct visitors; the rate
+ * is measured against the previous stage, and is blank for the first stage
+ * and wherever the previous stage was zero — never rendered as 0%.
+ */
+function ReferralFunnel() {
+  const [windowDays, setWindowDays] = useState<FunnelWindow>(30);
+  const funnel = useQuery({
+    queryKey: ["my-funnel", windowDays],
+    queryFn: () => getMyFunnel({ data: { windowDays } }),
+  });
+
+  return (
+    <section className="mt-6 rounded-2xl border border-border bg-card p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold">Referral funnel</h2>
+        </div>
+        <div className="inline-flex items-center gap-1 rounded-full border border-border p-0.5">
+          {FUNNEL_WINDOWS.map((w) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setWindowDays(w)}
+              aria-pressed={w === windowDays}
+              className={`rounded-full px-2.5 py-1 text-xs tabular-nums transition-colors ${
+                w === windowDays
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {w}d
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {funnel.isPending ? (
+        <p className="mt-3 text-sm text-muted-foreground">Loading your funnel…</p>
+      ) : funnel.isError ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          We could not read your funnel just now. Try again shortly.
+        </p>
+      ) : (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="py-2 pr-4 font-medium">Stage</th>
+                <th className="py-2 pr-4 font-medium">Visitors</th>
+                <th className="py-2 font-medium">From previous</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(funnel.data ?? []).map((r) => (
+                <tr key={r.stage} className="border-t border-border">
+                  <td className="py-2 pr-4">{stageLabel(r.stage)}</td>
+                  <td className="py-2 pr-4 font-semibold tabular-nums">{r.visitors}</td>
+                  <td className="py-2 tabular-nums text-muted-foreground">
+                    {r.ratePct === null ? "—" : `${r.ratePct}%`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="mt-4 text-xs text-muted-foreground">
+        Distinct visitors attributed to your code in the last {windowDays} days. Zero is a real
+        answer — nothing here is estimated or extrapolated.
+      </p>
+    </section>
+  );
+}
+
 function TierProgress({ partner }: { partner: PartnerDashboard["partner"] }) {
   const { tiers, effectiveTier, earnedTier, lifetimeRevenueUsd, nextTier, toNextTierUsd } = partner;
   const span = nextTier
