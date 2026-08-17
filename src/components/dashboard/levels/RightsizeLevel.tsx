@@ -436,7 +436,7 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
                 </span>
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{o.note}</p>
-              {o.toModel ? (
+              {o.toModel && !sup ? (
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-opportunity/20 pt-3">
                   <span className="text-xs text-muted-foreground">
                     Right-size to <span className="font-mono text-foreground">{o.toModel}</span>
