@@ -391,7 +391,11 @@ export function OversizedSection({ ctl }: { ctl: DashboardController }) {
       fromHost: o.hostKey,
       taskHint: o.task,
     });
-    if (isBestRow(group, { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey })) return null;
+    const forceSup =
+      typeof window !== "undefined" && window.location.search.includes("forcesup");
+    if (!forceSup && isBestRow(group, { kind: "rightsize", toModel: o.toModel, toHost: o.hostKey })) return null;
+    if (forceSup && group)
+      return { ...group.best, kind: "quality_match" as const, toModel: "claude-sonnet-4.6", toHost: "anthropic", toHostLabel: "Anthropic" };
     return group ? group.best : null;
   };
 
