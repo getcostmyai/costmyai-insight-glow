@@ -60,6 +60,14 @@ export interface SwitchSavings {
   events: number;
   /** Events dropped because one side of the comparison has no price. */
   unpricedEvents: number;
+  /**
+   * Events a container claimed it rerouted without naming the pair it rerouted
+   * FROM. There is no counterfactual for such an event, so it is neither priced
+   * nor tolerated: any of these refuses the whole switch's credit for this run.
+   * The API schema rejects the shape, but `supabaseAdmin` writes bypass it.
+   */
+  missingOriginalEvents: number;
+
   /** What the caller's original pair would have cost for the same tokens. */
   counterfactualUsd: number;
   /** What the pair the container actually used did cost. */
@@ -194,6 +202,7 @@ export async function computeSwitchSavings(
         switchId,
         events: 0,
         unpricedEvents: 0,
+        missingOriginalEvents: 0,
         counterfactualUsd: 0,
         actualUsd: 0,
         savedUsd: 0,
@@ -203,13 +212,24 @@ export async function computeSwitchSavings(
         toHost: g.host,
       } satisfies SwitchSavings);
 
-    const before = g.original_model_key && g.original_host ? priceFor(g.original_model_key, g.original_host) : undefined;
+    // No origin, no counterfactual. `?? ""` here used to resolve to an unpriced
+    // pair and quietly contribute $0 — a legitimate-looking result for an event
+    // whose "before" nobody ever recorded. It is now counted as its own defect
+    // and refuses the credit in `recomputeSwitchSavings`.
+    if (!g.original_model_key || !g.original_host) {
+      row.missingOriginalEvents += count;
+      acc.set(switchId, row);
+      continue;
+    }
+
+    const before = priceFor(g.original_model_key, g.original_host);
     const after = priceFor(g.model_key, g.host);
     if (!before || !after) {
       row.unpricedEvents += count;
       acc.set(switchId, row);
       continue;
     }
+
 
     row.events += count;
     // One mix, two rate cards. This is the line that makes a move onto a host
@@ -244,7 +264,8 @@ export interface SavingsWriteResult extends SwitchSavings {
    */
   refused: boolean;
   /** Present whenever `refused`. Never free text. */
-  refusedReason?: SwitchBlockedReason | "switch_not_active";
+  refusedReason?: SwitchBlockedReason | "switch_not_active" | "origin_unknown";
+
 }
 
 /**
@@ -306,12 +327,18 @@ export async function recomputeSwitchSavings(
       autonomous: Boolean(row.autonomous),
       everSwitchedTo: gate?.everSwitchedTo ?? false,
     });
-    const refusedReason: SwitchBlockedReason | "switch_not_active" | null =
+    const refusedReason: SwitchBlockedReason | "switch_not_active" | "origin_unknown" | null =
       row.status !== "active"
         ? "switch_not_active"
-        : decision.executable
-          ? null
-          : (decision.reason ?? "routing_not_granted");
+        : s.missingOriginalEvents > 0
+          ? // A rerouted event with no `original_model_key` has no counterfactual.
+            // Crediting the rest of the batch would publish a figure computed over
+            // traffic we cannot fully account for, so the whole switch refuses.
+            "origin_unknown"
+          : decision.executable
+            ? null
+            : (decision.reason ?? "routing_not_granted");
+
 
     const { data: before } = await db
       .from("switches")
@@ -344,8 +371,12 @@ export async function recomputeSwitchSavings(
         switch_id: s.switchId,
         event: "savings_refused",
         detail:
-          `Container reported ${s.events} rerouted event(s) worth $${s.savedUsd.toFixed(2)}, ` +
-          `but this switch is not executable today (${refusedReason}). Not credited.`,
+          refusedReason === "origin_unknown"
+            ? `Container reported ${s.missingOriginalEvents} rerouted event(s) with no original model/host. ` +
+              `There is no counterfactual for those, so nothing on this switch is credited this run.`
+            : `Container reported ${s.events} rerouted event(s) worth $${s.savedUsd.toFixed(2)}, ` +
+              `but this switch is not executable today (${refusedReason}). Not credited.`,
+
       });
       if (eventErr) throw new Error(`savings refusal not recorded for ${s.switchId}: ${eventErr.message}`);
     }
