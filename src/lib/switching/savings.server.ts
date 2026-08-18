@@ -371,8 +371,12 @@ export async function recomputeSwitchSavings(
         switch_id: s.switchId,
         event: "savings_refused",
         detail:
-          `Container reported ${s.events} rerouted event(s) worth $${s.savedUsd.toFixed(2)}, ` +
-          `but this switch is not executable today (${refusedReason}). Not credited.`,
+          refusedReason === "origin_unknown"
+            ? `Container reported ${s.missingOriginalEvents} rerouted event(s) with no original model/host. ` +
+              `There is no counterfactual for those, so nothing on this switch is credited this run.`
+            : `Container reported ${s.events} rerouted event(s) worth $${s.savedUsd.toFixed(2)}, ` +
+              `but this switch is not executable today (${refusedReason}). Not credited.`,
+
       });
       if (eventErr) throw new Error(`savings refusal not recorded for ${s.switchId}: ${eventErr.message}`);
     }
