@@ -21,6 +21,16 @@ import { readIntelligence, type IntelligencePayload } from "./intelligence.serve
 /** Server-side cache window. Also the interval the widget re-polls on. */
 export const WIDGET_CACHE_TTL_MS = 5 * 60 * 1000;
 
+/**
+ * How long a payload that could not be refreshed may still be served.
+ *
+ * Serving the last good copy through a brief upstream wobble is right; serving
+ * it forever, unlabelled, on somebody else's website while our own copy says
+ * "refreshed every five minutes" is not. Past this bound the widget stops
+ * claiming to know the market and says so.
+ */
+export const WIDGET_STALE_SERVE_MAX_MS = 60 * 60 * 1000;
+
 /** How long one stat is shown before the widget advances. */
 export const WIDGET_ROTATE_MS = 6000;
 
@@ -40,6 +50,12 @@ export interface WidgetPayload {
   generatedAt: string;
   /** Epoch ms this snapshot was computed — lets a client see its own staleness. */
   computedAt: number;
+  /**
+   * True when this is a last-good copy served after a failed refresh. Rendered,
+   * never swallowed: a widget on a third-party page has to be able to say that
+   * what it is showing is older than it promises.
+   */
+  stale?: boolean;
   stats: WidgetStat[];
 }
 
@@ -140,7 +156,16 @@ export async function readWidgetPayload(): Promise<WidgetPayload> {
       return payload;
     })
     .catch((err) => {
-      if (cache) return cache.payload;
+      /*
+       * A failed refresh falls back to the last good payload, but only inside a
+       * bounded window and only while saying that is what it is. Beyond the
+       * window there is no honest fallback left, so the error propagates and
+       * the surface renders its unavailable state instead of old figures
+       * dressed as current ones.
+       */
+      if (cache && Date.now() - cache.at <= WIDGET_STALE_SERVE_MAX_MS) {
+        return { ...cache.payload, stale: true };
+      }
       throw err;
     })
     .finally(() => {

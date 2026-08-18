@@ -14,7 +14,11 @@ import {
   WIDGET_RATE_WINDOW_MS,
   WIDGET_CACHE_TTL_MS,
 } from "./widget.server";
-import { renderWidgetDocument, widgetDocumentHeaders } from "./widget-html.server";
+import {
+  renderWidgetDocument,
+  renderWidgetUnavailable,
+  widgetDocumentHeaders,
+} from "./widget-html.server";
 
 function limitHeaders(remaining: number) {
   return {
@@ -51,7 +55,26 @@ export async function serveWidgetDocument(request: Request): Promise<Response> {
 
   const url = new URL(request.url);
   const n = nonce();
-  const payload = await readWidgetPayload();
+
+  /*
+   * Past the bounded stale window `readWidgetPayload` refuses to hand back an
+   * old copy. On somebody else's page the honest answer is an explicit
+   * unavailable card, never last week's market presented as this minute's.
+   */
+  let payload;
+  try {
+    payload = await readWidgetPayload();
+  } catch {
+    return new Response(renderWidgetUnavailable({ origin: url.origin, nonce: n }), {
+      status: 200,
+      headers: {
+        ...widgetDocumentHeaders(n),
+        "Cache-Control": "public, max-age=60",
+        ...limitHeaders(verdict.remaining),
+      },
+    });
+  }
+
   return new Response(renderWidgetDocument(payload, { origin: url.origin, nonce: n }), {
     status: 200,
     headers: { ...widgetDocumentHeaders(n), ...limitHeaders(verdict.remaining) },
@@ -62,7 +85,21 @@ export async function serveWidgetData(request: Request): Promise<Response> {
   const verdict = rateLimit(`data:${callerKey(request)}`);
   if (!verdict.ok) return tooMany(verdict.retryAfterSec, "application/json");
 
-  const payload = await readWidgetPayload();
+  let payload;
+  try {
+    payload = await readWidgetPayload();
+  } catch {
+    return new Response(JSON.stringify({ error: "unavailable" }), {
+      status: 503,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "public, max-age=60",
+        ...limitHeaders(verdict.remaining),
+      },
+    });
+  }
+
   return new Response(JSON.stringify(payload), {
     status: 200,
     headers: {

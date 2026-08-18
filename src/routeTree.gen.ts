@@ -72,6 +72,7 @@ import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/b
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncTaskDriftRouteImport } from './routes/api/public/sync/task-drift'
 import { Route as ApiPublicSyncSchemaFiltersRouteImport } from './routes/api/public/sync/schema-filters'
+import { Route as ApiPublicSyncRollupHealthRouteImport } from './routes/api/public/sync/rollup-health'
 import { Route as ApiPublicSyncReprocessRouteImport } from './routes/api/public/sync/reprocess'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
 import { Route as ApiPublicSyncPartnerPayoutsRouteImport } from './routes/api/public/sync/partner-payouts'
@@ -409,6 +410,12 @@ const ApiPublicSyncSchemaFiltersRoute =
     path: '/api/public/sync/schema-filters',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSyncRollupHealthRoute =
+  ApiPublicSyncRollupHealthRouteImport.update({
+    id: '/api/public/sync/rollup-health',
+    path: '/api/public/sync/rollup-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSyncReprocessRoute = ApiPublicSyncReprocessRouteImport.update({
   id: '/api/public/sync/reprocess',
   path: '/api/public/sync/reprocess',
@@ -534,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
+  '/api/public/sync/rollup-health': typeof ApiPublicSyncRollupHealthRoute
   '/api/public/sync/schema-filters': typeof ApiPublicSyncSchemaFiltersRoute
   '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
@@ -606,6 +614,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
+  '/api/public/sync/rollup-health': typeof ApiPublicSyncRollupHealthRoute
   '/api/public/sync/schema-filters': typeof ApiPublicSyncSchemaFiltersRoute
   '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
@@ -683,6 +692,7 @@ export interface FileRoutesById {
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
+  '/api/public/sync/rollup-health': typeof ApiPublicSyncRollupHealthRoute
   '/api/public/sync/schema-filters': typeof ApiPublicSyncSchemaFiltersRoute
   '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
@@ -760,6 +770,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
+    | '/api/public/sync/rollup-health'
     | '/api/public/sync/schema-filters'
     | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
@@ -832,6 +843,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
+    | '/api/public/sync/rollup-health'
     | '/api/public/sync/schema-filters'
     | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
@@ -908,6 +920,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
+    | '/api/public/sync/rollup-health'
     | '/api/public/sync/schema-filters'
     | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
@@ -962,6 +975,7 @@ export interface RootRouteChildren {
   ApiPublicSyncPartnerPayoutsRoute: typeof ApiPublicSyncPartnerPayoutsRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyncReprocessRoute: typeof ApiPublicSyncReprocessRoute
+  ApiPublicSyncRollupHealthRoute: typeof ApiPublicSyncRollupHealthRoute
   ApiPublicSyncSchemaFiltersRoute: typeof ApiPublicSyncSchemaFiltersRoute
   ApiPublicSyncTaskDriftRoute: typeof ApiPublicSyncTaskDriftRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
@@ -1418,6 +1432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncSchemaFiltersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/rollup-health': {
+      id: '/api/public/sync/rollup-health'
+      path: '/api/public/sync/rollup-health'
+      fullPath: '/api/public/sync/rollup-health'
+      preLoaderRoute: typeof ApiPublicSyncRollupHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/reprocess': {
       id: '/api/public/sync/reprocess'
       path: '/api/public/sync/reprocess'
@@ -1623,6 +1644,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncPartnerPayoutsRoute: ApiPublicSyncPartnerPayoutsRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyncReprocessRoute: ApiPublicSyncReprocessRoute,
+  ApiPublicSyncRollupHealthRoute: ApiPublicSyncRollupHealthRoute,
   ApiPublicSyncSchemaFiltersRoute: ApiPublicSyncSchemaFiltersRoute,
   ApiPublicSyncTaskDriftRoute: ApiPublicSyncTaskDriftRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,

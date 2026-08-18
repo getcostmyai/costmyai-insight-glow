@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, PlugZap } from "lucide-react";
+import { Clock, DatabaseZap, PlugZap } from "lucide-react";
 
 import { relativeAgo } from "@/lib/freshness";
+import { coverageCopy, coverageIsFaulty } from "@/lib/dashboard/rollup-health";
+
 
 
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -109,17 +111,59 @@ export function DashboardShell({
         <main className="min-w-0 flex-1 space-y-8">
           {data.dataState === "awaiting_first_event" && <AwaitingFirstEvent />}
           <IngestBanner ingest={data.ingest} />
+          <RollupBanner rollups={data.rollups} />
 
           {children}
           <p className="pb-6 text-center text-xs text-muted-foreground">
-            Savings computed from your tracked traffic and current provider pricing · last read{" "}
-            <LocalTime iso={data.generatedAt} />.
+            Savings computed from your tracked traffic and current provider pricing · complete
+            through <LocalTime iso={data.dataAsOf} />
+            {data.rollups.state === "ok" || data.rollups.state === "never" ? null : (
+              <> · {relativeAgo(data.dataAsOf)} behind the newest event we hold</>
+            )}
+            .
           </p>
         </main>
+
       </div>
     </div>
   );
 }
+
+/**
+ * The understatement notice.
+ *
+ * Distinct from the ingest banner directly above it, and deliberately so: that
+ * one says nothing is arriving, this one says things arrived and were not
+ * counted. Every figure below is derived from the rollups, so when the rollups
+ * trail the events the page is not merely out of date — it is wrong in one
+ * direction, low, and it would otherwise say so nowhere.
+ */
+function RollupBanner({ rollups }: { rollups: DashboardController["data"]["rollups"] }) {
+  if (!coverageIsFaulty(rollups)) return null;
+
+  return (
+    <section
+      className="flex flex-wrap items-center gap-5 rounded-2xl border border-destructive/40 bg-destructive/5 p-6"
+      role="status"
+    >
+      <span className="flex size-11 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+        <DatabaseZap className="size-5" />
+      </span>
+      <div className="min-w-60 flex-1">
+        <p className="text-sm font-semibold text-destructive">
+          {rollups.state === "stale"
+            ? "Figures behind your traffic"
+            : "Today is not fully counted"}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground" suppressHydrationWarning>
+          {coverageCopy(rollups)} We are repairing this automatically; nothing you sent has been
+          lost.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 
 function AwaitingFirstEvent() {
   return (

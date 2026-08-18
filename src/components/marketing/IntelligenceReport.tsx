@@ -191,11 +191,27 @@ function MoveList({
   );
 }
 
+/**
+ * The price-sync pillar reads differently on a frozen archive page.
+ *
+ * "Refresh continuously" is true of the engine, but on a page whose own hero
+ * says the month is frozen it reads as a claim about the figures on that page,
+ * which are fixed. Same mechanism, stated in the tense that matches what the
+ * reader is looking at.
+ */
+function pricePillar(frozenMonth: string | null) {
+  return frozenMonth
+    ? {
+        title: "Price sync at freeze",
+        body: "The prices on this page are the catalog as it stood when this month was frozen. The engine itself keeps re-syncing from public provider feeds; the live page reflects that, this archive deliberately does not.",
+      }
+    : {
+        title: "Live price sync",
+        body: "Per-host prices refresh continuously from public provider feeds. A recommendation is priced against the catalog as it stands the moment you see it — not a quarterly snapshot.",
+      };
+}
+
 const PILLARS = [
-  {
-    title: "Live price sync",
-    body: "Per-host prices refresh continuously from public provider feeds. A recommendation is priced against the catalog as it stands the moment you see it — not a quarterly snapshot.",
-  },
   {
     title: "Independent benchmark scores",
     body: "Quality comes from published third-party evaluations, per task class. We do not run our own private eval and we are never paid for placement.",
@@ -255,7 +271,7 @@ export function IntelligenceReport({
       <NotesRail ctx={ctx} />
       <Archive ctx={ctx} />
 
-      <Method />
+      <Method ctx={ctx} />
 
     </>
   );
@@ -728,13 +744,13 @@ function Archive({ ctx }: { ctx: ReportContext }) {
   );
 }
 
-function Method() {
+function Method({ ctx }: { ctx: ReportContext }) {
   return (
     <section className="border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
       <div className="mx-auto max-w-6xl">
         <SectionHead eyebrow="Method" title="How a switch gets measured" />
         <ul className="mt-16 divide-y divide-border/60 border-t border-border/60">
-          {PILLARS.map((p, i) => (
+          {[pricePillar(ctx.frozenMonth), ...PILLARS].map((p, i) => (
             <Reveal as="li" key={p.title} delay={i * 60}>
               <div className="grid gap-3 py-7 sm:grid-cols-[16rem_minmax(0,1fr)] sm:gap-12">
                 <h3 className="text-sm font-semibold tracking-tight">{p.title}</h3>

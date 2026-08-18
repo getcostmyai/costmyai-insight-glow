@@ -27,6 +27,7 @@ import { deriveDataState, type DataState } from "./dashboard/onboarding";
 import { forecastMonthEnd, FORECAST_RULES } from "./dashboard/forecast";
 import { syncGapDays } from "./dashboard/sync-health.server";
 import { ingestConnection } from "./dashboard/ingest-health.server";
+import { readRollupCoverage } from "./dashboard/rollup-health.server";
 
 import { buildComposition } from "./dashboard/composition";
 import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
@@ -1329,13 +1330,26 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    */
   const ingest = await ingestConnection(orgId, now);
 
-
-
-
+  /**
+   * Whether the figures above were derived from all of that traffic.
+   *
+   * `ingest` measures arrival and `syncHealth` measures the collectors; neither
+   * looks at the transform between `usage_events` and `usage_rollups`, which is
+   * where a silent understatement lives. This is the only reading that does.
+   */
+  const rollupCoverage = await readRollupCoverage(orgId, now);
 
   return {
     days,
+    /** Request clock. Never presented as the age of the data — see `dataAsOf`. */
     generatedAt: new Date(now).toISOString(),
+    /**
+     * The moment the figures are complete as of: the newest event actually
+     * represented in the rollups. Falls back to the request clock only for a
+     * workspace with no traffic, where there is nothing to be stale about.
+     */
+    dataAsOf: rollupCoverage.dataAsOf ?? new Date(now).toISOString(),
+    rollups: rollupCoverage,
     workspace: {
       id: orgId,
       name: org.data.name,

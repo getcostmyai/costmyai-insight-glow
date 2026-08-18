@@ -49,6 +49,16 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Writes the usage events every projection and recommendation is computed from.",
   },
   {
+    job: "rollup-health",
+    label: "Rollup coverage",
+    cronName: "costmyai-rollup-health",
+    schedule: "*/15 * * * *",
+    maxIntervalMinutes: 60,
+    what:
+      "Compares stored events against the rolled-up figures every dashboard number is read from, and re-derives any window the inline ingest rebuild failed to write.",
+  },
+
+  {
     job: "pricing-sync",
     label: "Pricing sync",
     cronName: "costmyai-pricing-sync",
