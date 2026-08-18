@@ -7,13 +7,13 @@
  * 1. A referral code cannot collide on case. `ACME` and `acme` are the same
  *    code, because every lookup in the product lowercases before it matches.
  * 2. A workspace cannot hold two active switches for the same workload.
- * 3. A rerouted event with no original model/host has no counterfactual, so the
- *    switch refuses the credit instead of quietly booking $0 as a real result.
+ * The third claim of the dispatch — a rerouted event with no original pair must
+ * refuse rather than price at $0 — is proved in `savings-origin-unknown.test.ts`:
+ * the database's own `usage_events_reroute_complete` check already refuses that
+ * row at insert time, even for a service-role write, so it cannot be staged here.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-
-import { recomputeSwitchSavings } from "@/lib/switching/savings.server";
 
 import { guardIntegrationDatabase } from "./support/isolation";
 
@@ -115,59 +115,4 @@ describe("one active switch per workload", () => {
       .single();
     expect(rolledBack.error).toBeNull();
   }, 60_000);
-});
-
-describe("savings refuses an event with no origin", () => {
-  it("does not price a NULL original_model_key at $0", async () => {
-    const created = await admin
-      .from("switches")
-      .insert({
-        org_id: orgId,
-        from_model: "gpt-4o",
-        from_host: "api.openai.com",
-        to_model: "gpt-4o-mini",
-        to_host: "api.openai.com",
-        basis: "integrity test — origin_unknown",
-        badge: "SAME MODEL",
-        status: "active",
-        saved_usd: 0,
-      })
-      .select("id")
-      .single();
-    if (created.error) throw created.error;
-    const switchId = created.data!.id as string;
-
-    // The shape the API schema rejects but a `supabaseAdmin` write can produce:
-    // rerouted, successful, attributed — and with no pair to compare against.
-    const event = await admin.from("usage_events").insert({
-      org_id: orgId,
-      occurred_at: new Date().toISOString(),
-      model_key: "gpt-4o-mini",
-      host: "api.openai.com",
-      task_hint: "chat",
-      input_tokens: 1_000_000,
-      output_tokens: 200_000,
-      status: "ok",
-      rerouted: true,
-      route_reason: switchId,
-      original_model_key: null,
-      original_host: null,
-    });
-    expect(event.error).toBeNull();
-
-    const [result] = await recomputeSwitchSavings(admin as never, orgId, [switchId]);
-    expect(result).toBeDefined();
-    expect(result!.missingOriginalEvents).toBe(1);
-    expect(result!.refused).toBe(true);
-    expect(result!.refusedReason).toBe("origin_unknown");
-    expect(result!.storedUsd).toBe(0);
-
-    const { data: events } = await admin
-      .from("switch_events")
-      .select("event, detail")
-      .eq("switch_id", switchId)
-      .eq("event", "savings_refused");
-    expect(events?.length).toBeGreaterThan(0);
-    expect(events![0]!.detail).toMatch(/no original model\/host/i);
-  }, 90_000);
 });
