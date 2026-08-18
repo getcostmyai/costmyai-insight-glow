@@ -1,12 +1,8 @@
 import { describe, expect, it, beforeEach } from "vitest";
 
-import {
-  buildWidgetStats,
-  rateLimit,
-  callerKey,
-  WIDGET_RATE_LIMIT,
-  __resetWidgetState,
-} from "../widget.server";
+import { buildWidgetStats, __resetWidgetState } from "../widget.server";
+import { callerIdentity, RATE_RULES } from "@/lib/rate-limit.server";
+
 import { renderWidgetDocument, widgetDocumentHeaders } from "../widget-html.server";
 import type { IntelligencePayload, PriceMove } from "../intelligence.server";
 
@@ -72,27 +68,29 @@ describe("widget rotation set", () => {
 describe("widget rate limit", () => {
   beforeEach(() => __resetWidgetState());
 
-  it("allows the ceiling then refuses within the window", () => {
-    for (let i = 0; i < WIDGET_RATE_LIMIT; i++) {
-      expect(rateLimit("k", 1000).ok).toBe(true);
-    }
-    const over = rateLimit("k", 1000);
-    expect(over.ok).toBe(false);
-    expect(over.retryAfterSec).toBeGreaterThan(0);
-    // A new window releases it again.
-    expect(rateLimit("k", 1000 + 60_001).ok).toBe(true);
+  it("no longer keeps a per-isolate counter of its own", async () => {
+    const src = await import("node:fs/promises").then((fs) =>
+      fs.readFile("src/lib/intelligence/widget.server.ts", "utf8"),
+    );
+    expect(src).not.toMatch(/new Map<string, \{ count/);
+    expect(src).not.toContain("export function rateLimit");
   });
 
-  it("keys callers separately by origin and ip", () => {
-    const a = callerKey(
-      new Request("https://x.test", { headers: { origin: "https://a.test", "x-forwarded-for": "1.1.1.1" } }),
+  it("keeps an embed-specific ceiling separate from the other public endpoints", () => {
+    expect(RATE_RULES.widgetDoc.name).not.toBe(RATE_RULES.estimator.name);
+    expect(RATE_RULES.widgetDoc.limit).toBe(60);
+  });
+
+  it("keys callers by client ip, falling back to origin", () => {
+    const a = callerIdentity(
+      new Request("https://x.test", { headers: { "x-forwarded-for": "1.1.1.1" } }),
     );
-    const b = callerKey(
-      new Request("https://x.test", { headers: { origin: "https://b.test", "x-forwarded-for": "1.1.1.1" } }),
-    );
-    expect(a).not.toBe(b);
+    const b = callerIdentity(new Request("https://x.test", { headers: { origin: "https://b.test" } }));
+    expect(a).toBe("1.1.1.1");
+    expect(b).toBe("b.test");
   });
 });
+
 
 describe("widget document safety", () => {
   it("escapes hostile stat text instead of emitting markup", () => {

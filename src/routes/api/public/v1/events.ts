@@ -31,12 +31,30 @@ export const Route = createFileRoute("/api/public/v1/events")({
           );
         }
 
+        // Keyed per workspace, deliberately: a global ceiling would let one
+        // noisy but legitimate customer starve everyone else's ingest.
+        const { enforceRateLimit, RateLimitedError, RATE_RULES } = await import(
+          "@/lib/rate-limit.server"
+        );
+        try {
+          await enforceRateLimit(RATE_RULES.ingest, `org:${authed.orgId}`);
+        } catch (err) {
+          if (err instanceof RateLimitedError) {
+            return Response.json(
+              { error: "rate_limited", detail: err.message },
+              { status: 429, headers: { "Retry-After": String(err.retryAfterSec) } },
+            );
+          }
+          throw err;
+        }
+
         let body: unknown;
         try {
           body = await request.json();
         } catch {
           return Response.json({ error: "Body must be JSON" }, { status: 400 });
         }
+
 
         const parsed = ingestBatchSchema.safeParse(body);
         if (!parsed.success) {

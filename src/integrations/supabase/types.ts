@@ -1491,6 +1491,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_counters: {
+        Row: {
+          bucket_key: string
+          hits: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          hits?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          bucket_key?: string
+          hits?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       recommendations: {
         Row: {
           basis: string
@@ -2432,6 +2453,15 @@ export type Database = {
         Args: { _application_id: string }
         Returns: Json
       }
+      rate_limit_consume: {
+        Args: { _key: string; _limit: number; _window_seconds: number }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          retry_after_sec: number
+        }[]
+      }
+      rate_limit_prune: { Args: never; Returns: number }
       schema_filter_state: { Args: { _predicates: Json }; Returns: Json }
       set_org_plan: {
         Args: {
