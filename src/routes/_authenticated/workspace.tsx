@@ -48,8 +48,17 @@ function WorkspaceLayout() {
     return <Centered>Loading your workspace…</Centered>;
   }
   if (workspaces.isError) {
-    return <Centered>We could not read your workspaces. Refresh in a moment.</Centered>;
+    return (
+      <div className="mx-auto w-full max-w-2xl px-6 py-24">
+        <ErrorState
+          error={workspaces.error}
+          onRetry={() => workspaces.refetch()}
+          retrying={workspaces.isFetching}
+        />
+      </div>
+    );
   }
+
   if (workspaces.data.length === 0) {
     return <FirstWorkspace email={user.email ?? null} />;
   }
