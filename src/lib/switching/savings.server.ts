@@ -264,7 +264,8 @@ export interface SavingsWriteResult extends SwitchSavings {
    */
   refused: boolean;
   /** Present whenever `refused`. Never free text. */
-  refusedReason?: SwitchBlockedReason | "switch_not_active";
+  refusedReason?: SwitchBlockedReason | "switch_not_active" | "origin_unknown";
+
 }
 
 /**
