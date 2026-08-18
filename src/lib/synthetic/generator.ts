@@ -274,6 +274,7 @@ export function rollupEvents(
           costUsd: 0,
           outputP50: 0,
           outputP95: 0,
+          peakTotalTokens: 0,
         },
         outputs: [],
       };
@@ -284,6 +285,10 @@ export function rollupEvents(
     entry.row.outputTokens += e.outputTokens;
     entry.row.cacheReadTokens += e.cacheReadTokens ?? 0;
     entry.row.cacheWriteTokens += e.cacheWriteTokens ?? 0;
+    entry.row.peakTotalTokens = Math.max(
+      entry.row.peakTotalTokens,
+      e.inputTokens + e.outputTokens,
+    );
     if (e.status === "ok") entry.outputs.push(e.outputTokens);
   }
 
