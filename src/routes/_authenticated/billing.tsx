@@ -137,6 +137,17 @@ function BillingPage() {
       </AccountShell>
     );
   }
+  if (workspaces.isError) {
+    return (
+      <AccountShell active="billing" title="Billing">
+        <ErrorState
+          error={workspaces.error}
+          onRetry={() => workspaces.refetch()}
+          retrying={workspaces.isFetching}
+        />
+      </AccountShell>
+    );
+  }
   if (!org) {
     return (
       <AccountShell active="billing" title="Billing">
@@ -146,6 +157,20 @@ function BillingPage() {
       </AccountShell>
     );
   }
+  if (billing.isError) {
+    // Without this read we don't know the level or the subscription state, so
+    // we say so rather than defaulting the page to "you're on Compare".
+    return (
+      <AccountShell active="billing" title="Billing">
+        <ErrorState
+          error={billing.error}
+          onRetry={() => billing.refetch()}
+          retrying={billing.isFetching}
+        />
+      </AccountShell>
+    );
+  }
+
 
   const current = billing.data?.effectivePlan ?? "compare";
   const status = billing.data?.status ?? null;
