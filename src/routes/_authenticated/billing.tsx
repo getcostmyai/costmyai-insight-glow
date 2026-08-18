@@ -352,12 +352,24 @@ function BillingPage() {
           <p className="p-6 text-sm text-muted-foreground">
             Receipts are visible to workspace owners and admins.
           </p>
+        ) : invoices.isError ? (
+          // The highest-severity false negative in the product: "no invoices"
+          // on a failed read looks like a real answer to "was I charged?".
+          <div className="p-6">
+            <ErrorState
+              compact
+              error={invoices.error}
+              onRetry={() => invoices.refetch()}
+              retrying={invoices.isFetching}
+            />
+          </div>
         ) : invoices.isPending ? (
           <p className="p-6 text-sm text-muted-foreground">Loading receipts…</p>
         ) : (invoices.data?.length ?? 0) === 0 ? (
           <p className="p-6 text-sm text-muted-foreground">
             No invoices yet. Receipts appear here the moment the provider issues one.
           </p>
+
 
         ) : (
           <div className="divide-y divide-border">
