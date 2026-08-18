@@ -33,5 +33,20 @@
     "table": "organizations",
     "file": "src/lib/workspace.functions.ts",
     "reason": "Lists the workspaces the signed-in caller belongs to, through requireSupabaseAuth and the is_org_member RLS policy. Filtering is_synthetic here would hide the demo workspace from the one account permitted to see it while adding no isolation: RLS, not this filter, is what keeps other tenants out. Surfaced by the Dispatch 127 scanner fix. Reviewed Dispatch 127."
+  },
+  {
+    "table": "organizations",
+    "file": "src/lib/billing.functions.ts",
+    "reason": "Reads one workspace's Stripe customer/subscription id by primary key, after the caller's membership has already been checked. is_synthetic guards against synthetic rows mixing into a real tenant's figures; there is no cross-tenant surface here and a synthetic workspace still has its own billing row. Reviewed Dispatch 231."
+  },
+  {
+    "table": "organizations",
+    "file": "src/lib/ingest/rollup-sweep.server.ts",
+    "reason": "The sweep must list every workspace, synthetic included: the demo workspace's rollups are what the demo dashboard reads, so excluding them would leave exactly the coverage holes this job exists to repair. Nothing here is quoted as a customer figure; the output is per-workspace coverage state. Reviewed Dispatch 231."
+  },
+  {
+    "table": "organizations",
+    "file": "src/routes/api/public/payments/webhook.ts",
+    "reason": "Reads the one workspace named by a signature-verified Stripe event, by primary key, to apply that event's plan and referral attribution. Filtering is_synthetic would silently drop a real payment event if the workspace were ever flagged. Reviewed Dispatch 231."
   }
 ]
