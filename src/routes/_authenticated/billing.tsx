@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, Receipt } from "lucide-react";
 
+import { ErrorState } from "@/components/ErrorState";
 import { AccountShell } from "@/components/dashboard/AccountShell";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PlanCheckout } from "@/components/billing/PlanCheckout";
@@ -137,6 +138,17 @@ function BillingPage() {
       </AccountShell>
     );
   }
+  if (workspaces.isError) {
+    return (
+      <AccountShell active="billing" title="Billing">
+        <ErrorState
+          error={workspaces.error}
+          onRetry={() => workspaces.refetch()}
+          retrying={workspaces.isFetching}
+        />
+      </AccountShell>
+    );
+  }
   if (!org) {
     return (
       <AccountShell active="billing" title="Billing">
@@ -146,6 +158,20 @@ function BillingPage() {
       </AccountShell>
     );
   }
+  if (billing.isError) {
+    // Without this read we don't know the level or the subscription state, so
+    // we say so rather than defaulting the page to "you're on Compare".
+    return (
+      <AccountShell active="billing" title="Billing">
+        <ErrorState
+          error={billing.error}
+          onRetry={() => billing.refetch()}
+          retrying={billing.isFetching}
+        />
+      </AccountShell>
+    );
+  }
+
 
   const current = billing.data?.effectivePlan ?? "compare";
   const status = billing.data?.status ?? null;
@@ -352,12 +378,24 @@ function BillingPage() {
           <p className="p-6 text-sm text-muted-foreground">
             Receipts are visible to workspace owners and admins.
           </p>
+        ) : invoices.isError ? (
+          // The highest-severity false negative in the product: "no invoices"
+          // on a failed read looks like a real answer to "was I charged?".
+          <div className="p-6">
+            <ErrorState
+              compact
+              error={invoices.error}
+              onRetry={() => invoices.refetch()}
+              retrying={invoices.isFetching}
+            />
+          </div>
         ) : invoices.isPending ? (
           <p className="p-6 text-sm text-muted-foreground">Loading receipts…</p>
         ) : (invoices.data?.length ?? 0) === 0 ? (
           <p className="p-6 text-sm text-muted-foreground">
             No invoices yet. Receipts appear here the moment the provider issues one.
           </p>
+
 
         ) : (
           <div className="divide-y divide-border">

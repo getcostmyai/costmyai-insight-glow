@@ -1,3 +1,4 @@
+import { ErrorState } from "@/components/ErrorState";
 import { AccountShell } from "@/components/dashboard/AccountShell";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +36,19 @@ function TeamPage() {
   const org = workspaces.data?.[0];
 
   if (workspaces.isPending) return <Shell>Loading your workspace…</Shell>;
+  // Ordered deliberately: a failed workspace read is not "you have none".
+  if (workspaces.isError)
+    return (
+      <AccountShell active="team" title="Team">
+        <ErrorState
+          error={workspaces.error}
+          onRetry={() => workspaces.refetch()}
+          retrying={workspaces.isFetching}
+        />
+      </AccountShell>
+    );
   if (!org) return <Shell>Create a workspace first.</Shell>;
+
 
   return <Team orgId={org.id} orgName={org.name} manager={org.role !== "member"} />;
 }
@@ -135,20 +148,32 @@ function Team({ orgId, orgName, manager }: { orgId: string; orgName: string; man
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Members
           </h2>
-          <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            {(members.data ?? []).map((m) => (
-              <li key={m.userId} className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-sm">{m.email ?? "Teammate"}</span>
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  {m.role}
-                </span>
-              </li>
-            ))}
-            {members.isPending ? (
-              <li className="px-5 py-3.5 text-sm text-muted-foreground">Loading…</li>
-            ) : null}
-          </ul>
+          {/* A failed read must never render as a short member list: an empty
+              or partial roster is a claim about who has access. */}
+          {members.isError ? (
+            <ErrorState
+              className="mt-3"
+              compact
+              error={members.error}
+              onRetry={() => members.refetch()}
+              retrying={members.isFetching}
+            />
+          ) : (
+            <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+              {(members.data ?? []).map((m) => (
+                <li key={m.userId} className="flex items-center justify-between px-5 py-3.5">
+                  <span className="text-sm">{m.email ?? "Teammate"}</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    {m.role}
+                  </span>
+                </li>
+              ))}
+              {members.isPending ? (
+                <li className="px-5 py-3.5 text-sm text-muted-foreground">Loading…</li>
+              ) : null}
+            </ul>
+          )}
         </section>
 
         {manager ? (
@@ -156,7 +181,19 @@ function Team({ orgId, orgName, manager }: { orgId: string; orgName: string; man
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Open invitations
             </h2>
-            {open.length === 0 ? (
+            {invites.isError ? (
+              // "No invitations waiting" on a 500 is a false all-clear — an
+              // owner would conclude nobody is pending when we simply don't know.
+              <ErrorState
+                className="mt-3"
+                compact
+                error={invites.error}
+                onRetry={() => invites.refetch()}
+                retrying={invites.isFetching}
+              />
+            ) : invites.isPending ? (
+              <p className="mt-3 text-sm text-muted-foreground">Loading invitations…</p>
+            ) : open.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">No invitations waiting.</p>
             ) : (
               <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
@@ -180,6 +217,7 @@ function Team({ orgId, orgName, manager }: { orgId: string; orgName: string; man
             )}
           </section>
         ) : null}
+
       </div>
     </AccountShell>
   );
