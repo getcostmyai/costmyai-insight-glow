@@ -232,6 +232,13 @@ export interface RollupRow {
   costUsd: number;
   outputP50: number;
   outputP95: number;
+  /**
+   * Largest single request seen in the bucket (input + output). Carried on the
+   * rollup so the friction badge can read observed context peaks from the small
+   * summary table instead of scanning every raw event on the dashboard's hot
+   * path.
+   */
+  peakTotalTokens: number;
 }
 
 
@@ -267,6 +274,7 @@ export function rollupEvents(
           costUsd: 0,
           outputP50: 0,
           outputP95: 0,
+          peakTotalTokens: 0,
         },
         outputs: [],
       };
@@ -277,6 +285,10 @@ export function rollupEvents(
     entry.row.outputTokens += e.outputTokens;
     entry.row.cacheReadTokens += e.cacheReadTokens ?? 0;
     entry.row.cacheWriteTokens += e.cacheWriteTokens ?? 0;
+    entry.row.peakTotalTokens = Math.max(
+      entry.row.peakTotalTokens,
+      e.inputTokens + e.outputTokens,
+    );
     if (e.status === "ok") entry.outputs.push(e.outputTokens);
   }
 
