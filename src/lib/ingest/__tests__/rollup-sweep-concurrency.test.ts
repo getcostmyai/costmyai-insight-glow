@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+import { classifyCoverage } from "@/lib/dashboard/rollup-health";
+
 /**
  * The ~40-large-tenant scenario that was flagged as the breaking point.
  *
@@ -22,20 +24,23 @@ const realSeconds = { check: CHECK_MS * 1000 / SCALE, repair: REPAIR_MS * 1000 /
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 vi.mock("@/lib/dashboard/rollup-health.server", () => ({
-  readRollupCoverage: async (orgId: string) => {
+  readRollupCoverage: async (_orgId: string, now: number) => {
     inFlight += 1;
     peakInFlight = Math.max(peakInFlight, inFlight);
     await sleep(CHECK_MS);
     inFlight -= 1;
-    return {
-      state: "gap",
-      lastEventAt: new Date("2026-08-18T10:00:00Z").toISOString(),
-      lastBucketStart: new Date("2026-08-18T00:00:00Z").toISOString(),
-      eventsOnLastDay: 173876,
-      rolledOnLastDay: 0,
-      missingRequests: 173876,
-      orgId,
-    };
+    const day = new Date(now);
+    const dayStart = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate());
+    return classifyCoverage(
+      {
+        lastEventAt: new Date(now - 2 * 60 * 60_000).toISOString(),
+        lastBucketStart: new Date(dayStart).toISOString(),
+        eventsOnLastDay: 173876,
+        rolledOnLastDay: 0,
+        missingDays: 0,
+      },
+      now,
+    );
   },
 }));
 
