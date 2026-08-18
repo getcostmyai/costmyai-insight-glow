@@ -42,6 +42,20 @@ const esc = (s: string) =>
 const jsonIsland = (value: unknown) =>
   JSON.stringify(value).replace(/</g, "\\u003c").replace(/\u2028|\u2029/g, "");
 
+/**
+ * Absolute UTC, not "3 minutes ago": the document is served from a cache with a
+ * TTL, so a relative label baked into the HTML would itself go stale in the
+ * embedder's cache and lie about how stale the figures are.
+ */
+export function asOfLabel(computedAt: number): string {
+  const d = new Date(computedAt);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(
+    d.getUTCHours(),
+  )}:${pad(d.getUTCMinutes())} UTC`;
+}
+
+
 export interface WidgetDocOptions {
   /** Absolute URL of this app, used for the attribution link only. */
   origin: string;
@@ -76,6 +90,8 @@ export function renderWidgetDocument(payload: WidgetPayload, opts: WidgetDocOpti
       radial-gradient(120% 140% at 100% 0%, rgba(121,69,236,.10) 0%, rgba(121,69,236,0) 55%),
       ${PALETTE.bg};
   }
+  .asof{font-size:11px;color:${PALETTE.muted};white-space:nowrap}
+  .asof[data-stale="1"]{color:${PALETTE.up};font-weight:600}
   .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${PALETTE.muted};font-weight:600}
   .stat{display:flex;flex-direction:column;gap:6px}
   .value{
@@ -107,6 +123,14 @@ export function renderWidgetDocument(payload: WidgetPayload, opts: WidgetDocOpti
     </div>
     <div class="foot">
       <div class="dots" id="dots"></div>
+      <!-- The age of the figures, stated on the surface that carries them.
+           A widget nobody at CostMyAI can see has to disclose its own
+           staleness or nothing will. -->
+      <span class="asof" id="asof" data-stale="${payload.stale ? "1" : "0"}">${esc(
+        payload.stale
+          ? `Last refreshed ${asOfLabel(payload.computedAt)} · retrying`
+          : `As of ${asOfLabel(payload.computedAt)}`,
+      )}</span>
       <a class="via" id="via" href="${esc(home)}" target="_blank" rel="noopener">Powered by <b>Cost<i>My</i>AI</b></a>
     </div>
   </div>
@@ -191,4 +215,54 @@ export function widgetDocumentHeaders(nonce: string): HeadersInit {
       WIDGET_CACHE_TTL_MS / 1000,
     )}`,
   };
+}
+
+/**
+ * What the widget shows when there are no figures it can honestly present.
+ *
+ * Deliberately blank of numbers. The failure mode this replaces — quietly
+ * re-serving a cached market long after the refresh stopped working — is worse
+ * than showing nothing, because a third-party page has no way to tell.
+ */
+export function renderWidgetUnavailable(opts: WidgetDocOptions): string {
+  const { origin, nonce } = opts;
+  const home = `${origin}/intelligence?utm_source=embed&utm_medium=widget`;
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>AI price market — via CostMyAI</title>
+<style nonce="${nonce}">
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:${SANS};background:${PALETTE.bg};color:${PALETTE.ink};-webkit-font-smoothing:antialiased}
+  .card{position:relative;height:100%;min-height:168px;display:flex;flex-direction:column;
+    justify-content:space-between;gap:14px;padding:20px 22px;
+    border:1px solid ${PALETTE.hairline};border-radius:18px;background:${PALETTE.bg}}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${PALETTE.muted};font-weight:600}
+  .label{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .detail{font-size:12.5px;line-height:1.45;color:${PALETTE.body};margin-top:6px}
+  .foot{display:flex;align-items:center;justify-content:flex-end;
+    border-top:1px solid ${PALETTE.hairline};padding-top:12px}
+  .via{font-size:12px;color:${PALETTE.muted};text-decoration:none;font-weight:600}
+  .via b{color:${PALETTE.ink};font-weight:700}
+  .via i{color:${PALETTE.brand};font-style:normal}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="eyebrow">AI price market</div>
+    <div>
+      <div class="label">Figures temporarily unavailable</div>
+      <div class="detail">We would rather show nothing than show a market reading we cannot confirm is current. Live figures at CostMyAI.</div>
+    </div>
+    <div class="foot">
+      <a class="via" href="${esc(home)}" target="_blank" rel="noopener">Powered by <b>Cost<i>My</i>AI</b></a>
+    </div>
+  </div>
+</body>
+</html>`;
 }
