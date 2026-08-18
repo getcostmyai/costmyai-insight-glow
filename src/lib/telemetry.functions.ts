@@ -18,6 +18,10 @@ export const trackEstimatorEvent = createServerFn({ method: "POST" })
     event: (ALLOWED.includes(data?.event) ? data.event : "estimator_viewed") as LeadEventType,
   }))
   .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { enforceRateLimit, callerIdentity, RATE_RULES } = await import("./rate-limit.server");
+    await enforceRateLimit(RATE_RULES.estimatorTelemetry, callerIdentity(getRequest()));
+
     const { recordLeadEvent } = await import("./telemetry/lead-events.server");
     await recordLeadEvent(data.event);
     return { ok: true };

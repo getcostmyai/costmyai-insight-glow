@@ -130,8 +130,16 @@ live("a real native Gemini call, all the way to a dashboard", () => {
       }),
     });
     const text = await res.text();
+    if (res.status === 429) {
+      // Google's own free-tier quota, not a failure of anything we built. Same
+      // handling as dispatch-206: say the proof did not run rather than let a
+      // provider quota read as a broken journey.
+      console.warn("[dispatch-177] Gemini returned 429 (free-tier quota); cannot prove today.");
+      return;
+    }
     console.log("GEMINI RAW RESPONSE", text);
     expect(res.status).toBe(200);
+
     const payload = JSON.parse(text) as {
       modelVersion: string;
       usageMetadata: {

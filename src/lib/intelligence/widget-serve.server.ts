@@ -6,26 +6,22 @@
  * is guaranteed to bypass site auth on every deployment. Both go through this
  * module so the cache, the limiter and the CSP can never diverge between them.
  */
+import { readWidgetPayload, WIDGET_CACHE_TTL_MS } from "./widget.server";
 import {
-  callerKey,
-  rateLimit,
-  readWidgetPayload,
-  WIDGET_RATE_LIMIT,
-  WIDGET_RATE_WINDOW_MS,
-  WIDGET_CACHE_TTL_MS,
-} from "./widget.server";
+  callerIdentity,
+  consumeRateLimit,
+  rateLimitHeaders,
+  RATE_RULES,
+  type RateVerdict,
+} from "@/lib/rate-limit.server";
 import {
   renderWidgetDocument,
   renderWidgetUnavailable,
   widgetDocumentHeaders,
 } from "./widget-html.server";
 
-function limitHeaders(remaining: number) {
-  return {
-    "X-RateLimit-Limit": String(WIDGET_RATE_LIMIT),
-    "X-RateLimit-Remaining": String(Math.max(0, remaining)),
-    "X-RateLimit-Window": `${Math.floor(WIDGET_RATE_WINDOW_MS / 1000)}s`,
-  };
+function limitHeaders(verdict: RateVerdict, windowSec: number) {
+  return rateLimitHeaders(verdict, windowSec);
 }
 
 function tooMany(retryAfterSec: number, contentType: string) {
@@ -38,7 +34,7 @@ function tooMany(retryAfterSec: number, contentType: string) {
       headers: {
         "Content-Type": contentType,
         "Retry-After": String(retryAfterSec),
-        ...limitHeaders(0),
+        "X-RateLimit-Remaining": "0",
       },
     },
   );
@@ -50,8 +46,9 @@ const nonce = () =>
     .join("");
 
 export async function serveWidgetDocument(request: Request): Promise<Response> {
-  const verdict = rateLimit(`doc:${callerKey(request)}`);
+  const verdict = await consumeRateLimit(RATE_RULES.widgetDoc, callerIdentity(request));
   if (!verdict.ok) return tooMany(verdict.retryAfterSec, "text/plain; charset=utf-8");
+
 
   const url = new URL(request.url);
   const n = nonce();
@@ -70,19 +67,23 @@ export async function serveWidgetDocument(request: Request): Promise<Response> {
       headers: {
         ...widgetDocumentHeaders(n),
         "Cache-Control": "public, max-age=60",
-        ...limitHeaders(verdict.remaining),
+        ...limitHeaders(verdict, RATE_RULES.widgetDoc.windowSec),
       },
     });
   }
 
   return new Response(renderWidgetDocument(payload, { origin: url.origin, nonce: n }), {
     status: 200,
-    headers: { ...widgetDocumentHeaders(n), ...limitHeaders(verdict.remaining) },
+    headers: {
+      ...widgetDocumentHeaders(n),
+      ...limitHeaders(verdict, RATE_RULES.widgetDoc.windowSec),
+    },
+
   });
 }
 
 export async function serveWidgetData(request: Request): Promise<Response> {
-  const verdict = rateLimit(`data:${callerKey(request)}`);
+  const verdict = await consumeRateLimit(RATE_RULES.widgetData, callerIdentity(request));
   if (!verdict.ok) return tooMany(verdict.retryAfterSec, "application/json");
 
   let payload;
@@ -95,7 +96,7 @@ export async function serveWidgetData(request: Request): Promise<Response> {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
         "Cache-Control": "public, max-age=60",
-        ...limitHeaders(verdict.remaining),
+        ...limitHeaders(verdict, RATE_RULES.widgetDoc.windowSec),
       },
     });
   }
@@ -110,7 +111,7 @@ export async function serveWidgetData(request: Request): Promise<Response> {
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Accept",
       "Cache-Control": `public, max-age=${Math.floor(WIDGET_CACHE_TTL_MS / 1000)}`,
-      ...limitHeaders(verdict.remaining),
+      ...limitHeaders(verdict, RATE_RULES.widgetDoc.windowSec),
     },
   });
 }

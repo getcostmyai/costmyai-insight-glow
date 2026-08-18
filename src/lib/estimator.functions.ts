@@ -17,6 +17,13 @@ export const estimateSavingFn = createServerFn({ method: "POST" })
     distribution: data.distribution,
   }))
   .handler(async ({ data }): Promise<EstimatorResult> => {
+    // Unauthenticated, multi-read and a write per call — the cheapest
+    // amplification target in the app, so it is the strictest of the public
+    // read paths. Counters are shared across workers (Postgres-backed).
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { enforceRateLimit, callerIdentity, RATE_RULES } = await import("./rate-limit.server");
+    await enforceRateLimit(RATE_RULES.estimator, callerIdentity(getRequest()));
+
     const { estimateSaving } = await import("./estimator/estimate.server");
     const result = await estimateSaving(data);
 

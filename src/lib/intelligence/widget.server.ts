@@ -179,69 +179,17 @@ export async function readWidgetPayload(): Promise<WidgetPayload> {
 /* Rate limiting                                                       */
 /* ------------------------------------------------------------------ */
 
-/**
- * Fixed-window limiter for the unauthenticated embed surface only.
- *
- * This ceiling exists so embed traffic — which anyone can point at us — cannot
- * become a scraping channel or crowd out the authenticated dashboard/API. It is
- * intentionally separate from, and much lower than, any signed-in API budget.
- * State is per server instance; with several instances the effective ceiling is
- * a multiple of this, which is fine for its purpose (a cheap upper bound in
- * front of a cache, not a billing-grade quota).
+/*
+ * The widget's limiter used to be a per-isolate Map here. It has been removed
+ * rather than kept alongside its replacement: counters now live in Postgres via
+ * `@/lib/rate-limit.server`, shared by every public endpoint and every worker
+ * instance. The embed ceiling itself is unchanged (RATE_RULES.widgetDoc /
+ * widgetData) — it is simply enforced for real now.
  */
-export const WIDGET_RATE_LIMIT = 60; // requests
-export const WIDGET_RATE_WINDOW_MS = 60_000; // per minute, per caller key
-
-const buckets = new Map<string, { count: number; resetAt: number }>();
-
-export interface RateVerdict {
-  ok: boolean;
-  remaining: number;
-  retryAfterSec: number;
-}
-
-export function rateLimit(
-  key: string,
-  now = Date.now(),
-  limit = WIDGET_RATE_LIMIT,
-  windowMs = WIDGET_RATE_WINDOW_MS,
-): RateVerdict {
-  // Opportunistic sweep so an unbounded key space cannot grow the map forever.
-  if (buckets.size > 5000) {
-    for (const [k, b] of buckets) if (b.resetAt <= now) buckets.delete(k);
-  }
-
-  const bucket = buckets.get(key);
-  if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
-    return { ok: true, remaining: limit - 1, retryAfterSec: Math.ceil(windowMs / 1000) };
-  }
-
-  bucket.count += 1;
-  const retryAfterSec = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000));
-  if (bucket.count > limit) return { ok: false, remaining: 0, retryAfterSec };
-  return { ok: true, remaining: limit - bucket.count, retryAfterSec };
-}
-
-/** Caller identity: the requesting origin when present, else the client IP. */
-export function callerKey(request: Request): string {
-  const origin = request.headers.get("origin") ?? request.headers.get("referer") ?? "";
-  let host = "";
-  try {
-    if (origin) host = new URL(origin).host;
-  } catch {
-    host = "";
-  }
-  const ip =
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
-  return `${host || "no-origin"}|${ip}`;
-}
 
 /** Reset helper for tests. */
 export function __resetWidgetState() {
-  buckets.clear();
   cache = null;
   inflight = null;
 }
+

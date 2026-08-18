@@ -23,6 +23,13 @@ export const submitPartnerApplication = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data }) => {
+    // Stricter than the read-only public endpoints: an accepted submission
+    // sends a real email, so the ceiling is "a human applying", not "a page
+    // being used".
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { enforceRateLimit, callerIdentity, RATE_RULES } = await import("./rate-limit.server");
+    await enforceRateLimit(RATE_RULES.partnerApplication, callerIdentity(getRequest()));
+
     const { submitApplication } = await import("./partner-application.server");
     return submitApplication(data);
   });
