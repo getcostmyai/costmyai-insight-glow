@@ -51,7 +51,7 @@ export interface RollupSweep {
  * proof, where healing the damage before observing it would defeat the point.
  */
 export async function sweepRollups(
-  opts: { repair?: boolean; now?: number } = {},
+  opts: { repair?: boolean; now?: number; concurrency?: number } = {},
 ): Promise<RollupSweep> {
   const repair = opts.repair !== false;
   const now = opts.now ?? Date.now();
@@ -60,28 +60,26 @@ export async function sweepRollups(
   const { data: orgs, error } = await db.from("organizations").select("id");
   if (error) throw new Error(`rollup sweep could not list workspaces: ${error.message}`);
 
-  const results: OrgSweepResult[] = [];
+  const orgIds = (orgs ?? []).map((o) => o.id as string);
 
-  for (const org of orgs ?? []) {
-    const orgId = org.id as string;
+  const perOrg = async (orgId: string): Promise<OrgSweepResult | null> => {
     let coverage: RollupCoverage;
     try {
       coverage = await readRollupCoverage(orgId, now);
     } catch (err) {
-      results.push({
+      return {
         orgId,
         state: "stale",
         missingRequests: 0,
         repaired: false,
         bucketsWritten: 0,
         error: err instanceof Error ? err.message : String(err),
-      });
-      continue;
+      };
     }
 
     // "settling" is the ingest path doing its job a moment ago, and "never" is
     // a workspace with no traffic. Neither is a hole.
-    if (!coverageIsFaulty(coverage)) continue;
+    if (!coverageIsFaulty(coverage)) return null;
 
     const result: OrgSweepResult = {
       orgId,
@@ -108,8 +106,19 @@ export async function sweepRollups(
       }
     }
 
-    results.push(result);
-  }
+    return result;
+  };
+
+  /**
+   * Dispatch — bounded fan-out. Each workspace's check and repair is disjoint
+   * from every other (own rows, own window), so they are safe to overlap; what
+   * is not safe is overlapping all of them at once against one connection pool.
+   * The pass is wall-clock bound by the slowest tenant times ceil(n / width),
+   * not by their sum, which is what kept a thousand-workspace estate inside the
+   * quarter-hour the schedule gives it.
+   */
+  const settled = await mapWithConcurrency(orgIds, opts.concurrency ?? SWEEP_CONCURRENCY, perOrg);
+  const results = settled.filter((r): r is OrgSweepResult => r !== null);
 
   return {
     orgsChecked: (orgs ?? []).length,
