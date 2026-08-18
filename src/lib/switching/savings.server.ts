@@ -60,6 +60,14 @@ export interface SwitchSavings {
   events: number;
   /** Events dropped because one side of the comparison has no price. */
   unpricedEvents: number;
+  /**
+   * Events a container claimed it rerouted without naming the pair it rerouted
+   * FROM. There is no counterfactual for such an event, so it is neither priced
+   * nor tolerated: any of these refuses the whole switch's credit for this run.
+   * The API schema rejects the shape, but `supabaseAdmin` writes bypass it.
+   */
+  missingOriginalEvents: number;
+
   /** What the caller's original pair would have cost for the same tokens. */
   counterfactualUsd: number;
   /** What the pair the container actually used did cost. */
