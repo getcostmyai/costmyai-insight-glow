@@ -118,11 +118,29 @@ beforeAll(async () => {
 }, 90_000);
 
 afterAll(async () => {
-  await admin.from("organizations").delete().in("id", [orgId, secondOrg]);
-  await admin.from("partners").delete().in("id", [alicePartner, bobPartner]);
-  await admin.from("platform_admins").delete().eq("user_id", platformAdmin.id);
-  for (const a of [alice, bob, customer, platformAdmin]) await admin.auth.admin.deleteUser(a.id);
+  /**
+   * Dispatch 231. This teardown used to be a bare sequence: one throwing step
+   * (or an aborted run) left the `platform_admins` grant behind, and a real
+   * standing admin row for a deleted user sat in production for two weeks
+   * before an integrity sweep found it. The privileged row is now dropped
+   * FIRST, verified by read-back, and a belt-and-braces sweep removes any
+   * `note = 'test'` grant whose user no longer exists.
+   */
+  try {
+    await admin.from("platform_admins").delete().eq("user_id", platformAdmin.id);
+    const { data: left } = await admin
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", platformAdmin.id)
+      .maybeSingle();
+    if (left) throw new Error(`platform_admins grant for ${platformAdmin.id} survived teardown`);
+  } finally {
+    await admin.from("organizations").delete().in("id", [orgId, secondOrg]);
+    await admin.from("partners").delete().in("id", [alicePartner, bobPartner]);
+    for (const a of [alice, bob, customer, platformAdmin]) await admin.auth.admin.deleteUser(a.id);
+  }
 }, 90_000);
+
 
 describe("referral attribution", () => {
   it("attaches once, then refuses a second claim and any move to another partner", async () => {
