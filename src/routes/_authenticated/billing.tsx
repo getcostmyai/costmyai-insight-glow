@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, Receipt } from "lucide-react";
 
+import { ErrorState } from "@/components/ErrorState";
 import { AccountShell } from "@/components/dashboard/AccountShell";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PlanCheckout } from "@/components/billing/PlanCheckout";
