@@ -202,6 +202,7 @@ export async function computeSwitchSavings(
         switchId,
         events: 0,
         unpricedEvents: 0,
+        missingOriginalEvents: 0,
         counterfactualUsd: 0,
         actualUsd: 0,
         savedUsd: 0,
@@ -211,13 +212,24 @@ export async function computeSwitchSavings(
         toHost: g.host,
       } satisfies SwitchSavings);
 
-    const before = g.original_model_key && g.original_host ? priceFor(g.original_model_key, g.original_host) : undefined;
+    // No origin, no counterfactual. `?? ""` here used to resolve to an unpriced
+    // pair and quietly contribute $0 — a legitimate-looking result for an event
+    // whose "before" nobody ever recorded. It is now counted as its own defect
+    // and refuses the credit in `recomputeSwitchSavings`.
+    if (!g.original_model_key || !g.original_host) {
+      row.missingOriginalEvents += count;
+      acc.set(switchId, row);
+      continue;
+    }
+
+    const before = priceFor(g.original_model_key, g.original_host);
     const after = priceFor(g.model_key, g.host);
     if (!before || !after) {
       row.unpricedEvents += count;
       acc.set(switchId, row);
       continue;
     }
+
 
     row.events += count;
     // One mix, two rate cards. This is the line that makes a move onto a host
