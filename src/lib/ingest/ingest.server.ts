@@ -300,6 +300,7 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
       cost_usd: b.costUsd,
       output_p50: b.outputP50,
       output_p95: b.outputP95,
+      peak_total_tokens: b.peakTotalTokens,
 
     }));
 
