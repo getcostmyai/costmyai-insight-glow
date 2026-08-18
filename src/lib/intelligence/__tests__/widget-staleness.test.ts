@@ -82,7 +82,7 @@ describe("widget staleness", () => {
       month: "August 2026",
       generatedAt: "2026-08-18T00:00:00Z",
       computedAt: Date.parse("2026-08-18T11:30:00Z"),
-      stats: [{ id: "a", value: "36", label: "price changes", detail: "", tone: "brand" as const }],
+      stats: [{ id: "mom-moves" as const, value: "36", label: "price changes", detail: "", tone: "brand" as const }],
     };
 
     const live = renderWidgetDocument(base, { origin: "https://costmyai.com", nonce: "n" });
