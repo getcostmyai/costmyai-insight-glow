@@ -12,14 +12,18 @@ import { classifyCoverage } from "@/lib/dashboard/rollup-health";
  * holding more than `SWEEP_CONCURRENCY` workspaces open at once.
  */
 
-const SCALE = 1000; // real seconds -> test milliseconds
-const CHECK_MS = 5.3 * SCALE / 1000; // 5.3 s of real work
-const REPAIR_MS = 8.4 * SCALE / 1000; // 8.4 s of real work
+// One real second of measured per-tenant work is simulated as one test
+// millisecond, so the test runs in a fifth of a second and its wall clock maps
+// straight back to real seconds.
+const CHECK_SECONDS = 5.3; // measured: rollup-health head count, demo org
+const REPAIR_SECONDS = 8.4; // measured: serial repair pass, demo org
+const CHECK_MS = CHECK_SECONDS;
+const REPAIR_MS = REPAIR_SECONDS;
 const CRON_INTERVAL_S = 15 * 60;
 
 let inFlight = 0;
 let peakInFlight = 0;
-const realSeconds = { check: CHECK_MS * 1000 / SCALE, repair: REPAIR_MS * 1000 / SCALE };
+const realSeconds = { check: CHECK_SECONDS, repair: REPAIR_SECONDS };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -92,7 +96,7 @@ describe("rollup sweep at 40 large tenants", () => {
     const started = Date.now();
     const sweep = await sweepRollups({ repair: true });
     const elapsedMs = Date.now() - started;
-    const projectedRealSeconds = (elapsedMs / SCALE) * 1;
+    const projectedRealSeconds = elapsedMs; // 1 test ms == 1 real second
 
     const serialSeconds = 40 * (realSeconds.check + realSeconds.repair);
 
