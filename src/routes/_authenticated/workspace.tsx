@@ -219,7 +219,22 @@ function PendingInvites() {
       setError(e instanceof Error ? e.message : "That invitation could not be accepted."),
   });
 
+  // An invited teammate must not be told, by silence, that no invitation
+  // exists when the read simply failed — that pushes them to create a second,
+  // orphan workspace.
+  if (invites.isError) {
+    return (
+      <ErrorState
+        className="mb-6"
+        compact
+        error={invites.error}
+        onRetry={() => invites.refetch()}
+        retrying={invites.isFetching}
+      />
+    );
+  }
   if (!invites.data?.length) return null;
+
 
   return (
     <div className="mb-6 space-y-3">
