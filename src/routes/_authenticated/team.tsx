@@ -36,7 +36,19 @@ function TeamPage() {
   const org = workspaces.data?.[0];
 
   if (workspaces.isPending) return <Shell>Loading your workspace…</Shell>;
+  // Ordered deliberately: a failed workspace read is not "you have none".
+  if (workspaces.isError)
+    return (
+      <AccountShell active="team" title="Team">
+        <ErrorState
+          error={workspaces.error}
+          onRetry={() => workspaces.refetch()}
+          retrying={workspaces.isFetching}
+        />
+      </AccountShell>
+    );
   if (!org) return <Shell>Create a workspace first.</Shell>;
+
 
   return <Team orgId={org.id} orgName={org.name} manager={org.role !== "member"} />;
 }
