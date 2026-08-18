@@ -232,6 +232,13 @@ export interface RollupRow {
   costUsd: number;
   outputP50: number;
   outputP95: number;
+  /**
+   * Largest single request seen in the bucket (input + output). Carried on the
+   * rollup so the friction badge can read observed context peaks from the small
+   * summary table instead of scanning every raw event on the dashboard's hot
+   * path.
+   */
+  peakTotalTokens: number;
 }
 
 
