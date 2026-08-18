@@ -23,6 +23,14 @@ import { adminClient, rebuildRollups } from "./ingest.server";
 /** Never re-derive more than this in one pass; a longer hole is escalated. */
 export const REPAIR_WINDOW_DAYS = 7;
 
+/**
+ * How many workspaces the sweep works on at once. Chosen against the pooled
+ * connection budget the rest of the app shares, not against how fast one pass
+ * could theoretically go: a sweep that starves ingest of connections costs more
+ * than a sweep that finishes a minute later.
+ */
+export const SWEEP_CONCURRENCY = 8;
+
 const DAY_MS = 24 * 60 * 60_000;
 
 export interface OrgSweepResult {
