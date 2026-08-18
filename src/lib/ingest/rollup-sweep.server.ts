@@ -1,5 +1,6 @@
 import { readRollupCoverage } from "@/lib/dashboard/rollup-health.server";
 import { coverageIsFaulty, type RollupCoverage } from "@/lib/dashboard/rollup-health";
+import { mapWithConcurrency } from "@/lib/util/pool";
 
 import { adminClient, rebuildRollups } from "./ingest.server";
 
