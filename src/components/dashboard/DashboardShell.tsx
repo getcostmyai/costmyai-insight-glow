@@ -6,6 +6,7 @@ import { coverageCopy, coverageIsFaulty } from "@/lib/dashboard/rollup-health";
 
 
 
+import { DashboardMasthead } from "@/components/dashboard/DashboardChrome";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { RangeToggle, LocalTime, Metric } from "@/components/dashboard/primitives";
 import { SpendChart } from "@/components/dashboard/SpendChart";
