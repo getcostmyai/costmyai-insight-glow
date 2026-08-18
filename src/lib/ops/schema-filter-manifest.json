@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-13T12:09:20.810Z",
+  "generatedAt": "2026-08-18T13:43:33.472Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -23,7 +23,7 @@
     },
     {
       "file": "src/lib/benchmarks/aa-sync.server.ts",
-      "line": 67,
+      "line": 87,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -84,7 +84,7 @@
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 61,
+      "line": 62,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -93,7 +93,7 @@
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 68,
+      "line": 69,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -102,23 +102,23 @@
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 79,
+      "line": 80,
       "table": "benchmarks",
       "filters": [],
       "snippet": ".from(\"benchmarks\") .select(\"model_key, suite, task_class, score, measured_at\") .order(\"measured_at\", { ascend"
     },
     {
       "file": "src/lib/catalog/catalog.server.ts",
-      "line": 86,
+      "line": 87,
       "table": "pricing_snapshots",
       "filters": [
         "status"
       ],
-      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"status\", \"ok\")"
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"feed\", PRICING_FEED)"
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 397,
+      "line": 419,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -127,7 +127,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 409,
+      "line": 431,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -136,7 +136,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 421,
+      "line": 443,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -145,7 +145,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 427,
+      "line": 449,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -154,7 +154,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 432,
+      "line": 454,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -163,7 +163,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 438,
+      "line": 460,
       "table": "switches",
       "filters": [
         "org_id",
@@ -173,7 +173,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 445,
+      "line": 467,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -182,7 +182,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 452,
+      "line": 474,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -191,7 +191,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 458,
+      "line": 480,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -200,7 +200,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 464,
+      "line": 486,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -210,16 +210,25 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 475,
+      "line": 497,
       "table": "pricing_snapshots",
       "filters": [
         "status"
       ],
-      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"status\", \"ok\")"
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") // Both feeds write to this ledger; without the filter a bench"
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 829,
+      "line": 507,
+      "table": "pricing_snapshots",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"feed\", BENCHMARK_FEED)"
+    },
+    {
+      "file": "src/lib/dashboard.server.ts",
+      "line": 869,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -228,7 +237,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 844,
+      "line": 884,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -237,7 +246,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 975,
+      "line": 1015,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -246,7 +255,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 998,
+      "line": 1038,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -255,7 +264,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1006,
+      "line": 1046,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
@@ -282,8 +291,44 @@
       "snippet": ".from(\"api_keys\").select(\"revoked_at\").eq(\"org_id\", orgId)"
     },
     {
+      "file": "src/lib/dashboard/rollup-health.server.ts",
+      "line": 34,
+      "table": "usage_events",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_events\") .select(\"occurred_at\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard/rollup-health.server.ts",
+      "line": 41,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"bucket_start\") .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard/rollup-health.server.ts",
+      "line": 64,
+      "table": "usage_events",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_events\") .select(\"id\", { count: \"exact\", head: true }) .eq(\"org_id\", orgId)"
+    },
+    {
+      "file": "src/lib/dashboard/rollup-health.server.ts",
+      "line": 70,
+      "table": "usage_rollups",
+      "filters": [
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"requests\") .eq(\"org_id\", orgId)"
+    },
+    {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 97,
+      "line": 98,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -292,7 +337,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 100,
+      "line": 101,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -301,7 +346,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 112,
+      "line": 113,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -310,7 +355,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 119,
+      "line": 120,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -319,7 +364,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 126,
+      "line": 127,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -328,7 +373,16 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 205,
+      "line": 137,
+      "table": "pricing_snapshots",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at\") .eq(\"feed\", BENCHMARK_FEED)"
+    },
+    {
+      "file": "src/lib/engine/evaluate.server.ts",
+      "line": 230,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -337,7 +391,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 216,
+      "line": 241,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -346,7 +400,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 220,
+      "line": 245,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -356,7 +410,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 393,
+      "line": 419,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -365,7 +419,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 416,
+      "line": 442,
       "table": "switches",
       "filters": [
         "org_id",
@@ -529,6 +583,13 @@
       "snippet": ".from(\"usage_events\") .select(\"id, org_id, occurred_at, status, parse_status, input_tokens, output_tokens, env"
     },
     {
+      "file": "src/lib/ingest/rollup-sweep.server.ts",
+      "line": 69,
+      "table": "organizations",
+      "filters": [],
+      "snippet": ".from(\"organizations\").select(\"id\")"
+    },
+    {
       "file": "src/lib/ingest/routing.server.ts",
       "line": 39,
       "table": "org_provider_routing",
@@ -680,7 +741,7 @@
     },
     {
       "file": "src/lib/marketing.server.ts",
-      "line": 54,
+      "line": 55,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -689,7 +750,7 @@
     },
     {
       "file": "src/lib/marketing.server.ts",
-      "line": 57,
+      "line": 58,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -698,12 +759,12 @@
     },
     {
       "file": "src/lib/marketing.server.ts",
-      "line": 64,
+      "line": 65,
       "table": "pricing_snapshots",
       "filters": [
         "status"
       ],
-      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at, status\") .eq(\"status\", \"ok\")"
+      "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at, status\") .eq(\"feed\", PRICING_FEED)"
     },
     {
       "file": "src/lib/partner-application.server.ts",
@@ -731,6 +792,31 @@
         "status"
       ],
       "snippet": ".from(\"partners\") .select(\"referral_code, status\") .eq(\"id\", membership.data.partner_id)"
+    },
+    {
+      "file": "src/lib/partner-create.server.ts",
+      "line": 59,
+      "table": "partners",
+      "filters": [],
+      "snippet": ".from(\"partners\") .select(\"id\") .ilike(\"referral_code\", candidate)"
+    },
+    {
+      "file": "src/lib/partner-create.server.ts",
+      "line": 83,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select(\"id, name, referral_code\") .eq(\"contact_email\", email)"
+    },
+    {
+      "file": "src/lib/partner-welcome.server.ts",
+      "line": 34,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select(\"id, name, contact_email, referral_code, status\") .eq(\"id\", partnerId)"
     },
     {
       "file": "src/lib/partners.functions.ts",
@@ -866,7 +952,7 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 95,
+      "line": 118,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -875,21 +961,21 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 142,
+      "line": 184,
       "table": "model_catalog",
       "filters": [],
       "snippet": ".from(\"model_catalog\").select(\"model_key\")"
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 159,
+      "line": 201,
       "table": "host_prices",
       "filters": [],
       "snippet": ".from(\"host_prices\").select(\"host\").range(f, t)"
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 200,
+      "line": 242,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -898,7 +984,7 @@
     },
     {
       "file": "src/lib/pricing/sync.server.ts",
-      "line": 482,
+      "line": 524,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -907,7 +993,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 134,
+      "line": 142,
       "table": "host_prices",
       "filters": [
         "is_active",
@@ -917,7 +1003,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 169,
+      "line": 177,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -926,7 +1012,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 281,
+      "line": 302,
       "table": "switches",
       "filters": [
         "org_id",
@@ -936,7 +1022,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 317,
+      "line": 344,
       "table": "switches",
       "filters": [
         "org_id"
@@ -971,6 +1057,15 @@
       "snippet": ".from(\"host_prices\") .select(\"model_key, host, host_label, input_usd_per_mtok, output_usd_per_mtok\") .eq(\"is_f"
     },
     {
+      "file": "src/lib/telemetry/lead-events.server.ts",
+      "line": 87,
+      "table": "partners",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partners\") .select(\"id\") .ilike(\"referral_code\", code)"
+    },
+    {
       "file": "src/lib/workspace.functions.ts",
       "line": 33,
       "table": "organizations",
@@ -978,8 +1073,22 @@
       "snippet": ".from(\"organizations\").select(\"id, name, slug, plan\").order(\"created_at\")"
     },
     {
+      "file": "src/lib/workspace.functions.ts",
+      "line": 191,
+      "table": "organizations",
+      "filters": [],
+      "snippet": ".from(\"organizations\") .select(\"plan, first_visitor_id, referred_by_partner_id\") .eq(\"id\", data.orgId)"
+    },
+    {
       "file": "src/routes/api/public/payments/webhook.ts",
-      "line": 147,
+      "line": 110,
+      "table": "organizations",
+      "filters": [],
+      "snippet": ".from(\"organizations\") .select(\"plan, first_visitor_id, referred_by_partner_id\") .eq(\"id\", orgId)"
+    },
+    {
+      "file": "src/routes/api/public/payments/webhook.ts",
+      "line": 173,
       "table": "subscriptions",
       "filters": [
         "org_id"

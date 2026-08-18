@@ -82,18 +82,34 @@ beforeAll(async () => {
   // Real observed traffic to openai, and none at all to together — the two
   // sides of the connection signal, established the way a customer does it.
   const day = new Date(Date.now() - 5 * 86_400_000).toISOString().slice(0, 10);
-  const rollup = await admin.from("usage_rollups").insert({
-    org_id: orgId,
-    granularity: "day",
-    bucket_start: `${day}T00:00:00+00:00`,
-    model_key: "openai/gpt-4o-mini",
-    host: "openai",
-    task_hint: "unknown",
-    requests: 12,
-    input_tokens: 1200,
-    output_tokens: 300,
-    cost_usd: 0.01,
-  });
+  // Two distinct workloads, because a workspace may hold only one active switch
+  // per (model, host) — the same invariant the database enforces.
+  const rollup = await admin.from("usage_rollups").insert([
+    {
+      org_id: orgId,
+      granularity: "day",
+      bucket_start: `${day}T00:00:00+00:00`,
+      model_key: "openai/gpt-4o-mini",
+      host: "openai",
+      task_hint: "unknown",
+      requests: 12,
+      input_tokens: 1200,
+      output_tokens: 300,
+      cost_usd: 0.01,
+    },
+    {
+      org_id: orgId,
+      granularity: "day",
+      bucket_start: `${day}T00:00:00+00:00`,
+      model_key: "openai/gpt-4o",
+      host: "openai",
+      task_hint: "unknown",
+      requests: 9,
+      input_tokens: 2400,
+      output_tokens: 600,
+      cost_usd: 0.04,
+    },
+  ]);
   if (rollup.error) throw rollup.error;
 
   const switches = await admin
@@ -110,9 +126,9 @@ beforeAll(async () => {
       },
       {
         org_id: orgId,
-        from_model: "openai/gpt-4o-mini",
+        from_model: "openai/gpt-4o",
         from_host: "openai",
-        to_model: "openai/gpt-4o-mini",
+        to_model: "openai/gpt-4o",
         to_host: "together",
         basis: "arbitrage",
         autonomous: false,
@@ -174,7 +190,7 @@ describe("switch plan endpoint", () => {
       org_id: orgId,
       granularity: "day",
       bucket_start: `${day}T00:00:00+00:00`,
-      model_key: "openai/gpt-4o-mini",
+      model_key: "openai/gpt-4o",
       host: "together",
       task_hint: "unknown",
       requests: 3,
