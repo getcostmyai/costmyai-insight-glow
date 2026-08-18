@@ -2086,6 +2086,7 @@ export type Database = {
           output_p50: number | null
           output_p95: number | null
           output_tokens: number
+          peak_total_tokens: number | null
           requests: number
           task_hint: string
         }
@@ -2104,6 +2105,7 @@ export type Database = {
           output_p50?: number | null
           output_p95?: number | null
           output_tokens?: number
+          peak_total_tokens?: number | null
           requests?: number
           task_hint?: string
         }
@@ -2122,6 +2124,7 @@ export type Database = {
           output_p50?: number | null
           output_p95?: number | null
           output_tokens?: number
+          peak_total_tokens?: number | null
           requests?: number
           task_hint?: string
         }
