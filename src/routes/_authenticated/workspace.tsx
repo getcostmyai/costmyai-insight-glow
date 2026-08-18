@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, Loader2, LogOut, PlugZap } from "lucide-react";
 
 
+import { ErrorState } from "@/components/ErrorState";
 import { supabase } from "@/integrations/supabase/client";
 import { INDUSTRIES, USE_CASES, type UseCase } from "@/lib/benchmark/taxonomy";
 import { acceptInvite, listMyInvites } from "@/lib/invites.functions";
