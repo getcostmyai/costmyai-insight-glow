@@ -1,3 +1,4 @@
+import { ErrorState } from "@/components/ErrorState";
 import { AccountShell } from "@/components/dashboard/AccountShell";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -142,7 +143,6 @@ function Team({ orgId, orgName, manager }: { orgId: string; orgName: string; man
               className="mt-3"
               compact
               error={members.error}
-              error-context="members"
               onRetry={() => members.refetch()}
               retrying={members.isFetching}
             />
