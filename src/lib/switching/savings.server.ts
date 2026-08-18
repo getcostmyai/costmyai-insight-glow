@@ -326,12 +326,18 @@ export async function recomputeSwitchSavings(
       autonomous: Boolean(row.autonomous),
       everSwitchedTo: gate?.everSwitchedTo ?? false,
     });
-    const refusedReason: SwitchBlockedReason | "switch_not_active" | null =
+    const refusedReason: SwitchBlockedReason | "switch_not_active" | "origin_unknown" | null =
       row.status !== "active"
         ? "switch_not_active"
-        : decision.executable
-          ? null
-          : (decision.reason ?? "routing_not_granted");
+        : s.missingOriginalEvents > 0
+          ? // A rerouted event with no `original_model_key` has no counterfactual.
+            // Crediting the rest of the batch would publish a figure computed over
+            // traffic we cannot fully account for, so the whole switch refuses.
+            "origin_unknown"
+          : decision.executable
+            ? null
+            : (decision.reason ?? "routing_not_granted");
+
 
     const { data: before } = await db
       .from("switches")
