@@ -102,10 +102,10 @@ export function PlanChangeConfirm({
             remainder of {meta.label}.
           </p>
           <p className="text-muted-foreground">
-            {q.amountDueNowUsd !== null
-              ? `The payment provider quotes ${usd(q.amountDueNowUsd)} ${q.currency} on your next invoice for this change.`
+            {q.nextInvoiceTotalUsd !== null
+              ? `The payment provider quotes ${usd(q.nextInvoiceTotalUsd)} ${q.currency} for your next invoice: the part-period difference for this change plus the next period. Nothing is charged today.`
               : `The provider could not quote the prorated amount right now${
-                  q.amountUnavailableReason ? ` (${q.amountUnavailableReason})` : ""
+                  q.quoteUnavailableReason ? ` (${q.quoteUnavailableReason})` : ""
                 }. The change is still prorated; the exact figure will appear on your next invoice.`}
           </p>
         </div>

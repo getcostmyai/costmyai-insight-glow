@@ -49,10 +49,10 @@ export interface PlanChangePreview {
    * subscription's own currency. Null when nothing is charged today (a
    * deferred downgrade) or when the provider could not be asked.
    */
-  amountDueNowUsd: number | null;
+  nextInvoiceTotalUsd: number | null;
   currency: string;
   /** Present when the amount could not be read, so the page can say why. */
-  amountUnavailableReason: string | null;
+  quoteUnavailableReason: string | null;
 }
 
 function planFromLookupKey(
@@ -147,8 +147,8 @@ export async function previewChange(
     return {
       ...base,
       effectiveIso: null,
-      amountDueNowUsd: null,
-      amountUnavailableReason: null,
+      nextInvoiceTotalUsd: null,
+      quoteUnavailableReason: null,
     };
   }
 
@@ -158,16 +158,16 @@ export async function previewChange(
     return {
       ...base,
       effectiveIso: current.periodEndIso,
-      amountDueNowUsd: null,
-      amountUnavailableReason: null,
+      nextInvoiceTotalUsd: null,
+      quoteUnavailableReason: null,
     };
   }
 
   const lookupKey = PAID_PLANS.find((p) => p.plan === target.plan)?.priceIds[target.interval];
   if (!lookupKey) throw new Error("No price for that plan");
 
-  let amountDueNowUsd: number | null = null;
-  let amountUnavailableReason: string | null = null;
+  let nextInvoiceTotalUsd: number | null = null;
+  let quoteUnavailableReason: string | null = null;
   try {
     const priceId = await resolvePriceId(stripe, lookupKey);
     const preview = await (stripe.invoices as any).createPreview({
@@ -178,16 +178,16 @@ export async function previewChange(
         proration_behavior: "create_prorations",
       },
     });
-    amountDueNowUsd = Number(preview?.amount_due ?? 0) / 100;
+    nextInvoiceTotalUsd = Number(preview?.amount_due ?? 0) / 100;
   } catch (error) {
-    amountUnavailableReason = (error as Error).message;
+    quoteUnavailableReason = (error as Error).message;
   }
 
   return {
     ...base,
     effectiveIso: new Date().toISOString(),
-    amountDueNowUsd,
-    amountUnavailableReason,
+    nextInvoiceTotalUsd,
+    quoteUnavailableReason,
   };
 }
 
