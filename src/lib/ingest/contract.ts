@@ -50,6 +50,16 @@ export const INGEST_PATHS = {
    * back to the caller's original model, and repeated reports pause the switch.
    */
   fallbacks: "/api/public/v1/switches",
+  /**
+   * Dispatch 236. Remote task classification. A `v3` container that could not
+   * place a request locally posts the extracted prompt text here, OFF the
+   * caller's request path, and gets back one enum label. Same token as ingest.
+   *
+   * This is the first endpoint in the system that receives prompt text, which
+   * is exactly why it belongs to a new image line and not to `v2` — see
+   * packages/gateway-container/DECISIONS.md §12.
+   */
+  classify: "/api/public/v1/classify",
 } as const;
 
 
