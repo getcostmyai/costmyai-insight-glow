@@ -125,7 +125,23 @@ export type ParseStatus = (typeof PARSE_STATUSES)[number];
  */
 export const CONTAINER_DEFAULTS = {
   image: "ghcr.io/getcostmyai/gateway",
+  /**
+   * The tag the quickstart hands a stranger. Deliberately still `v1`.
+   *
+   * `v2` (below) is a real published release that reads request bodies locally
+   * by default. Moving the copy-paste tag to it would change the privacy
+   * posture of anyone who pastes the quickstart without ever deciding to, and
+   * `v1` is a MOVING tag — a customer who re-pulls it must get the container
+   * they already agreed to run. So `v1` never gains the classifier, and `v2`
+   * is only ever reached by naming it.
+   */
   tag: "v1",
+  /**
+   * Dispatch 233. The classifying release: identical to `v1` in every other
+   * respect, with local task classification ON unless explicitly disabled.
+   * Named by a customer who wants Certify to work on ordinary chat traffic.
+   */
+  classifyingTag: "v2",
   port: 8787,
   spoolDir: "/var/lib/costmyai/spool",
   spoolVolume: "costmyai-spool",
@@ -138,13 +154,24 @@ export const CONTAINER_DEFAULTS = {
     upstreamTimeout: "COSTMYAI_UPSTREAM_TIMEOUT_MS",
     port: "COSTMYAI_PORT",
     /**
-     * Dispatch 232. Opt-in local task classification: the container reads the
-     * request body IN THE CUSTOMER'S OWN PROCESS to derive a task label, and
-     * sends only the label. Unset means the pre-232 posture — path and model
-     * name only, everything else `unknown`.
+     * Dispatch 232. Local task classification: the container reads the request
+     * body IN THE CUSTOMER'S OWN PROCESS to derive a task label, and sends only
+     * the label.
+     *
+     * Dispatch 233: this variable is now the customer's OVERRIDE, in both
+     * directions, and it always wins. Unset means "whatever this image tag
+     * decided" — off on `v1`, on on `v2`.
      */
     classifyLocal: "COSTMYAI_CLASSIFY_LOCAL",
+    /**
+     * Baked into the image at build time (`--build-arg`), never something a
+     * customer sets. This is how a default can belong to a TAG rather than to
+     * the source tree: one codebase, two published postures, and no way for a
+     * rebuild of `v1` to quietly acquire `v2`'s behaviour.
+     */
+    classifyLocalDefault: "COSTMYAI_CLASSIFY_LOCAL_DEFAULT",
   },
+
 
   /**
    * Where a customer's container delivers metadata.
@@ -168,6 +195,12 @@ export const CONTAINER_DEFAULTS = {
 export function containerImageRef(): string {
   return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.tag}`;
 }
+
+/** The classifying release, named explicitly. Never the quickstart default. */
+export function classifyingImageRef(): string {
+  return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.classifyingTag}`;
+}
+
 
 /**
  * One container fronts one provider, and the SDK base URL a customer sets is

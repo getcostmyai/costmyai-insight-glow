@@ -93,15 +93,40 @@ const results = [
   await probe(registry, repository, PINNED),
 ];
 
+/**
+ * Dispatch 233. The classifying line is probed and REPORTED, but is not a
+ * failure while it is unpublished: the quickstart does not name it, so a
+ * stranger's first command does not depend on it. It becomes load-bearing the
+ * moment any copy tells a customer to pull it — which the docs now do — so the
+ * digest is printed next to v1's, because the one thing that must never be
+ * true is the two tags resolving to the same image.
+ */
+const classifying = await probe(registry, repository, CONTAINER_DEFAULTS.classifyingTag);
+
+
 console.log(`Connector image, as a stranger's Docker daemon sees it\n`);
 for (const r of results) {
   console.log(`${r.ok ? "PUBLISHED " : "MISSING   "} ${r.ref}`);
   console.log(`           ${r.detail}`);
   if (r.digest) console.log(`           ${r.digest}`);
 }
+console.log(
+  `${classifying.ok ? "PUBLISHED " : "NOT YET   "} ${classifying.ref}  (classifies locally by default)`,
+);
+console.log(`           ${classifying.detail}`);
+if (classifying.digest) console.log(`           ${classifying.digest}`);
 
 const quickstart = results[0]!;
 console.log(`\nQuickstart reference: ${containerImageRef()}`);
+
+if (classifying.ok && classifying.digest && classifying.digest === quickstart.digest) {
+  console.log(
+    `\nRESULT: ${CONTAINER_DEFAULTS.tag} and ${CONTAINER_DEFAULTS.classifyingTag} resolve to the SAME image.` +
+      "\n        One of the two release lines is lying about its posture. Republish v2 alone.",
+  );
+  process.exit(1);
+}
+
 
 if (!quickstart.ok) {
   console.log(

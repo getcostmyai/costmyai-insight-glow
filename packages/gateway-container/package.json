@@ -1,6 +1,6 @@
 {
   "name": "@costmyai/gateway",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "private": false,
   "type": "module",
   "description": "CostMyAI metadata connector — a pass-through proxy that reports usage metadata and never sees your provider key.",
@@ -16,7 +16,12 @@
   "engines": {
     "node": ">=22"
   },
-  "files": ["dist", "README.md", "CONNECT.md", "DECISIONS.md"],
+  "files": [
+    "dist",
+    "README.md",
+    "CONNECT.md",
+    "DECISIONS.md"
+  ],
   "devDependencies": {
     "@types/node": "^22.15.0",
     "typescript": "5.9.2"

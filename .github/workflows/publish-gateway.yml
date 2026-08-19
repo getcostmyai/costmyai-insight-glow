@@ -5,15 +5,34 @@
 #
 # Auth is the built-in GITHUB_TOKEN — no PAT, no secret to rotate. It is scoped
 # to this repository and granted `packages: write` below.
+#
+# Dispatch 233 — two release lines, and they are not interchangeable:
+#
+#   v1  FROZEN. Local classification does not exist in that binary. `v1` is a
+#       moving tag customers already run, so a rebuild of it from today's tree
+#       would put a content-reading classifier into containers whose operators
+#       agreed to a container that had none — even switched off, the capability
+#       and the audit answer both change. This workflow refuses to publish it.
+#   v2  The classifying line. Same source, built with
+#       CLASSIFY_LOCAL_DEFAULT=true so local classification is ON by default in
+#       that tag only. A customer reaches it by naming it, and can still opt out
+#       per-container with COSTMYAI_CLASSIFY_LOCAL=false.
 name: Publish gateway container
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Immutable release tag (must match packages/gateway-container/package.json)"
+        description: "Immutable release tag (must match packages/gateway-container/package.json), e.g. v2.0.0"
         required: true
-        default: "v1.0.1"
+        default: "v2.0.0"
+      line:
+        description: "Release line. Only v2 is publishable; v1 is frozen at its shipped digest."
+        required: true
+        default: "v2"
+        type: choice
+        options:
+          - v2
 
 jobs:
   publish:
@@ -22,8 +41,26 @@ jobs:
       contents: read
       packages: write
     steps:
+      # Belt and braces: the choice list already excludes v1, but a workflow
+      # file can be edited faster than this reason can be re-derived.
+      - name: Refuse to republish the frozen v1 line
+        if: ${{ inputs.line != 'v2' }}
+        run: |
+          echo "v1 is frozen at ghcr.io/getcostmyai/gateway:v1 (sha256:0818e270...)."
+          echo "It predates local classification and must keep predating it."
+          echo "Publish the v2 line instead; see packages/gateway-container/DECISIONS.md §12."
+          exit 1
+
       - name: Check out the exact commit being released
         uses: actions/checkout@v4
+
+      - name: Version input must match the package version
+        run: |
+          pkg="v$(node -p "require('./packages/gateway-container/package.json').version")"
+          if [ "$pkg" != "${{ inputs.version }}" ]; then
+            echo "packages/gateway-container/package.json says $pkg, workflow says ${{ inputs.version }}."
+            exit 1
+          fi
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -35,8 +72,9 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Same three tags as the manual procedure: an immutable release tag, the
-      # moving `v1` the quickstart names, and the commit the build came from.
+      # Three tags: the immutable release tag, the moving `v2` the docs name for
+      # the classifying line, and the commit the build came from. `v1` is NOT in
+      # this list and must not be added — that is the whole guarantee.
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -44,10 +82,12 @@ jobs:
           # src/lib/ingest/contract.ts into the image.
           context: .
           file: packages/gateway-container/Dockerfile
+          build-args: |
+            CLASSIFY_LOCAL_DEFAULT=true
           push: true
           tags: |
             ghcr.io/getcostmyai/gateway:${{ inputs.version }}
-            ghcr.io/getcostmyai/gateway:v1
+            ghcr.io/getcostmyai/gateway:v2
             ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -56,8 +96,10 @@ jobs:
         run: |
           echo "Pushed:"
           echo "  ghcr.io/getcostmyai/gateway:${{ inputs.version }}"
-          echo "  ghcr.io/getcostmyai/gateway:v1"
+          echo "  ghcr.io/getcostmyai/gateway:v2   (local classification ON by default)"
           echo "  ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}"
+          echo ""
+          echo "v1 was not touched and must never be republished from this tree."
           echo ""
           echo "A newly created GHCR package is PRIVATE by default."
           echo "Flip it to Public once: github.com/orgs/getcostmyai/packages -> gateway"

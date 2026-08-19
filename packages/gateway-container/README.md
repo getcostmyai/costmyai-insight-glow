@@ -73,9 +73,38 @@ Streaming is supported for all of them, without buffering the response. Anything
 is still forwarded untouched and reported honestly as `parse_status: "unparsed"` rather
 than silently dropped or guessed at.
 
-Task labels are derived from the request path and model name only — never from your
-content. What cannot be placed structurally is reported `unknown`, and an unknown
-cohort refuses certification instead of borrowing an unrelated benchmark.
+### Task labels, and the two release lines
+
+On **`:v1`** (the tag above) labels are derived from the request path and model name
+only — never from your content. Ordinary chat traffic cannot be placed that way, so it
+is reported `unknown`, and an unknown cohort refuses certification instead of borrowing
+an unrelated benchmark. That means Certify and Rightsize stay empty for chat workloads.
+
+On **`:v2`** the container additionally classifies the request **inside your own
+container** to derive that label. Prompt text is read in your process and never spooled,
+logged, retained or sent to us — only the resulting label, a confidence number and
+feature names like `code.fenced_block` leave. This is on by default on `v2` and off on
+`v1`.
+
+**Moving from v1 to v2 — the whole migration:**
+
+```bash
+docker pull ghcr.io/getcostmyai/gateway:v2
+# change the image reference in your run command / compose file / task definition
+# then recreate the container
+```
+
+Nothing else changes. Same env vars, same port, same spool volume (keep the mount —
+queued metadata survives the swap), same ingest token, same base URLs in your SDKs, same
+provider keys. Your application is not touched at all. Roll back by pointing the image
+reference at `:v1` and recreating.
+
+Want `v2` without local classification — newer image, `v1` posture? Add
+`-e COSTMYAI_CLASSIFY_LOCAL=false`. Your setting always wins over the tag's default.
+Responses from a classifying container carry `x-costmyai-task` (and
+`x-costmyai-task-abstained` when it declined to label), so you can see per request
+exactly what was derived.
+
 
 ## 4. Optional: billing reconciliation
 

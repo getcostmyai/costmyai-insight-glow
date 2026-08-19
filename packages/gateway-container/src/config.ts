@@ -116,6 +116,36 @@ function boolFrom(value: string | undefined): boolean {
   return ["1", "true", "yes", "on"].includes((value ?? "").trim().toLowerCase());
 }
 
+/** An explicit negative, recognised as precisely as the affirmative above. */
+function isExplicitlyOff(value: string | undefined): boolean {
+  return ["0", "false", "no", "off"].includes((value ?? "").trim().toLowerCase());
+}
+
+/**
+ * Dispatch 233. Whether this container reads request content locally.
+ *
+ * Two inputs, and the precedence between them is the whole point:
+ *
+ *  1. `COSTMYAI_CLASSIFY_LOCAL`, set by the customer, ALWAYS wins — in both
+ *     directions. `=false` on a v2 image is a real, honoured opt-out, so a
+ *     regulated deployment can take the newer image for its bug fixes without
+ *     taking its posture.
+ *  2. `COSTMYAI_CLASSIFY_LOCAL_DEFAULT`, baked into the image at build time
+ *     and never set by a customer. This is what makes the default belong to a
+ *     TAG: `v1` is built without it (off, exactly as shipped), `v2` is built
+ *     with it (on).
+ *
+ * Unrecognised junk in either variable resolves to OFF, unchanged from before:
+ * the safe direction for a flag that decides whether bytes get read.
+ */
+function classifyLocalFrom(env: Record<string, string | undefined>): boolean {
+  const explicit = env[CONTAINER_DEFAULTS.env.classifyLocal];
+  if (boolFrom(explicit)) return true;
+  if (isExplicitlyOff(explicit)) return false;
+  return boolFrom(env[CONTAINER_DEFAULTS.env.classifyLocalDefault]);
+}
+
+
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): ContainerConfig {
   const e = CONTAINER_DEFAULTS.env;
@@ -142,7 +172,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     switchPollIntervalMs: 60_000,
     routeKeys: routeKeysFrom(env),
     containerId: env["COSTMYAI_CONTAINER_ID"]?.trim() || null,
-    classifyLocal: boolFrom(env[e.classifyLocal]),
+    classifyLocal: classifyLocalFrom(env),
 
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,

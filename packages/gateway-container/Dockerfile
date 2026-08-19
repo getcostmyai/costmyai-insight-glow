@@ -37,8 +37,20 @@ RUN cd packages/gateway-container \
 FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
+# Dispatch 233. The one difference between the v1 and v2 images.
+#
+# v1 is built with the default below (empty → local classification OFF) and is
+# byte-for-byte the posture it has always had. v2 is built with
+# `--build-arg CLASSIFY_LOCAL_DEFAULT=true`, which bakes the ON default into
+# THAT TAG ONLY. A customer's own COSTMYAI_CLASSIFY_LOCAL still overrides this
+# in either direction, so `-e COSTMYAI_CLASSIFY_LOCAL=false` on v2 is a real
+# opt-out and `=true` on v1 remains a no-op only because v1's binary predates
+# the classifier entirely.
+ARG CLASSIFY_LOCAL_DEFAULT=""
+ENV COSTMYAI_CLASSIFY_LOCAL_DEFAULT=$CLASSIFY_LOCAL_DEFAULT
 COPY --from=build /build/packages/gateway-container/dist ./dist
 COPY packages/gateway-container/package.json ./package.json
+
 # The spool lives on a mounted volume; without one, a restart loses the queue.
 VOLUME ["/var/lib/costmyai/spool"]
 EXPOSE 8787
