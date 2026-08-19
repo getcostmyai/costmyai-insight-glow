@@ -1,4 +1,4 @@
-import { classifyTask, isInScope } from "./classify.js";
+import { classifyRequest, isInScope, type TaskDecision } from "./classify.js";
 import type { ContainerConfig } from "./config.js";
 import {
   classifyResponseFailure,
@@ -150,6 +150,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   // stays in this process, and only the resulting enum is ever enqueued.
   const task = classifyRequest({
     path: incoming.pathname,
+    task,
     model: requestedModel,
     body: bodyBytes,
     readContent: config.classifyLocal,
@@ -162,6 +163,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   const rewrite: RewriteOutcome = planRewrite({
     lookup: deps.switchMap?.lookup(requestedModel, upstream.host) ?? null,
     path: incoming.pathname,
+    task,
     headers: request.headers,
     body: bodyBytes,
     originalModel: requestedModel,
@@ -245,6 +247,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         uuid,
         host: upstream.host,
         path: incoming.pathname,
+        task,
         model: sentModel,
         reading: null,
         status: "error",
@@ -299,6 +302,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       uuid,
       host: upstream.host,
       path: incoming.pathname,
+      task,
       model: modelInFlight,
       reading: null,
       status: "error",
@@ -352,6 +356,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       uuid,
       host: upstream.host,
       path: incoming.pathname,
+      task,
       model: modelInFlight,
       reading: null,
       status,
@@ -376,6 +381,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         uuid,
         host: upstream.host,
         path: incoming.pathname,
+        task,
         model: reading.model ?? modelInFlight,
         reading,
         status,
@@ -414,6 +420,8 @@ interface RecordArgs {
   model: string | null;
   reading: UsageReading | null;
   status: "ok" | "error";
+  /** Decided once per request, from the caller's own body. */
+  task: TaskDecision;
   skip?: boolean;
   fallbackReason?: FallbackReason;
   reroute?: { rerouted: true; originalModel: string; originalHost: string; switchId: string };
@@ -427,7 +435,7 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     // Dropping it would turn "we could not read this" into "you sent nothing".
     model_key: (args.model ?? "unknown").slice(0, 120),
     host: args.host.slice(0, 120),
-    task_hint: classifyTask(args.path, args.model),
+    task_hint: args.task.hint,
     input_tokens: args.reading?.inputTokens ?? 0,
     output_tokens: args.reading?.outputTokens ?? 0,
     latency_ms: Math.max(0, args.now() - args.startedAt),
