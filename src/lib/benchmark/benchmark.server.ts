@@ -65,30 +65,33 @@ export function hasBenchmarkAnswers(p: ProfileRow | null): boolean {
   );
 }
 
-async function countFor(client: Client, cut: Cut): Promise<number> {
-  const { data, error } = await client.rpc("benchmark_cut", {
-    _industry: cut.industry,
-    _use_case: cut.useCase,
-    _revenue_band: cut.revenueBand,
-  });
-  if (error) throw error;
-  const row = Array.isArray(data) ? data[0] : data;
-  return Number((row as { company_count?: number } | null)?.company_count ?? 0);
+export interface SelfCut {
+  industry: string | null;
+  use_case: string | null;
+  revenue_band: string | null;
+  granularity: number;
+  widened: boolean;
+  company_count: number;
+  p25_usd: number | null;
+  p50_usd: number | null;
+  p75_usd: number | null;
 }
 
-async function spreadFor(client: Client, cut: Cut) {
-  const { data, error } = await client.rpc("benchmark_cut", {
-    _industry: cut.industry,
-    _use_case: cut.useCase,
-    _revenue_band: cut.revenueBand,
-  });
+/**
+ * The caller's own cohort, resolved entirely inside the database.
+ *
+ * There are no free profile parameters: the industry, use case and revenue
+ * band come from this workspace's own profile row, and the widening ladder is
+ * walked server-side so exactly one cohort — the first that clears the floor —
+ * ever comes back. A caller who cannot address a neighbouring cell cannot
+ * difference two of them, so the raw-count leak and the percentile-subtraction
+ * attack are closed by the same mechanism rather than by two patches.
+ */
+async function selfCut(client: Client, orgId: string): Promise<SelfCut | null> {
+  const { data, error } = await client.rpc("benchmark_cut_self", { _org_id: orgId });
   if (error) throw error;
-  const row = (Array.isArray(data) ? data[0] : data) as {
-    p25_usd: number | null;
-    p50_usd: number | null;
-    p75_usd: number | null;
-  } | null;
-  return row;
+  const row = (Array.isArray(data) ? data[0] : data) as SelfCut | null;
+  return row ?? null;
 }
 
 /**
