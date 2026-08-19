@@ -203,10 +203,28 @@ async function accrueCommission(invoice: any, env: StripeEnv) {
   // Commission is owed on revenue, not on tax we merely collect and remit,
   // and the ledger is denominated in USD regardless of what currency the
   // buyer was presented with. Both corrections live in one place.
-  const { commissionBasisUsd } = await import("@/lib/billing/invoice-revenue.server");
+  const { commissionBasisUsd, InvoiceCurrencyUnconvertibleError } = await import(
+    "@/lib/billing/invoice-revenue.server"
+  );
   const { createStripeClient } = await import("@/lib/stripe.server");
-  const basis = await commissionBasisUsd(createStripeClient(env), String(invoice.id), invoice);
+  let basis;
+  try {
+    basis = await commissionBasisUsd(createStripeClient(env), String(invoice.id), invoice);
+  } catch (error) {
+    if (error instanceof InvoiceCurrencyUnconvertibleError) {
+      // Writing a number we cannot stand behind is worse than writing none.
+      // No ledger row is created, and the refusal is loud enough to act on;
+      // retrying would fail identically, so the event is not rejected.
+      console.error(
+        `Commission NOT accrued for invoice ${invoice.id}: ${error.message}. ` +
+          `Settle this line manually and record why.`,
+      );
+      return;
+    }
+    throw error;
+  }
   if (basis.amountUsd <= 0) return;
+
 
   const line = invoice.lines?.data?.[0];
   const { error } = await getSupabase().rpc("accrue_commission", {
