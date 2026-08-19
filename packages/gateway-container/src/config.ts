@@ -106,6 +106,17 @@ function intFrom(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
+/**
+ * A privacy-affecting flag is opt-in on an explicit affirmative only. Anything
+ * else — unset, empty, "0", "off", a typo — reads as OFF, because the failure
+ * mode of a mis-parsed truthy string here is reading content the customer did
+ * not agree to have read.
+ */
+function boolFrom(value: string | undefined): boolean {
+  return ["1", "true", "yes", "on"].includes((value ?? "").trim().toLowerCase());
+}
+
+
 export function loadConfig(env: Record<string, string | undefined> = process.env): ContainerConfig {
   const e = CONTAINER_DEFAULTS.env;
   const ingestToken = env[e.token];
