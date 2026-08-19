@@ -195,14 +195,18 @@ export function resolveLadder(
 ): LadderResolution {
 
   const normalized = normalizeTask(task);
-  if (task.trim().toLowerCase() === UNLABELLED_TASK && (labelling?.classifierRevision ?? 0) > 0) {
+  const revision = labelling?.classifierRevision ?? 0;
+  if (task.trim().toLowerCase() === UNLABELLED_TASK && revision > 0) {
     return {
       field: null,
       rung: -1,
       tried: [],
       refusal: "task_label_low_confidence",
       detail:
-        "Your own container read this traffic locally and declined to label it: nothing in the request pointed clearly enough at one kind of work, or two kinds were equally plausible. Certification is per task type, so with no task named there is no instrument to certify against, and we will not pick one on a coin flip. Requests carrying a structural signal — declared tools, or a constrained response schema — classify with certainty and do get certified. Cheaper-host switches on the same model are unaffected.",
+        (revision >= 2
+          ? "This request was read by the local rules in your own container and then, when those abstained, by our classifier — and neither could say what kind of work it is with enough confidence to stand behind. On real traffic that is the residual few percent: requests that are genuinely two kinds of work at once, or too short to carry any signal at all."
+          : "Your own container read this traffic locally and declined to label it: nothing in the request pointed clearly enough at one kind of work, or two kinds were equally plausible. The remote fallback that resolves most of these is off on this container — it is on by default on the v3 image, and COSTMYAI_CLASSIFY_REMOTE=true enables it.") +
+        " Certification is per task type, so with no task named there is no instrument to certify against, and we will not pick one on a coin flip. Cheaper-host switches on the same model are unaffected.",
     };
   }
   if (task.trim().toLowerCase() === UNLABELLED_TASK) {
@@ -212,10 +216,10 @@ export function resolveLadder(
       tried: [],
       refusal: "no_valid_instrument",
       detail:
-        "This traffic arrived without a task label, so there is no instrument to certify a quality-equivalent switch against. The v1 connector reads only the endpoint and the model name, never your prompts, which is why chat traffic is usually unlabelled. The v2 connector image classifies locally by default (ghcr.io/getcostmyai/gateway:v2) — prompts are read in your own container only and never leave it; only the label does, and COSTMYAI_CLASSIFY_LOCAL=false turns it off. Cheaper-host switches on the same model are unaffected either way.",
-
+        "This traffic arrived without a task label — nothing read it, so there is no instrument to certify a quality-equivalent switch against. That means this container is the v1 connector image, which reads only the endpoint and the model name and never a request body, or classification was explicitly turned off. New installs get ghcr.io/getcostmyai/gateway:v3 by default, which labels the great majority of ordinary chat traffic: local rules run in your container, and only when they abstain does the extracted text reach us to be labelled, off your request path. If nothing may leave your container, :v2 classifies locally only. Cheaper-host switches on the same model are unaffected either way.",
     };
   }
+
   /*
    * Correction to the four-cell canon (Dispatch, 17 Aug 2026).
    *

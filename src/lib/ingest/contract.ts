@@ -136,31 +136,46 @@ export type ParseStatus = (typeof PARSE_STATUSES)[number];
 export const CONTAINER_DEFAULTS = {
   image: "ghcr.io/getcostmyai/gateway",
   /**
-   * The tag the quickstart hands a stranger. Deliberately still `v1`.
+   * The tag the quickstart hands a stranger. Dispatch 237: now `v3`.
    *
-   * `v2` (below) is a real published release that reads request bodies locally
-   * by default. Moving the copy-paste tag to it would change the privacy
-   * posture of anyone who pastes the quickstart without ever deciding to, and
-   * `v1` is a MOVING tag — a customer who re-pulls it must get the container
-   * they already agreed to run. So `v1` never gains the classifier, and `v2`
-   * is only ever reached by naming it.
+   * Why this moved. `v1` reads nothing but the endpoint and the model name, so
+   * ordinary chat traffic arrives unlabelled and Certify refuses on ~all of it
+   * — measured, not assumed. Handing a brand-new customer the tag on which the
+   * product's central promise cannot fire is not a conservative default, it is
+   * a broken one. `v3` labels ~96.5% of real traffic and both classification
+   * layers are individually switchable by the customer.
+   *
+   * What did NOT change: tags never mutate their posture. `v1` never gains a
+   * classifier and `v2` never gains remote classification, so anyone already
+   * running either keeps exactly the container they agreed to run. This
+   * constant only decides what a NEW installer copy-pastes, and the privacy
+   * page and README state the v3 posture at the point of copying.
    */
-  tag: "v1",
+  tag: "v3",
   /**
-   * Dispatch 233. The classifying release: identical to `v1` in every other
-   * respect, with local task classification ON unless explicitly disabled.
-   * Named by a customer who wants Certify to work on ordinary chat traffic.
+   * The non-classifying line, named explicitly. Reads the endpoint and model
+   * name only, never a request body. Kept published and documented for anyone
+   * who wants that posture, and named here so audits can assert v1's baked
+   * defaults without going through the (now moving) quickstart tag.
+   */
+  nonClassifyingTag: "v1",
+  /**
+   * Dispatch 233. The locally-classifying release: identical to `v1` in every
+   * other respect, with local task classification ON unless explicitly
+   * disabled. Prompt text is read in the customer's own container and never
+   * leaves it. Named by anyone who wants labels without any text egress.
    */
   classifyingTag: "v2",
   /**
-   * Dispatch 236. The remotely-classifying line: local rules first, and when
-   * they abstain, the extracted prompt text is sent to CostMyAI to be labelled
-   * by a model. That is a different privacy posture from `v2`, whose claim is
-   * "structural shape only, never meaning, and nothing leaves the container".
-   * A moving `v2` must not quietly acquire it, so this is `v3` and nothing
-   * else. Reached only by naming it.
+   * Dispatch 236. The remotely-classifying line, and since Dispatch 237 the
+   * quickstart default: local rules first, and when they abstain, the
+   * extracted prompt text is sent to CostMyAI to be labelled by a model. That
+   * is a different privacy posture from `v2`, whose claim is "structural shape
+   * only, never meaning, and nothing leaves the container". A moving `v2` must
+   * not quietly acquire it, which is why it is a separate tag.
    */
   remoteClassifyingTag: "v3",
+
   port: 8787,
   spoolDir: "/var/lib/costmyai/spool",
   spoolVolume: "costmyai-spool",

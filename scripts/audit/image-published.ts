@@ -82,11 +82,12 @@ function split(image: string): { registry: string; repository: string } {
 const { registry, repository } = split(CONTAINER_DEFAULTS.image);
 
 /**
- * The tag the quickstart names is the one that has to work. The pinned release
- * tag is checked too: `v1` moving without an immutable `vX.Y.Z` behind it
- * leaves no way to say which build a customer is actually running.
+ * The tag the quickstart names is the one that has to work. Since Dispatch 237
+ * that is `v3`, so the pinned release checked alongside it is v3's. A moving
+ * tag without an immutable `vX.Y.Z` behind it leaves no way to say which build
+ * a customer is actually running.
  */
-const PINNED = process.env["CONNECTOR_RELEASE_TAG"] ?? "v1.0.1";
+const PINNED = process.env["CONNECTOR_RELEASE_TAG"] ?? "v3.0.0";
 
 const results = [
   await probe(registry, repository, CONTAINER_DEFAULTS.tag),
@@ -94,19 +95,18 @@ const results = [
 ];
 
 /**
- * Dispatch 233. The classifying line is probed and REPORTED, but is not a
- * failure while it is unpublished: the quickstart does not name it, so a
- * stranger's first command does not depend on it. It becomes load-bearing the
- * moment any copy tells a customer to pull it — which the docs now do — so the
- * digest is printed next to v1's, because the one thing that must never be
- * true is the two tags resolving to the same image.
+ * Dispatch 233/237. Every published line is probed by its OWN name rather than
+ * through the quickstart tag, because the quickstart tag now points at one of
+ * them: the invariant being checked is that the three postures are three
+ * distinct images, and that survives whichever one is currently the default.
  */
+const nonClassifying = await probe(registry, repository, CONTAINER_DEFAULTS.nonClassifyingTag);
 const classifying = await probe(registry, repository, CONTAINER_DEFAULTS.classifyingTag);
 
 /**
- * Dispatch 236. The remotely-classifying line. Reported the same way, and held
- * to the same rule: it must diverge in digest from BOTH v1 and v2, because it
- * is the only tag whose prompt text may leave the customer's network.
+ * Dispatch 236. The remotely-classifying line, held to the same rule: it must
+ * diverge in digest from BOTH v1 and v2, because it is the only tag whose
+ * prompt text may leave the customer's network.
  */
 const remote = await probe(registry, repository, CONTAINER_DEFAULTS.remoteClassifyingTag);
 const remotePinned = await probe(
@@ -114,6 +114,7 @@ const remotePinned = await probe(
   repository,
   process.env["CONNECTOR_REMOTE_RELEASE_TAG"] ?? "v3.0.0",
 );
+
 
 /**
  * Baked, not just documented.
@@ -162,6 +163,7 @@ for (const r of results) {
   if (r.digest) console.log(`           ${r.digest}`);
 }
 for (const [r, what] of [
+  [nonClassifying, "reads endpoint and model name only"],
   [classifying, "classifies locally by default"],
   [remote, "classifies locally, then remotely when local abstains"],
   [remotePinned, "pinned remote release"],
@@ -174,31 +176,39 @@ for (const [r, what] of [
 const quickstart = results[0]!;
 console.log(`\nQuickstart reference: ${containerImageRef()}`);
 
-if (classifying.ok && classifying.digest && classifying.digest === quickstart.digest) {
-  console.log(
-    `\nRESULT: ${CONTAINER_DEFAULTS.tag} and ${CONTAINER_DEFAULTS.classifyingTag} resolve to the SAME image.` +
-      "\n        One of the two release lines is lying about its posture. Republish v2 alone.",
-  );
-  process.exit(1);
-}
-
-if (remote.ok && remote.digest && (remote.digest === quickstart.digest || remote.digest === classifying.digest)) {
-  console.log(
-    `\nRESULT: ${CONTAINER_DEFAULTS.remoteClassifyingTag} resolves to the same image as` +
-      ` ${remote.digest === quickstart.digest ? CONTAINER_DEFAULTS.tag : CONTAINER_DEFAULTS.classifyingTag}.` +
-      "\n        A tag that may send prompt text off-network must never be the same build as one that promises not to.",
-  );
-  process.exit(1);
+/**
+ * Three postures must be three distinct builds, whichever one the quickstart
+ * currently points at. Compared pairwise by their own names.
+ */
+const lines = [
+  [CONTAINER_DEFAULTS.nonClassifyingTag, nonClassifying],
+  [CONTAINER_DEFAULTS.classifyingTag, classifying],
+  [CONTAINER_DEFAULTS.remoteClassifyingTag, remote],
+] as const;
+for (let i = 0; i < lines.length; i++) {
+  for (let j = i + 1; j < lines.length; j++) {
+    const [tagA, a] = lines[i]!;
+    const [tagB, b] = lines[j]!;
+    if (a.ok && b.ok && a.digest && a.digest === b.digest) {
+      console.log(
+        `\nRESULT: ${tagA} and ${tagB} resolve to the SAME image.` +
+          "\n        A tag that may send prompt text off-network must never be the same build as one" +
+          `\n        that promises not to. Republish ${tagB} alone.`,
+      );
+      process.exit(1);
+    }
+  }
 }
 
 if (remote.ok) {
   const LOCAL = CONTAINER_DEFAULTS.env.classifyLocalDefault;
   const REMOTE = CONTAINER_DEFAULTS.env.classifyRemoteDefault;
   const expectations: { tag: string; wantLocal: boolean; wantRemote: boolean }[] = [
-    { tag: CONTAINER_DEFAULTS.tag, wantLocal: false, wantRemote: false },
+    { tag: CONTAINER_DEFAULTS.nonClassifyingTag, wantLocal: false, wantRemote: false },
     { tag: CONTAINER_DEFAULTS.classifyingTag, wantLocal: true, wantRemote: false },
     { tag: CONTAINER_DEFAULTS.remoteClassifyingTag, wantLocal: true, wantRemote: true },
   ];
+
   console.log(`\nBaked posture, read from each image's own config blob`);
   let bakedFailure = false;
   for (const e of expectations) {

@@ -60,9 +60,22 @@ describe("the customer's own variable always wins", () => {
   });
 });
 
-describe("the quickstart still hands strangers the non-classifying tag", () => {
-  it("keeps v1 as the copy-paste default and v2 as the named opt-in", () => {
-    expect(CONTAINER_DEFAULTS.tag).toBe("v1");
+describe("the quickstart default tag is a deliberate, locked choice", () => {
+  /**
+   * Dispatch 237. This assertion previously pinned `v1` and existed to stop the
+   * default drifting to a classifying image by accident. The default was then
+   * moved on purpose, so the lock moves with it rather than being deleted: a
+   * revert to `v1` (or a silent slide to `v2`) fails here and has to be argued
+   * for, exactly as moving to `v3` had to be.
+   */
+  it("hands a brand-new customer the remotely-classifying image", () => {
+    expect(CONTAINER_DEFAULTS.tag).toBe("v3");
+    expect(CONTAINER_DEFAULTS.tag).toBe(CONTAINER_DEFAULTS.remoteClassifyingTag);
+  });
+
+  it("keeps the quieter postures published and reachable by name", () => {
+    expect(CONTAINER_DEFAULTS.nonClassifyingTag).toBe("v1");
     expect(CONTAINER_DEFAULTS.classifyingTag).toBe("v2");
+    expect(CONTAINER_DEFAULTS.remoteClassifyingTag).toBe("v3");
   });
 });

@@ -54,27 +54,34 @@ function PrivacyPage() {
         <p>
           <strong className="text-foreground">Usage and billing data you choose to share:</strong>{" "}
           aggregate, provider neutral records of model usage, spend, and switching activity, pushed
-          from your own environment via the Verification Engine. Prompt content and model outputs
-          are never sent to us. On the <code>v1</code> connector image, the task label is derived
-          from the request path and model name alone and no request body is read. On the{" "}
-          <code>v2</code> image, local classification is on by default: request text is read inside
-          your own container to derive a more accurate label, and you can turn it off with{" "}
-          <code>COSTMYAI_CLASSIFY_LOCAL=false</code>. On both of those images, only the label, a
-          confidence number and feature names leave your environment, and no prompt text is
-          transmitted, stored or logged by us.
+          from your own environment via the Verification Engine. Model outputs are never sent to
+          us, and prompt content is only ever involved in the one case described immediately below.
+          Which connector image you run decides that, and the quickstart now hands new customers
+          the <code>v3</code> image by default, so this is the posture you get unless you choose
+          another tag. On the <code>v1</code> image, the task label is derived from the request
+          path and model name alone and no request body is read. On the <code>v2</code> image,
+          local classification is on by default: request text is read inside your own container to
+          derive a more accurate label, and <code>COSTMYAI_CLASSIFY_LOCAL=false</code> turns it
+          off. On both of those images, only the label, a confidence number and feature names leave
+          your environment, and no prompt text is transmitted, stored or logged by us.
         </p>
         <p>
-          <strong className="text-foreground">The one exception, on the v3 image:</strong> the{" "}
-          <code>v3</code> connector image adds remote classification, on by default in that tag
+          <strong className="text-foreground">
+            The one exception, on the v3 image — and v3 is what a new install runs:
+          </strong>{" "}
+          the <code>v3</code> connector image adds remote classification, on by default in that tag
           only. When the in-container rules cannot place a request, the extracted request text is
           sent to us and labelled by a model. That call runs after your response has already been
           returned, so it never delays your traffic. The text is used for that single labelling
-          call and is not persisted by us; the only thing retained is the resulting label. If you
-          do not want this, set <code>COSTMYAI_CLASSIFY_REMOTE=false</code> and the v3 image
-          behaves exactly like v2, or stay on the <code>v2</code> image, where the capability does
-          not exist at all.
-
+          call and is not persisted by us; the only thing retained is the resulting label. Because
+          this is now the default rather than something you opt into, we state it here plainly: if
+          you do not want it, set <code>COSTMYAI_CLASSIFY_REMOTE=false</code> and the v3 image
+          behaves exactly like v2, or run the <code>v2</code> image, where the capability does not
+          exist at all, or the <code>v1</code> image, which reads no request body whatsoever. Both
+          remain published and supported; your own environment variable always overrides the tag's
+          default.
         </p>
+
         <p>
           <strong className="text-foreground">Website and product analytics:</strong> we use Google
           Analytics to understand how visitors use this site (pages visited, general location,

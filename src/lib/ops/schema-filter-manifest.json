@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-18T13:43:33.472Z",
+  "generatedAt": "2026-08-19T22:15:40.658Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -13,7 +13,7 @@
     },
     {
       "file": "src/lib/benchmark/benchmark.server.ts",
-      "line": 106,
+      "line": 109,
       "table": "usage_rollups",
       "filters": [
         "is_synthetic",
@@ -39,7 +39,17 @@
     },
     {
       "file": "src/lib/billing.functions.ts",
-      "line": 256,
+      "line": 181,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"plan, status, current_period_end\") .eq(\"org_id\", data.orgId)"
+    },
+    {
+      "file": "src/lib/billing.functions.ts",
+      "line": 282,
       "table": "subscriptions",
       "filters": [
         "org_id"
@@ -48,7 +58,17 @@
     },
     {
       "file": "src/lib/billing.functions.ts",
-      "line": 314,
+      "line": 319,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"stripe_subscription_id, stripe_customer_id, status, current_period_end\") .eq(\""
+    },
+    {
+      "file": "src/lib/billing.functions.ts",
+      "line": 503,
       "table": "subscriptions",
       "filters": [
         "org_id"
@@ -118,7 +138,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 419,
+      "line": 430,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -127,7 +147,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 431,
+      "line": 442,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -136,7 +156,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 443,
+      "line": 454,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -145,7 +165,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 449,
+      "line": 460,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -154,7 +174,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 454,
+      "line": 465,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -163,7 +183,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 460,
+      "line": 471,
       "table": "switches",
       "filters": [
         "org_id",
@@ -173,7 +193,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 467,
+      "line": 478,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -182,7 +202,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 474,
+      "line": 485,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -191,7 +211,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 480,
+      "line": 491,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -200,7 +220,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 486,
+      "line": 497,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -210,7 +230,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 497,
+      "line": 508,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -219,7 +239,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 507,
+      "line": 518,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -228,7 +248,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 869,
+      "line": 880,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -237,7 +257,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 884,
+      "line": 895,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -246,7 +266,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1015,
+      "line": 1026,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -255,7 +275,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1038,
+      "line": 1049,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -264,7 +284,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1046,
+      "line": 1057,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
@@ -410,7 +430,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 419,
+      "line": 426,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -419,7 +439,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 442,
+      "line": 449,
       "table": "switches",
       "filters": [
         "org_id",
@@ -536,17 +556,17 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 212,
+      "line": 221,
       "table": "usage_events",
       "filters": [
         "org_id",
         "status"
       ],
-      "snippet": ".from(\"usage_events\") .select(\"occurred_at, model_key, host, task_hint, input_tokens, output_tokens, cache_rea"
+      "snippet": ".from(\"usage_events\") .select( \"occurred_at, model_key, host, task_hint, task_confidence, classifier_revision,"
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 224,
+      "line": 235,
       "table": "host_prices",
       "filters": [
         "is_fixture"
@@ -555,7 +575,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 242,
+      "line": 253,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -1081,14 +1101,14 @@
     },
     {
       "file": "src/routes/api/public/payments/webhook.ts",
-      "line": 110,
+      "line": 163,
       "table": "organizations",
       "filters": [],
-      "snippet": ".from(\"organizations\") .select(\"plan, first_visitor_id, referred_by_partner_id\") .eq(\"id\", orgId)"
+      "snippet": ".from(\"organizations\") .select(\"first_visitor_id, referred_by_partner_id\") .eq(\"id\", orgId)"
     },
     {
       "file": "src/routes/api/public/payments/webhook.ts",
-      "line": 173,
+      "line": 197,
       "table": "subscriptions",
       "filters": [
         "org_id"

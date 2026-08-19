@@ -31,8 +31,15 @@ docker run -d --name costmyai --restart unless-stopped \
   -e COSTMYAI_UPSTREAM_URL=https://api.openai.com \
   -v costmyai-spool:/var/lib/costmyai/spool \
   -p 8787:8787 \
-  ghcr.io/getcostmyai/gateway:v1
+  ghcr.io/getcostmyai/gateway:v3
 ```
+
+The default tag is `v3`: it labels the *kind* of work each request is (coding, reasoning,
+agentic and so on) so Certify and Rightsize can act on ordinary chat traffic. Local rules
+run in your container; when they cannot place a request, the extracted request text is
+sent to us to be labelled, off your request path. Two quieter tags stay published and are
+reached by naming them: `:v2` classifies locally only, nothing leaves your container;
+`:v1` reads no request body at all. See the posture table below.
 
 For Anthropic, run a second one with `COSTMYAI_UPSTREAM_URL=https://api.anthropic.com`
 and `-p 8788:8787`.
@@ -166,7 +173,8 @@ and against the dashboard's quickstart in CI.
 
 ## Publishing the image (maintainers)
 
-The reference customers paste — `ghcr.io/getcostmyai/gateway:v1` — is generated from
+The reference customers paste — `ghcr.io/getcostmyai/gateway:v3` (Dispatch 237; `v1` and
+`v2` remain published and are reached by naming them) — is generated from
 `CONTAINER_DEFAULTS` in `src/lib/ingest/contract.ts`. Publishing does not change any
 code; it makes that existing reference resolve. `bun run audit` fails until it does.
 
@@ -235,8 +243,8 @@ second machine, or locally after evicting the local copy:
 ```bash
 docker logout ghcr.io
 docker image rm $IMAGE:v1 $IMAGE:$VERSION $IMAGE:$SHA
-docker pull ghcr.io/getcostmyai/gateway:v1
-docker run --rm ghcr.io/getcostmyai/gateway:v1 --version 2>/dev/null || true
+docker pull ghcr.io/getcostmyai/gateway:v3
+docker run --rm ghcr.io/getcostmyai/gateway:v3 --version 2>/dev/null || true
 ```
 
 A pull that succeeds while logged out is the only proof that a stranger can run the
