@@ -131,6 +131,14 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Sends eight frozen tasks to six pinned models and records the token counts each provider billed, so that a fixed workload getting quietly more expensive is measured rather than argued.",
   },
   {
+    job: "job-alerts",
+    label: "Job alerting",
+    cronName: "costmyai-job-alerts",
+    schedule: "*/15 * * * *",
+    maxIntervalMinutes: 60,
+    what: "Pushes a message out when any scheduled job turns failing, stale or empty, so the board is not the only place a failure appears.",
+  },
+  {
 
 
     job: SHAPE_WATCH_JOB,
