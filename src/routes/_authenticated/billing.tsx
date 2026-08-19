@@ -75,6 +75,7 @@ function BillingPage() {
   const queryClient = useQueryClient();
   const [interval, setInterval] = useState<BillingInterval>("monthly");
   const [checkoutPlan, setCheckoutPlan] = useState<PlanTier | null>(null);
+  const [changePlan, setChangePlan] = useState<PlanTier | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const workspaces = useQuery({
