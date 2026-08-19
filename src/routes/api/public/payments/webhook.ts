@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 import { PLAN_BY_PRICE_ID } from "@/lib/billing/catalog";
-import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
+import { type StripeEnv, type StripeWebhookEvent, verifyWebhook } from "@/lib/stripe.server";
 
 /**
  * The only thing in the system that may move a workspace onto a paid level.
@@ -51,7 +51,7 @@ function grantsAccess(status: string, periodEnd: string | null): boolean {
   return false;
 }
 
-async function syncSubscription(subscription: any, env: StripeEnv) {
+async function syncSubscription(subscription: any, env: StripeEnv, event: StripeWebhookEvent) {
   const orgId = subscription.metadata?.orgId;
   const userId = subscription.metadata?.userId ?? null;
   if (!orgId) {
@@ -74,34 +74,72 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
       ? subscription.customer
       : (subscription.customer?.id ?? null);
 
-  const subscriptionWrite = await getSupabase()
-    .from("subscriptions")
-    .upsert(
-      {
-        org_id: orgId,
-        // The plan gate reads this row, so a malformed actor id must not be
-        // allowed to sink the whole write — the workspace, not the person, is
-        // what the subscription belongs to.
-        user_id: UUID.test(userId ?? "") ? userId : null,
-        stripe_subscription_id: subscription.id,
-        stripe_customer_id: customerId,
-        product_id: productId,
-        price_id: priceId,
-        plan: plan as Database["public"]["Enums"]["plan_tier"],
-        status,
-        current_period_start: periodStart,
-        current_period_end: periodEnd,
-        cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
-        environment: env,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "stripe_subscription_id" },
-    );
+  const nextPlan = (grantsAccess(status, periodEnd)
+    ? plan
+    : "compare") as Database["public"]["Enums"]["plan_tier"];
+
+  // Ordering is decided by the provider's own clock, not by arrival order.
+  //
+  // Delivery is at-least-once and unordered: a `customer.subscription.updated`
+  // raised before a cancellation can arrive after it, and applying it would
+  // resurrect a dead subscription until some later event happened to correct
+  // it. The comparison cannot live here, because two handlers running in
+  // separate isolates would both read the same stored timestamp and both
+  // decide they are newest. So the whole thing — the guard, the subscription
+  // row and the workspace level derived from it — is one database statement
+  // that takes a row lock on the subscription, and the second writer
+  // re-evaluates against what the first actually wrote.
+  const eventCreated = isoFrom(event.created) ?? new Date().toISOString();
+  const { data: outcome, error: applyError } = await getSupabase().rpc(
+    "apply_subscription_event",
+    {
+      _org_id: orgId,
+      // The plan gate reads this row, so a malformed actor id must not be
+      // allowed to sink the whole write — the workspace, not the person, is
+      // what the subscription belongs to.
+      _user_id: UUID.test(userId ?? "") ? userId : null,
+      _subscription_id: subscription.id,
+      _customer_id: customerId as string,
+      _product_id: productId as string,
+      _price_id: priceId,
+      _plan: plan as Database["public"]["Enums"]["plan_tier"],
+      _status: status,
+      _period_start: periodStart as string,
+      _period_end: periodEnd as string,
+      _cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
+      _environment: env,
+      _event_created: eventCreated,
+      _event_id: (event.id ?? null) as string,
+      // The workspace record follows the subscription, in both directions.
+      // When the paid period is genuinely over the workspace goes back to
+      // Compare — there is no grace beyond what was paid for.
+      _next_plan: nextPlan,
+    },
+  );
 
   // Fail loudly. A silently dropped subscription row leaves a workspace that
   // paid without the record the plan gate reads, so let the provider retry.
-  if (subscriptionWrite.error) {
-    throw new Error(`subscriptions write failed: ${subscriptionWrite.error.message}`);
+  if (applyError) {
+    throw new Error(`subscriptions write failed: ${applyError.message}`);
+  }
+
+  const result = (outcome ?? {}) as {
+    applied?: boolean;
+    previous_plan?: string | null;
+    stored_event_created_at?: string | null;
+    stored_status?: string | null;
+  };
+
+  if (!result.applied) {
+    // Not an error: a stale event is delivered exactly as often as the
+    // provider retries, and refusing it is the correct outcome. Say so, so a
+    // reader of the logs can tell a refusal from a lost event.
+    console.log(
+      `Stale payment event ignored: ${event.id} (${event.type}) for ${subscription.id};`,
+      `event ${eventCreated} is not newer than stored ${result.stored_event_created_at}`,
+      `(stored status ${result.stored_status})`,
+    );
+    return;
   }
 
   // Pin the customer for this workspace if nothing has claimed it yet. The
@@ -117,57 +155,29 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
       );
   }
 
-
-  // Read the level first, so the lead event can name the transition rather
-  // than only its destination.
-  const orgBefore = await getSupabase()
-    .from("organizations")
-    .select("plan, first_visitor_id, referred_by_partner_id")
-    .eq("id", orgId)
-    .maybeSingle();
-
-  const nextPlan = (grantsAccess(status, periodEnd)
-    ? plan
-    : "compare") as Database["public"]["Enums"]["plan_tier"];
-
-  // The workspace record follows the subscription, in both directions. When
-  // the paid period is genuinely over the workspace goes back to Compare —
-  // there is no grace beyond what was paid for.
-  const orgWrite = await getSupabase()
-    .from("organizations")
-    .update({
-      plan: nextPlan,
-      stripe_customer_id:
-        typeof subscription.customer === "string"
-          ? subscription.customer
-          : (subscription.customer?.id ?? null),
-      stripe_subscription_id: subscription.id,
-      plan_valid_until: periodEnd,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", orgId);
-
-  if (orgWrite.error) {
-    throw new Error(`organizations write failed: ${orgWrite.error.message}`);
-  }
-
   // No browser request behind a webhook, so the visitor comes from the column
   // captured at signup. Only a genuine change is recorded — Stripe re-sends
   // the same subscription state often, and a replay is not a transition.
-  if (orgBefore.data && orgBefore.data.plan !== nextPlan) {
+  if (result.previous_plan && result.previous_plan !== nextPlan) {
+    const orgRow = await getSupabase()
+      .from("organizations")
+      .select("first_visitor_id, referred_by_partner_id")
+      .eq("id", orgId)
+      .maybeSingle();
     const { recordAccountLeadEvent } = await import("@/lib/telemetry/lead-events.server");
     await recordAccountLeadEvent("plan_changed", {
-      visitorId: orgBefore.data.first_visitor_id,
-      partnerId: orgBefore.data.referred_by_partner_id,
+      visitorId: orgRow.data?.first_visitor_id ?? null,
+      partnerId: orgRow.data?.referred_by_partner_id ?? null,
       payload: {
         org_id: orgId,
         new_plan: nextPlan,
-        previous_plan: orgBefore.data.plan,
+        previous_plan: result.previous_plan,
         source: "stripe_webhook",
       },
     });
   }
 }
+
 
 /**
  * Partner commission accrues off the money that actually moved — a paid
@@ -249,10 +259,10 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
-      await syncSubscription(event.data.object, env);
+      await syncSubscription(event.data.object, env, event);
       break;
     case "customer.subscription.deleted":
-      await syncSubscription({ ...event.data.object, status: "canceled" }, env);
+      await syncSubscription({ ...event.data.object, status: "canceled" }, env, event);
       break;
     case "invoice.paid":
       await accrueCommission(event.data.object, env);

@@ -79,10 +79,19 @@ export function getStripeErrorMessage(error: unknown): string {
  * standing in front of the webhook route, so it runs before anything is read
  * out of the payload.
  */
+/** The envelope fields the handler relies on, including the ordering clock. */
+export interface StripeWebhookEvent {
+  id: string;
+  type: string;
+  /** Provider-side creation time, in Unix seconds. The ordering key. */
+  created: number;
+  data: { object: any };
+}
+
 export async function verifyWebhook(
   req: Request,
   env: StripeEnv,
-): Promise<{ type: string; data: { object: any } }> {
+): Promise<StripeWebhookEvent> {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
   const secret =
