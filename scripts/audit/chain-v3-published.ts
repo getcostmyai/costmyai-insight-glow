@@ -170,9 +170,12 @@ async function one(i: number) {
     res.headers.get("x-costmyai-task-final") === "deferred" ? " (deferred)" : ""
   }`;
   headerLabels[key] = (headerLabels[key] ?? 0) + 1;
-  await res.text();
+  const body = await res.text();
   if (res.ok) ok++;
-  else fail++;
+  else {
+    fail++;
+    if (fail <= 2) console.log("FAIL", res.status, body.slice(0, 300));
+  }
 }
 
 const queue = Array.from({ length: N }, (_, i) => i);
