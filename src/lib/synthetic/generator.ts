@@ -103,6 +103,13 @@ export interface SyntheticEvent {
    */
   cacheReadTokens?: number;
   cacheWriteTokens?: number;
+  /**
+   * Dispatch 234. Label trustworthiness, carried from the real ingest path.
+   * Absent on synthetic traffic, which is labelled by construction and has no
+   * classifier behind it — it aggregates as 0/0, exactly as pre-234 traffic did.
+   */
+  taskConfidence?: number;
+  classifierRevision?: number;
   latencyMs: number;
   status: "ok" | "error";
 }
@@ -239,6 +246,19 @@ export interface RollupRow {
    * path.
    */
   peakTotalTokens: number;
+  /**
+   * Dispatch 234. Requests-weighted mean confidence of the events in the
+   * bucket: a bucket of 1000 confident events and one abstention should not
+   * read as half-trustworthy, so each event counts once, by request.
+   */
+  taskConfidenceMean: number;
+  /**
+   * The LOWEST classifier revision that contributed. Minimum, not maximum, on
+   * purpose: a bucket is only as trustworthy as its weakest contributor, and
+   * taking the maximum would let one event from a newer classifier vouch for
+   * hundreds classified by an older one.
+   */
+  classifierRevisionMin: number;
 }
 
 
@@ -252,7 +272,10 @@ export function rollupEvents(
   granularity: Granularity,
   priceFor: (modelKey: string, host: string) => PriceRow | undefined,
 ): RollupRow[] {
-  const buckets = new Map<string, { row: RollupRow; outputs: number[] }>();
+  const buckets = new Map<
+    string,
+    { row: RollupRow; outputs: number[]; confidenceSum: number; revisionMin: number | null }
+  >();
 
   for (const e of events) {
     const start = bucketStart(e.occurredAt, granularity);
@@ -275,8 +298,12 @@ export function rollupEvents(
           outputP50: 0,
           outputP95: 0,
           peakTotalTokens: 0,
+          taskConfidenceMean: 0,
+          classifierRevisionMin: 0,
         },
         outputs: [],
+        confidenceSum: 0,
+        revisionMin: null as number | null,
       };
       buckets.set(key, entry);
     }
@@ -289,11 +316,17 @@ export function rollupEvents(
       entry.row.peakTotalTokens,
       e.inputTokens + e.outputTokens,
     );
+    entry.confidenceSum += e.taskConfidence ?? 0;
+    const revision = e.classifierRevision ?? 0;
+    entry.revisionMin = entry.revisionMin === null ? revision : Math.min(entry.revisionMin, revision);
     if (e.status === "ok") entry.outputs.push(e.outputTokens);
   }
 
   const rows: RollupRow[] = [];
-  for (const { row, outputs } of buckets.values()) {
+  for (const { row, outputs, confidenceSum, revisionMin } of buckets.values()) {
+    row.taskConfidenceMean =
+      row.requests > 0 ? Math.round((confidenceSum / row.requests) * 100) / 100 : 0;
+    row.classifierRevisionMin = revisionMin ?? 0;
     const price = priceFor(row.modelKey, row.host);
     // The bucket's own cache mix, priced at the host's own cache rates. A
     // bucket with no cache activity produces the identical number this line
