@@ -1,0 +1,15 @@
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { runPipeline } from "@/lib/engine/pipeline";
+import { fetchAllRows } from "@/lib/paginate.server";
+const org="561efc9b-fbfb-479b-a2b7-c31a530e06fe";
+const rollups = await fetchAllRows((f,t)=>supabaseAdmin.from("usage_rollups").select("model_key,host,task_hint,requests,input_tokens,output_tokens,cache_read_tokens,cache_write_tokens,cost_usd,output_p50,output_p95").eq("org_id",org).eq("granularity","day").range(f,t));
+const prices:any = await fetchAllRows((f,t)=>supabaseAdmin.from("host_prices").select("*").eq("is_active",true).range(f,t));
+const benchmarks:any = await fetchAllRows((f,t)=>supabaseAdmin.from("benchmarks").select("model_key,suite,task_class,score").eq("is_fixture",false).range(f,t));
+const margins:any = await fetchAllRows((f,t)=>supabaseAdmin.from("benchmark_margins").select("suite,task_class,margin,method,synced_at,source_run_id").eq("is_fixture",false).range(f,t));
+const models:any = await fetchAllRows((f,t)=>supabaseAdmin.from("model_catalog").select("model_key,display_name,vendor,tier").eq("is_active",true).range(f,t));
+const usage = rollups.map((r:any)=>({...r, days:30, cost_usd:Number(r.cost_usd), requests:Number(r.requests), input_tokens:Number(r.input_tokens), output_tokens:Number(r.output_tokens), output_p50:Number(r.output_p50), output_p95:Number(r.output_p95)}));
+const out:any = runPipeline({usage, prices:prices.map((p:any)=>({...p,input_usd_per_mtok:Number(p.input_usd_per_mtok),output_usd_per_mtok:Number(p.output_usd_per_mtok),cache_read_usd_per_mtok:p.cache_read_usd_per_mtok==null?null:Number(p.cache_read_usd_per_mtok),cache_write_usd_per_mtok:p.cache_write_usd_per_mtok==null?null:Number(p.cache_write_usd_per_mtok)})), benchmarks:benchmarks.map((b:any)=>({...b,score:Number(b.score)})), margins:margins.map((m:any)=>({...m,margin:Number(m.margin)})), models, objectives:[], staleEvidence:null});
+console.log("usage rows", usage.length, usage.map((u:any)=>[u.model_key,u.cost_usd]));
+for (const k of Object.keys(out)) console.log(k, Array.isArray(out[k])? out[k].length : out[k]);
+console.log(JSON.stringify(out.hostArbitrage?.slice(0,2)), JSON.stringify(out.qualityMatched?.slice(0,2)), JSON.stringify(out.oversized?.slice(0,2)));
+console.log("refusals:", JSON.stringify(out.refusals ?? out.refused ?? null).slice(0,1200));
