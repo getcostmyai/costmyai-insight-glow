@@ -322,6 +322,7 @@ export type Database = {
         Row: {
           clawback_of: string | null
           clawback_reason: string | null
+          clawed_back_fraction: number
           commission_usd: number
           created_at: string
           environment: string
@@ -342,6 +343,7 @@ export type Database = {
         Insert: {
           clawback_of?: string | null
           clawback_reason?: string | null
+          clawed_back_fraction?: number
           commission_usd: number
           created_at?: string
           environment?: string
@@ -362,6 +364,7 @@ export type Database = {
         Update: {
           clawback_of?: string | null
           clawback_reason?: string | null
+          clawed_back_fraction?: number
           commission_usd?: number
           created_at?: string
           environment?: string
@@ -2445,7 +2448,12 @@ export type Database = {
       benchmark_k_floor: { Args: never; Returns: number }
       claim_partner_membership: { Args: never; Returns: string }
       clawback_commission: {
-        Args: { _environment?: string; _invoice_id: string; _reason: string }
+        Args: {
+          _environment?: string
+          _fraction?: number
+          _invoice_id: string
+          _reason: string
+        }
         Returns: Json
       }
       create_organization: { Args: { _name: string }; Returns: string }
