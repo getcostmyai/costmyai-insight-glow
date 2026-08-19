@@ -177,7 +177,10 @@ const TEXT_SIGNALS: Signal[] = [
   // ---- generation (LCR) ---------------------------------------------------
   {
     id: "generation.compose",
-    test: /\b(write|draft|compose|generate) (me )?(a|an|the|some)?\s?(email|blog|post|essay|story|poem|article|summary|description|copy|caption|script|letter|announcement)\b/i,
+    // Up to a few words of qualifier between the verb and the artefact:
+    // "draft a launch announcement email" is the same instruction as "draft an
+    // email", and the tight version of this pattern missed it.
+    test: /\b(write|draft|compose|generate)\b[^.\n]{0,40}?\b(email|blog post|blog|post|essay|story|poem|article|summary|description|copy|caption|screenplay|letter|announcement|press release)\b/i,
     hint: "generation",
     weight: 4,
   },

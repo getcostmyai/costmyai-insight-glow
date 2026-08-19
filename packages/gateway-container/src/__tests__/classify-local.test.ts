@@ -106,9 +106,12 @@ describe("it abstains rather than guesses", () => {
   });
 
   it("abstains when two different instruments are equally plausible", () => {
-    // "explain why" (reasoning) against a fenced code block (code): one weight
-    // each way, and the two certify through different instruments.
-    const decision = classifyContent(chat("Explain why this happens:\n```\nfoo\n```"));
+    // A correctness proof ABOUT code: strong evidence both ways (fenced block
+    // plus syntax against a proof instruction plus LaTeX), and Terminal-Bench
+    // and HLE are different instruments. Refusing beats coin-flipping.
+    const decision = classifyContent(
+      chat("Prove that this terminates, deriving the bound with \\sum notation:\n```py\ndef f(n): pass\n```"),
+    );
     expect(decision.hint).toBe("unknown");
     expect(decision.abstained).toBe("ambiguous");
   });
