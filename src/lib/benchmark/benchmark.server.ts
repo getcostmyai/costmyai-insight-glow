@@ -1,5 +1,5 @@
 import { BENCHMARK_ASK_THRESHOLD, askThresholdMet } from "./ask-gate";
-import { resolveBucket, type BucketResolution, type Cut } from "./k-anonymity";
+import { candidateCuts, cutLabel, K_ANONYMITY_FLOOR } from "./k-anonymity";
 
 
 /**
@@ -65,30 +65,33 @@ export function hasBenchmarkAnswers(p: ProfileRow | null): boolean {
   );
 }
 
-async function countFor(client: Client, cut: Cut): Promise<number> {
-  const { data, error } = await client.rpc("benchmark_cut", {
-    _industry: cut.industry,
-    _use_case: cut.useCase,
-    _revenue_band: cut.revenueBand,
-  });
-  if (error) throw error;
-  const row = Array.isArray(data) ? data[0] : data;
-  return Number((row as { company_count?: number } | null)?.company_count ?? 0);
+export interface SelfCut {
+  industry: string | null;
+  use_case: string | null;
+  revenue_band: string | null;
+  granularity: number;
+  widened: boolean;
+  company_count: number;
+  p25_usd: number | null;
+  p50_usd: number | null;
+  p75_usd: number | null;
 }
 
-async function spreadFor(client: Client, cut: Cut) {
-  const { data, error } = await client.rpc("benchmark_cut", {
-    _industry: cut.industry,
-    _use_case: cut.useCase,
-    _revenue_band: cut.revenueBand,
-  });
+/**
+ * The caller's own cohort, resolved entirely inside the database.
+ *
+ * There are no free profile parameters: the industry, use case and revenue
+ * band come from this workspace's own profile row, and the widening ladder is
+ * walked server-side so exactly one cohort — the first that clears the floor —
+ * ever comes back. A caller who cannot address a neighbouring cell cannot
+ * difference two of them, so the raw-count leak and the percentile-subtraction
+ * attack are closed by the same mechanism rather than by two patches.
+ */
+async function selfCut(client: Client, orgId: string): Promise<SelfCut | null> {
+  const { data, error } = await client.rpc("benchmark_cut_self", { _org_id: orgId });
   if (error) throw error;
-  const row = (Array.isArray(data) ? data[0] : data) as {
-    p25_usd: number | null;
-    p50_usd: number | null;
-    p75_usd: number | null;
-  } | null;
-  return row;
+  const row = (Array.isArray(data) ? data[0] : data) as SelfCut | null;
+  return row ?? null;
 }
 
 /**
@@ -144,37 +147,43 @@ export async function buildBenchmark(
   }
 
 
-  const resolution: BucketResolution = await resolveBucket(
-    {
-      industry: profile.industry,
-      useCase: profile.use_case,
-      revenueBand: profile.revenue_band,
-    },
-    (cut) => countFor(client, cut),
-  );
-
-  if (!resolution.ok) {
-    return { state: "refused", floor: resolution.floor, reason: resolution.reason };
+  // No dimensions at all means there is nothing to cut on, and the database
+  // is never asked.
+  const dims = candidateCuts({
+    industry: profile.industry,
+    useCase: profile.use_case,
+    revenueBand: profile.revenue_band,
+  });
+  if (dims.length === 0) {
+    return { state: "refused", floor: K_ANONYMITY_FLOOR, reason: "no_dimensions" };
   }
 
-  const spread = await spreadFor(client, resolution.cut);
-  // Belt and braces: the database withholds the spread below the floor, so a
-  // missing spread is itself a refusal rather than something to paper over.
-  if (!spread || spread.p25_usd === null || spread.p50_usd === null || spread.p75_usd === null) {
-    return { state: "refused", floor: resolution.floor, reason: "below_floor" };
+  const cut = await selfCut(client, orgId);
+  if (
+    !cut ||
+    cut.company_count < K_ANONYMITY_FLOOR ||
+    cut.p25_usd === null ||
+    cut.p50_usd === null ||
+    cut.p75_usd === null
+  ) {
+    return { state: "refused", floor: K_ANONYMITY_FLOOR, reason: "below_floor" };
   }
 
   const yours = await ownMonthlySpend(client, orgId);
-  const position = yours < spread.p25_usd ? "below" : yours > spread.p75_usd ? "above" : "typical";
+  const position = yours < cut.p25_usd ? "below" : yours > cut.p75_usd ? "above" : "typical";
 
   return {
     state: "shown",
-    cohortLabel: resolution.cut.label,
-    companyCount: resolution.companyCount,
-    widened: resolution.widened,
-    lowUsd: Number(spread.p25_usd),
-    medianUsd: Number(spread.p50_usd),
-    highUsd: Number(spread.p75_usd),
+    cohortLabel: cutLabel({
+      industry: cut.industry,
+      useCase: cut.use_case,
+      revenueBand: cut.revenue_band,
+    }),
+    companyCount: cut.company_count,
+    widened: cut.widened,
+    lowUsd: Number(cut.p25_usd),
+    medianUsd: Number(cut.p50_usd),
+    highUsd: Number(cut.p75_usd),
     yourMonthlyUsd: Math.round(yours * 100) / 100,
     position,
   };
