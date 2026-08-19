@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 import { PLAN_BY_PRICE_ID } from "@/lib/billing/catalog";
-import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
+import { type StripeEnv, type StripeWebhookEvent, verifyWebhook } from "@/lib/stripe.server";
 
 /**
  * The only thing in the system that may move a workspace onto a paid level.
@@ -51,7 +51,7 @@ function grantsAccess(status: string, periodEnd: string | null): boolean {
   return false;
 }
 
-async function syncSubscription(subscription: any, env: StripeEnv, event: WebhookEvent) {
+async function syncSubscription(subscription: any, env: StripeEnv, event: StripeWebhookEvent) {
   const orgId = subscription.metadata?.orgId;
   const userId = subscription.metadata?.userId ?? null;
   if (!orgId) {
@@ -99,8 +99,8 @@ async function syncSubscription(subscription: any, env: StripeEnv, event: Webhoo
       // what the subscription belongs to.
       _user_id: UUID.test(userId ?? "") ? userId : null,
       _subscription_id: subscription.id,
-      _customer_id: customerId,
-      _product_id: productId,
+      _customer_id: customerId as string,
+      _product_id: productId as string,
       _price_id: priceId,
       _plan: plan as Database["public"]["Enums"]["plan_tier"],
       _status: status,
@@ -109,7 +109,7 @@ async function syncSubscription(subscription: any, env: StripeEnv, event: Webhoo
       _cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
       _environment: env,
       _event_created: eventCreated,
-      _event_id: event.id ?? null,
+      _event_id: (event.id ?? null) as string,
       // The workspace record follows the subscription, in both directions.
       // When the paid period is genuinely over the workspace goes back to
       // Compare — there is no grace beyond what was paid for.
@@ -259,10 +259,10 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
-      await syncSubscription(event.data.object, env);
+      await syncSubscription(event.data.object, env, event);
       break;
     case "customer.subscription.deleted":
-      await syncSubscription({ ...event.data.object, status: "canceled" }, env);
+      await syncSubscription({ ...event.data.object, status: "canceled" }, env, event);
       break;
     case "invoice.paid":
       await accrueCommission(event.data.object, env);
