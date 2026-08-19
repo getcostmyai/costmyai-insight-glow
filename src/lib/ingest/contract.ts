@@ -152,6 +152,15 @@ export const CONTAINER_DEFAULTS = {
    * Named by a customer who wants Certify to work on ordinary chat traffic.
    */
   classifyingTag: "v2",
+  /**
+   * Dispatch 236. The remotely-classifying line: local rules first, and when
+   * they abstain, the extracted prompt text is sent to CostMyAI to be labelled
+   * by a model. That is a different privacy posture from `v2`, whose claim is
+   * "structural shape only, never meaning, and nothing leaves the container".
+   * A moving `v2` must not quietly acquire it, so this is `v3` and nothing
+   * else. Reached only by naming it.
+   */
+  remoteClassifyingTag: "v3",
   port: 8787,
   spoolDir: "/var/lib/costmyai/spool",
   spoolVolume: "costmyai-spool",
