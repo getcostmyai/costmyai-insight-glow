@@ -34,10 +34,28 @@ export const Route = createFileRoute("/api/public/sync/rollup-health")({
 
         const { sweepRollups } = await import("@/lib/ingest/rollup-sweep.server");
         const { recordRun } = await import("@/lib/engine/evaluate.server");
+        const { withJobLock } = await import("@/lib/ops/job-lock.server");
         const started = new Date();
 
         try {
-          const sweep = await sweepRollups({ repair: body.repair !== false });
+          /*
+           * Single-flight. Two repairs of the same workspace converge on the
+           * same rows, but while they overlap a reader can see a bucket one run
+           * has deleted and the other has not yet rewritten — a transient hole
+           * in figures that are supposed to be complete. A tick that arrives
+           * while a pass is still running is skipped, not queued.
+           */
+          const run = await withJobLock("rollup-health", 15 * 60, () =>
+            sweepRollups({ repair: body.repair !== false }),
+          );
+
+          if (!run.ran) {
+            return Response.json(
+              { skipped: true, reason: "another rollup-health run is already in progress" },
+              { status: 200 },
+            );
+          }
+          const sweep = run.result;
 
           /*
            * Nothing to repair is this job's healthy resting state, so it is
