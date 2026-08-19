@@ -174,14 +174,14 @@ live("real chat traffic, locally classified", () => {
     // reachable for this traffic rather than refused for want of a label.
     for (const row of rows!) {
       expect(normalizeTask(row.task_hint), `${row.task_hint} maps into the ladder`).not.toBeNull();
-      const resolved = resolveLadder(row.task_hint, () => 4);
+      const resolved = resolveLadder(row.task_hint, () => 100);
       expect(resolved.refusal, `${row.task_hint} has an instrument`).toBeNull();
       expect(resolved.field).toBeTruthy();
     }
 
     console.log(
       "[dispatch-232] live labels:",
-      rows!.map((r) => `${r.task_hint}=${resolveLadder(r.task_hint, () => 4).field}`).join(" "),
+      rows!.map((r) => `${r.task_hint}=${resolveLadder(r.task_hint, () => 100).field}`).join(" "),
     );
   }, 180_000);
 });
