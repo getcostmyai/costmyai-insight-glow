@@ -52,6 +52,15 @@ ENV NODE_ENV=production
 # the classifier entirely.
 ARG CLASSIFY_LOCAL_DEFAULT=""
 ENV COSTMYAI_CLASSIFY_LOCAL_DEFAULT=$CLASSIFY_LOCAL_DEFAULT
+
+# Dispatch 236. Set to "true" only for the v3 line. It makes remote task
+# classification the default in that image: where the local rules abstain, the
+# extracted prompt text is sent to CostMyAI to be labelled by a model, off the
+# request path. This is the one default that causes text to leave the customer's
+# network, which is why it belongs to a distinct tag rather than a rebuild, and
+# why an unset build-arg leaves it off.
+ARG CLASSIFY_REMOTE_DEFAULT=""
+ENV COSTMYAI_CLASSIFY_REMOTE_DEFAULT=$CLASSIFY_REMOTE_DEFAULT
 COPY --from=build /build/packages/gateway-container/dist ./dist
 COPY packages/gateway-container/package.json ./package.json
 
