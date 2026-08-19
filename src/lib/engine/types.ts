@@ -113,6 +113,13 @@ export interface UsageAggregate {
    */
   cache_read_tokens?: number;
   cache_write_tokens?: number;
+  /**
+   * Dispatch 234. The LOWEST classifier revision behind this workload's events.
+   * Absent on aggregates built before the classifier existed. Read only to tell
+   * two different silences apart: traffic no classifier ever looked at, and
+   * traffic a classifier looked at and declined to label.
+   */
+  classifier_revision?: number | null;
   cost_usd: number;
   /** Number of days the aggregate covers, used to normalise to a month. */
   days: number;
@@ -137,6 +144,12 @@ export type RefusalReason =
   | "no_baseline_price"
   | "no_baseline_score"
   | "no_valid_instrument"
+  /**
+   * Dispatch 234. A local classifier read this traffic and declined to label
+   * it. Distinct from `no_valid_instrument`, which is about a task nothing
+   * measures; this is about work we could not name in the first place.
+   */
+  | "task_label_low_confidence"
   | "benchmark_data_stale"
   | "benchmark_not_discriminating"
   | "no_candidate_clears_bar"

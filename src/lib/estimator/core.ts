@@ -65,12 +65,15 @@ export function resolveEstimate(
   const resolution = lookup.instrument(shape.taskClass);
   if (!resolution.field) {
     return refuse(
-      resolution.refusal === "no_valid_instrument"
-        ? "no_valid_instrument"
-        : "benchmark_not_discriminating",
-      resolution.refusal === "no_valid_instrument"
-        ? "No independent instrument measures this kind of work."
-        : "No model currently differentiates enough on this to certify a switch.",
+      // The estimator is driven by a task class the visitor picked, so a
+      // classifier refusal cannot arise here; it maps to the same "nothing
+      // measured this" answer rather than claiming a benchmark was consulted.
+      resolution.refusal === "benchmark_not_discriminating"
+        ? "benchmark_not_discriminating"
+        : "no_valid_instrument",
+      resolution.refusal === "benchmark_not_discriminating"
+        ? "No model currently differentiates enough on this to certify a switch."
+        : "No independent instrument measures this kind of work.",
       resolution.detail,
     );
   }

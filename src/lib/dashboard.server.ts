@@ -162,6 +162,8 @@ export const REFUSAL_LABEL: Record<string, string> = {
   // instrument that measures it at all.
   no_baseline_score: "no measured score for this model",
   no_valid_instrument: "no independent instrument measures this task type",
+  task_label_low_confidence:
+    "the local classifier could not name what kind of work this traffic is",
   benchmark_not_discriminating:
     "no model currently differentiates enough on this to certify a switch",
   no_candidate_clears_bar: "quality gap outside the equivalence band",
