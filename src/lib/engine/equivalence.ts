@@ -44,8 +44,13 @@ export interface ScoreLookup {
   separation(field: AaField): number | null;
   /** True when the model carries at least one certifiable instrument score. */
   covered(modelKey: string): boolean;
-  /** Walk the ranked ladder for a product task and say which instrument certifies it. */
-  instrument(taskHint: string): LadderResolution;
+  /**
+   * Walk the ranked ladder for a product task and say which instrument
+   * certifies it. `modelKey`, when given, keeps the walk on rungs that have
+   * actually measured that model.
+   */
+  instrument(taskHint: string, modelKey?: string): LadderResolution;
+
 }
 
 /** Indexes benchmark scores and their measured margins for fast, suite-aware lookup. */
@@ -93,9 +98,16 @@ export function buildScoreLookup(
     spread,
     separation,
     covered: (modelKey) => coveredModels.has(modelKey),
-    instrument(taskHint) {
-      return resolveLadder(taskHint, separation);
+    instrument(taskHint, modelKey) {
+      return resolveLadder(
+        taskHint,
+        separation,
+        modelKey
+          ? (field) => (byModelTask.get(`${modelKey}::${field}`)?.score ?? 0) > 0
+          : undefined,
+      );
     },
+
   };
 }
 
@@ -200,7 +212,7 @@ export function findQualityMatches(
      * at least SEPARATION_THRESHOLD wins. No rung passing means REFUSE — never
      * a composite index, never a borrowed instrument.
      */
-    const resolution = lookup.instrument(u.task_hint);
+    const resolution = lookup.instrument(u.task_hint, u.model_key);
     if (!resolution.field) {
       refuse(u, resolution.refusal ?? "no_valid_instrument", resolution.detail);
       continue;

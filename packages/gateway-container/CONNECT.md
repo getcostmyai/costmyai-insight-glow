@@ -24,9 +24,13 @@ The three things that matter before you decide:
    copies every header to the provider byte for byte and never reads, stores or logs
    credentials. There is no field anywhere in CostMyAI to paste a provider key into —
    by design. If our container were compromised tomorrow, there is no key of yours in it.
-3. **What we receive is metadata, never content.** Model, host, endpoint path, a coarse
-   task label derived from the path and model name only, token counts, latency, HTTP
-   status. Never prompts, never completions, never headers.
+3. **What we receive is metadata, never content.** Model, host, endpoint path, a task
+   label, token counts, latency, HTTP status. Never prompts, never completions, never
+   headers. By default the task label is coarse and derived from the path and model name
+   alone — no request body is read. You can opt in with `COSTMYAI_CLASSIFY_LOCAL=true`,
+   which classifies the request text **inside your own container**: only the resulting
+   label, a confidence number and feature names (e.g. `structure.tool_result`) are ever
+   sent to us. Prompt text never leaves your environment in either mode.
 
 **The only change to your application is one line: the base URL.** No SDK swap, no code
 changes, no key rotation.

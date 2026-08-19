@@ -160,11 +160,24 @@ export interface LadderResolution {
   detail: string;
 }
 
-/** The walk plus the reason it ended the way it did, for honest UI copy. */
+/**
+ * The walk plus the reason it ended the way it did, for honest UI copy.
+ *
+ * `scoredOn` is optional and, when given, is the second condition a rung has to
+ * meet: the workload's own model must actually be measured on that instrument.
+ * A rung that discriminates but has never scored this model cannot certify
+ * anything, and stopping there reported "not measured on Terminal-Bench" while
+ * a lower rung of the SAME task ladder (SciCode, equally valid for coding) did
+ * measure it. Walking past an unusable rung is not a borrowed instrument — every
+ * rung in a ladder is already admissible for that task; it is only the ranking
+ * of fit that says which to prefer.
+ */
 export function resolveLadder(
   task: string,
   separationOf: (field: AaField) => number | null,
+  scoredOn?: (field: AaField) => boolean,
 ): LadderResolution {
+
   const normalized = normalizeTask(task);
   if (task.trim().toLowerCase() === UNLABELLED_TASK) {
     return {
@@ -215,8 +228,8 @@ export function resolveLadder(
     };
   });
 
-  const hit = tried.findIndex((t) => t.passed);
-  if (hit === -1) {
+  const discriminating = tried.findIndex((t) => t.passed);
+  if (discriminating === -1) {
     return {
       field: null,
       rung: -1,
@@ -228,6 +241,15 @@ export function resolveLadder(
     };
   }
 
+  /*
+   * Prefer the best-fitting rung that BOTH discriminates and has measured this
+   * workload's model. When no rung has measured it, fall back to the
+   * best-fitting discriminating rung so the caller can refuse against a named
+   * instrument rather than silently.
+   */
+  const usable = tried.findIndex((t) => t.passed && (scoredOn ? scoredOn(t.field) : true));
+  const hit = usable === -1 ? discriminating : usable;
+
   return {
     field: tried[hit].field,
     rung: hit,
@@ -235,6 +257,7 @@ export function resolveLadder(
     refusal: null,
     detail: `${FIELD_SPECS[tried[hit].field].label} separates by ${tried[hit].separation?.toFixed(1)} points on ${task.replaceAll("_", " ")}.`,
   };
+
 }
 
 /** Separation = observed spread of scores on one instrument, in points. */

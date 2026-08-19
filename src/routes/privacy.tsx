@@ -54,8 +54,12 @@ function PrivacyPage() {
         <p>
           <strong className="text-foreground">Usage and billing data you choose to share:</strong>{" "}
           aggregate, provider neutral records of model usage, spend, and switching activity, pushed
-          from your own environment via the Verification Engine. This does not include prompt
-          content or model outputs unless you explicitly configure it to.
+          from your own environment via the Verification Engine. Prompt content and model outputs
+          are never sent to us. By default the connector derives its task label from the request
+          path and model name alone. You may opt in (<code>COSTMYAI_CLASSIFY_LOCAL=true</code>) to
+          local classification, which reads request text inside your own container to derive a more
+          accurate label. Even then, only the label, a confidence number and feature names leave
+          your environment. No prompt text is transmitted, stored or logged by us in either mode.
         </p>
         <p>
           <strong className="text-foreground">Website and product analytics:</strong> we use Google
