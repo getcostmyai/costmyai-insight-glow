@@ -173,6 +173,37 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
     if (roleError) throw roleError;
     if (!isManager) throw new Error("Only a workspace owner or admin can change the plan.");
 
+    // A second checkout for a workspace that is already paying creates a
+    // SECOND subscription against a second customer — the workspace is then
+    // billed twice with no way back through the hosted portal. Until a real
+    // plan-switch path exists, a live subscription refuses checkout outright.
+    const { data: existing, error: existingError } = await context.supabase
+      .from("subscriptions")
+      .select("plan, status, current_period_end")
+      .eq("org_id", data.orgId)
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingError) throw existingError;
+    if (existing) {
+      const end = existing.current_period_end
+        ? new Date(existing.current_period_end).getTime()
+        : null;
+      const stillWithinPaidPeriod = end === null || end > Date.now();
+      const live =
+        ["active", "trialing", "past_due"].includes(existing.status as string) &&
+        stillWithinPaidPeriod;
+      if (live) {
+        return {
+          error:
+            `This workspace already has an active ${existing.plan} subscription. ` +
+            `Starting a second checkout would bill it twice. ` +
+            `Cancel the current plan from the billing portal first, or contact support to change plans.`,
+        };
+      }
+    }
+
     const priceId = priceIdFor(data.plan, data.interval);
     if (!priceId) throw new Error("No price for that plan");
 
