@@ -1,5 +1,5 @@
 import { BENCHMARK_ASK_THRESHOLD, askThresholdMet } from "./ask-gate";
-import { resolveBucket, type BucketResolution, type Cut } from "./k-anonymity";
+import { candidateCuts, cutLabel, K_ANONYMITY_FLOOR } from "./k-anonymity";
 
 
 /**
