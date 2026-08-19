@@ -68,10 +68,41 @@ export const MAX_CAPTURES_PER_BATCH = 100;
  * response content, and anything it cannot place stays `unknown`. An unknown
  * cohort walks the same ladder as everything else and refuses honestly, which
  * is the only correct answer for work nobody has measured.
+ *
+ * Phase 0 of the local-classification epic widens this list to the real
+ * certification split. The set is derived from the LADDER, not invented: each
+ * label below is one distinct instrument outcome in
+ * `src/lib/benchmarks/task-ladder.ts`, and no label exists that the ladder
+ * cannot tell apart from its neighbours.
+ *
+ *   code           — coding / debugging / data analysis  → Terminal-Bench, then SciCode
+ *   reasoning      — reasoning / question answering      → HLE, then GPQA
+ *   agentic        — planning / decision support / tools → τ³-Banking
+ *   generation     — the long-context bucket             → AA Long Context Reasoning
+ *   classification — same instrument as `generation`
+ *   unknown        — no label; refuses, never guesses
+ *
+ * `classification` and `generation` resolve to the SAME instrument today, so
+ * they are one certification bucket wearing two names. Both are kept because
+ * both are already on the wire and in stored rollups: collapsing them would
+ * relabel history to buy a distinction the ladder cannot currently make. If AA
+ * ever ships an instrument that separates them, the wire needs no change.
+ *
+ * Every value here must survive `normalizeTask()` in the ladder — that
+ * function is the join between this wire vocabulary and the certification
+ * vocabulary, and a label it cannot resolve is a label that silently refuses.
  */
-export const TASK_HINTS = ["generation", "code", "classification", "unknown"] as const;
+export const TASK_HINTS = [
+  "generation",
+  "code",
+  "classification",
+  "reasoning",
+  "agentic",
+  "unknown",
+] as const;
 export type TaskHint = (typeof TASK_HINTS)[number];
 export const UNKNOWN_TASK_HINT: TaskHint = "unknown";
+
 
 /**
  * How completely the connector could read a response envelope.
