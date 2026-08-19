@@ -175,6 +175,13 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
     readContent: config.classifyLocal,
   });
 
+  /**
+   * Dispatch 236. The remote pass runs only where the local one gave up. A
+   * request the rules placed is never sent anywhere: the cheapest, most private
+   * answer that is right stays the answer.
+   */
+  const remoteWillRun = Boolean(deps.remote) && config.classifyLocal && task.hint === "unknown";
+
 
   // Dispatch 155, Stage 4. `lookup` is synchronous and memory-only; with no
   // fresh plan, no matching switch, or no switch map at all it returns null and
@@ -266,6 +273,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         host: upstream.host,
         path: incoming.pathname,
         task,
+        body: bodyBytes,
         model: sentModel,
         reading: null,
         status: "error",
@@ -321,6 +329,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       host: upstream.host,
       path: incoming.pathname,
       task,
+      body: bodyBytes,
       model: modelInFlight,
       reading: null,
       status: "error",
@@ -393,6 +402,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       host: upstream.host,
       path: incoming.pathname,
       task,
+      body: bodyBytes,
       model: modelInFlight,
       reading: null,
       status,
@@ -418,6 +428,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         host: upstream.host,
         path: incoming.pathname,
         task,
+        body: bodyBytes,
         model: reading.model ?? modelInFlight,
         reading,
         status,
@@ -458,6 +469,11 @@ interface RecordArgs {
   status: "ok" | "error";
   /** Decided once per request, from the caller's own body. */
   task: TaskDecision;
+  /**
+   * Dispatch 236. Kept only to hand to the remote classifier AFTER the caller
+   * has their response. Never stored, never enqueued, never logged.
+   */
+  body?: Uint8Array;
   skip?: boolean;
   fallbackReason?: FallbackReason;
   reroute?: { rerouted: true; originalModel: string; originalHost: string; switchId: string };
@@ -500,7 +516,40 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
   if (event.parse_status !== "parsed" && args.reading?.skeleton) {
     event.envelope_skeleton = args.reading.skeleton;
   }
-  deps.queue.enqueue({ kind: "events", body: { events: [event] } });
+  const queued = deps.queue.enqueue({ kind: "events", body: { events: [event] } });
+
+  /**
+   * Dispatch 236 — off the request path, by construction.
+   *
+   * Everything above has already happened: the caller holds their response (or,
+   * on a stream, has finished receiving it) before this line is reached, and
+   * nothing here is awaited by anyone. The classification call runs, and when
+   * it returns a label it AMENDS THE EVENT STILL SITTING IN THE QUEUE — the
+   * same "correct the queued record rather than write a second one" pattern
+   * `parser_revision` reprocessing already uses. Flush is every 30 s; the call
+   * takes about a second; the label lands on its own event.
+   *
+   * Only requests the local pass abstained on are sent. Any failure leaves the
+   * event exactly as enqueued: `unknown`, confidence 0, and honest.
+   */
+  const remote = deps.remote;
+  if (remote && deps.config.classifyRemote && event.task_hint === "unknown") {
+    void remote
+      .classify(args.body)
+      .then((decision) => {
+        if (decision.hint === "unknown") return;
+        queued.patch((body) => {
+          const first = (body as { events: ProxyEvent[] }).events[0];
+          if (!first) return;
+          first.task_hint = decision.hint;
+          first.task_confidence = Math.round(decision.confidence * 100) / 100;
+          first.classifier_revision = REMOTE_CLASSIFIER_REVISION;
+        });
+      })
+      .catch(() => {
+        /* classify() never rejects; a broken promise still must not touch traffic */
+      });
+  }
 }
 
 /** Lift ONLY the model identifier out of a request. Never anything else. */
