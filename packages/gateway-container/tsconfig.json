@@ -12,9 +12,13 @@
     // The shared sources use the repo's "@/..." alias. The image build has no
     // repo tsconfig, so the alias must be declared here or tsc cannot resolve
     // src/lib/ingest/switch-plan.ts's import of the provider-gate types.
+    // Under nodenext a mapped specifier still needs a real file, so the ".ts"
+    // candidate is listed first — the repo writes these aliases extensionless.
+    // Type-only imports today; a runtime "@/..." import would survive into the
+    // emitted JS and break at boot, so keep them type-only.
     "baseUrl": "../..",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*.ts", "src/*"]
     }
   },
   "include": [
