@@ -7,8 +7,10 @@ import { ErrorState } from "@/components/ErrorState";
 import { AccountShell } from "@/components/dashboard/AccountShell";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PlanCheckout } from "@/components/billing/PlanCheckout";
+import { PlanChangeConfirm } from "@/components/billing/PlanChangeConfirm";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 import {
+  cancelPlanChange,
   createBillingPortal,
   getWorkspaceBilling,
   listWorkspaceInvoices,
@@ -75,6 +77,7 @@ function BillingPage() {
   const queryClient = useQueryClient();
   const [interval, setInterval] = useState<BillingInterval>("monthly");
   const [checkoutPlan, setCheckoutPlan] = useState<PlanTier | null>(null);
+  const [changePlan, setChangePlan] = useState<PlanTier | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const workspaces = useQuery({
@@ -109,6 +112,21 @@ function BillingPage() {
     staleTime: 60_000,
   });
 
+
+  // Dropping a plan change that was booked for the renewal boundary.
+  const dropChange = useMutation({
+    mutationFn: () =>
+      cancelPlanChange({ data: { orgId: org!.id, environment: getStripeEnvironment() } }),
+    onSuccess: (result) => {
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["workspace-billing"] });
+    },
+    onError: (e: unknown) =>
+      setError(e instanceof Error ? e.message : "The booked change could not be cleared."),
+  });
 
   const portal = useMutation({
     mutationFn: () =>
@@ -177,10 +195,31 @@ function BillingPage() {
   const status = billing.data?.status ?? null;
   const returnUrl = `${typeof window === "undefined" ? "" : window.location.origin}/billing?session_id={CHECKOUT_SESSION_ID}`;
 
+  // A workspace that is already paying must never be sent back through
+  // checkout: that creates a second subscription and bills it twice. It gets
+  // the plan-change path instead, which modifies the subscription it has.
+  const periodEndMs = billing.data?.currentPeriodEnd
+    ? new Date(billing.data.currentPeriodEnd).getTime()
+    : null;
+  const hasLiveSubscription =
+    billing.data?.accessSource === "subscription" &&
+    ["active", "trialing", "past_due"].includes(status ?? "") &&
+    (periodEndMs === null || periodEndMs > Date.now());
+
   async function choose(plan: PlanTier) {
     setError(null);
     if (plan === "compare") {
+      if (hasLiveSubscription) {
+        setError(
+          "To leave the paid levels, cancel the subscription under “Manage payment method & cancellation”. You keep your level until the period you have paid for ends.",
+        );
+        return;
+      }
       navigate({ to: "/workspace" });
+      return;
+    }
+    if (hasLiveSubscription) {
+      setChangePlan(plan);
       return;
     }
     setCheckoutPlan(plan);
@@ -315,15 +354,39 @@ function BillingPage() {
         {/* A booked plan change is real, already-agreed state. Showing only
             today's price would misrepresent the next invoice. */}
         {billing.data?.scheduledChange ? (
-          <p className="mt-4 rounded-xl bg-muted/50 p-3 text-sm text-foreground">
-            Currently <span className="font-semibold">{PLAN_META[current].label}</span>,{" "}
-            {usd(PLAN_META[current].monthly, 0)}/mo — switches to{" "}
-            <span className="font-semibold">
-              {PLAN_META[billing.data.scheduledChange.plan].label}
-            </span>
-            , {usd(billing.data.scheduledChange.monthlyUsd, 0)}/mo on{" "}
-            {fmtDate(billing.data.scheduledChange.effectiveIso)}
-            {billing.data.scheduledChange.interval === "yearly" ? " (billed yearly)" : ""}.
+          <div className="mt-4 rounded-xl bg-muted/50 p-3 text-sm text-foreground">
+            <p>
+              Currently <span className="font-semibold">{PLAN_META[current].label}</span>,{" "}
+              {usd(PLAN_META[current].monthly, 0)}/mo — switches to{" "}
+              <span className="font-semibold">
+                {PLAN_META[billing.data.scheduledChange.plan].label}
+              </span>
+              , {usd(billing.data.scheduledChange.monthlyUsd, 0)}/mo on{" "}
+              {fmtDate(billing.data.scheduledChange.effectiveIso)}
+              {billing.data.scheduledChange.interval === "yearly" ? " (billed yearly)" : ""}.
+            </p>
+            {canManage ? (
+              <button
+                type="button"
+                disabled={dropChange.isPending}
+                onClick={() => dropChange.mutate()}
+                className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-primary hover:underline disabled:opacity-60"
+              >
+                {dropChange.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Keep {PLAN_META[current].label} instead
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {/* A failed charge does not take access away mid-retry — but the
+            customer has to be told, or the first they hear of it is losing the
+            level when the provider finally gives up. */}
+        {status === "past_due" ? (
+          <p className="mt-4 rounded-xl bg-opportunity-soft p-3 text-sm text-opportunity">
+            The last payment for this workspace failed. You keep{" "}
+            {PLAN_META[current].label} while the payment provider retries, but if the card is not
+            fixed the subscription is cancelled and the workspace returns to Compare. Update the
+            payment method under “Manage payment method &amp; cancellation”.
           </p>
         ) : null}
         {billing.data?.cancelAtPeriodEnd && status !== "canceled" ? (
@@ -454,6 +517,18 @@ function BillingPage() {
                 returnUrl={returnUrl}
               />
             </>
+          ) : changePlan ? (
+            <PlanChangeConfirm
+              orgId={org.id}
+              plan={changePlan}
+              interval={interval}
+              onCancel={() => setChangePlan(null)}
+              onDone={() => {
+                setChangePlan(null);
+                queryClient.invalidateQueries({ queryKey: ["workspace-billing"] });
+                queryClient.invalidateQueries({ queryKey: ["my-workspaces"] });
+              }}
+            />
           ) : (
             <PlanPicker
               interval={interval}
@@ -461,6 +536,7 @@ function BillingPage() {
               currentPlan={current}
               onSelect={choose}
               busyPlan={null}
+              mode={hasLiveSubscription ? "change" : "checkout"}
             />
           )}
         </div>

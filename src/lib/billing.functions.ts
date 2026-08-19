@@ -306,6 +306,169 @@ export const createBillingPortal = createServerFn({ method: "POST" })
     }
   });
 
+/**
+ * Changing the level of a workspace that is ALREADY paying.
+ *
+ * This is the only correct path for an existing subscriber: checkout would
+ * create a second subscription and bill the workspace twice. The policy is
+ * fixed and is not the caller's to choose — upgrades apply now with normal
+ * proration, downgrades are booked for the end of the period already paid for.
+ */
+
+async function liveSubscriptionFor(
+  supabase: any,
+  orgId: string,
+  environment: Env,
+): Promise<{ subscriptionId: string; customerId: string }> {
+  const { data: sub, error } = await supabase
+    .from("subscriptions")
+    .select("stripe_subscription_id, stripe_customer_id, status, current_period_end")
+    .eq("org_id", orgId)
+    .eq("environment", environment)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!sub?.stripe_subscription_id || !sub?.stripe_customer_id) {
+    throw new Error("This workspace has no subscription to change yet.");
+  }
+  const end = sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
+  const live =
+    ["active", "trialing", "past_due"].includes(sub.status as string) &&
+    (end === null || end > Date.now());
+  if (!live) {
+    throw new Error(
+      "This workspace has no live subscription, so there is nothing to change. Choose a plan to subscribe.",
+    );
+  }
+  return {
+    subscriptionId: sub.stripe_subscription_id as string,
+    customerId: sub.stripe_customer_id as string,
+  };
+}
+
+function validatePlanChangeInput(data: {
+  orgId: string;
+  plan: PlanTier;
+  interval: BillingInterval;
+  environment: Env;
+}) {
+  if (!UUID.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
+  if (data?.interval !== "monthly" && data?.interval !== "yearly") {
+    throw new Error("Unknown billing interval");
+  }
+  if (!PAID_PLANS.some((p) => p.plan === data?.plan)) {
+    throw new Error(
+      "Compare is free — to leave a paid level, cancel the subscription from the billing portal.",
+    );
+  }
+  return {
+    orgId: data.orgId,
+    plan: data.plan,
+    interval: data.interval,
+    environment: validEnv(data.environment),
+  };
+}
+
+export type PlanChangeQuote =
+  | (import("./billing/change.server").PlanChangePreview & { ok: true })
+  | { ok: false; error: string };
+
+export const previewPlanChange = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(validatePlanChangeInput)
+  .handler(async ({ data, context }): Promise<PlanChangeQuote> => {
+    await assertManager(context.supabase, data.orgId);
+    const { createStripeClient, getStripeErrorMessage } = await import("./stripe.server");
+    const { readCurrentSubscription, previewChange } = await import("./billing/change.server");
+
+    try {
+      const { subscriptionId, customerId } = await liveSubscriptionFor(
+        context.supabase,
+        data.orgId,
+        data.environment,
+      );
+      const stripe = createStripeClient(data.environment);
+      const current = await readCurrentSubscription(stripe, subscriptionId);
+      const preview = await previewChange(
+        stripe,
+        current,
+        { plan: data.plan, interval: data.interval },
+        customerId,
+      );
+      return { ok: true, ...preview };
+    } catch (error) {
+      return { ok: false, error: getStripeErrorMessage(error) };
+    }
+  });
+
+export type PlanChangeResult =
+  | (import("./billing/change.server").AppliedChange & { ok: true })
+  | { ok: false; error: string };
+
+export const changeWorkspacePlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(validatePlanChangeInput)
+  .handler(async ({ data, context }): Promise<PlanChangeResult> => {
+    // Only a manager may move the money. RLS already scopes the workspace; this
+    // is the authority on top of membership.
+    await assertManager(context.supabase, data.orgId);
+
+    const { createStripeClient, getStripeErrorMessage } = await import("./stripe.server");
+    const { readCurrentSubscription, applyChange } = await import("./billing/change.server");
+
+    try {
+      const { subscriptionId } = await liveSubscriptionFor(
+        context.supabase,
+        data.orgId,
+        data.environment,
+      );
+      const stripe = createStripeClient(data.environment);
+      const current = await readCurrentSubscription(stripe, subscriptionId);
+      const applied = await applyChange(
+        stripe,
+        current,
+        { plan: data.plan, interval: data.interval },
+        { orgId: data.orgId, userId: context.userId },
+        data.environment,
+      );
+      // The recorded level still follows the signed webhook, never this call:
+      // an immediate upgrade lands as `customer.subscription.updated`, and a
+      // booked downgrade lands at the boundary. Nothing here writes the plan.
+      return { ok: true, ...applied };
+    } catch (error) {
+      return { ok: false, error: getStripeErrorMessage(error) };
+    }
+  });
+
+/** Drops a downgrade (or interval change) that was booked for the boundary. */
+export const cancelPlanChange = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orgId: string; environment: Env }) => {
+    if (!UUID.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
+    return { orgId: data.orgId, environment: validEnv(data.environment) };
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true } | { ok: false; error: string }> => {
+    await assertManager(context.supabase, data.orgId);
+    const { createStripeClient, getStripeErrorMessage } = await import("./stripe.server");
+    const { readCurrentSubscription, cancelScheduledChange } = await import(
+      "./billing/change.server"
+    );
+    try {
+      const { subscriptionId } = await liveSubscriptionFor(
+        context.supabase,
+        data.orgId,
+        data.environment,
+      );
+      const stripe = createStripeClient(data.environment);
+      const current = await readCurrentSubscription(stripe, subscriptionId);
+      await cancelScheduledChange(stripe, current);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: getStripeErrorMessage(error) };
+    }
+  });
+
 export type { SubscriptionState };
 
 export interface InvoiceRow {

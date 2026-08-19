@@ -26,12 +26,18 @@ export function PlanPicker({
   currentPlan,
   onSelect,
   busyPlan,
+  mode = "checkout",
 }: {
   interval: BillingInterval;
   onIntervalChange: (i: BillingInterval) => void;
   currentPlan: PlanTier;
   onSelect: (plan: PlanTier) => void;
   busyPlan: PlanTier | null;
+  /**
+   * "change" when the workspace already pays: the buttons then describe moving
+   * an existing subscription up or down, not starting a second one.
+   */
+  mode?: "checkout" | "change";
 }) {
   return (
     <div>
@@ -108,8 +114,14 @@ export function PlanPicker({
                   : busyPlan === plan
                     ? "Opening checkout…"
                     : free
-                      ? "Continue on Compare"
-                      : `Choose ${meta.label}`}
+                      ? mode === "change"
+                        ? "Cancel to return to Compare"
+                        : "Continue on Compare"
+                      : mode === "change"
+                        ? PLAN_ORDER.indexOf(plan) > PLAN_ORDER.indexOf(currentPlan)
+                          ? `Upgrade to ${meta.label}`
+                          : `Downgrade to ${meta.label}`
+                        : `Choose ${meta.label}`}
               </button>
             </div>
           );
