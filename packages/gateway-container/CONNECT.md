@@ -26,11 +26,18 @@ The three things that matter before you decide:
    by design. If our container were compromised tomorrow, there is no key of yours in it.
 3. **What we receive is metadata, never content.** Model, host, endpoint path, a task
    label, token counts, latency, HTTP status. Never prompts, never completions, never
-   headers. By default the task label is coarse and derived from the path and model name
-   alone — no request body is read. You can opt in with `COSTMYAI_CLASSIFY_LOCAL=true`,
-   which classifies the request text **inside your own container**: only the resulting
-   label, a confidence number and feature names (e.g. `structure.tool_result`) are ever
-   sent to us. Prompt text never leaves your environment in either mode.
+   headers.
+
+   Which task label you get depends on the **image tag**, and nothing else:
+
+   | Tag   | Task labelling                                                                 |
+   | ----- | ------------------------------------------------------------------------------ |
+   | `:v1` | Coarse, from the request path and model name alone. No request body is read. Chat traffic stays `unknown`, and Certify refuses it. |
+   | `:v2` | Also classifies the request text **inside your own container**. Only the resulting label, a confidence number and feature names (e.g. `structure.tool_result`) are ever sent to us. On by default; `COSTMYAI_CLASSIFY_LOCAL=false` turns it off and your setting always wins. |
+
+   Prompt text never leaves your environment on either tag. `:v1` containers do not
+   contain the classifier at all — setting the variable there does nothing.
+
 
 **The only change to your application is one line: the base URL.** No SDK swap, no code
 changes, no key rotation.
