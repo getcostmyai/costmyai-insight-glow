@@ -247,6 +247,47 @@ describe("apply_switch — identity and integrity", () => {
     expect(error?.message ?? "").toMatch(/already has an active switch/i);
     await admin.from("recommendations").delete().eq("id", again);
   }, 30_000);
+
+  /*
+   * The lost race. The pre-check cannot see a concurrent uncommitted insert, so
+   * under real simultaneity the unique index is what refuses the second writer.
+   * Before the exception handler that read as raw Postgres text — "duplicate
+   * key value violates unique constraint switches_one_active_per_workload" —
+   * straight through to a customer. It must now be indistinguishable from the
+   * ordinary refusal.
+   */
+  it("gives the loser of a simultaneous activation the same plain sentence", async () => {
+    const model = `race-${Date.now()}`;
+    const recs = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => makeRecommendation(paidOrg, model, `task-${i}`)),
+    );
+
+    const settled = await Promise.all(
+      recs.map((rec) => owner.client.rpc("apply_switch", { _rec_id: rec })),
+    );
+
+    const winners = settled.filter((r) => !r.error);
+    const losers = settled.filter((r) => r.error);
+    expect(winners).toHaveLength(1);
+    expect(losers.length).toBe(7);
+
+    for (const l of losers) {
+      const msg = l.error?.message ?? "";
+      expect(msg).toMatch(/already has an active switch/i);
+      // No raw SQL of any kind reaches the caller.
+      expect(msg).not.toMatch(/duplicate key|constraint|switches_one_active_per_workload|23505/i);
+    }
+
+    const active = await admin
+      .from("switches")
+      .select("id")
+      .eq("org_id", paidOrg)
+      .eq("from_model", model)
+      .eq("status", "active");
+    expect(active.data).toHaveLength(1);
+
+    await admin.from("recommendations").delete().in("id", recs);
+  }, 60_000);
 });
 
 describe("set_switch_state — pause, resume, rollback", () => {

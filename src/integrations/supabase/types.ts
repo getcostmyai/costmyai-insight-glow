@@ -610,6 +610,33 @@ export type Database = {
         }
         Relationships: []
       }
+      job_locks: {
+        Row: {
+          acquired_at: string
+          created_at: string
+          expires_at: string
+          job: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          acquired_at?: string
+          created_at?: string
+          expires_at: string
+          job: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          acquired_at?: string
+          created_at?: string
+          expires_at?: string
+          job?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lead_events: {
         Row: {
           created_at: string
@@ -2389,6 +2416,14 @@ export type Database = {
       is_partner_member: { Args: { _partner_id: string }; Returns: boolean }
       is_partner_owner: { Args: { _partner_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      job_lock_acquire: {
+        Args: { _job: string; _ttl_seconds?: number }
+        Returns: string
+      }
+      job_lock_release: {
+        Args: { _job: string; _token: string }
+        Returns: boolean
+      }
       org_entitled_to: {
         Args: {
           _org_id: string
