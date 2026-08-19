@@ -2193,6 +2193,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "usage_events_route_reason_fkey"
+            columns: ["route_reason"]
+            isOneToOne: false
+            referencedRelation: "switches"
+            referencedColumns: ["id"]
+          },
         ]
       }
       usage_rollups: {

@@ -56,8 +56,10 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await admin.from("switches").delete().eq("org_id", orgId);
+  // usage_events.route_reason references switches(id) with NO ACTION, so the
+  // referencing rows go first. This ordering is deliberate, not incidental.
   await admin.from("usage_events").delete().eq("org_id", orgId);
+  await admin.from("switches").delete().eq("org_id", orgId);
   await admin.from("organizations").delete().eq("id", orgId);
   if (partnerIds.length) await admin.from("partners").delete().in("id", partnerIds);
 }, 60_000);
