@@ -203,6 +203,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     routeKeys: routeKeysFrom(env),
     containerId: env["COSTMYAI_CONTAINER_ID"]?.trim() || null,
     classifyLocal: classifyLocalFrom(env),
+    classifyRemote: classifyRemoteFrom(env, classifyLocalFrom(env)),
 
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
