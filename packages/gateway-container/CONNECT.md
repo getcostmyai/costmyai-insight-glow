@@ -239,11 +239,35 @@ dashboard says so.
 
 ---
 
+## Moving from `:v1` to `:v2`
+
+`:v2` is the same connector with local task classification on by default, which is what
+makes Certify and Rightsize work on ordinary chat traffic. The whole migration:
+
+```bash
+docker pull ghcr.io/getcostmyai/gateway:v2
+# change the image reference in your run command, compose file or task definition
+# recreate the container — keep the same spool volume mount
+```
+
+Nothing else on your side changes: same env vars, same port, same ingest token, same
+provider keys, same SDK base URLs, no application change. Keep the spool volume and
+queued metadata survives the swap. Roll back by pointing the reference at `:v1` and
+recreating.
+
+`:v1` never gains this. It is frozen at the image you are already running, and it does
+not contain the classifier — setting `COSTMYAI_CLASSIFY_LOCAL` on a `:v1` container does
+nothing at all, which is why the upgrade is a new tag rather than a new variable.
+
+Want `:v2` without local classification? `-e COSTMYAI_CLASSIFY_LOCAL=false`. Your setting
+overrides the tag's default in both directions.
+
 ## Rolling back
 
 Point the base URL back at the provider and restart your app. That's the whole rollback —
 nothing about your keys, models or code changed. The container can keep running or be
 stopped; either way your inference path is unaffected.
+
 
 ## If a switch does not work out
 
