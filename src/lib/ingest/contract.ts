@@ -137,7 +137,15 @@ export const CONTAINER_DEFAULTS = {
     flushInterval: "COSTMYAI_FLUSH_INTERVAL_MS",
     upstreamTimeout: "COSTMYAI_UPSTREAM_TIMEOUT_MS",
     port: "COSTMYAI_PORT",
+    /**
+     * Dispatch 232. Opt-in local task classification: the container reads the
+     * request body IN THE CUSTOMER'S OWN PROCESS to derive a task label, and
+     * sends only the label. Unset means the pre-232 posture — path and model
+     * name only, everything else `unknown`.
+     */
+    classifyLocal: "COSTMYAI_CLASSIFY_LOCAL",
   },
+
   /**
    * Where a customer's container delivers metadata.
    *
