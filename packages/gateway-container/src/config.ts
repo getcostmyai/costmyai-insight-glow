@@ -78,6 +78,9 @@ export interface ContainerConfig {
    * the ingest contract that could carry any.
    */
   classifyLocal: boolean;
+}
+
+
 
 
 /**
