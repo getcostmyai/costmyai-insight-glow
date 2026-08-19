@@ -556,6 +556,39 @@ export type Database = {
         }
         Relationships: []
       }
+      job_alert_state: {
+        Row: {
+          channel: string | null
+          created_at: string
+          delivery_error: string | null
+          job: string
+          notified_at: string
+          reason: string | null
+          updated_at: string
+          verdict: string
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          delivery_error?: string | null
+          job: string
+          notified_at?: string
+          reason?: string | null
+          updated_at?: string
+          verdict: string
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          delivery_error?: string | null
+          job?: string
+          notified_at?: string
+          reason?: string | null
+          updated_at?: string
+          verdict?: string
+        }
+        Relationships: []
+      }
       job_config: {
         Row: {
           created_at: string
@@ -2461,6 +2494,7 @@ export type Database = {
           retry_after_sec: number
         }[]
       }
+      rate_limit_gc: { Args: { _older_than_seconds?: number }; Returns: number }
       rate_limit_prune: { Args: never; Returns: number }
       schema_filter_state: { Args: { _predicates: Json }; Returns: Json }
       set_org_plan: {

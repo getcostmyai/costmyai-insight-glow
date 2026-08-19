@@ -76,6 +76,7 @@ import { Route as ApiPublicSyncRollupHealthRouteImport } from './routes/api/publ
 import { Route as ApiPublicSyncReprocessRouteImport } from './routes/api/public/sync/reprocess'
 import { Route as ApiPublicSyncPricesRouteImport } from './routes/api/public/sync/prices'
 import { Route as ApiPublicSyncPartnerPayoutsRouteImport } from './routes/api/public/sync/partner-payouts'
+import { Route as ApiPublicSyncJobAlertsRouteImport } from './routes/api/public/sync/job-alerts'
 import { Route as ApiPublicSyncIntelligenceLeadsRouteImport } from './routes/api/public/sync/intelligence-leads'
 import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/sync/freeze'
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
@@ -432,6 +433,11 @@ const ApiPublicSyncPartnerPayoutsRoute =
     path: '/api/public/sync/partner-payouts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSyncJobAlertsRoute = ApiPublicSyncJobAlertsRouteImport.update({
+  id: '/api/public/sync/job-alerts',
+  path: '/api/public/sync/job-alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncIntelligenceLeadsRoute =
   ApiPublicSyncIntelligenceLeadsRouteImport.update({
     id: '/api/public/sync/intelligence-leads',
@@ -538,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/intelligence-leads': typeof ApiPublicSyncIntelligenceLeadsRoute
+  '/api/public/sync/job-alerts': typeof ApiPublicSyncJobAlertsRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
@@ -611,6 +618,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/intelligence-leads': typeof ApiPublicSyncIntelligenceLeadsRoute
+  '/api/public/sync/job-alerts': typeof ApiPublicSyncJobAlertsRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
@@ -689,6 +697,7 @@ export interface FileRoutesById {
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
   '/api/public/sync/freeze': typeof ApiPublicSyncFreezeRoute
   '/api/public/sync/intelligence-leads': typeof ApiPublicSyncIntelligenceLeadsRoute
+  '/api/public/sync/job-alerts': typeof ApiPublicSyncJobAlertsRoute
   '/api/public/sync/partner-payouts': typeof ApiPublicSyncPartnerPayoutsRoute
   '/api/public/sync/prices': typeof ApiPublicSyncPricesRoute
   '/api/public/sync/reprocess': typeof ApiPublicSyncReprocessRoute
@@ -767,6 +776,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
     | '/api/public/sync/intelligence-leads'
+    | '/api/public/sync/job-alerts'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
@@ -840,6 +850,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
     | '/api/public/sync/intelligence-leads'
+    | '/api/public/sync/job-alerts'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
@@ -917,6 +928,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/benchmarks'
     | '/api/public/sync/freeze'
     | '/api/public/sync/intelligence-leads'
+    | '/api/public/sync/job-alerts'
     | '/api/public/sync/partner-payouts'
     | '/api/public/sync/prices'
     | '/api/public/sync/reprocess'
@@ -972,6 +984,7 @@ export interface RootRouteChildren {
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
   ApiPublicSyncFreezeRoute: typeof ApiPublicSyncFreezeRoute
   ApiPublicSyncIntelligenceLeadsRoute: typeof ApiPublicSyncIntelligenceLeadsRoute
+  ApiPublicSyncJobAlertsRoute: typeof ApiPublicSyncJobAlertsRoute
   ApiPublicSyncPartnerPayoutsRoute: typeof ApiPublicSyncPartnerPayoutsRoute
   ApiPublicSyncPricesRoute: typeof ApiPublicSyncPricesRoute
   ApiPublicSyncReprocessRoute: typeof ApiPublicSyncReprocessRoute
@@ -1460,6 +1473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncPartnerPayoutsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync/job-alerts': {
+      id: '/api/public/sync/job-alerts'
+      path: '/api/public/sync/job-alerts'
+      fullPath: '/api/public/sync/job-alerts'
+      preLoaderRoute: typeof ApiPublicSyncJobAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync/intelligence-leads': {
       id: '/api/public/sync/intelligence-leads'
       path: '/api/public/sync/intelligence-leads'
@@ -1641,6 +1661,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
   ApiPublicSyncFreezeRoute: ApiPublicSyncFreezeRoute,
   ApiPublicSyncIntelligenceLeadsRoute: ApiPublicSyncIntelligenceLeadsRoute,
+  ApiPublicSyncJobAlertsRoute: ApiPublicSyncJobAlertsRoute,
   ApiPublicSyncPartnerPayoutsRoute: ApiPublicSyncPartnerPayoutsRoute,
   ApiPublicSyncPricesRoute: ApiPublicSyncPricesRoute,
   ApiPublicSyncReprocessRoute: ApiPublicSyncReprocessRoute,
