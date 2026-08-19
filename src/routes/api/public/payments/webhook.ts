@@ -200,14 +200,37 @@ async function accrueCommission(invoice: any, env: StripeEnv) {
     .maybeSingle();
   if (!sub?.org_id) return;
 
-  const revenue = Number(invoice.amount_paid ?? 0) / 100;
-  if (revenue <= 0) return;
+  // Commission is owed on revenue, not on tax we merely collect and remit,
+  // and the ledger is denominated in USD regardless of what currency the
+  // buyer was presented with. Both corrections live in one place.
+  const { commissionBasisUsd, InvoiceCurrencyUnconvertibleError } = await import(
+    "@/lib/billing/invoice-revenue.server"
+  );
+  const { createStripeClient } = await import("@/lib/stripe.server");
+  let basis;
+  try {
+    basis = await commissionBasisUsd(createStripeClient(env), String(invoice.id), invoice);
+  } catch (error) {
+    if (error instanceof InvoiceCurrencyUnconvertibleError) {
+      // Writing a number we cannot stand behind is worse than writing none.
+      // No ledger row is created, and the refusal is loud enough to act on;
+      // retrying would fail identically, so the event is not rejected.
+      console.error(
+        `Commission NOT accrued for invoice ${invoice.id}: ${error.message}. ` +
+          `Settle this line manually and record why.`,
+      );
+      return;
+    }
+    throw error;
+  }
+  if (basis.amountUsd <= 0) return;
+
 
   const line = invoice.lines?.data?.[0];
   const { error } = await getSupabase().rpc("accrue_commission", {
     _org_id: sub.org_id,
     _invoice_id: String(invoice.id),
-    _revenue_usd: revenue,
+    _revenue_usd: basis.amountUsd,
     _subscription_id: subscriptionId,
     _period_start: isoFrom(line?.period?.start) ?? undefined,
     _period_end: isoFrom(line?.period?.end) ?? undefined,
@@ -215,6 +238,7 @@ async function accrueCommission(invoice: any, env: StripeEnv) {
   });
   if (error) throw new Error(`commission accrual failed: ${error.message}`);
 }
+
 
 /**
  * The provider tells us when a partner's payout account changes state — a
@@ -233,16 +257,27 @@ async function syncConnectAccount(account: any) {
 }
 
 /**
- * Money that came back. A commission line for a reversed invoice is clawed
- * back; if it was already transferred, the database writes an offsetting
- * negative line that nets against that partner's next payout.
+ * Money that came back. A commission line is reversed in proportion to what
+ * was actually refunded — half a refund reverses half the commission, because
+ * the customer still bought and kept the other half. If the line was already
+ * transferred, the database writes an offsetting negative line that nets
+ * against that partner's next payout.
+ *
+ * The fraction passed here is cumulative (the provider reports total refunded
+ * on the charge, not the increment), so a replayed webhook is a no-op.
  */
-async function clawback(invoiceId: string | null, reason: string, env: StripeEnv) {
+async function clawback(
+  invoiceId: string | null,
+  reason: string,
+  env: StripeEnv,
+  fraction = 1,
+) {
   if (!invoiceId) return;
   const { error } = await getSupabase().rpc("clawback_commission", {
     _invoice_id: invoiceId,
     _reason: reason,
     _environment: env,
+    _fraction: Math.min(1, Math.max(0, fraction)),
   });
   if (error) throw new Error(`clawback failed: ${error.message}`);
 }
@@ -252,6 +287,14 @@ function invoiceIdOf(charge: any): string | null {
   if (!invoice) return null;
   return typeof invoice === "string" ? invoice : (invoice.id ?? null);
 }
+
+/** Cumulative share of a charge that has been refunded, 0..1. */
+function refundedFraction(charge: any): number {
+  const amount = Number(charge?.amount ?? 0);
+  if (!(amount > 0)) return 1;
+  return Math.min(1, Number(charge?.amount_refunded ?? 0) / amount);
+}
+
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
@@ -270,9 +313,17 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "account.updated":
       await syncConnectAccount(event.data.object);
       break;
-    case "charge.refunded":
-      await clawback(invoiceIdOf(event.data.object), "invoice refunded", env);
+    case "charge.refunded": {
+      const charge = event.data.object;
+      const share = refundedFraction(charge);
+      await clawback(
+        invoiceIdOf(charge),
+        share >= 1 ? "invoice refunded" : `invoice partially refunded (${Math.round(share * 100)}%)`,
+        env,
+        share,
+      );
       break;
+    }
     case "charge.dispute.created": {
       const dispute = event.data.object;
       const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
