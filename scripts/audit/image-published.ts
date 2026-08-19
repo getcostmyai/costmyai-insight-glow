@@ -93,6 +93,17 @@ const results = [
   await probe(registry, repository, PINNED),
 ];
 
+/**
+ * Dispatch 233. The classifying line is probed and REPORTED, but is not a
+ * failure while it is unpublished: the quickstart does not name it, so a
+ * stranger's first command does not depend on it. It becomes load-bearing the
+ * moment any copy tells a customer to pull it — which the docs now do — so the
+ * digest is printed next to v1's, because the one thing that must never be
+ * true is the two tags resolving to the same image.
+ */
+const classifying = await probe(registry, repository, CONTAINER_DEFAULTS.classifyingTag);
+
+
 console.log(`Connector image, as a stranger's Docker daemon sees it\n`);
 for (const r of results) {
   console.log(`${r.ok ? "PUBLISHED " : "MISSING   "} ${r.ref}`);
