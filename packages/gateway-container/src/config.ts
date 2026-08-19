@@ -156,6 +156,25 @@ function classifyLocalFrom(env: Record<string, string | undefined>): boolean {
   return boolFrom(env[CONTAINER_DEFAULTS.env.classifyLocalDefault]);
 }
 
+/**
+ * Dispatch 236. Remote classification, resolved by exactly the same precedence
+ * as the local flag: the customer's variable always wins in both directions,
+ * and the image tag decides only what "unset" means. `v3` is built with the
+ * default on; `v1` and `v2` are not built with it at all.
+ *
+ * Remote classification implies reading the body, so it cannot be on while
+ * local reading is off — a container that may send text upstream but may not
+ * look at it locally is a posture nobody asked for. The stricter of the two
+ * wins, in the safe direction.
+ */
+function classifyRemoteFrom(env: Record<string, string | undefined>, classifyLocal: boolean): boolean {
+  if (!classifyLocal) return false;
+  const explicit = env[CONTAINER_DEFAULTS.env.classifyRemote];
+  if (boolFrom(explicit)) return true;
+  if (isExplicitlyOff(explicit)) return false;
+  return boolFrom(env[CONTAINER_DEFAULTS.env.classifyRemoteDefault]);
+}
+
 
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): ContainerConfig {
