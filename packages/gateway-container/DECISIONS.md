@@ -119,6 +119,59 @@ side treats an unknown cohort as uncertifiable — the ladder in
 instrument. A wrong label would silently corrupt Certify and the benchmark
 cohorts; `unknown` costs a recommendation and lies about nothing.
 
+### Amendment, 19 August 2026 (Dispatch 232/233) — scoped, not withdrawn
+
+The first sentence above was absolute. It is now true of one release line and
+false of another, and that is written here rather than left to be discovered in
+a diff — the same treatment §1 got when route keys scoped it.
+
+**What changed.** Structural classification could not label ordinary chat
+traffic. Path and model name place an embeddings call or a completion endpoint;
+they place nothing at all about what a `/v1/messages` request is *for*. So real
+customer traffic arrived overwhelmingly `unknown`, the ladder refused it
+honestly, and Certify — the product — was unreachable for the most common
+workload there is. This was proven on real traffic, not argued: 140 real
+Anthropic calls ingested for a test workspace produced zero certifiable
+cohorts. Structural labelling was not conservative here, it was inert.
+
+**What we did instead of loosening the refusal.** `classifyLocal.ts` derives a
+label from request text **inside the customer's own container**, in their own
+process, and emits one of six enum values plus a confidence number and feature
+names such as `code.fenced_block`. No text is spooled, logged, retained past
+the function return, or sent to CostMyAI, and there is no field in the ingest
+contract that could carry any. It abstains — `weak_signal`, `ambiguous`,
+`no_content`, `unreadable` — rather than guessing, because the reason a wrong
+label is unacceptable did not change when the classifier got better eyes.
+
+**Why the default is a property of the image tag, not of the source.** A
+default is a decision about somebody else's compliance posture, so it is made
+where the customer can see it:
+
+- **`v1` — unchanged, and frozen.** That published image has no classifier in
+  it at all. `COSTMYAI_CLASSIFY_LOCAL=true` on a `v1` container is a no-op,
+  because the binary predates the variable. `v1` is a *moving* tag, so it is
+  never rebuilt from a tree that contains the classifier; the publish workflow
+  refuses. Anyone who re-pulls gets the container they agreed to run.
+- **`v2` — classification on by default.** Built from the same source with
+  `--build-arg CLASSIFY_LOCAL_DEFAULT=true`. Reached only by naming the tag,
+  which makes taking it an act rather than a drift.
+- **The customer's own variable always wins, in both directions.**
+  `COSTMYAI_CLASSIFY_LOCAL=false` on `v2` is a real, honoured opt-out — a
+  regulated deployment can take `v2` for its fixes without taking its posture.
+  Unrecognised junk in either variable still resolves to OFF.
+
+**The real cost of "on", stated rather than dismissed.** Even though no bytes
+leave the customer's network, a container that inspects prompt bytes is a line
+in their data map, their DPIA and their subprocessor attestations. "It stays
+local" is true and does not make that paperwork disappear. That is why the
+default belongs to a tag a customer chooses, and why the opt-out exists on the
+tag that defaults on.
+
+**What did not change.** Content is read only for labelling. Nothing is
+retained. `unknown` is still the answer when evidence is weak, and the ladder
+still refuses it rather than borrowing an instrument.
+
+
 ## 13. The envelope skeleton: content-free, and the only thing retained
 
 Dispatch 106 needed something the connector had deliberately never kept: enough
