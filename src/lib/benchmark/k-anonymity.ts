@@ -70,6 +70,20 @@ export function candidateCuts(dims: BucketDims): Cut[] {
   return cuts;
 }
 
+/**
+ * Plain-language description of a cut the database resolved on its own.
+ *
+ * The ladder now runs server-side (`benchmark_cut_self`), so the app never
+ * chooses a cell — it only names the one cell it was given.
+ */
+export function cutLabel(dims: BucketDims): string {
+  const parts: string[] = [];
+  if (clean(dims.industry)) parts.push(String(dims.industry).toLowerCase());
+  if (clean(dims.useCase)) parts.push(useCaseWords(String(dims.useCase)));
+  if (clean(dims.revenueBand)) parts.push("your revenue band");
+  return parts.join(", ");
+}
+
 function useCaseWords(useCase: string) {
   if (useCase === "customer_facing") return "customer-facing AI";
   if (useCase === "internal") return "internal AI tooling";
