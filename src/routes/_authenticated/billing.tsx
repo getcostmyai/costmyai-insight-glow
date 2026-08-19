@@ -177,10 +177,31 @@ function BillingPage() {
   const status = billing.data?.status ?? null;
   const returnUrl = `${typeof window === "undefined" ? "" : window.location.origin}/billing?session_id={CHECKOUT_SESSION_ID}`;
 
+  // A workspace that is already paying must never be sent back through
+  // checkout: that creates a second subscription and bills it twice. It gets
+  // the plan-change path instead, which modifies the subscription it has.
+  const periodEndMs = billing.data?.currentPeriodEnd
+    ? new Date(billing.data.currentPeriodEnd).getTime()
+    : null;
+  const hasLiveSubscription =
+    billing.data?.accessSource === "subscription" &&
+    ["active", "trialing", "past_due"].includes(status ?? "") &&
+    (periodEndMs === null || periodEndMs > Date.now());
+
   async function choose(plan: PlanTier) {
     setError(null);
     if (plan === "compare") {
+      if (hasLiveSubscription) {
+        setError(
+          "To leave the paid levels, cancel the subscription under “Manage payment method & cancellation”. You keep your level until the period you have paid for ends.",
+        );
+        return;
+      }
       navigate({ to: "/workspace" });
+      return;
+    }
+    if (hasLiveSubscription) {
+      setChangePlan(plan);
       return;
     }
     setCheckoutPlan(plan);
