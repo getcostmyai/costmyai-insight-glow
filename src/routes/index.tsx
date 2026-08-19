@@ -351,7 +351,7 @@ const STEPS = [
   {
     n: "01",
     title: "Connect",
-    body: "Point your application at the Verification Engine endpoint. One environment variable change. Requests forward to your provider unchanged. The engine reads token counts, model names, and request counts. Never your prompt content.",
+    body: "Point your application at the Verification Engine endpoint. One environment variable change. Requests forward to your provider unchanged. What reaches us is token counts, model names, and request counts. Never your prompt content: by default the engine does not read request bodies at all, and if you turn on local classification it reads them inside your own environment and sends us only the task label.",
   },
   {
     n: "02",
