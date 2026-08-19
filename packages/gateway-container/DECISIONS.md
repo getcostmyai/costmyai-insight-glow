@@ -454,3 +454,20 @@ run — the same reason v1 was frozen when local classification arrived. So:
 `COSTMYAI_CLASSIFY_REMOTE=false` makes a v3 container behave exactly like v2.
 Remote cannot be on while local reading is off — a container that may send text
 upstream but may not look at it locally is a posture nobody asked for.
+
+### Why v3 became the quickstart default (Dispatch 237)
+
+The copy-paste tag was `v1` on the reasoning that a stranger should never be
+handed a body-reading container by accident. Measured against real traffic that
+default was not conservative, it was broken: `v1` labels almost no ordinary chat
+traffic, so Certify — the product's central promise — refuses on nearly all of
+it. Local rules alone label 36%; local plus remote label 96.5%.
+
+Two things make the move honest rather than a quiet posture change. Tags still
+never mutate: `v1` and `v2` stay published, frozen in posture, and anyone
+already running either keeps the exact container they agreed to. And the v3
+posture is stated at the point of copying — quickstart, README, CONNECT.md and
+the privacy page all say plainly that extracted text may leave the network when
+local rules abstain, and name both quieter tags and the env-var opt-out. There
+were no customers on `v1` to migrate; this changes what a new installer gets,
+nothing else.
