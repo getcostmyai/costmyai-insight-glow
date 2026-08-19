@@ -130,10 +130,11 @@ describe("on, a real request carries a real label", () => {
   });
 
   it("labels a tool-carrying conversation agentic from the wire shape", async () => {
-    const { event } = await run("book me a table for four", {
+    const declaredOnly = await run("book me a table for four", true, {
       tools: [{ type: "function", function: { name: "book_table" } }],
     });
-    expect(["agentic", "unknown"]).toContain(event?.task_hint);
+    expect(["agentic", "unknown"]).toContain(declaredOnly.event?.task_hint);
+
     const withFlag = await run("Use the following tools to book the table, then confirm.", true, {
       tools: [{ type: "function", function: { name: "book_table" } }],
     });
