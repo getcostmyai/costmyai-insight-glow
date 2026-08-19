@@ -196,6 +196,12 @@ export function containerImageRef(): string {
   return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.tag}`;
 }
 
+/** The classifying release, named explicitly. Never the quickstart default. */
+export function classifyingImageRef(): string {
+  return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.classifyingTag}`;
+}
+
+
 /**
  * One container fronts one provider, and the SDK base URL a customer sets is
  * NOT the same string for every provider — OpenAI clients append their own
