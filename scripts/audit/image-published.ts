@@ -103,6 +103,57 @@ const results = [
  */
 const classifying = await probe(registry, repository, CONTAINER_DEFAULTS.classifyingTag);
 
+/**
+ * Dispatch 236. The remotely-classifying line. Reported the same way, and held
+ * to the same rule: it must diverge in digest from BOTH v1 and v2, because it
+ * is the only tag whose prompt text may leave the customer's network.
+ */
+const remote = await probe(registry, repository, CONTAINER_DEFAULTS.remoteClassifyingTag);
+const remotePinned = await probe(
+  registry,
+  repository,
+  process.env["CONNECTOR_REMOTE_RELEASE_TAG"] ?? "v3.0.0",
+);
+
+/**
+ * Baked, not just documented.
+ *
+ * A tag's posture lives in its image CONFIG, not in a README: `v3` must carry
+ * both build args in its own environment, and `v1`/`v2` must not carry the
+ * remote one. This reads the real config blob out of the real published image.
+ */
+async function bakedEnv(tag: string): Promise<string[] | null> {
+  try {
+    const tokenRes = await fetch(
+      `https://${registry}/token?scope=${encodeURIComponent(`repository:${repository}:pull`)}&service=${registry}`,
+    );
+    const token = ((await tokenRes.json()) as { token?: string }).token;
+    const auth = { Accept: MANIFEST_TYPES, ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+    const get = async (reference: string) =>
+      (await (
+        await fetch(`https://${registry}/v2/${repository}/manifests/${reference}`, { headers: auth })
+      ).json()) as {
+        manifests?: { digest: string; platform?: { os?: string; architecture?: string } }[];
+        config?: { digest: string };
+      };
+    let manifest = await get(encodeURIComponent(tag));
+    if (manifest.manifests?.length) {
+      const picked =
+        manifest.manifests.find((m) => m.platform?.os === "linux" && m.platform?.architecture === "amd64") ??
+        manifest.manifests[0]!;
+      manifest = await get(picked.digest);
+    }
+    if (!manifest.config?.digest) return null;
+    const cfg = (await (
+      await fetch(`https://${registry}/v2/${repository}/blobs/${manifest.config.digest}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+    ).json()) as { config?: { Env?: string[] } };
+    return cfg.config?.Env ?? [];
+  } catch {
+    return null;
+  }
+}
 
 console.log(`Connector image, as a stranger's Docker daemon sees it\n`);
 for (const r of results) {
@@ -110,11 +161,15 @@ for (const r of results) {
   console.log(`           ${r.detail}`);
   if (r.digest) console.log(`           ${r.digest}`);
 }
-console.log(
-  `${classifying.ok ? "PUBLISHED " : "NOT YET   "} ${classifying.ref}  (classifies locally by default)`,
-);
-console.log(`           ${classifying.detail}`);
-if (classifying.digest) console.log(`           ${classifying.digest}`);
+for (const [r, what] of [
+  [classifying, "classifies locally by default"],
+  [remote, "classifies locally, then remotely when local abstains"],
+  [remotePinned, "pinned remote release"],
+] as const) {
+  console.log(`${r.ok ? "PUBLISHED " : "NOT YET   "} ${r.ref}  (${what})`);
+  console.log(`           ${r.detail}`);
+  if (r.digest) console.log(`           ${r.digest}`);
+}
 
 const quickstart = results[0]!;
 console.log(`\nQuickstart reference: ${containerImageRef()}`);
@@ -126,6 +181,48 @@ if (classifying.ok && classifying.digest && classifying.digest === quickstart.di
   );
   process.exit(1);
 }
+
+if (remote.ok && remote.digest && (remote.digest === quickstart.digest || remote.digest === classifying.digest)) {
+  console.log(
+    `\nRESULT: ${CONTAINER_DEFAULTS.remoteClassifyingTag} resolves to the same image as` +
+      ` ${remote.digest === quickstart.digest ? CONTAINER_DEFAULTS.tag : CONTAINER_DEFAULTS.classifyingTag}.` +
+      "\n        A tag that may send prompt text off-network must never be the same build as one that promises not to.",
+  );
+  process.exit(1);
+}
+
+if (remote.ok) {
+  const LOCAL = CONTAINER_DEFAULTS.env.classifyLocalDefault;
+  const REMOTE = CONTAINER_DEFAULTS.env.classifyRemoteDefault;
+  const expectations: { tag: string; wantLocal: boolean; wantRemote: boolean }[] = [
+    { tag: CONTAINER_DEFAULTS.tag, wantLocal: false, wantRemote: false },
+    { tag: CONTAINER_DEFAULTS.classifyingTag, wantLocal: true, wantRemote: false },
+    { tag: CONTAINER_DEFAULTS.remoteClassifyingTag, wantLocal: true, wantRemote: true },
+  ];
+  console.log(`\nBaked posture, read from each image's own config blob`);
+  let bakedFailure = false;
+  for (const e of expectations) {
+    const env = await bakedEnv(e.tag);
+    const on = (name: string) => env?.some((v) => v === `${name}=true`) ?? false;
+    const gotLocal = on(LOCAL);
+    const gotRemote = on(REMOTE);
+    const ok = gotLocal === e.wantLocal && gotRemote === e.wantRemote;
+    if (!ok) bakedFailure = true;
+    console.log(
+      `${ok ? "OK        " : "WRONG     "} :${e.tag}  ${LOCAL}=${gotLocal}  ${REMOTE}=${gotRemote}` +
+        (ok ? "" : `  (expected ${e.wantLocal} / ${e.wantRemote})`),
+    );
+  }
+  if (bakedFailure) {
+    console.log(
+      "\nRESULT: a published tag's baked defaults do not match its documented posture." +
+        "\n        The build args are what customers actually run — rebuild the offending tag.",
+    );
+    process.exit(1);
+  }
+}
+
+
 
 
 if (!quickstart.ok) {
@@ -218,18 +315,23 @@ async function bootCheck(tag: string): Promise<{ ok: boolean; detail: string }> 
 if (process.env["AUDIT_SKIP_BOOT"] === "1") {
   console.log("\nboot check skipped (AUDIT_SKIP_BOOT=1) — pullability alone was verified.");
 } else {
-  const boot = await bootCheck(CONTAINER_DEFAULTS.tag);
-  console.log(`\n${boot.ok ? "BOOTS     " : "BROKEN    "} ${quickstart.ref}`);
-  console.log(`           ${boot.detail}`);
-  if (!boot.ok) {
-    console.log(
-      "\nRESULT: the published image is pullable but does NOT run." +
-        "\n        Every customer's first command would succeed at the pull and fail at the start." +
-        "\n        Rebuild and republish (packages/gateway-container/README.md).",
-    );
-    process.exit(1);
+  const bootTags = [CONTAINER_DEFAULTS.tag, CONTAINER_DEFAULTS.classifyingTag, CONTAINER_DEFAULTS.remoteClassifyingTag];
+  console.log("");
+  for (const tag of bootTags) {
+    const boot = await bootCheck(tag);
+    console.log(`${boot.ok ? "BOOTS     " : "BROKEN    "} ${CONTAINER_DEFAULTS.image}:${tag}`);
+    console.log(`           ${boot.detail}`);
+    if (!boot.ok) {
+      console.log(
+        `\nRESULT: ${CONTAINER_DEFAULTS.image}:${tag} is pullable but does NOT run.` +
+          "\n        Every customer's first command would succeed at the pull and fail at the start." +
+          "\n        Rebuild and republish (packages/gateway-container/README.md).",
+      );
+      process.exit(1);
+    }
   }
 }
+
 
 console.log("\nRESULT: the published image matches what the quickstart tells customers to run, and it starts.");
 

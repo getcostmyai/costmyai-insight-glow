@@ -146,8 +146,17 @@ if (isEntrypoint) {
       port: config.port,
       upstream: new URL(config.upstreamUrl).host,
       app: config.baseUrl,
-      image: `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.tag}`,
+      /**
+       * Dispatch 237. This used to print `:v1` unconditionally, from a constant
+       * in the shared contract — so a customer running the `v2` or `v3` image
+       * read a startup line telling them they were running `v1`. One codebase
+       * builds all three lines, so the tag is not knowable from inside; the
+       * posture is, and the posture is the thing that actually differs.
+       */
+      image: CONTAINER_DEFAULTS.image,
+      classify: config.classifyRemote ? "local+remote" : config.classifyLocal ? "local" : "off",
     });
+
   });
   for (const signal of ["SIGTERM", "SIGINT"] as const) {
     process.on(signal, () => {
