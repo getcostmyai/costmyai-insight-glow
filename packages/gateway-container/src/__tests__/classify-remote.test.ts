@@ -6,7 +6,7 @@ import { loadConfig } from "../config.js";
 const config = () =>
   loadConfig({
     COSTMYAI_INGEST_TOKEN: "cma_live_test",
-    COSTMYAI_UPSTREAM: "https://api.anthropic.com",
+    COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
     COSTMYAI_BASE_URL: "https://costmyai.test",
     COSTMYAI_CLASSIFY_LOCAL: "true",
     COSTMYAI_CLASSIFY_REMOTE: "true",
@@ -109,7 +109,7 @@ describe("remote classification config", () => {
   it("is off unless asked for", () => {
     expect(loadConfig({
       COSTMYAI_INGEST_TOKEN: "cma_live_test",
-      COSTMYAI_UPSTREAM: "https://api.anthropic.com",
+      COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
       COSTMYAI_CLASSIFY_LOCAL: "true",
     }).classifyRemote).toBe(false);
   });
@@ -117,7 +117,7 @@ describe("remote classification config", () => {
   it("cannot be on while local content reading is off", () => {
     expect(loadConfig({
       COSTMYAI_INGEST_TOKEN: "cma_live_test",
-      COSTMYAI_UPSTREAM: "https://api.anthropic.com",
+      COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
       COSTMYAI_CLASSIFY_LOCAL: "false",
       COSTMYAI_CLASSIFY_REMOTE: "true",
     }).classifyRemote).toBe(false);
@@ -126,7 +126,7 @@ describe("remote classification config", () => {
   it("an operator's explicit off beats the v3 image default", () => {
     expect(loadConfig({
       COSTMYAI_INGEST_TOKEN: "cma_live_test",
-      COSTMYAI_UPSTREAM: "https://api.anthropic.com",
+      COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
       COSTMYAI_CLASSIFY_LOCAL_DEFAULT: "true",
       COSTMYAI_CLASSIFY_REMOTE_DEFAULT: "true",
       COSTMYAI_CLASSIFY_REMOTE: "false",
@@ -136,7 +136,7 @@ describe("remote classification config", () => {
   it("the v3 image default turns it on when the operator says nothing", () => {
     expect(loadConfig({
       COSTMYAI_INGEST_TOKEN: "cma_live_test",
-      COSTMYAI_UPSTREAM: "https://api.anthropic.com",
+      COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
       COSTMYAI_CLASSIFY_LOCAL_DEFAULT: "true",
       COSTMYAI_CLASSIFY_REMOTE_DEFAULT: "true",
     }).classifyRemote).toBe(true);
