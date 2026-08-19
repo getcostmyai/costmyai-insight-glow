@@ -104,6 +104,20 @@ async function syncSubscription(subscription: any, env: StripeEnv) {
     throw new Error(`subscriptions write failed: ${subscriptionWrite.error.message}`);
   }
 
+  // Pin the customer for this workspace if nothing has claimed it yet. The
+  // checkout path normally writes this row first; a subscription created
+  // outside the app (dashboard, migration) would otherwise leave the workspace
+  // unpinned and the next checkout free to mint a second customer.
+  if (customerId) {
+    await getSupabase()
+      .from("org_stripe_customers")
+      .upsert(
+        { org_id: orgId, environment: env, stripe_customer_id: customerId },
+        { onConflict: "org_id,environment", ignoreDuplicates: true },
+      );
+  }
+
+
   // Read the level first, so the lead event can name the transition rather
   // than only its destination.
   const orgBefore = await getSupabase()

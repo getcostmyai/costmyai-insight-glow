@@ -222,24 +222,19 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
       // respect: a billing-portal session and an invoice list are scoped to a
       // customer and nothing finer. If one person paying for two workspaces
       // shared a single customer, the billing page of workspace A would expose
-      // — and be able to cancel — workspace B's subscription. So the search key
-      // is the org id, and reuse by email address is deliberately gone: matching
-      // on an address merges exactly the customers that must stay separate.
-      let customerId: string | undefined;
-      const found = await stripe.customers.search({
-        query: `metadata['orgId']:'${data.orgId}'`,
-        limit: 1,
+      // — and be able to cancel — workspace B's subscription. So the key is the
+      // org id, and reuse by email address is deliberately gone.
+      //
+      // Which customer belongs to this workspace is decided by our own
+      // `org_stripe_customers` row, not by the provider's eventually-consistent
+      // search index — the lag in that index is what produced two customers for
+      // one workspace in test-mode data.
+      const { resolveOrgCustomer } = await import("./billing/customer.server");
+      const customerId = await resolveOrgCustomer(stripe, data.environment, data.orgId, {
+        userId,
+        email,
       });
-      if (found.data.length) {
-        customerId = found.data[0]!.id;
-      }
-      if (!customerId) {
-        const created = await stripe.customers.create({
-          ...(email && { email }),
-          metadata: { userId, orgId: data.orgId },
-        });
-        customerId = created.id;
-      }
+
 
 
       const session = await stripe.checkout.sessions.create({

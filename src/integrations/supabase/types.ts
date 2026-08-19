@@ -1028,6 +1028,35 @@ export type Database = {
           },
         ]
       }
+      org_stripe_customers: {
+        Row: {
+          created_at: string
+          environment: string
+          org_id: string
+          stripe_customer_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          org_id: string
+          stripe_customer_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          org_id?: string
+          stripe_customer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_stripe_customers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           autonomous_enabled: boolean
