@@ -112,6 +112,21 @@ function BillingPage() {
   });
 
 
+  // Dropping a plan change that was booked for the renewal boundary.
+  const dropChange = useMutation({
+    mutationFn: () =>
+      cancelPlanChange({ data: { orgId: org!.id, environment: getStripeEnvironment() } }),
+    onSuccess: (result) => {
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["workspace-billing"] });
+    },
+    onError: (e: unknown) =>
+      setError(e instanceof Error ? e.message : "The booked change could not be cleared."),
+  });
+
   const portal = useMutation({
     mutationFn: () =>
       createBillingPortal({
