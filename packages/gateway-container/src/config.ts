@@ -67,7 +67,18 @@ export interface ContainerConfig {
   routeKeys: Record<string, string>;
   /** Opaque label for the grant assertion. Never a credential. */
   containerId: string | null;
-}
+  /**
+   * Dispatch 232. Opt-in: read request bodies locally to derive a task label.
+   * Off by default. When off, this container's posture is byte-identical to
+   * every one shipped before — the classifier is never called, and unlabelled
+   * traffic stays honestly `unknown`.
+   *
+   * When on, the reading happens here, in the customer's own process. No
+   * prompt text is spooled, logged or sent to CostMyAI; there is no field in
+   * the ingest contract that could carry any.
+   */
+  classifyLocal: boolean;
+
 
 /**
  * `COSTMYAI_ROUTE_KEY_TOGETHER` grants `together`; `..._AI21_LABS` grants
