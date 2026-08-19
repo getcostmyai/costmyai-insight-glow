@@ -107,6 +107,9 @@ const child = spawn("node", [entry], {
   env: {
     ...bakedEnv,
     PATH: process.env["PATH"]!,
+    // Sandbox egress parity only (IPv4-first DNS + the CA bundle) — nothing about posture.
+    NODE_OPTIONS: process.env["NODE_OPTIONS"] ?? "",
+    SSL_CERT_FILE: process.env["SSL_CERT_FILE"] ?? "",
     COSTMYAI_INGEST_TOKEN: TOKEN,
     COSTMYAI_UPSTREAM_URL: "https://api.anthropic.com",
     COSTMYAI_BASE_URL: BASE_URL,
