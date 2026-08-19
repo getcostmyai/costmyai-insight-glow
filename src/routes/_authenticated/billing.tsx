@@ -338,15 +338,39 @@ function BillingPage() {
         {/* A booked plan change is real, already-agreed state. Showing only
             today's price would misrepresent the next invoice. */}
         {billing.data?.scheduledChange ? (
-          <p className="mt-4 rounded-xl bg-muted/50 p-3 text-sm text-foreground">
-            Currently <span className="font-semibold">{PLAN_META[current].label}</span>,{" "}
-            {usd(PLAN_META[current].monthly, 0)}/mo — switches to{" "}
-            <span className="font-semibold">
-              {PLAN_META[billing.data.scheduledChange.plan].label}
-            </span>
-            , {usd(billing.data.scheduledChange.monthlyUsd, 0)}/mo on{" "}
-            {fmtDate(billing.data.scheduledChange.effectiveIso)}
-            {billing.data.scheduledChange.interval === "yearly" ? " (billed yearly)" : ""}.
+          <div className="mt-4 rounded-xl bg-muted/50 p-3 text-sm text-foreground">
+            <p>
+              Currently <span className="font-semibold">{PLAN_META[current].label}</span>,{" "}
+              {usd(PLAN_META[current].monthly, 0)}/mo — switches to{" "}
+              <span className="font-semibold">
+                {PLAN_META[billing.data.scheduledChange.plan].label}
+              </span>
+              , {usd(billing.data.scheduledChange.monthlyUsd, 0)}/mo on{" "}
+              {fmtDate(billing.data.scheduledChange.effectiveIso)}
+              {billing.data.scheduledChange.interval === "yearly" ? " (billed yearly)" : ""}.
+            </p>
+            {canManage ? (
+              <button
+                type="button"
+                disabled={dropChange.isPending}
+                onClick={() => dropChange.mutate()}
+                className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-primary hover:underline disabled:opacity-60"
+              >
+                {dropChange.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Keep {PLAN_META[current].label} instead
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {/* A failed charge does not take access away mid-retry — but the
+            customer has to be told, or the first they hear of it is losing the
+            level when the provider finally gives up. */}
+        {status === "past_due" ? (
+          <p className="mt-4 rounded-xl bg-opportunity-soft p-3 text-sm text-opportunity">
+            The last payment for this workspace failed. You keep{" "}
+            {PLAN_META[current].label} while the payment provider retries, but if the card is not
+            fixed the subscription is cancelled and the workspace returns to Compare. Update the
+            payment method under “Manage payment method &amp; cancellation”.
           </p>
         ) : null}
         {billing.data?.cancelAtPeriodEnd && status !== "canceled" ? (
