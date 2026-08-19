@@ -35,6 +35,23 @@ const MIN_SCORE = 4;
 /** The winner must beat the runner-up by this much, unless they certify identically. */
 const MIN_MARGIN = 2;
 
+/**
+ * Classifier revision.
+ *
+ * A separate, independently versioned constant — deliberately NOT the image
+ * tag. The image version moves for reasons that have nothing to do with the
+ * classifier (a parser fix, a base-image bump), and a label's trustworthiness
+ * is a property of the rules that produced it, not of the tarball it shipped
+ * in. Same precedent as PARSER_REVISION in parse.ts: bump this, and only this,
+ * whenever a change could make the same request classify differently.
+ *
+ * 0 is reserved for "no local classifier ran" — every pre-232 container, and
+ * every v2 container with COSTMYAI_CLASSIFY_LOCAL turned off.
+ */
+export const CLASSIFIER_REVISION = 1;
+/** What a container with no local classifier reports. Never omitted, never null. */
+export const NO_CLASSIFIER_REVISION = 0;
+
 export type AbstainReason =
   /** Body was not JSON, or was too large to read. */
   | "unreadable"
