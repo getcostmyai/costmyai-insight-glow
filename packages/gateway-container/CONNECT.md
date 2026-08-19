@@ -52,7 +52,7 @@ changes, no key rotation.
 | Somewhere to run a container   | Docker host, ECS/Fargate, Cloud Run, Kubernetes, or a laptop for a first test. |
 | Outbound HTTPS from that host  | To your provider, and to CostMyAI.                                 |
 | A CostMyAI ingest token        | Dashboard → **Settings → Ingest tokens → Generate**. Shown once, stored only as a SHA-256 hash. |
-| Docker able to pull public images | `ghcr.io/getcostmyai/gateway:v1` is anonymously pullable — no registry login. |
+| Docker able to pull public images | `ghcr.io/getcostmyai/gateway:v3` is anonymously pullable — no registry login. |
 
 Place the container **network-close to the code that calls the provider** — same VPC,
 same cluster, same host. Every inference call traverses it, so a cross-region hop is
@@ -84,7 +84,7 @@ docker run -d --name costmyai-openai --restart unless-stopped \
   -e COSTMYAI_UPSTREAM_URL=https://api.openai.com \
   -v costmyai-openai-spool:/var/lib/costmyai/spool \
   -p 8787:8787 \
-  ghcr.io/getcostmyai/gateway:v1
+  ghcr.io/getcostmyai/gateway:v3
 ```
 
 **Anthropic** (second container, second port):
@@ -96,7 +96,7 @@ docker run -d --name costmyai-anthropic --restart unless-stopped \
   -e COSTMYAI_UPSTREAM_URL=https://api.anthropic.com \
   -v costmyai-anthropic-spool:/var/lib/costmyai/spool \
   -p 8788:8787 \
-  ghcr.io/getcostmyai/gateway:v1
+  ghcr.io/getcostmyai/gateway:v3
 ```
 
 The exact commands with your real token pre-filled are on the Settings page. The dashboard
@@ -211,7 +211,7 @@ traffic is reprocessed and the history stops under-reporting. Tell us the provid
 | Calls hit the wrong provider                  | Wrong `COSTMYAI_UPSTREAM_URL`  | `/healthz` names the upstream it is actually fronting. One container per provider.                          |
 | Container exits on start                      | Missing required variable      | `docker logs costmyai-openai` — it names the variable.                                                      |
 | `queued` grows and never drains               | Can't reach CostMyAI           | Allow outbound HTTPS to the `COSTMYAI_BASE_URL` host. Inference is unaffected meanwhile.                    |
-| `manifest unknown` on `docker pull`           | Wrong image reference          | Exactly `ghcr.io/getcostmyai/gateway:v1`. No login required.                                                |
+| `manifest unknown` on `docker pull`           | Wrong image reference          | Exactly `ghcr.io/getcostmyai/gateway:v3`. No login required.                                                |
 
 Anything else: send us `curl -s http://localhost:8787/healthz` and
 `docker logs --tail 50 <container>`. Neither contains a credential — every
