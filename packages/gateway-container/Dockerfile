@@ -9,7 +9,11 @@ FROM node:22-alpine AS build
 WORKDIR /build
 COPY packages/gateway-container/package.json packages/gateway-container/tsconfig.json ./packages/gateway-container/
 COPY packages/gateway-container/src ./packages/gateway-container/src
-COPY src/lib/ingest/contract.ts src/lib/ingest/backfill.ts ./src/lib/ingest/
+COPY src/lib/ingest/contract.ts src/lib/ingest/backfill.ts src/lib/ingest/switch-plan.ts ./src/lib/ingest/
+# switch-map.ts imports the switch plan types, and those import the provider
+# gate types through the repo's "@/..." alias. Both files must be in the build
+# context or tsc fails with TS2307 inside the image and nowhere else.
+COPY src/lib/dashboard/provider-gate.ts ./src/lib/dashboard/
 # NodeNext picks a module format per file from the NEAREST package.json. The
 # gateway package declares "type": "module", but the shared src/lib/ingest
 # sources sit above it, and in this build context nothing above them declares
