@@ -124,6 +124,10 @@ afterAll(async () => {
   for (const org of [orgId, otherOrgId]) {
     await admin.from("switch_fallbacks").delete().eq("org_id", org);
     await admin.from("switch_events").delete().eq("org_id", org);
+    // Rerouted events name their switch through route_reason (FK, NO ACTION);
+    // they must be cleared before the switch they point at.
+    await admin.from("usage_events").delete().eq("org_id", org);
+    await admin.from("usage_rollups").delete().eq("org_id", org);
     await admin.from("switches").delete().eq("org_id", org);
   }
   await admin.from("sync_runs").delete().eq("job", "switch-auto-pause").contains("detail", { orgId });
