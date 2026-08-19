@@ -1,5 +1,6 @@
 import { classifyRequest, isInScope, type TaskDecision } from "./classify.js";
 import { CLASSIFIER_REVISION, NO_CLASSIFIER_REVISION } from "./classify-local.js";
+import { REMOTE_CLASSIFIER_REVISION, type RemoteClassifier } from "./classify-remote.js";
 import type { ContainerConfig } from "./config.js";
 import {
   classifyResponseFailure,
@@ -71,6 +72,12 @@ export interface ProxyDeps {
    * behaves exactly as it did before Stage 4 — a byte-identical pass-through.
    */
   switchMap?: SwitchMap;
+  /**
+   * Dispatch 236. Remote classifier, present only on a container with
+   * `COSTMYAI_CLASSIFY_REMOTE` resolved on. Absent everywhere else, and the
+   * whole remote path is unreachable without it.
+   */
+  remote?: RemoteClassifier;
 }
 
 export interface ProxyEvent {
@@ -360,8 +367,15 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   // so a container without it still returns a response with no `x-costmyai-*`
   // header at all.
   if (config.classifyLocal) {
+    // Dispatch 236. This header reports ONLY what is known synchronously — the
+    // local pass. Remote classification runs after this response is already on
+    // the wire, so it cannot be represented here, and a header that claimed to
+    // be final would be wrong for exactly the requests the remote pass exists
+    // to fix. When a remote pass is going to run, the header says so; the
+    // authoritative label lives in stored data only.
     outHeaders.set("x-costmyai-task", task.hint);
     if (task.abstained) outHeaders.set("x-costmyai-task-abstained", task.abstained);
+    if (remoteWillRun) outHeaders.set("x-costmyai-task-final", "deferred");
   }
 
 
