@@ -147,37 +147,43 @@ export async function buildBenchmark(
   }
 
 
-  const resolution: BucketResolution = await resolveBucket(
-    {
-      industry: profile.industry,
-      useCase: profile.use_case,
-      revenueBand: profile.revenue_band,
-    },
-    (cut) => countFor(client, cut),
-  );
-
-  if (!resolution.ok) {
-    return { state: "refused", floor: resolution.floor, reason: resolution.reason };
+  // No dimensions at all means there is nothing to cut on, and the database
+  // is never asked.
+  const dims = candidateCuts({
+    industry: profile.industry,
+    useCase: profile.use_case,
+    revenueBand: profile.revenue_band,
+  });
+  if (dims.length === 0) {
+    return { state: "refused", floor: K_ANONYMITY_FLOOR, reason: "no_dimensions" };
   }
 
-  const spread = await spreadFor(client, resolution.cut);
-  // Belt and braces: the database withholds the spread below the floor, so a
-  // missing spread is itself a refusal rather than something to paper over.
-  if (!spread || spread.p25_usd === null || spread.p50_usd === null || spread.p75_usd === null) {
-    return { state: "refused", floor: resolution.floor, reason: "below_floor" };
+  const cut = await selfCut(client, orgId);
+  if (
+    !cut ||
+    cut.company_count < K_ANONYMITY_FLOOR ||
+    cut.p25_usd === null ||
+    cut.p50_usd === null ||
+    cut.p75_usd === null
+  ) {
+    return { state: "refused", floor: K_ANONYMITY_FLOOR, reason: "below_floor" };
   }
 
   const yours = await ownMonthlySpend(client, orgId);
-  const position = yours < spread.p25_usd ? "below" : yours > spread.p75_usd ? "above" : "typical";
+  const position = yours < cut.p25_usd ? "below" : yours > cut.p75_usd ? "above" : "typical";
 
   return {
     state: "shown",
-    cohortLabel: resolution.cut.label,
-    companyCount: resolution.companyCount,
-    widened: resolution.widened,
-    lowUsd: Number(spread.p25_usd),
-    medianUsd: Number(spread.p50_usd),
-    highUsd: Number(spread.p75_usd),
+    cohortLabel: cutLabel({
+      industry: cut.industry,
+      useCase: cut.use_case,
+      revenueBand: cut.revenue_band,
+    }),
+    companyCount: cut.company_count,
+    widened: cut.widened,
+    lowUsd: Number(cut.p25_usd),
+    medianUsd: Number(cut.p50_usd),
+    highUsd: Number(cut.p75_usd),
     yourMonthlyUsd: Math.round(yours * 100) / 100,
     position,
   };
