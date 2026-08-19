@@ -160,7 +160,11 @@ describe("nothing but the label leaves the container", () => {
 
   it("has no field in the contract that could carry content even if something tried", async () => {
     const { event } = await run(CODE_PROMPT, true);
-    const parsed = ingestBatchSchema.parse({ events: [{ ...event, prompt: "leak" } as unknown] });
-    expect(Object.keys(parsed.events[0] ?? {})).not.toContain("prompt");
+    // Stricter than "it would be dropped": the server refuses the whole batch.
+    // There is no additive field a future container could smuggle text through.
+    const parsed = ingestBatchSchema.safeParse({ events: [{ ...event, prompt: "leak" }] });
+    expect(parsed.success).toBe(false);
+    expect(JSON.stringify(parsed.error?.issues)).toContain("unrecognized_keys");
   });
+
 });
