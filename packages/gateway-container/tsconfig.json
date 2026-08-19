@@ -8,7 +8,30 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": "../.."
+    "rootDir": "../..",
+    // The shared sources use the repo's "@/..." alias. The image build has no
+    // repo tsconfig, so the alias must be declared here or tsc cannot resolve
+    // src/lib/ingest/switch-plan.ts's import of the provider-gate types.
+    // Under nodenext a mapped specifier still needs a real file, so the ".ts"
+    // candidate is listed first — the repo writes these aliases extensionless.
+    // Type-only imports today; a runtime "@/..." import would survive into the
+    // emitted JS and break at boot, so keep them type-only.
+    "baseUrl": "../..",
+    "paths": {
+      "@/*": ["src/*.ts", "src/*"]
+    }
   },
-  "include": ["src/**/*.ts", "../../src/lib/ingest/contract.ts", "../../src/lib/ingest/backfill.ts"]
+  "include": [
+    "src/**/*.ts",
+    "../../src/lib/ingest/contract.ts",
+    "../../src/lib/ingest/backfill.ts",
+    "../../src/lib/ingest/switch-plan.ts",
+    "../../src/lib/dashboard/provider-gate.ts"
+  ],
+  // Tests are run by vitest from the repo root, where vitest's types and the
+  // bundler resolver exist. They are NOT part of the shippable image build:
+  // the container installs only @types/node + typescript, so compiling them
+  // here fails on `Cannot find module 'vitest'` — which is exactly what broke
+  // the v2 publish.
+  "exclude": ["src/__tests__/**", "dist"]
 }
