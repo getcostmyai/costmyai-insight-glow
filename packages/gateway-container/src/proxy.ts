@@ -341,6 +341,17 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   // refusal or a fallback just as plainly. Nothing here is added to an
   // untouched request.
   for (const [name, value] of Object.entries(disclosure)) outHeaders.set(name, value);
+  // Dispatch 232. A customer who turned local classification on can see, per
+  // request, exactly what label was derived from their own content and — when
+  // nothing was derived — why it abstained. Added only under the opt-in flag,
+  // so a container without it still returns a response with no `x-costmyai-*`
+  // header at all.
+  if (config.classifyLocal) {
+    outHeaders.set("x-costmyai-task", task.hint);
+    if (task.abstained) outHeaders.set("x-costmyai-task-abstained", task.abstained);
+  }
+
+
 
   const status = response.status >= 400 ? "error" : "ok";
   const inScope = isInScope(incoming.pathname);
