@@ -59,9 +59,20 @@ function PrivacyPage() {
           from the request path and model name alone and no request body is read. On the{" "}
           <code>v2</code> image, local classification is on by default: request text is read inside
           your own container to derive a more accurate label, and you can turn it off with{" "}
-          <code>COSTMYAI_CLASSIFY_LOCAL=false</code>. On either image, only the label, a confidence
-          number and feature names leave your environment. No prompt text is transmitted, stored or
-          logged by us in either mode.
+          <code>COSTMYAI_CLASSIFY_LOCAL=false</code>. On both of those images, only the label, a
+          confidence number and feature names leave your environment, and no prompt text is
+          transmitted, stored or logged by us.
+        </p>
+        <p>
+          <strong className="text-foreground">The one exception, on the v3 image:</strong> the{" "}
+          <code>v3</code> connector image adds remote classification, on by default in that tag
+          only. When the in-container rules cannot place a request, the extracted request text is
+          sent to us and labelled by a model. That call runs after your response has already been
+          returned, so it never delays your traffic. The text is used for that single labelling
+          call and is not persisted by us; the only thing retained is the resulting label. If you
+          do not want this, set <code>COSTMYAI_CLASSIFY_REMOTE=false</code> and the v3 image
+          behaves exactly like v2, or stay on the <code>v2</code> image, where the capability does
+          not exist at all.
 
         </p>
         <p>
