@@ -150,7 +150,6 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   // stays in this process, and only the resulting enum is ever enqueued.
   const task = classifyRequest({
     path: incoming.pathname,
-    task,
     model: requestedModel,
     body: bodyBytes,
     readContent: config.classifyLocal,
@@ -163,7 +162,6 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   const rewrite: RewriteOutcome = planRewrite({
     lookup: deps.switchMap?.lookup(requestedModel, upstream.host) ?? null,
     path: incoming.pathname,
-    task,
     headers: request.headers,
     body: bodyBytes,
     originalModel: requestedModel,
