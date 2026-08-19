@@ -78,6 +78,17 @@ export interface ContainerConfig {
    * the ingest contract that could carry any.
    */
   classifyLocal: boolean;
+  /**
+   * Dispatch 236. Opt-in: when the local rules abstain, send the extracted
+   * prompt text to CostMyAI to be labelled by a model. Off by default on every
+   * line except `v3`.
+   *
+   * This is the one setting in the container that causes prompt text to leave
+   * the customer's network. It never runs on the request path — the caller
+   * already has their response before the classification call is made — and it
+   * degrades to the same honest `unknown` on any failure.
+   */
+  classifyRemote: boolean;
 }
 
 
