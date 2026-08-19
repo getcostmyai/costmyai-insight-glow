@@ -189,6 +189,19 @@ export const CONTAINER_DEFAULTS = {
      * rebuild of `v1` to quietly acquire `v2`'s behaviour.
      */
     classifyLocalDefault: "COSTMYAI_CLASSIFY_LOCAL_DEFAULT",
+    /**
+     * Dispatch 236. Remote task classification, the customer's OVERRIDE in
+     * both directions, exactly like `classifyLocal`. When on, a request the
+     * local rules abstained on has its extracted prompt text sent to CostMyAI
+     * to be labelled — off the caller's request path, after their response has
+     * already been returned.
+     */
+    classifyRemote: "COSTMYAI_CLASSIFY_REMOTE",
+    /**
+     * Baked in at build time, never set by a customer. `v3` is built with it;
+     * `v1` and `v2` are not, and must never be.
+     */
+    classifyRemoteDefault: "COSTMYAI_CLASSIFY_REMOTE_DEFAULT",
   },
 
 
