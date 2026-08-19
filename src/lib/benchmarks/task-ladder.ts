@@ -147,7 +147,16 @@ export function walkLadder(task: string, separationOf: (field: AaField) => numbe
   return -1;
 }
 
-export type LadderRefusal = "no_valid_instrument" | "benchmark_not_discriminating";
+export type LadderRefusal =
+  | "no_valid_instrument"
+  | "benchmark_not_discriminating"
+  /**
+   * Dispatch 234. Unlabelled traffic that a local classifier actually read and
+   * declined to label — as opposed to traffic nothing ever tried to label.
+   * Diagnostic only: it names the real cause and promises nothing that does not
+   * already exist today.
+   */
+  | "task_label_low_confidence";
 
 export interface LadderResolution {
   /** The chosen instrument, or null when the walk refused. */
@@ -176,9 +185,26 @@ export function resolveLadder(
   task: string,
   separationOf: (field: AaField) => number | null,
   scoredOn?: (field: AaField) => boolean,
+  /**
+   * Dispatch 234. What produced (or failed to produce) the label. A revision
+   * above 0 means a local classifier read this traffic in the customer's own
+   * container and abstained, which is a different fact from traffic nobody
+   * ever tried to classify — and it deserves a different sentence.
+   */
+  labelling?: { classifierRevision?: number | null },
 ): LadderResolution {
 
   const normalized = normalizeTask(task);
+  if (task.trim().toLowerCase() === UNLABELLED_TASK && (labelling?.classifierRevision ?? 0) > 0) {
+    return {
+      field: null,
+      rung: -1,
+      tried: [],
+      refusal: "task_label_low_confidence",
+      detail:
+        "Your own container read this traffic locally and declined to label it: nothing in the request pointed clearly enough at one kind of work, or two kinds were equally plausible. Certification is per task type, so with no task named there is no instrument to certify against, and we will not pick one on a coin flip. Requests carrying a structural signal — declared tools, or a constrained response schema — classify with certainty and do get certified. Cheaper-host switches on the same model are unaffected.",
+    };
+  }
   if (task.trim().toLowerCase() === UNLABELLED_TASK) {
     return {
       field: null,

@@ -49,7 +49,11 @@ export interface ScoreLookup {
    * certifies it. `modelKey`, when given, keeps the walk on rungs that have
    * actually measured that model.
    */
-  instrument(taskHint: string, modelKey?: string): LadderResolution;
+  instrument(
+    taskHint: string,
+    modelKey?: string,
+    labelling?: { classifierRevision?: number | null },
+  ): LadderResolution;
 
 }
 
@@ -98,13 +102,14 @@ export function buildScoreLookup(
     spread,
     separation,
     covered: (modelKey) => coveredModels.has(modelKey),
-    instrument(taskHint, modelKey) {
+    instrument(taskHint, modelKey, labelling) {
       return resolveLadder(
         taskHint,
         separation,
         modelKey
           ? (field) => (byModelTask.get(`${modelKey}::${field}`)?.score ?? 0) > 0
           : undefined,
+        labelling,
       );
     },
 
@@ -212,7 +217,9 @@ export function findQualityMatches(
      * at least SEPARATION_THRESHOLD wins. No rung passing means REFUSE — never
      * a composite index, never a borrowed instrument.
      */
-    const resolution = lookup.instrument(u.task_hint, u.model_key);
+    const resolution = lookup.instrument(u.task_hint, u.model_key, {
+      classifierRevision: u.classifier_revision,
+    });
     if (!resolution.field) {
       refuse(u, resolution.refusal ?? "no_valid_instrument", resolution.detail);
       continue;
