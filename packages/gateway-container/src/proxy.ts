@@ -143,6 +143,19 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       : new Uint8Array(await request.arrayBuffer());
   const requestedModel = modelFromRequest(bodyBytes, incoming.pathname);
 
+  // Dispatch 232, Phase 1. Decided ONCE, from the caller's own original body,
+  // before any rewrite: the task a customer sent is the task they sent, and a
+  // switch that swaps the model must not be able to change the label the
+  // workload is certified under. Content is read only with `classifyLocal`,
+  // stays in this process, and only the resulting enum is ever enqueued.
+  const task = classifyRequest({
+    path: incoming.pathname,
+    model: requestedModel,
+    body: bodyBytes,
+    readContent: config.classifyLocal,
+  });
+
+
   // Dispatch 155, Stage 4. `lookup` is synchronous and memory-only; with no
   // fresh plan, no matching switch, or no switch map at all it returns null and
   // `planRewrite` passes the request through untouched.
