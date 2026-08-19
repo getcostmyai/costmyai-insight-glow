@@ -333,7 +333,11 @@ describe("an unlabelled cohort", () => {
     expect(r.field).toBeNull();
     expect(r.refusal).toBe("no_valid_instrument");
     expect(r.detail).toMatch(/without a task label/i);
-    expect(r.detail).toMatch(/never your prompts/i);
+    // Dispatch 237: v3 is the default install, so the copy for a still-unread
+    // cohort must name the upgrade path rather than the old "never your
+    // prompts" v1 framing — and must still say which image reads nothing.
+    expect(r.detail).toMatch(/never a request body/i);
+    expect(r.detail).toMatch(/gateway:v3/);
   });
 
   it("is never normalised into a real task", () => {
