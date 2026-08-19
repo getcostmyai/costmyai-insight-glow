@@ -534,6 +534,10 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
    */
   const remote = deps.remote;
   if (remote && deps.config.classifyRemote && event.task_hint === "unknown") {
+    // Deferred a full turn of the event loop: `record()` is called just before
+    // the buffered response is returned, and even the microtask that starts a
+    // fetch should not run ahead of handing the caller their bytes.
+    setTimeout(() => {
     void remote
       .classify(args.body)
       .then((decision) => {
@@ -549,6 +553,7 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
       .catch(() => {
         /* classify() never rejects; a broken promise still must not touch traffic */
       });
+    }, 0);
   }
 }
 
