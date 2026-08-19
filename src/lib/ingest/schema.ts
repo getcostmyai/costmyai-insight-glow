@@ -50,6 +50,33 @@ export const ingestEventSchema = z
     cache_read_tokens: z.number().int().min(0).max(10_000_000).default(0),
     cache_write_tokens: z.number().int().min(0).max(10_000_000).default(0),
 
+    /**
+     * Dispatch 234. How sure the classifier was about `task_hint`, 0..1 to two
+     * decimals.
+     *
+     * Optional with NO default, deliberately. A pre-234 container reports a
+     * structural label (an `/embeddings` call is `classification`) and no
+     * confidence at all; defaulting that to 0 would make it fail the coherence
+     * check below and break a payload we promised would keep validating
+     * forever. Absent means "not reported", which is a different fact from
+     * "reported as zero", and it is stored as 0 rather than refused.
+     */
+    task_confidence: z
+      .number()
+      .min(0)
+      .max(1)
+      .refine((v) => Math.round(v * 100) / 100 === v, {
+        message: "task_confidence must be given to at most two decimals",
+      })
+      .optional(),
+    /**
+     * Which revision of the local classifier produced the label. Versioned
+     * independently of the image tag, exactly like `parser_revision`: 0 means
+     * no local classifier ran, which is every pre-232 container and every v2
+     * container with classification turned off.
+     */
+    classifier_revision: z.number().int().min(0).max(1000).default(0),
+
     latency_ms: z.number().int().min(0).max(3_600_000).nullable().optional(),
     status: z.enum(["ok", "error"]).default("ok"),
     /**
@@ -131,7 +158,26 @@ export const ingestEventSchema = z
   .refine((e) => e.cache_read_tokens + e.cache_write_tokens <= e.input_tokens, {
     message: "cache_read_tokens + cache_write_tokens must not exceed input_tokens",
     path: ["cache_read_tokens"],
-  });
+  })
+  /**
+   * Dispatch 234, the coherence invariant. When an event reports a confidence
+   * at all, it has to agree with its own label: `unknown` means the classifier
+   * declined, which is zero confidence by definition, and a real label means it
+   * did not decline, which cannot be zero. Either mismatch is a bug in whatever
+   * produced the event, and storing it would put a labelled-but-uncertain or
+   * unlabelled-but-certain row into the cohorts Certify reads. Refused at the
+   * door instead, the same answer a prompt field gets.
+   */
+  .refine(
+    (e) =>
+      e.task_confidence === undefined ||
+      (e.task_hint === UNKNOWN_TASK_HINT ? e.task_confidence === 0 : e.task_confidence > 0),
+    {
+      message:
+        "task_confidence must be 0 for an unknown task_hint and greater than 0 for any other label",
+      path: ["task_confidence"],
+    },
+  );
 
 
 

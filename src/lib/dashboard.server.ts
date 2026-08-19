@@ -162,6 +162,8 @@ export const REFUSAL_LABEL: Record<string, string> = {
   // instrument that measures it at all.
   no_baseline_score: "no measured score for this model",
   no_valid_instrument: "no independent instrument measures this task type",
+  task_label_low_confidence:
+    "the local classifier could not name what kind of work this traffic is",
   benchmark_not_discriminating:
     "no model currently differentiates enough on this to certify a switch",
   no_candidate_clears_bar: "quality gap outside the equivalence band",
@@ -299,6 +301,8 @@ interface RollupRow {
   cache_read_tokens?: number | string | null;
   cache_write_tokens?: number | string | null;
   cost_usd: number | string;
+  /** Dispatch 234. Least-trustworthy classifier revision behind the bucket. */
+  classifier_revision_min?: number | string | null;
 
   output_p50?: number | string | null;
   output_p95?: number | string | null;
@@ -328,6 +332,13 @@ function aggregateUsage(rows: RollupRow[], days: number): UsageAggregate[] {
       cost_usd: 0,
       days,
     };
+    // Dispatch 234. Minimum across the contributing buckets, for the same
+    // reason the bucket itself takes a minimum: a workload is only as
+    // trustworthy as its least-trustworthy traffic.
+    agg.classifier_revision =
+      agg.classifier_revision == null
+        ? Number(r.classifier_revision_min ?? 0)
+        : Math.min(agg.classifier_revision, Number(r.classifier_revision_min ?? 0));
     agg.requests += Number(r.requests);
     agg.input_tokens += Number(r.input_tokens);
     agg.output_tokens += Number(r.output_tokens);
@@ -418,7 +429,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         supabase
           .from("usage_rollups")
           .select(
-            "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95",
+            "bucket_start, model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95, classifier_revision_min",
           )
           .eq("org_id", orgId)
           .eq("granularity", granularity)

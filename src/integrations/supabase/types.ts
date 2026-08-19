@@ -2104,6 +2104,7 @@ export type Database = {
         Row: {
           cache_read_tokens: number
           cache_write_tokens: number
+          classifier_revision: number
           created_at: string
           envelope_skeleton: Json | null
           fallback_reason: string | null
@@ -2125,11 +2126,13 @@ export type Database = {
           rerouted: boolean
           route_reason: string | null
           status: string
+          task_confidence: number
           task_hint: string
         }
         Insert: {
           cache_read_tokens?: number
           cache_write_tokens?: number
+          classifier_revision?: number
           created_at?: string
           envelope_skeleton?: Json | null
           fallback_reason?: string | null
@@ -2151,11 +2154,13 @@ export type Database = {
           rerouted?: boolean
           route_reason?: string | null
           status?: string
+          task_confidence?: number
           task_hint?: string
         }
         Update: {
           cache_read_tokens?: number
           cache_write_tokens?: number
+          classifier_revision?: number
           created_at?: string
           envelope_skeleton?: Json | null
           fallback_reason?: string | null
@@ -2177,6 +2182,7 @@ export type Database = {
           rerouted?: boolean
           route_reason?: string | null
           status?: string
+          task_confidence?: number
           task_hint?: string
         }
         Relationships: [
@@ -2194,6 +2200,7 @@ export type Database = {
           bucket_start: string
           cache_read_tokens: number
           cache_write_tokens: number
+          classifier_revision_min: number
           cost_usd: number
           granularity: string
           host: string
@@ -2207,12 +2214,14 @@ export type Database = {
           output_tokens: number
           peak_total_tokens: number | null
           requests: number
+          task_confidence_mean: number
           task_hint: string
         }
         Insert: {
           bucket_start: string
           cache_read_tokens?: number
           cache_write_tokens?: number
+          classifier_revision_min?: number
           cost_usd?: number
           granularity?: string
           host: string
@@ -2226,12 +2235,14 @@ export type Database = {
           output_tokens?: number
           peak_total_tokens?: number | null
           requests?: number
+          task_confidence_mean?: number
           task_hint?: string
         }
         Update: {
           bucket_start?: string
           cache_read_tokens?: number
           cache_write_tokens?: number
+          classifier_revision_min?: number
           cost_usd?: number
           granularity?: string
           host?: string
@@ -2245,6 +2256,7 @@ export type Database = {
           output_tokens?: number
           peak_total_tokens?: number | null
           requests?: number
+          task_confidence_mean?: number
           task_hint?: string
         }
         Relationships: [

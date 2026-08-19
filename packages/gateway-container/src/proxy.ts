@@ -1,4 +1,5 @@
 import { classifyRequest, isInScope, type TaskDecision } from "./classify.js";
+import { CLASSIFIER_REVISION, NO_CLASSIFIER_REVISION } from "./classify-local.js";
 import type { ContainerConfig } from "./config.js";
 import {
   classifyResponseFailure,
@@ -77,6 +78,18 @@ export interface ProxyEvent {
   model_key: string;
   host: string;
   task_hint: string;
+  /**
+   * Dispatch 234. How sure the classifier was about `task_hint`, 0..1 to two
+   * decimals. Coherent by construction: `unknown` always reports 0, and any
+   * real label always reports more than 0.
+   */
+  task_confidence?: number;
+  /**
+   * Revision of the classifier that produced the label — 0 when no local
+   * classifier ran, so a structural label from a container with classification
+   * off is never mistaken for a content-derived one.
+   */
+  classifier_revision?: number;
   input_tokens: number;
   output_tokens: number;
   /**
@@ -445,6 +458,11 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     model_key: (args.model ?? "unknown").slice(0, 120),
     host: args.host.slice(0, 120),
     task_hint: args.task.hint,
+    // Coherence is enforced here as well as at the door: an `unknown` label
+    // carries no confidence, ever, whatever the decision object says.
+    task_confidence:
+      args.task.hint === "unknown" ? 0 : Math.round(args.task.confidence * 100) / 100,
+    classifier_revision: deps.config.classifyLocal ? CLASSIFIER_REVISION : NO_CLASSIFIER_REVISION,
     input_tokens: args.reading?.inputTokens ?? 0,
     output_tokens: args.reading?.outputTokens ?? 0,
     latency_ms: Math.max(0, args.now() - args.startedAt),

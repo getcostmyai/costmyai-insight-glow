@@ -87,6 +87,15 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
     model_key: e.model_key,
     host: e.host,
     task_hint: e.task_hint,
+    /**
+     * Dispatch 234. How much the label above is worth. Absent on a pre-234
+     * container's payload, which means "not reported" and is stored as 0 —
+     * the same value that container's traffic has always carried implicitly.
+     * The coherence invariant (unknown iff zero) is enforced by the schema, so
+     * nothing incoherent reaches this line.
+     */
+    task_confidence: e.task_confidence ?? 0,
+    classifier_revision: e.classifier_revision,
     input_tokens: e.input_tokens,
     // Dispatch 204. Subsets of input_tokens, persisted so the row can be
     // repriced later against a corrected cache rate without re-reading an
@@ -210,7 +219,9 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
     (f, t) =>
       db
         .from("usage_events")
-        .select("occurred_at, model_key, host, task_hint, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, latency_ms, status")
+        .select(
+          "occurred_at, model_key, host, task_hint, task_confidence, classifier_revision, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, latency_ms, status",
+        )
         .eq("org_id", orgId)
         .gte("occurred_at", from.toISOString())
         .lt("occurred_at", to.toISOString())
@@ -265,6 +276,9 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
       modelKey,
       host: resolveHost(r.host, modelKey).key,
       taskHint: r.task_hint,
+      // Dispatch 234. Carried into the rollup as metadata only — see rollupEvents.
+      taskConfidence: Number(r.task_confidence ?? 0),
+      classifierRevision: r.classifier_revision ?? 0,
       inputTokens: r.input_tokens,
       outputTokens: r.output_tokens,
       cacheReadTokens: r.cache_read_tokens ?? 0,
@@ -301,6 +315,14 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
       output_p50: b.outputP50,
       output_p95: b.outputP95,
       peak_total_tokens: b.peakTotalTokens,
+      /**
+       * Dispatch 234. Metadata beside the bucket, deliberately NOT part of the
+       * grouping key: folding confidence into the key would split one workload
+       * into a row per distinct confidence value and shatter every cohort that
+       * reads this table.
+       */
+      task_confidence_mean: b.taskConfidenceMean,
+      classifier_revision_min: b.classifierRevisionMin,
 
     }));
 

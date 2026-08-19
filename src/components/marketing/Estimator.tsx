@@ -653,6 +653,7 @@ function BelowThreshold({ r }: { r: Extract<EstimatorResult, { state: "below_thr
 const REFUSAL_TITLE: Record<string, string> = {
   benchmark_not_discriminating: "Switch not certifiable",
   no_valid_instrument: "No instrument measures this work",
+  task_label_low_confidence: "Work could not be labelled",
   no_cheaper_equal: "No certifiable switch found",
   model_not_in_catalog: "Cannot assess",
   shape_only: "Cannot assess without a named model",
@@ -661,6 +662,8 @@ const REFUSAL_TITLE: Record<string, string> = {
 
 const REFUSAL_LEAD: Record<string, string> = {
 
+  task_label_low_confidence:
+    "Your container read this traffic locally and declined to name what kind of work it is, and certification is per task type. Requests carrying a structural signal — declared tools, or a constrained response schema — classify with certainty and do get certified.",
   no_valid_instrument:
     "No independent evaluation measures this kind of work today, so no switch on it can be certified. We would rather name that than quote a number nobody measured.",
   benchmark_not_discriminating:

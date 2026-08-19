@@ -28,6 +28,9 @@ const CLASS_OF: Record<RefusalReason, RefusalClass> = {
   no_baseline_price: "unmeasurable",
   no_baseline_score: "unmeasurable",
   no_valid_instrument: "unmeasurable",
+  // The classifier declined, so there is no task to choose an instrument for.
+  // Nothing was measured, which is the same class as having no instrument.
+  task_label_low_confidence: "unmeasurable",
   /*
    * The instrument exists, but the evidence behind it is older than one sync
    * cadence, so nothing was measured recently enough to certify against. That
