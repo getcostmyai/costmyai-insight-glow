@@ -229,7 +229,7 @@ async function evaluateOrg(
       supabaseAdmin
         .from("usage_rollups")
         .select(
-          "model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95",
+          "model_key, host, task_hint, requests, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, output_p50, output_p95, classifier_revision_min",
         )
         .eq("org_id", org.id)
         .eq("granularity", "day")
@@ -271,6 +271,13 @@ async function evaluateOrg(
       cost_usd: 0,
       days: EVALUATION_WINDOW_DAYS,
     };
+    // Dispatch 234. Minimum across the contributing buckets, for the same
+    // reason the bucket itself takes a minimum: a workload is only as
+    // trustworthy as its least-trustworthy traffic.
+    agg.classifier_revision =
+      agg.classifier_revision == null
+        ? Number(r.classifier_revision_min ?? 0)
+        : Math.min(agg.classifier_revision, Number(r.classifier_revision_min ?? 0));
     agg.requests += Number(r.requests);
     agg.input_tokens += Number(r.input_tokens);
     agg.output_tokens += Number(r.output_tokens);
