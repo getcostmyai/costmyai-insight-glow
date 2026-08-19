@@ -34,6 +34,13 @@ docker run -d --name costmyai --restart unless-stopped \
   ghcr.io/getcostmyai/gateway:v3
 ```
 
+The default tag is `v3`: it labels the *kind* of work each request is (coding, reasoning,
+agentic and so on) so Certify and Rightsize can act on ordinary chat traffic. Local rules
+run in your container; when they cannot place a request, the extracted request text is
+sent to us to be labelled, off your request path. Two quieter tags stay published and are
+reached by naming them: `:v2` classifies locally only, nothing leaves your container;
+`:v1` reads no request body at all. See the posture table below.
+
 For Anthropic, run a second one with `COSTMYAI_UPSTREAM_URL=https://api.anthropic.com`
 and `-p 8788:8787`.
 

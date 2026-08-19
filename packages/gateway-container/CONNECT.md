@@ -99,6 +99,14 @@ docker run -d --name costmyai-anthropic --restart unless-stopped \
   ghcr.io/getcostmyai/gateway:v3
 ```
 
+**About `:v3`, the default tag.** It derives a task label for each request — local rules
+in your container first, and when those cannot place a request, the extracted request
+text is sent to us to be labelled off your request path. That label is what makes Certify
+and Rightsize work on ordinary chat traffic. Turn the remote half off with
+`-e COSTMYAI_CLASSIFY_REMOTE=false`, or run `:v2` (local classification only, nothing
+leaves your container) or `:v1` (no request body read at all). Your env var always beats
+the tag's default.
+
 The exact commands with your real token pre-filled are on the Settings page. The dashboard
 generates them from the same constant the container itself reads, so they cannot drift.
 
