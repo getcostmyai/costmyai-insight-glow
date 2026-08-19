@@ -173,7 +173,8 @@ export function resolveLadder(
       tried: [],
       refusal: "no_valid_instrument",
       detail:
-        "This traffic arrived without a task label — the connector reads only the endpoint and the model name, never your prompts — so there is no instrument to certify a quality-equivalent switch against. Cheaper-host switches on the same model are unaffected.",
+        "This traffic arrived without a task label, so there is no instrument to certify a quality-equivalent switch against. By default the connector reads only the endpoint and the model name, never your prompts, which is why chat traffic is usually unlabelled. You can turn on local classification inside your own container (COSTMYAI_CLASSIFY_LOCAL) — prompts are read in your container only and never leave it; only the label does. Cheaper-host switches on the same model are unaffected either way.",
+
     };
   }
   /*

@@ -1,4 +1,4 @@
-import { classifyTask, isInScope } from "./classify.js";
+import { classifyRequest, isInScope, type TaskDecision } from "./classify.js";
 import type { ContainerConfig } from "./config.js";
 import {
   classifyResponseFailure,
@@ -143,6 +143,19 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       : new Uint8Array(await request.arrayBuffer());
   const requestedModel = modelFromRequest(bodyBytes, incoming.pathname);
 
+  // Dispatch 232, Phase 1. Decided ONCE, from the caller's own original body,
+  // before any rewrite: the task a customer sent is the task they sent, and a
+  // switch that swaps the model must not be able to change the label the
+  // workload is certified under. Content is read only with `classifyLocal`,
+  // stays in this process, and only the resulting enum is ever enqueued.
+  const task = classifyRequest({
+    path: incoming.pathname,
+    model: requestedModel,
+    body: bodyBytes,
+    readContent: config.classifyLocal,
+  });
+
+
   // Dispatch 155, Stage 4. `lookup` is synchronous and memory-only; with no
   // fresh plan, no matching switch, or no switch map at all it returns null and
   // `planRewrite` passes the request through untouched.
@@ -232,6 +245,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         uuid,
         host: upstream.host,
         path: incoming.pathname,
+        task,
         model: sentModel,
         reading: null,
         status: "error",
@@ -286,6 +300,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       uuid,
       host: upstream.host,
       path: incoming.pathname,
+      task,
       model: modelInFlight,
       reading: null,
       status: "error",
@@ -326,6 +341,17 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   // refusal or a fallback just as plainly. Nothing here is added to an
   // untouched request.
   for (const [name, value] of Object.entries(disclosure)) outHeaders.set(name, value);
+  // Dispatch 232. A customer who turned local classification on can see, per
+  // request, exactly what label was derived from their own content and — when
+  // nothing was derived — why it abstained. Added only under the opt-in flag,
+  // so a container without it still returns a response with no `x-costmyai-*`
+  // header at all.
+  if (config.classifyLocal) {
+    outHeaders.set("x-costmyai-task", task.hint);
+    if (task.abstained) outHeaders.set("x-costmyai-task-abstained", task.abstained);
+  }
+
+
 
   const status = response.status >= 400 ? "error" : "ok";
   const inScope = isInScope(incoming.pathname);
@@ -339,6 +365,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       uuid,
       host: upstream.host,
       path: incoming.pathname,
+      task,
       model: modelInFlight,
       reading: null,
       status,
@@ -363,6 +390,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         uuid,
         host: upstream.host,
         path: incoming.pathname,
+        task,
         model: reading.model ?? modelInFlight,
         reading,
         status,
@@ -401,6 +429,8 @@ interface RecordArgs {
   model: string | null;
   reading: UsageReading | null;
   status: "ok" | "error";
+  /** Decided once per request, from the caller's own body. */
+  task: TaskDecision;
   skip?: boolean;
   fallbackReason?: FallbackReason;
   reroute?: { rerouted: true; originalModel: string; originalHost: string; switchId: string };
@@ -414,7 +444,7 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
     // Dropping it would turn "we could not read this" into "you sent nothing".
     model_key: (args.model ?? "unknown").slice(0, 120),
     host: args.host.slice(0, 120),
-    task_hint: classifyTask(args.path, args.model),
+    task_hint: args.task.hint,
     input_tokens: args.reading?.inputTokens ?? 0,
     output_tokens: args.reading?.outputTokens ?? 0,
     latency_ms: Math.max(0, args.now() - args.startedAt),

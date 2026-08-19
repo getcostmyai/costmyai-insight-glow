@@ -67,7 +67,21 @@ export interface ContainerConfig {
   routeKeys: Record<string, string>;
   /** Opaque label for the grant assertion. Never a credential. */
   containerId: string | null;
+  /**
+   * Dispatch 232. Opt-in: read request bodies locally to derive a task label.
+   * Off by default. When off, this container's posture is byte-identical to
+   * every one shipped before — the classifier is never called, and unlabelled
+   * traffic stays honestly `unknown`.
+   *
+   * When on, the reading happens here, in the customer's own process. No
+   * prompt text is spooled, logged or sent to CostMyAI; there is no field in
+   * the ingest contract that could carry any.
+   */
+  classifyLocal: boolean;
 }
+
+
+
 
 /**
  * `COSTMYAI_ROUTE_KEY_TOGETHER` grants `together`; `..._AI21_LABS` grants
@@ -91,6 +105,17 @@ function intFrom(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
+
+/**
+ * A privacy-affecting flag is opt-in on an explicit affirmative only. Anything
+ * else — unset, empty, "0", "off", a typo — reads as OFF, because the failure
+ * mode of a mis-parsed truthy string here is reading content the customer did
+ * not agree to have read.
+ */
+function boolFrom(value: string | undefined): boolean {
+  return ["1", "true", "yes", "on"].includes((value ?? "").trim().toLowerCase());
+}
+
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): ContainerConfig {
   const e = CONTAINER_DEFAULTS.env;
@@ -117,6 +142,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     switchPollIntervalMs: 60_000,
     routeKeys: routeKeysFrom(env),
     containerId: env["COSTMYAI_CONTAINER_ID"]?.trim() || null,
+    classifyLocal: boolFrom(env[e.classifyLocal]),
+
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
   };
