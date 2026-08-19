@@ -13,26 +13,38 @@
 #       would put a content-reading classifier into containers whose operators
 #       agreed to a container that had none — even switched off, the capability
 #       and the audit answer both change. This workflow refuses to publish it.
-#   v2  The classifying line. Same source, built with
+#   v2  The locally-classifying line. Same source, built with
 #       CLASSIFY_LOCAL_DEFAULT=true so local classification is ON by default in
 #       that tag only. A customer reaches it by naming it, and can still opt out
 #       per-container with COSTMYAI_CLASSIFY_LOCAL=false.
+#
+# Dispatch 236 adds a third line, and for the same reason v1 was frozen:
+#
+#   v3  The remotely-classifying line. Built with CLASSIFY_REMOTE_DEFAULT=true,
+#       so when the local rules abstain the extracted prompt text is sent to
+#       CostMyAI to be labelled by a model — off the request path, but it does
+#       leave the customer's network. v2's documented claim is "structural shape
+#       only, never meaning"; that claim is FALSE under remote classification,
+#       and a claim must not stop being true under a tag customers already run.
+#       So v3 is a new line, never a v2 rebuild. Opt out per-container with
+#       COSTMYAI_CLASSIFY_REMOTE=false; v3 then behaves exactly like v2.
 name: Publish gateway container
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Immutable release tag (must match packages/gateway-container/package.json), e.g. v2.0.0"
+        description: "Immutable release tag (must match packages/gateway-container/package.json), e.g. v3.0.0"
         required: true
-        default: "v2.0.0"
+        default: "v3.0.0"
       line:
-        description: "Release line. Only v2 is publishable; v1 is frozen at its shipped digest."
+        description: "Release line. v2 and v3 are publishable; v1 is frozen at its shipped digest."
         required: true
-        default: "v2"
+        default: "v3"
         type: choice
         options:
           - v2
+          - v3
 
 jobs:
   publish:
@@ -44,12 +56,22 @@ jobs:
       # Belt and braces: the choice list already excludes v1, but a workflow
       # file can be edited faster than this reason can be re-derived.
       - name: Refuse to republish the frozen v1 line
-        if: ${{ inputs.line != 'v2' }}
+        if: ${{ inputs.line != 'v2' && inputs.line != 'v3' }}
         run: |
           echo "v1 is frozen at ghcr.io/getcostmyai/gateway:v1 (sha256:0818e270...)."
           echo "It predates local classification and must keep predating it."
-          echo "Publish the v2 line instead; see packages/gateway-container/DECISIONS.md §12."
+          echo "Publish the v2 or v3 line instead; see packages/gateway-container/DECISIONS.md §12."
           exit 1
+
+      # The line and the version must agree. A v3 image pushed as v2.1.0 — or
+      # worse, a v3 build landing on the moving `v2` tag — is exactly the silent
+      # posture change this whole scheme exists to prevent.
+      - name: Line and version must agree
+        run: |
+          case "${{ inputs.version }}" in
+            "${{ inputs.line }}".*) ;;
+            *) echo "Version ${{ inputs.version }} does not belong to line ${{ inputs.line }}."; exit 1 ;;
+          esac
 
       - name: Check out the exact commit being released
         uses: actions/checkout@v4
@@ -77,9 +99,10 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Three tags: the immutable release tag, the moving `v2` the docs name for
-      # the classifying line, and the commit the build came from. `v1` is NOT in
-      # this list and must not be added — that is the whole guarantee.
+      # Three tags: the immutable release tag, the moving tag for the line being
+      # released, and the commit the build came from. `v1` is NOT in this list
+      # and must not be added — that is the whole guarantee. The moving tag is
+      # the line input, so a v3 build can never land on `v2`.
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -89,10 +112,11 @@ jobs:
           file: packages/gateway-container/Dockerfile
           build-args: |
             CLASSIFY_LOCAL_DEFAULT=true
+            CLASSIFY_REMOTE_DEFAULT=${{ inputs.line == 'v3' }}
           push: true
           tags: |
             ghcr.io/getcostmyai/gateway:${{ inputs.version }}
-            ghcr.io/getcostmyai/gateway:v2
+            ghcr.io/getcostmyai/gateway:${{ inputs.line }}
             ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -101,7 +125,7 @@ jobs:
         run: |
           echo "Pushed:"
           echo "  ghcr.io/getcostmyai/gateway:${{ inputs.version }}"
-          echo "  ghcr.io/getcostmyai/gateway:v2   (local classification ON by default)"
+          echo "  ghcr.io/getcostmyai/gateway:${{ inputs.line }}   (line default: local classification ON; remote ${{ inputs.line == 'v3' && 'ON' || 'OFF' }})"
           echo "  ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}"
           echo ""
           echo "v1 was not touched and must never be republished from this tree."
