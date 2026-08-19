@@ -54,6 +54,14 @@ export const RATE_RULES = {
   ingest: { name: "ingest", limit: 600, windowSec: 60 },
   widgetDoc: { name: "widget-doc", limit: 60, windowSec: 60 },
   widgetData: { name: "widget-data", limit: 60, windowSec: 60 },
+  /**
+   * Dispatch 236. One classification per proxied request that the local rules
+   * abstained on, so the ceiling tracks ingest's 600/min rather than a UI rule.
+   * Deliberately lower: every call past this one costs real model spend
+   * (~$0.16/1k), and the failure mode of hitting it is an abstention the ladder
+   * already handles, not a dropped event.
+   */
+  classify: { name: "classify", limit: 300, windowSec: 60 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({
