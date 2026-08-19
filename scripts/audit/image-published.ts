@@ -110,9 +110,23 @@ for (const r of results) {
   console.log(`           ${r.detail}`);
   if (r.digest) console.log(`           ${r.digest}`);
 }
+console.log(
+  `${classifying.ok ? "PUBLISHED " : "NOT YET   "} ${classifying.ref}  (classifies locally by default)`,
+);
+console.log(`           ${classifying.detail}`);
+if (classifying.digest) console.log(`           ${classifying.digest}`);
 
 const quickstart = results[0]!;
 console.log(`\nQuickstart reference: ${containerImageRef()}`);
+
+if (classifying.ok && classifying.digest && classifying.digest === quickstart.digest) {
+  console.log(
+    `\nRESULT: ${CONTAINER_DEFAULTS.tag} and ${CONTAINER_DEFAULTS.classifyingTag} resolve to the SAME image.` +
+      "\n        One of the two release lines is lying about its posture. Republish v2 alone.",
+  );
+  process.exit(1);
+}
+
 
 if (!quickstart.ok) {
   console.log(
