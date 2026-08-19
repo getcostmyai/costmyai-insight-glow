@@ -1752,6 +1752,8 @@ export type Database = {
           current_period_start: string | null
           environment: string
           id: string
+          last_event_created_at: string | null
+          last_event_id: string | null
           org_id: string
           plan: Database["public"]["Enums"]["plan_tier"]
           price_id: string
@@ -1769,6 +1771,8 @@ export type Database = {
           current_period_start?: string | null
           environment?: string
           id?: string
+          last_event_created_at?: string | null
+          last_event_id?: string | null
           org_id: string
           plan: Database["public"]["Enums"]["plan_tier"]
           price_id: string
@@ -1786,6 +1790,8 @@ export type Database = {
           current_period_start?: string | null
           environment?: string
           id?: string
+          last_event_created_at?: string | null
+          last_event_id?: string | null
           org_id?: string
           plan?: Database["public"]["Enums"]["plan_tier"]
           price_id?: string
@@ -2394,6 +2400,26 @@ export type Database = {
           _subscription_id?: string
         }
         Returns: string
+      }
+      apply_subscription_event: {
+        Args: {
+          _cancel_at_period_end: boolean
+          _customer_id: string
+          _environment: string
+          _event_created: string
+          _event_id: string
+          _next_plan: Database["public"]["Enums"]["plan_tier"]
+          _org_id: string
+          _period_end: string
+          _period_start: string
+          _plan: Database["public"]["Enums"]["plan_tier"]
+          _price_id: string
+          _product_id: string
+          _status: string
+          _subscription_id: string
+          _user_id: string
+        }
+        Returns: Json
       }
       apply_switch: {
         Args: { _autonomous?: boolean; _rec_id: string }
