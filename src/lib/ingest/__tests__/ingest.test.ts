@@ -172,7 +172,9 @@ function queueFor(sink: unknown[]): UpstreamQueue {
   const originalEnqueue = q.enqueue.bind(q);
   q.enqueue = (item) => {
     sink.push(item);
-    originalEnqueue(item);
+    // Pass the real patch handle through: the spy observes enqueues, it does
+    // not get to change whether a queued event can still be amended.
+    return originalEnqueue(item);
   };
   return q;
 }

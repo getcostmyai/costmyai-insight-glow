@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { Readable, Writable } from "node:stream";
 
 import { CONTAINER_DEFAULTS, loadConfig, type ContainerConfig } from "./config.js";
+import { REMOTE_POOL_WIDTH, RemoteClassifier } from "./classify-remote.js";
 import { handleProxy } from "./proxy.js";
 import { UpstreamQueue } from "./queue.js";
 import { Spool } from "./spool.js";
@@ -77,10 +78,28 @@ export function createGateway(config: ContainerConfig) {
       return;
     }
 
-    const response = await handleProxy(toWebRequest(req, url), { config, queue, switchMap: switches });
+    const response = await handleProxy(toWebRequest(req, url), {
+      config,
+      queue,
+      switchMap: switches,
+      remote,
+    });
     res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
     if (response.body) await response.body.pipeTo(Writable.toWeb(res) as WritableStream<Uint8Array>);
     else res.end();
+  }
+
+  /**
+   * Dispatch 236. Built once, and only when the operator turned remote
+   * classification on — an off container has no classifier object at all, so
+   * the remote path is unreachable rather than merely unused.
+   */
+  const remote = config.classifyRemote ? new RemoteClassifier({ config }) : undefined;
+  if (remote) {
+    log("remote task classification enabled", {
+      pool: REMOTE_POOL_WIDTH,
+      note: "prompt text is sent to CostMyAI for labelling, off the request path",
+    });
   }
 
   const timer = setInterval(() => void flush(), config.flushIntervalMs);

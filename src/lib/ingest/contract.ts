@@ -50,6 +50,16 @@ export const INGEST_PATHS = {
    * back to the caller's original model, and repeated reports pause the switch.
    */
   fallbacks: "/api/public/v1/switches",
+  /**
+   * Dispatch 236. Remote task classification. A `v3` container that could not
+   * place a request locally posts the extracted prompt text here, OFF the
+   * caller's request path, and gets back one enum label. Same token as ingest.
+   *
+   * This is the first endpoint in the system that receives prompt text, which
+   * is exactly why it belongs to a new image line and not to `v2` — see
+   * packages/gateway-container/DECISIONS.md §12.
+   */
+  classify: "/api/public/v1/classify",
 } as const;
 
 
@@ -142,6 +152,15 @@ export const CONTAINER_DEFAULTS = {
    * Named by a customer who wants Certify to work on ordinary chat traffic.
    */
   classifyingTag: "v2",
+  /**
+   * Dispatch 236. The remotely-classifying line: local rules first, and when
+   * they abstain, the extracted prompt text is sent to CostMyAI to be labelled
+   * by a model. That is a different privacy posture from `v2`, whose claim is
+   * "structural shape only, never meaning, and nothing leaves the container".
+   * A moving `v2` must not quietly acquire it, so this is `v3` and nothing
+   * else. Reached only by naming it.
+   */
+  remoteClassifyingTag: "v3",
   port: 8787,
   spoolDir: "/var/lib/costmyai/spool",
   spoolVolume: "costmyai-spool",
@@ -170,6 +189,19 @@ export const CONTAINER_DEFAULTS = {
      * rebuild of `v1` to quietly acquire `v2`'s behaviour.
      */
     classifyLocalDefault: "COSTMYAI_CLASSIFY_LOCAL_DEFAULT",
+    /**
+     * Dispatch 236. Remote task classification, the customer's OVERRIDE in
+     * both directions, exactly like `classifyLocal`. When on, a request the
+     * local rules abstained on has its extracted prompt text sent to CostMyAI
+     * to be labelled — off the caller's request path, after their response has
+     * already been returned.
+     */
+    classifyRemote: "COSTMYAI_CLASSIFY_REMOTE",
+    /**
+     * Baked in at build time, never set by a customer. `v3` is built with it;
+     * `v1` and `v2` are not, and must never be.
+     */
+    classifyRemoteDefault: "COSTMYAI_CLASSIFY_REMOTE_DEFAULT",
   },
 
 
@@ -199,6 +231,14 @@ export function containerImageRef(): string {
 /** The classifying release, named explicitly. Never the quickstart default. */
 export function classifyingImageRef(): string {
   return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.classifyingTag}`;
+}
+
+/**
+ * The remotely-classifying release (Dispatch 236), named explicitly. Never the
+ * quickstart default, and never reachable by re-pulling `v1` or `v2`.
+ */
+export function remoteClassifyingImageRef(): string {
+  return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.remoteClassifyingTag}`;
 }
 
 

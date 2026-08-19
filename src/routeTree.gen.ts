@@ -68,6 +68,7 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 import { Route as ApiPublicWidgetIntelligenceRouteImport } from './routes/api/public/widget/intelligence'
 import { Route as ApiPublicV1SwitchesRouteImport } from './routes/api/public/v1/switches'
 import { Route as ApiPublicV1EventsRouteImport } from './routes/api/public/v1/events'
+import { Route as ApiPublicV1ClassifyRouteImport } from './routes/api/public/v1/classify'
 import { Route as ApiPublicV1BillingRouteImport } from './routes/api/public/v1/billing'
 import { Route as ApiPublicSyntheticTickRouteImport } from './routes/api/public/synthetic/tick'
 import { Route as ApiPublicSyncTaskDriftRouteImport } from './routes/api/public/sync/task-drift'
@@ -390,6 +391,11 @@ const ApiPublicV1EventsRoute = ApiPublicV1EventsRouteImport.update({
   path: '/api/public/v1/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1ClassifyRoute = ApiPublicV1ClassifyRouteImport.update({
+  id: '/api/public/v1/classify',
+  path: '/api/public/v1/classify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1BillingRoute = ApiPublicV1BillingRouteImport.update({
   id: '/api/public/v1/billing',
   path: '/api/public/v1/billing',
@@ -553,6 +559,7 @@ export interface FileRoutesByFullPath {
   '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/classify': typeof ApiPublicV1ClassifyRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
@@ -627,6 +634,7 @@ export interface FileRoutesByTo {
   '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/classify': typeof ApiPublicV1ClassifyRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
@@ -706,6 +714,7 @@ export interface FileRoutesById {
   '/api/public/sync/task-drift': typeof ApiPublicSyncTaskDriftRoute
   '/api/public/synthetic/tick': typeof ApiPublicSyntheticTickRoute
   '/api/public/v1/billing': typeof ApiPublicV1BillingRoute
+  '/api/public/v1/classify': typeof ApiPublicV1ClassifyRoute
   '/api/public/v1/events': typeof ApiPublicV1EventsRoute
   '/api/public/v1/switches': typeof ApiPublicV1SwitchesRoute
   '/api/public/widget/intelligence': typeof ApiPublicWidgetIntelligenceRoute
@@ -785,6 +794,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
+    | '/api/public/v1/classify'
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
@@ -859,6 +869,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
+    | '/api/public/v1/classify'
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
@@ -937,6 +948,7 @@ export interface FileRouteTypes {
     | '/api/public/sync/task-drift'
     | '/api/public/synthetic/tick'
     | '/api/public/v1/billing'
+    | '/api/public/v1/classify'
     | '/api/public/v1/events'
     | '/api/public/v1/switches'
     | '/api/public/widget/intelligence'
@@ -993,6 +1005,7 @@ export interface RootRouteChildren {
   ApiPublicSyncTaskDriftRoute: typeof ApiPublicSyncTaskDriftRoute
   ApiPublicSyntheticTickRoute: typeof ApiPublicSyntheticTickRoute
   ApiPublicV1BillingRoute: typeof ApiPublicV1BillingRoute
+  ApiPublicV1ClassifyRoute: typeof ApiPublicV1ClassifyRoute
   ApiPublicV1EventsRoute: typeof ApiPublicV1EventsRoute
   ApiPublicV1SwitchesRoute: typeof ApiPublicV1SwitchesRoute
   ApiPublicWidgetIntelligenceRoute: typeof ApiPublicWidgetIntelligenceRoute
@@ -1417,6 +1430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/classify': {
+      id: '/api/public/v1/classify'
+      path: '/api/public/v1/classify'
+      fullPath: '/api/public/v1/classify'
+      preLoaderRoute: typeof ApiPublicV1ClassifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/billing': {
       id: '/api/public/v1/billing'
       path: '/api/public/v1/billing'
@@ -1670,6 +1690,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSyncTaskDriftRoute: ApiPublicSyncTaskDriftRoute,
   ApiPublicSyntheticTickRoute: ApiPublicSyntheticTickRoute,
   ApiPublicV1BillingRoute: ApiPublicV1BillingRoute,
+  ApiPublicV1ClassifyRoute: ApiPublicV1ClassifyRoute,
   ApiPublicV1EventsRoute: ApiPublicV1EventsRoute,
   ApiPublicV1SwitchesRoute: ApiPublicV1SwitchesRoute,
   ApiPublicWidgetIntelligenceRoute: ApiPublicWidgetIntelligenceRoute,

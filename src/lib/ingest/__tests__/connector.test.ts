@@ -43,7 +43,9 @@ function harness(responder: (req: Request) => Promise<Response> | Response) {
   const originalEnqueue = queue.enqueue.bind(queue);
   queue.enqueue = (item) => {
     sent.push(item);
-    originalEnqueue(item);
+    // Pass the real patch handle through: the spy observes enqueues, it does
+    // not get to change whether a queued event can still be amended.
+    return originalEnqueue(item);
   };
   const seen: Request[] = [];
   const fetchImpl = (async (url: string, init: RequestInit) => {

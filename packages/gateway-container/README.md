@@ -86,6 +86,27 @@ logged, retained or sent to us — only the resulting label, a confidence number
 feature names like `code.fenced_block` leave. This is on by default on `v2` and off on
 `v1`.
 
+On **`:v3`** the container goes one step further, and this is the only mode in which
+anything you sent reaches us. When the in-container rules **cannot** place a request —
+which is most ordinary reasoning and agentic traffic — the extracted request text is sent
+to CostMyAI and labelled by a model. That call happens **after your response has already
+been returned**: it never sits in front of your traffic, adds nothing to your latency, and
+an outage of it is invisible to your callers. It costs roughly **$0.16 per 1,000
+classified requests** in model spend, which we absorb; short prompts are nearer $0.03 and
+long ones nearer $0.29.
+
+The reason this is a separate tag rather than an update to `v2` is that `v2` promises your
+text never leaves your network, and under `v3` that promise would no longer be true. We do
+not change what a promise means under a tag you are already running.
+
+| tag | reads your content | sends anything derived from it | sends the text itself |
+| --- | --- | --- | --- |
+| `:v1` | no | path + model name only | no |
+| `:v2` | in your container | label, confidence, feature names | no |
+| `:v3` | in your container | label, confidence, feature names | **yes, when the local rules abstain** |
+
+`-e COSTMYAI_CLASSIFY_REMOTE=false` gives you a `v3` image that behaves exactly like `v2`.
+
 **Moving from v1 to v2 — the whole migration:**
 
 ```bash
@@ -104,6 +125,12 @@ Want `v2` without local classification — newer image, `v1` posture? Add
 Responses from a classifying container carry `x-costmyai-task` (and
 `x-costmyai-task-abstained` when it declined to label), so you can see per request
 exactly what was derived.
+
+One caveat on that header, stated plainly: on `v3` it reports **only what was known at
+the moment your response was sent** — the local pass. Remote classification finishes about
+a second later, so a request that is labelled remotely leaves the header reading `unknown`
+with `x-costmyai-task-final: deferred` alongside it. The final label exists only in your
+stored data on the dashboard, never in the response header.
 
 
 ## 4. Optional: billing reconciliation

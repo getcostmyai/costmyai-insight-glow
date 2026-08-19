@@ -43,9 +43,28 @@ export class UpstreamQueue {
     this.items = [...items, ...this.items].slice(-this.maxItems);
   }
 
-  enqueue(item: QueueItem): void {
+  /**
+   * Returns a handle that can amend the item WHILE IT IS STILL QUEUED
+   * (Dispatch 236). Remote classification finishes about a second after the
+   * response was returned; the flush interval is 30 s, so in practice the label
+   * lands on the very event that carried it, with no second write, no partial
+   * row and no reconciliation to get wrong.
+   *
+   * `patch` reports whether it landed. Once the batch has been sent — or was
+   * dropped for the spool bound — it returns false and the event keeps the
+   * honest `unknown` it was enqueued with, rather than a label arriving for a
+   * row that is already upstream.
+   */
+  enqueue(item: QueueItem): { patch: (mutate: (body: unknown) => void) => boolean } {
     this.items.push(item);
     if (this.items.length > this.maxItems) this.items = this.items.slice(-this.maxItems);
+    return {
+      patch: (mutate) => {
+        if (!this.items.includes(item)) return false;
+        mutate(item.body);
+        return true;
+      },
+    };
   }
 
   /**

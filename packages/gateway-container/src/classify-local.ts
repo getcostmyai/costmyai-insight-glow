@@ -49,6 +49,14 @@ const MIN_MARGIN = 2;
  * every v2 container with COSTMYAI_CLASSIFY_LOCAL turned off.
  */
 export const CLASSIFIER_REVISION = 1;
+/**
+ * Dispatch 236. Labels produced by the REMOTE classifier (gpt-5-mini, strict
+ * tool-constrained decoding, off the request path). A separate value because
+ * the same request classifies differently under it than under revision 1 —
+ * which is precisely what this constant exists to record. Confirmed against
+ * the current value (1) rather than assumed: 2 is the next real revision.
+ */
+export const REMOTE_CLASSIFIER_REVISION = 2;
 /** What a container with no local classifier reports. Never omitted, never null. */
 export const NO_CLASSIFIER_REVISION = 0;
 
@@ -60,7 +68,20 @@ export type AbstainReason =
   /** Text found, but nothing in it points anywhere. Ordinary open-ended chat. */
   | "weak_signal"
   /** Two different instruments are equally plausible. Refusing beats coin-flipping. */
-  | "ambiguous";
+  | "ambiguous"
+  /**
+   * Dispatch 236, remote classification. Three new members, no new refusal
+   * path: each one lands in the SAME `hint: "unknown", confidence: 0` decision
+   * every other abstention produces, so everything downstream — the door
+   * coherence guard, the rollup weighting, the ladder's refusal — is reached
+   * by machinery that already existed and was already proven.
+   */
+  /** CostMyAI could not be reached, or answered non-2xx. */
+  | "remote_unavailable"
+  /** The remote call was still running when its bound expired. */
+  | "remote_timeout"
+  /** Every slot in the bounded pool was busy. Never queued, never blocked. */
+  | "pool_saturated";
 
 export interface TaskDecision {
   hint: TaskHint;

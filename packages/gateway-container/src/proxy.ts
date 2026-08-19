@@ -1,5 +1,6 @@
 import { classifyRequest, isInScope, type TaskDecision } from "./classify.js";
 import { CLASSIFIER_REVISION, NO_CLASSIFIER_REVISION } from "./classify-local.js";
+import { REMOTE_CLASSIFIER_REVISION, type RemoteClassifier } from "./classify-remote.js";
 import type { ContainerConfig } from "./config.js";
 import {
   classifyResponseFailure,
@@ -71,6 +72,12 @@ export interface ProxyDeps {
    * behaves exactly as it did before Stage 4 — a byte-identical pass-through.
    */
   switchMap?: SwitchMap;
+  /**
+   * Dispatch 236. Remote classifier, present only on a container with
+   * `COSTMYAI_CLASSIFY_REMOTE` resolved on. Absent everywhere else, and the
+   * whole remote path is unreachable without it.
+   */
+  remote?: RemoteClassifier;
 }
 
 export interface ProxyEvent {
@@ -168,6 +175,13 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
     readContent: config.classifyLocal,
   });
 
+  /**
+   * Dispatch 236. The remote pass runs only where the local one gave up. A
+   * request the rules placed is never sent anywhere: the cheapest, most private
+   * answer that is right stays the answer.
+   */
+  const remoteWillRun = Boolean(deps.remote) && config.classifyLocal && task.hint === "unknown";
+
 
   // Dispatch 155, Stage 4. `lookup` is synchronous and memory-only; with no
   // fresh plan, no matching switch, or no switch map at all it returns null and
@@ -259,6 +273,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         host: upstream.host,
         path: incoming.pathname,
         task,
+        body: bodyBytes,
         model: sentModel,
         reading: null,
         status: "error",
@@ -314,6 +329,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       host: upstream.host,
       path: incoming.pathname,
       task,
+      body: bodyBytes,
       model: modelInFlight,
       reading: null,
       status: "error",
@@ -360,8 +376,15 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
   // so a container without it still returns a response with no `x-costmyai-*`
   // header at all.
   if (config.classifyLocal) {
+    // Dispatch 236. This header reports ONLY what is known synchronously — the
+    // local pass. Remote classification runs after this response is already on
+    // the wire, so it cannot be represented here, and a header that claimed to
+    // be final would be wrong for exactly the requests the remote pass exists
+    // to fix. When a remote pass is going to run, the header says so; the
+    // authoritative label lives in stored data only.
     outHeaders.set("x-costmyai-task", task.hint);
     if (task.abstained) outHeaders.set("x-costmyai-task-abstained", task.abstained);
+    if (remoteWillRun) outHeaders.set("x-costmyai-task-final", "deferred");
   }
 
 
@@ -379,6 +402,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
       host: upstream.host,
       path: incoming.pathname,
       task,
+      body: bodyBytes,
       model: modelInFlight,
       reading: null,
       status,
@@ -404,6 +428,7 @@ export async function handleProxy(request: Request, deps: ProxyDeps): Promise<Re
         host: upstream.host,
         path: incoming.pathname,
         task,
+        body: bodyBytes,
         model: reading.model ?? modelInFlight,
         reading,
         status,
@@ -444,6 +469,11 @@ interface RecordArgs {
   status: "ok" | "error";
   /** Decided once per request, from the caller's own body. */
   task: TaskDecision;
+  /**
+   * Dispatch 236. Kept only to hand to the remote classifier AFTER the caller
+   * has their response. Never stored, never enqueued, never logged.
+   */
+  body?: Uint8Array;
   skip?: boolean;
   fallbackReason?: FallbackReason;
   reroute?: { rerouted: true; originalModel: string; originalHost: string; switchId: string };
@@ -486,7 +516,45 @@ function record(deps: ProxyDeps, args: RecordArgs): void {
   if (event.parse_status !== "parsed" && args.reading?.skeleton) {
     event.envelope_skeleton = args.reading.skeleton;
   }
-  deps.queue.enqueue({ kind: "events", body: { events: [event] } });
+  const queued = deps.queue.enqueue({ kind: "events", body: { events: [event] } });
+
+  /**
+   * Dispatch 236 — off the request path, by construction.
+   *
+   * Everything above has already happened: the caller holds their response (or,
+   * on a stream, has finished receiving it) before this line is reached, and
+   * nothing here is awaited by anyone. The classification call runs, and when
+   * it returns a label it AMENDS THE EVENT STILL SITTING IN THE QUEUE — the
+   * same "correct the queued record rather than write a second one" pattern
+   * `parser_revision` reprocessing already uses. Flush is every 30 s; the call
+   * takes about a second; the label lands on its own event.
+   *
+   * Only requests the local pass abstained on are sent. Any failure leaves the
+   * event exactly as enqueued: `unknown`, confidence 0, and honest.
+   */
+  const remote = deps.remote;
+  if (remote && deps.config.classifyRemote && event.task_hint === "unknown") {
+    // Deferred a full turn of the event loop: `record()` is called just before
+    // the buffered response is returned, and even the microtask that starts a
+    // fetch should not run ahead of handing the caller their bytes.
+    setTimeout(() => {
+    void remote
+      .classify(args.body)
+      .then((decision) => {
+        if (decision.hint === "unknown") return;
+        queued.patch((body) => {
+          const first = (body as { events: ProxyEvent[] }).events[0];
+          if (!first) return;
+          first.task_hint = decision.hint;
+          first.task_confidence = Math.round(decision.confidence * 100) / 100;
+          first.classifier_revision = REMOTE_CLASSIFIER_REVISION;
+        });
+      })
+      .catch(() => {
+        /* classify() never rejects; a broken promise still must not touch traffic */
+      });
+    }, 0);
+  }
 }
 
 /** Lift ONLY the model identifier out of a request. Never anything else. */

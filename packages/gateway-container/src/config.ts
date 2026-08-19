@@ -78,6 +78,17 @@ export interface ContainerConfig {
    * the ingest contract that could carry any.
    */
   classifyLocal: boolean;
+  /**
+   * Dispatch 236. Opt-in: when the local rules abstain, send the extracted
+   * prompt text to CostMyAI to be labelled by a model. Off by default on every
+   * line except `v3`.
+   *
+   * This is the one setting in the container that causes prompt text to leave
+   * the customer's network. It never runs on the request path — the caller
+   * already has their response before the classification call is made — and it
+   * degrades to the same honest `unknown` on any failure.
+   */
+  classifyRemote: boolean;
 }
 
 
@@ -145,6 +156,25 @@ function classifyLocalFrom(env: Record<string, string | undefined>): boolean {
   return boolFrom(env[CONTAINER_DEFAULTS.env.classifyLocalDefault]);
 }
 
+/**
+ * Dispatch 236. Remote classification, resolved by exactly the same precedence
+ * as the local flag: the customer's variable always wins in both directions,
+ * and the image tag decides only what "unset" means. `v3` is built with the
+ * default on; `v1` and `v2` are not built with it at all.
+ *
+ * Remote classification implies reading the body, so it cannot be on while
+ * local reading is off — a container that may send text upstream but may not
+ * look at it locally is a posture nobody asked for. The stricter of the two
+ * wins, in the safe direction.
+ */
+function classifyRemoteFrom(env: Record<string, string | undefined>, classifyLocal: boolean): boolean {
+  if (!classifyLocal) return false;
+  const explicit = env[CONTAINER_DEFAULTS.env.classifyRemote];
+  if (boolFrom(explicit)) return true;
+  if (isExplicitlyOff(explicit)) return false;
+  return boolFrom(env[CONTAINER_DEFAULTS.env.classifyRemoteDefault]);
+}
+
 
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): ContainerConfig {
@@ -173,6 +203,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     routeKeys: routeKeysFrom(env),
     containerId: env["COSTMYAI_CONTAINER_ID"]?.trim() || null,
     classifyLocal: classifyLocalFrom(env),
+    classifyRemote: classifyRemoteFrom(env, classifyLocalFrom(env)),
 
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
