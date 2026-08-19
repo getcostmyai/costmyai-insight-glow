@@ -2456,6 +2456,20 @@ export type Database = {
           p75_usd: number
         }[]
       }
+      benchmark_cut_self: {
+        Args: { _org_id: string }
+        Returns: {
+          company_count: number
+          granularity: number
+          industry: string
+          p25_usd: number
+          p50_usd: number
+          p75_usd: number
+          revenue_band: string
+          use_case: string
+          widened: boolean
+        }[]
+      }
       benchmark_eligible_companies: { Args: never; Returns: number }
       benchmark_k_floor: { Args: never; Returns: number }
       claim_partner_membership: { Args: never; Returns: string }
