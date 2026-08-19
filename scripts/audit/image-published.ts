@@ -82,11 +82,12 @@ function split(image: string): { registry: string; repository: string } {
 const { registry, repository } = split(CONTAINER_DEFAULTS.image);
 
 /**
- * The tag the quickstart names is the one that has to work. The pinned release
- * tag is checked too: `v1` moving without an immutable `vX.Y.Z` behind it
- * leaves no way to say which build a customer is actually running.
+ * The tag the quickstart names is the one that has to work. Since Dispatch 237
+ * that is `v3`, so the pinned release checked alongside it is v3's. A moving
+ * tag without an immutable `vX.Y.Z` behind it leaves no way to say which build
+ * a customer is actually running.
  */
-const PINNED = process.env["CONNECTOR_RELEASE_TAG"] ?? "v1.0.1";
+const PINNED = process.env["CONNECTOR_RELEASE_TAG"] ?? "v3.0.0";
 
 const results = [
   await probe(registry, repository, CONTAINER_DEFAULTS.tag),
@@ -94,19 +95,18 @@ const results = [
 ];
 
 /**
- * Dispatch 233. The classifying line is probed and REPORTED, but is not a
- * failure while it is unpublished: the quickstart does not name it, so a
- * stranger's first command does not depend on it. It becomes load-bearing the
- * moment any copy tells a customer to pull it — which the docs now do — so the
- * digest is printed next to v1's, because the one thing that must never be
- * true is the two tags resolving to the same image.
+ * Dispatch 233/237. Every published line is probed by its OWN name rather than
+ * through the quickstart tag, because the quickstart tag now points at one of
+ * them: the invariant being checked is that the three postures are three
+ * distinct images, and that survives whichever one is currently the default.
  */
+const nonClassifying = await probe(registry, repository, CONTAINER_DEFAULTS.nonClassifyingTag);
 const classifying = await probe(registry, repository, CONTAINER_DEFAULTS.classifyingTag);
 
 /**
- * Dispatch 236. The remotely-classifying line. Reported the same way, and held
- * to the same rule: it must diverge in digest from BOTH v1 and v2, because it
- * is the only tag whose prompt text may leave the customer's network.
+ * Dispatch 236. The remotely-classifying line, held to the same rule: it must
+ * diverge in digest from BOTH v1 and v2, because it is the only tag whose
+ * prompt text may leave the customer's network.
  */
 const remote = await probe(registry, repository, CONTAINER_DEFAULTS.remoteClassifyingTag);
 const remotePinned = await probe(
@@ -114,6 +114,7 @@ const remotePinned = await probe(
   repository,
   process.env["CONNECTOR_REMOTE_RELEASE_TAG"] ?? "v3.0.0",
 );
+
 
 /**
  * Baked, not just documented.
