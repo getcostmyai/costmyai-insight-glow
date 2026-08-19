@@ -7,6 +7,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { AccountShell } from "@/components/dashboard/AccountShell";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { PlanCheckout } from "@/components/billing/PlanCheckout";
+import { PlanChangeConfirm } from "@/components/billing/PlanChangeConfirm";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 import {
   createBillingPortal,
