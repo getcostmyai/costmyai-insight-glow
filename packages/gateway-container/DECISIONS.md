@@ -366,3 +366,91 @@ envelopes and nothing more, and no wording anywhere may imply otherwise until a
 real key exists. The Bedrock line here is about *ingestion*: observing and
 certifying Bedrock traffic. It says nothing about the Phase 3 execution
 refusal, which stands — SigV4-signed requests are never rewritten.
+
+## Dispatch 236 — remote task classification, and why it is a new image line
+
+### The gap this closes
+
+Local rules classification (Dispatch 232) is honest and structurally partial.
+Measured on a 200-item labelled golden set built from Chain Drill Co's own real
+traffic, where the true label is known by construction:
+
+| classifier | correct | wrong | abstained |
+| --- | --- | --- | --- |
+| local rules (v2) | 36.0% | **0.0%** | 64.0% |
+| gpt-5-nano | 72.0% | 24.0% | 4.0% |
+| **gpt-5-mini** | **96.5%** | 3.5% | 0.0% |
+
+Two whole buckets — `reasoning` and `agentic` — have no lexical signature the
+rules can see, so they abstain on them by construction and Certify never runs.
+
+`gpt-5-nano` was rejected on that evidence, not on price. Converting 24% honest
+abstentions into 24% confident wrong labels is worse than not building this:
+it trades a visible "we don't know" for an invisible wrong certification.
+
+The mislabelling was diagnosed before the conclusion was drawn, in three real
+tests: repeated calls on the same prompt (24/24 identical wrong label), shuffled
+ordering, and first-third vs last-third. Deterministic, position-independent,
+non-converging — a stable model prior, not a cache artifact.
+
+### Real cost, stated not dismissed
+
+At the golden set's mean prompt (463 in / 21 out): **$0.159 per 1,000
+classifications**. Short prompts near $0.03, a full 4,000-character window near
+$0.29. Small in absolute terms, not free, and it scales with traffic. This
+number appears wherever the capability is described.
+
+### Pool width, re-derived for mini
+
+Not inherited from nano's width of 6 — a width is a function of the service time
+of the model actually in the loop. Same method, same throughput target:
+
+    peak observed proxy concurrency ....... 10 in flight
+    mean proxied duration ................. ~2.0 s
+    arrival rate  λ = 10 / 2.0 ............ 5 req/s
+    measured gpt-5-mini p90 (40 real) ..... 1.328 s   (p50 954 ms, max 2991 ms)
+    width = ceil(λ × p90) ................. 7
+
+Sized on p90, not p50: the pool exists to absorb the slow tail.
+
+Strict tool-constrained decoding was re-verified for mini rather than assumed to
+transfer from the nano probe: 40/40 valid, and 5/5 correct through the shipped
+endpoint code path.
+
+### Architecture
+
+Off the request path, always. Classification fires after the caller already has
+their response; the label attaches by amending the event **still sitting in the
+queue** — the same "correct the queued record" pattern `parser_revision`
+reprocessing already uses. Flush is 30s, the call is ~1s, so the label lands on
+its own event with no second write.
+
+`x-costmyai-task` is therefore **no longer authoritative** for remotely
+classified requests. It reports only what is known synchronously — the local
+pass — and sets `x-costmyai-task-final: deferred` when a remote pass will run.
+The final label lives in stored data only.
+
+Three new `AbstainReason` members — `remote_unavailable`, `remote_timeout`,
+`pool_saturated` — reuse every existing downstream refusal path. No new refusal
+mechanism was invented. Any failure leaves the event `unknown` at confidence 0,
+and the ladder refuses it exactly as it always has.
+
+`classifier_revision` goes to **2** for remotely-labelled events (the local
+classifier's value was confirmed as 1 before bumping, not assumed).
+
+### Why v3 and not a v2 rebuild
+
+v2's documented claim is "structural shape only, never meaning". Under remote
+classification that claim is false: extracted prompt text leaves the customer's
+network. A claim must not stop being true under a moving tag customers already
+run — the same reason v1 was frozen when local classification arrived. So:
+
+| line | local | remote | claim |
+| --- | --- | --- | --- |
+| v1 | absent | absent | no content is read |
+| v2 | ON by default | absent | content read in-process; only enums leave |
+| v3 | ON by default | ON by default | extracted text may leave, off the request path |
+
+`COSTMYAI_CLASSIFY_REMOTE=false` makes a v3 container behave exactly like v2.
+Remote cannot be on while local reading is off — a container that may send text
+upstream but may not look at it locally is a posture nobody asked for.
