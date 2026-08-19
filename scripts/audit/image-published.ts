@@ -315,18 +315,23 @@ async function bootCheck(tag: string): Promise<{ ok: boolean; detail: string }> 
 if (process.env["AUDIT_SKIP_BOOT"] === "1") {
   console.log("\nboot check skipped (AUDIT_SKIP_BOOT=1) — pullability alone was verified.");
 } else {
-  const boot = await bootCheck(CONTAINER_DEFAULTS.tag);
-  console.log(`\n${boot.ok ? "BOOTS     " : "BROKEN    "} ${quickstart.ref}`);
-  console.log(`           ${boot.detail}`);
-  if (!boot.ok) {
-    console.log(
-      "\nRESULT: the published image is pullable but does NOT run." +
-        "\n        Every customer's first command would succeed at the pull and fail at the start." +
-        "\n        Rebuild and republish (packages/gateway-container/README.md).",
-    );
-    process.exit(1);
+  const bootTags = [CONTAINER_DEFAULTS.tag, CONTAINER_DEFAULTS.classifyingTag, CONTAINER_DEFAULTS.remoteClassifyingTag];
+  console.log("");
+  for (const tag of bootTags) {
+    const boot = await bootCheck(tag);
+    console.log(`${boot.ok ? "BOOTS     " : "BROKEN    "} ${CONTAINER_DEFAULTS.image}:${tag}`);
+    console.log(`           ${boot.detail}`);
+    if (!boot.ok) {
+      console.log(
+        `\nRESULT: ${CONTAINER_DEFAULTS.image}:${tag} is pullable but does NOT run.` +
+          "\n        Every customer's first command would succeed at the pull and fail at the start." +
+          "\n        Rebuild and republish (packages/gateway-container/README.md).",
+      );
+      process.exit(1);
+    }
   }
 }
+
 
 console.log("\nRESULT: the published image matches what the quickstart tells customers to run, and it starts.");
 
