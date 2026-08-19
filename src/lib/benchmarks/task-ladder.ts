@@ -194,6 +194,7 @@ export function resolveLadder(
   labelling?: { classifierRevision?: number | null },
 ): LadderResolution {
 
+  const normalized = normalizeTask(task);
   const revision = labelling?.classifierRevision ?? 0;
   if (task.trim().toLowerCase() === UNLABELLED_TASK && revision > 0) {
     return {
