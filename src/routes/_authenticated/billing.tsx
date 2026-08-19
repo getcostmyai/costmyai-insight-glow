@@ -10,6 +10,7 @@ import { PlanCheckout } from "@/components/billing/PlanCheckout";
 import { PlanChangeConfirm } from "@/components/billing/PlanChangeConfirm";
 import { PlanPicker } from "@/components/billing/PlanPicker";
 import {
+  cancelPlanChange,
   createBillingPortal,
   getWorkspaceBilling,
   listWorkspaceInvoices,
