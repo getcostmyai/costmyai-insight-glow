@@ -233,6 +233,14 @@ export function classifyingImageRef(): string {
   return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.classifyingTag}`;
 }
 
+/**
+ * The remotely-classifying release (Dispatch 236), named explicitly. Never the
+ * quickstart default, and never reachable by re-pulling `v1` or `v2`.
+ */
+export function remoteClassifyingImageRef(): string {
+  return `${CONTAINER_DEFAULTS.image}:${CONTAINER_DEFAULTS.remoteClassifyingTag}`;
+}
+
 
 /**
  * One container fronts one provider, and the SDK base URL a customer sets is
