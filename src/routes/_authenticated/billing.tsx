@@ -476,6 +476,18 @@ function BillingPage() {
                 returnUrl={returnUrl}
               />
             </>
+          ) : changePlan ? (
+            <PlanChangeConfirm
+              orgId={org.id}
+              plan={changePlan}
+              interval={interval}
+              onCancel={() => setChangePlan(null)}
+              onDone={() => {
+                setChangePlan(null);
+                queryClient.invalidateQueries({ queryKey: ["workspace-billing"] });
+                queryClient.invalidateQueries({ queryKey: ["my-workspaces"] });
+              }}
+            />
           ) : (
             <PlanPicker
               interval={interval}
@@ -483,6 +495,7 @@ function BillingPage() {
               currentPlan={current}
               onSelect={choose}
               busyPlan={null}
+              mode={hasLiveSubscription ? "change" : "checkout"}
             />
           )}
         </div>
