@@ -163,6 +163,7 @@ for (const r of results) {
   if (r.digest) console.log(`           ${r.digest}`);
 }
 for (const [r, what] of [
+  [nonClassifying, "reads endpoint and model name only"],
   [classifying, "classifies locally by default"],
   [remote, "classifies locally, then remotely when local abstains"],
   [remotePinned, "pinned remote release"],
@@ -175,31 +176,39 @@ for (const [r, what] of [
 const quickstart = results[0]!;
 console.log(`\nQuickstart reference: ${containerImageRef()}`);
 
-if (classifying.ok && classifying.digest && classifying.digest === quickstart.digest) {
-  console.log(
-    `\nRESULT: ${CONTAINER_DEFAULTS.tag} and ${CONTAINER_DEFAULTS.classifyingTag} resolve to the SAME image.` +
-      "\n        One of the two release lines is lying about its posture. Republish v2 alone.",
-  );
-  process.exit(1);
-}
-
-if (remote.ok && remote.digest && (remote.digest === quickstart.digest || remote.digest === classifying.digest)) {
-  console.log(
-    `\nRESULT: ${CONTAINER_DEFAULTS.remoteClassifyingTag} resolves to the same image as` +
-      ` ${remote.digest === quickstart.digest ? CONTAINER_DEFAULTS.tag : CONTAINER_DEFAULTS.classifyingTag}.` +
-      "\n        A tag that may send prompt text off-network must never be the same build as one that promises not to.",
-  );
-  process.exit(1);
+/**
+ * Three postures must be three distinct builds, whichever one the quickstart
+ * currently points at. Compared pairwise by their own names.
+ */
+const lines = [
+  [CONTAINER_DEFAULTS.nonClassifyingTag, nonClassifying],
+  [CONTAINER_DEFAULTS.classifyingTag, classifying],
+  [CONTAINER_DEFAULTS.remoteClassifyingTag, remote],
+] as const;
+for (let i = 0; i < lines.length; i++) {
+  for (let j = i + 1; j < lines.length; j++) {
+    const [tagA, a] = lines[i]!;
+    const [tagB, b] = lines[j]!;
+    if (a.ok && b.ok && a.digest && a.digest === b.digest) {
+      console.log(
+        `\nRESULT: ${tagA} and ${tagB} resolve to the SAME image.` +
+          "\n        A tag that may send prompt text off-network must never be the same build as one" +
+          `\n        that promises not to. Republish ${tagB} alone.`,
+      );
+      process.exit(1);
+    }
+  }
 }
 
 if (remote.ok) {
   const LOCAL = CONTAINER_DEFAULTS.env.classifyLocalDefault;
   const REMOTE = CONTAINER_DEFAULTS.env.classifyRemoteDefault;
   const expectations: { tag: string; wantLocal: boolean; wantRemote: boolean }[] = [
-    { tag: CONTAINER_DEFAULTS.tag, wantLocal: false, wantRemote: false },
+    { tag: CONTAINER_DEFAULTS.nonClassifyingTag, wantLocal: false, wantRemote: false },
     { tag: CONTAINER_DEFAULTS.classifyingTag, wantLocal: true, wantRemote: false },
     { tag: CONTAINER_DEFAULTS.remoteClassifyingTag, wantLocal: true, wantRemote: true },
   ];
+
   console.log(`\nBaked posture, read from each image's own config blob`);
   let bakedFailure = false;
   for (const e of expectations) {
