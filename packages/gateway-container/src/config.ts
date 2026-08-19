@@ -142,6 +142,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     switchPollIntervalMs: 60_000,
     routeKeys: routeKeysFrom(env),
     containerId: env["COSTMYAI_CONTAINER_ID"]?.trim() || null,
+    classifyLocal: boolFrom(env[e.classifyLocal]),
+
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
   };
