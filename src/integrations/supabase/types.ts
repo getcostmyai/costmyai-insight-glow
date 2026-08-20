@@ -413,6 +413,39 @@ export type Database = {
           },
         ]
       }
+      consent_records: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          email: string | null
+          id: string
+          method: string
+          privacy_version: string
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          method: string
+          privacy_version: string
+          terms_version: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          method?: string
+          privacy_version?: string
+          terms_version?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       host_prices: {
         Row: {
           cache_read_usd_per_mtok: number | null
