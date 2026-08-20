@@ -57,6 +57,7 @@ import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
 import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_authenticated/workspace.certify'
+import { Route as AuthenticatedBetaPlanRouteImport } from './routes/_authenticated/beta.$plan'
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
@@ -331,6 +332,11 @@ const AuthenticatedWorkspaceCertifyRoute =
     path: '/certify',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedBetaPlanRoute = AuthenticatedBetaPlanRouteImport.update({
+  id: '/beta/$plan',
+  path: '/beta/$plan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminReferralsRoute =
   AuthenticatedAdminReferralsRouteImport.update({
     id: '/admin/referrals',
@@ -534,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
+  '/beta/$plan': typeof AuthenticatedBetaPlanRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -609,6 +616,7 @@ export interface FileRoutesByTo {
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
+  '/beta/$plan': typeof AuthenticatedBetaPlanRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -689,6 +697,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
+  '/_authenticated/beta/$plan': typeof AuthenticatedBetaPlanRoute
   '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
+    | '/beta/$plan'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
+    | '/beta/$plan'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/referrals'
+    | '/_authenticated/beta/$plan'
     | '/_authenticated/workspace/certify'
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
@@ -1353,6 +1365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceCertifyRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/beta/$plan': {
+      id: '/_authenticated/beta/$plan'
+      path: '/beta/$plan'
+      fullPath: '/beta/$plan'
+      preLoaderRoute: typeof AuthenticatedBetaPlanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/referrals': {
       id: '/_authenticated/admin/referrals'
       path: '/admin/referrals'
@@ -1592,6 +1611,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
+  AuthenticatedBetaPlanRoute: typeof AuthenticatedBetaPlanRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1606,6 +1626,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAdminPartnerApplicationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
   AuthenticatedAdminReferralsRoute: AuthenticatedAdminReferralsRoute,
+  AuthenticatedBetaPlanRoute: AuthenticatedBetaPlanRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
