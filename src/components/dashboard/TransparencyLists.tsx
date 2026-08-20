@@ -170,6 +170,13 @@ export function ArbitrageList({
 
   return (
     <section>
+      {/**
+       * Dispatch 232. The Compare hero's five framing figures ride with the
+       * list itself, so every rung that merges arbitrage in — Certify,
+       * Rightsize, Govern — states them without a trip to Compare.
+       */}
+      <ArbitrageStats ctl={ctl} />
+
       <SectionTitle
         eyebrow="List A · arbitrage saves"
         title="Same model, cheaper host"
