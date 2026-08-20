@@ -109,7 +109,8 @@ export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
           label="Cheaper hosts"
         />
       </div>
-    </section>
+    </div>
+
   );
 }
 
