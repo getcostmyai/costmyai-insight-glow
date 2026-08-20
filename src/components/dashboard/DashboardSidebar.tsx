@@ -75,12 +75,17 @@ export function DashboardSidebar({
   account?: AccountKey;
 }) {
   const paths = PATHS[scope];
-  // Dispatch 172. Every level is listed for every workspace. Hiding the levels
-  // below the current plan meant a paying customer could not navigate to
-  // something they are entitled to except by guessing the URL; the levels above
-  // the plan stay listed as the upsell path they always were, and the real gate
-  // is the server-side plan check, not the nav.
-  const visibleLevels = LEVELS;
+  // Dispatch 232 reverses Dispatch 172. A customer sees their own rung plus
+  // every rung above it (locked, as the upsell path). Rungs *below* their own
+  // are never listed: everything those rungs found is merged inline into the
+  // rung they are on, so there is nothing left down there to navigate to.
+  // Demo keeps the full ladder — it is an internal walkthrough of the product.
+  const visibleLevels =
+    scope === "demo"
+      ? LEVELS
+      : LEVELS.filter((meta) => meta.requiredPlan === null || planAtLeast(meta.requiredPlan, plan));
+
+
 
 
   return (
