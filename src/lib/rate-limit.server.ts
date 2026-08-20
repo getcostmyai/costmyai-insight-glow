@@ -62,6 +62,8 @@ export const RATE_RULES = {
    * already handles, not a dropped event.
    */
   classify: { name: "classify", limit: 300, windowSec: 60 },
+  /** One acceptance record per signup; 10/hour absorbs retries, nothing more. */
+  consent: { name: "consent", limit: 10, windowSec: 3600 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({
