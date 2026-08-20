@@ -93,8 +93,16 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
     },
   ];
 
-  const levelCards = LEVELS.filter((l) => l.key !== "overview").map((meta) => {
-    const unlocked = planAtLeast(plan as PlanTier, meta.requiredPlan!);
+  // Dispatch 232. Same downward-visibility rule as the sidebar: own rung and
+  // above only. Below-rung findings are merged inline into the rung the
+  // customer is on, so linking down would send them to a subset of what they
+  // already see. Demo keeps the full ladder.
+  const levelCards = LEVELS.filter(
+    (l) =>
+      l.key !== "overview" &&
+      (scope === "demo" || planAtLeast(l.requiredPlan!, plan as PlanTier)),
+  ).map((meta) => {
+
     if (meta.key === "compare")
       return {
         meta,
