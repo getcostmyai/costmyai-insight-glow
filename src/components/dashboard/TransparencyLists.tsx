@@ -29,13 +29,8 @@ import { nonQualifyingEmptyCopy } from "@/lib/dashboard/zero-data-copy";
 export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
   return (
     <>
-      {/**
-       * Dispatch 232. The five framing figures that used to live only on the
-       * standalone Compare hero are folded in here, so a customer whose rung is
-       * above Compare never has to visit Compare to see them. Same source
-       * array, same computation, no extra fetch.
-       */}
-      <ArbitrageStats ctl={ctl} />
+      {/* Dispatch 232. The folded Compare figures ride inside ArbitrageList. */}
+
       {/**
        * Dispatch 221. Rightsize and Govern render the full transparency lists.
        * Locked alternatives are unreachable there today, but if a future plan
