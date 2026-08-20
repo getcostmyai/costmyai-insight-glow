@@ -66,7 +66,8 @@ export function PlanPicker({
           const rate = monthlyRate(plan, interval);
           const isCurrent = plan === currentPlan;
           const free = plan === "compare";
-          const featured = plan === "rightsize";
+          const beta = plan === "rightsize" || plan === "govern";
+          const featured = false;
           return (
             <div
               key={plan}
@@ -76,9 +77,9 @@ export function PlanPicker({
                   : "border-border bg-card"
               }`}
             >
-              {featured ? (
-                <span className="absolute -top-2.5 left-6 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-                  Most chosen
+              {beta ? (
+                <span className="absolute -top-2.5 left-6 rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Coming soon — beta
                 </span>
               ) : null}
               <p className="text-sm font-semibold">{meta.label}</p>
@@ -100,7 +101,7 @@ export function PlanPicker({
                 ))}
               </ul>
               <button
-                disabled={isCurrent || busyPlan !== null}
+                disabled={isCurrent || beta || busyPlan !== null}
                 onClick={() => onSelect(plan)}
                 className={`mt-6 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-transform disabled:opacity-60 ${
                   featured || !free
@@ -108,8 +109,10 @@ export function PlanPicker({
                     : "border border-border text-foreground hover:bg-muted"
                 }`}
               >
-                {!free && !isCurrent ? <Sparkles className="size-4" /> : null}
-                {isCurrent
+                {!free && !isCurrent && !beta ? <Sparkles className="size-4" /> : null}
+                {beta
+                  ? "Invitation only"
+                  : isCurrent
                   ? "Current plan"
                   : busyPlan === plan
                     ? "Opening checkout…"

@@ -148,7 +148,8 @@ function Plans({ yearly }: { yearly: boolean }) {
         {ORDER.map((plan, i) => {
           const meta = PLAN_META[plan];
           const price = yearly ? meta.yearly : meta.monthly;
-          const featured = plan === "rightsize";
+          const beta = plan === "rightsize" || plan === "govern";
+          const featured = false;
 
           return (
             <Reveal key={plan} delay={i * 90} className="flex">
@@ -159,9 +160,9 @@ function Plans({ yearly }: { yearly: boolean }) {
                     : "border-border bg-card shadow-[var(--shadow-card)]"
                 }`}
               >
-                {featured ? (
-                  <span className="absolute -top-3 left-7 rounded-full fill-gradient-brand px-3 py-1 text-[11px] font-semibold text-primary-foreground">
-                    Most chosen
+                {beta ? (
+                  <span className="absolute -top-3 left-7 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Coming soon — closed beta
                   </span>
                 ) : null}
 
@@ -179,22 +180,27 @@ function Plans({ yearly }: { yearly: boolean }) {
                   )}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {price === 0
-                    ? "No card required"
-                    : yearly
-                      ? "billed yearly"
-                      : "billed monthly, cancel anytime"}
+                  {beta
+                    ? "not on sale yet — price shown for reference"
+                    : price === 0
+                      ? "No card required"
+                      : yearly
+                        ? "billed yearly"
+                        : "billed monthly, cancel anytime"}
                 </p>
 
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{meta.blurb}</p>
 
-                <Link
-                  to="/auth"
-                  className={`mt-6 w-full px-5 py-2.5 text-sm ${featured ? "btn-gradient" : "btn-quiet"}`}
-                >
-                  {price === 0 ? "Start free" : `Start ${meta.label}`}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                {beta ? (
+                  <p className="mt-6 w-full rounded-full border border-dashed border-border px-5 py-2.5 text-center text-sm text-muted-foreground">
+                    In closed beta — invitation only
+                  </p>
+                ) : (
+                  <Link to="/auth" className="btn-quiet mt-6 w-full px-5 py-2.5 text-sm">
+                    {price === 0 ? "Start free" : `Start ${meta.label}`}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                )}
 
                 <ul className="mt-7 space-y-3 border-t border-border pt-6">
                   {INCLUDES[plan].map((line) => (
