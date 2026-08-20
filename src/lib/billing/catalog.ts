@@ -24,6 +24,29 @@ export const PAID_PLANS: PaidPlan[] = [
   { plan: "govern", priceIds: { monthly: "govern_monthly", yearly: "govern_yearly" } },
 ];
 
+/**
+ * Levels a workspace may buy on its own from /pricing or /billing.
+ *
+ * Rightsize and Govern are in closed beta: they are not sold self-serve, and
+ * are reached only through an unlisted checkout link handed out by hand. The
+ * grant path is identical either way — a signed webhook, and nothing else.
+ */
+export const SELF_SERVE_PLANS: PlanTier[] = ["certify"];
+export const BETA_PLANS: Exclude<PlanTier, "compare">[] = ["rightsize", "govern"];
+
+export function isBetaPlan(plan: PlanTier): plan is "rightsize" | "govern" {
+  return BETA_PLANS.includes(plan as "rightsize" | "govern");
+}
+
+/**
+ * Unlisted prices for the hand-picked beta circle. Referenced by the private
+ * checkout path only — never by /pricing, /billing or `priceIdFor`.
+ */
+export const BETA_PRICE_IDS: Record<"rightsize" | "govern", string> = {
+  rightsize: "rightsize_private_beta_monthly",
+  govern: "govern_private_beta_monthly",
+};
+
 /** Reverse map used by the webhook to turn a purchased price back into a level. */
 export const PLAN_BY_PRICE_ID: Record<string, PlanTier> = PAID_PLANS.reduce(
   (acc, p) => {
@@ -31,7 +54,10 @@ export const PLAN_BY_PRICE_ID: Record<string, PlanTier> = PAID_PLANS.reduce(
     acc[p.priceIds.yearly] = p.plan;
     return acc;
   },
-  {} as Record<string, PlanTier>,
+  { [BETA_PRICE_IDS.rightsize]: "rightsize", [BETA_PRICE_IDS.govern]: "govern" } as Record<
+    string,
+    PlanTier
+  >,
 );
 
 export function priceIdFor(plan: PlanTier, interval: BillingInterval): string | null {
