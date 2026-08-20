@@ -3,7 +3,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import type { PlanTier } from "./engine/types";
-import { PAID_PLANS, priceIdFor, type BillingInterval } from "./billing/catalog";
+import {
+  BETA_PRICE_IDS,
+  isBetaPlan,
+  PAID_PLANS,
+  priceIdFor,
+  type BillingInterval,
+} from "./billing/catalog";
 import { type SubscriptionState } from "./billing/entitlement";
 
 /**
@@ -149,6 +155,11 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
       }
       if (!PAID_PLANS.some((p) => p.plan === data?.plan)) {
         throw new Error("That plan is not sold — Compare is free and needs no checkout.");
+      }
+      if (isBetaPlan(data.plan)) {
+        throw new Error(
+          "Rightsize and Govern are in closed beta and are not sold self-serve yet.",
+        );
       }
       if (typeof data?.returnUrl !== "string" || !data.returnUrl.startsWith("http")) {
         throw new Error("Invalid return URL");
