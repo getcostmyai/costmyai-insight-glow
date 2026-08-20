@@ -39,7 +39,7 @@ function BetaEnrolPage() {
 
   if (!isBetaPlan(plan as PlanTier)) {
     return (
-      <AccountShell title="Beta access">
+      <AccountShell active="billing" title="Beta access">
         <p className="text-sm text-muted-foreground">That level has no beta invitation.</p>
       </AccountShell>
     );
@@ -62,7 +62,7 @@ function BetaEnrolPage() {
   };
 
   return (
-    <AccountShell title={`${meta.label} beta`}>
+    <AccountShell active="billing" title={`${meta.label} beta`}>
       <PaymentTestModeBanner />
       <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
         {meta.label} is in closed beta. This invitation enrols your workspace at no charge — no card
