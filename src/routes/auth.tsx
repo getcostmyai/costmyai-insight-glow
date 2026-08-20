@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Loader2, Mail } from "lucide-react";
 
 import { lovable } from "@/integrations/lovable";
+import { recordSignupConsent } from "@/lib/consent.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
@@ -53,6 +54,8 @@ function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [agreeError, setAgreeError] = useState(false);
 
   async function sendReset() {
     setError(null);
@@ -121,6 +124,12 @@ function AuthPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setAgreeError(false);
+    if (mode === "signup" && !agreed) {
+      setAgreeError(true);
+      setError("Please agree to the Terms and Privacy Policy before creating an account.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -133,6 +142,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // The acceptance record is written server-side: with email confirmation
+        // on there is no session yet, so the user cannot write it themselves.
+        if (data.user) {
+          await recordSignupConsent({
+            data: { userId: data.user.id, email, method: "password_signup" },
+          });
+        }
         // With confirmation on, signUp returns no session — the user is not in yet.
         if (!data.session) setCheckEmail(true);
       } else {
@@ -150,6 +166,12 @@ function AuthPage() {
   }
 
   async function google() {
+    setAgreeError(false);
+    if (mode === "signup" && !agreed) {
+      setAgreeError(true);
+      setError("Please agree to the Terms and Privacy Policy before creating an account.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -168,7 +190,12 @@ function AuthPage() {
       if (result.error) throw result.error;
       if (result.redirected) return;
 
-      await waitForCommittedSession();
+      const user = await waitForCommittedSession();
+      if (user.email) {
+        await recordSignupConsent({
+          data: { userId: user.id, email: user.email, method: "google_signup" },
+        }).catch(() => undefined);
+      }
       finishSignIn(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
@@ -258,6 +285,51 @@ function AuthPage() {
                 placeholder="Password"
                 className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
               />
+              {mode === "signup" ? (
+                <label
+                  htmlFor="agree"
+                  className="flex items-start gap-2.5 pt-1 text-left text-sm text-muted-foreground"
+                >
+                  <input
+                    id="agree"
+                    name="agree"
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => {
+                      setAgreed(e.target.checked);
+                      if (e.target.checked) {
+                        setAgreeError(false);
+                        setError(null);
+                      }
+                    }}
+                    className={`mt-0.5 h-4 w-4 shrink-0 rounded border bg-background accent-primary ${
+                      agreeError ? "border-destructive" : "border-border"
+                    }`}
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                    >
+                      Terms
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                    >
+                      Privacy Policy
+                    </a>
+                    , including that my usage data is used to compute recommendations for all
+                    service tiers, including ones I have not subscribed to.
+                  </span>
+                </label>
+              ) : null}
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               <button
                 type="submit"
