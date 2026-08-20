@@ -102,6 +102,8 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
       l.key !== "overview" &&
       (scope === "demo" || planAtLeast(l.requiredPlan!, plan as PlanTier)),
   ).map((meta) => {
+    const unlocked = planAtLeast(plan as PlanTier, meta.requiredPlan!);
+
 
     if (meta.key === "compare")
       return {
