@@ -30,7 +30,7 @@ function PrivacyPage() {
       eyebrow="Legal"
       title="Privacy"
       accent="Policy."
-      updated="2 August 2026"
+      updated="20 August 2026"
       intro={
         <>
           CostMyAI ("we," "us," "our") is operated from Vienna, Austria. This policy explains what
@@ -168,7 +168,7 @@ function PrivacyPage() {
           by law afterward. Usage data pushed via the Verification Engine, and everything derived
           from it, follows the retention rules set out in the{" "}
           <a
-            href="/legal/methodology#retention"
+            href="/legal/methodology"
             className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
           >
             Retention section of our Methodology page
