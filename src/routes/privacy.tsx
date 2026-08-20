@@ -140,11 +140,40 @@ function PrivacyPage() {
         </ul>
       </LegalSection>
 
+      <LegalSection title="How your usage data is used across service tiers">
+        <p>
+          CostMyAI sells four tiers: Compare, Certify, Rightsize and Govern. The usage data you
+          share is used to compute recommendations for <strong className="text-foreground">all
+          four</strong>, regardless of which tier you are subscribed to, including tiers you have
+          not bought and tiers that are not yet generally released.
+        </p>
+        <p>
+          We do this for one reason: a recommendation engine can only be validated against real
+          usage. Computing the higher-tier results on live data is how we check that they are
+          correct before those tiers go on general sale.
+        </p>
+        <p>
+          Results you are not entitled to are computed and stored, but they are not shown to you.
+          The database itself enforces this: a workspace can only read a recommendation whose tier
+          is at or below the plan it actually pays for. If you later upgrade, the results for that
+          tier become visible to you; if you never upgrade, you never see them. These computed
+          results are your workspace's data, are covered by the same retention and deletion rules
+          below, and are never shared with, sold to, or used to advise another customer.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Data retention">
         <p>
           We retain account and billing data for as long as your account is active and as required
-          by law afterward. Usage data pushed via the Verification Engine follows the retention
-          rules described on our Methodology page.
+          by law afterward. Usage data pushed via the Verification Engine, and everything derived
+          from it, follows the retention rules set out in the{" "}
+          <a
+            href="/legal/methodology#retention"
+            className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+          >
+            Retention section of our Methodology page
+          </a>
+          : kept while your workspace exists, deleted within 30 days of closure or on request.
         </p>
       </LegalSection>
 
