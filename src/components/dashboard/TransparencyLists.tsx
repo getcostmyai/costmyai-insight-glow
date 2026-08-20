@@ -64,8 +64,8 @@ export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
   const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : null;
 
   return (
-    <section
-      className="grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
+    <div
+      className="mb-6 grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
       style={{ background: "var(--gradient-hero)" }}
     >
       <div>
