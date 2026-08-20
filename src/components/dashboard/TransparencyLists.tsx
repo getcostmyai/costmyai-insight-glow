@@ -1,6 +1,8 @@
 import { ArrowRight, Clock, ShieldOff } from "lucide-react";
 
-import { SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { HeroStat, SectionTitle, asSwitchRow } from "@/components/dashboard/primitives";
+import { OpportunityRing } from "@/components/dashboard/SavingsRing";
+
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
 import { groupFor } from "@/lib/dashboard/group";
 import { supersededOption } from "@/components/dashboard/SupersededNote";
