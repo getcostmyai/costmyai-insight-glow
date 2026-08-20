@@ -54,6 +54,10 @@ const SECTIONS = [
     title: "What we never hold",
     body: "No provider API keys, no prompts, no completions, no user content. The Verification Engine runs in your environment; what reaches us is aggregate metadata only, and the ingest schema rejects anything else.",
   },
+  {
+    title: "Retention",
+    body: "The aggregate usage records pushed by the Verification Engine, and the rollups and recommendations derived from them, are kept for as long as your workspace exists, because a savings figure is only auditable against the history it was computed from. Close your workspace, or ask us to delete it, and that data is removed within 30 days. Public market data — model prices, benchmark scores and their change history — is not customer data and is kept permanently as a public record.",
+  },
 ];
 
 function MethodologyPage() {
