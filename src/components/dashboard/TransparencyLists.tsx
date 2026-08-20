@@ -29,13 +29,8 @@ import { nonQualifyingEmptyCopy } from "@/lib/dashboard/zero-data-copy";
 export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
   return (
     <>
-      {/**
-       * Dispatch 232. The five framing figures that used to live only on the
-       * standalone Compare hero are folded in here, so a customer whose rung is
-       * above Compare never has to visit Compare to see them. Same source
-       * array, same computation, no extra fetch.
-       */}
-      <ArbitrageStats ctl={ctl} />
+      {/* Dispatch 232. The folded Compare figures ride inside ArbitrageList. */}
+
       {/**
        * Dispatch 221. Rightsize and Govern render the full transparency lists.
        * Locked alternatives are unreachable there today, but if a future plan
@@ -69,8 +64,8 @@ export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
   const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : null;
 
   return (
-    <section
-      className="grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
+    <div
+      className="mb-6 grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
       style={{ background: "var(--gradient-hero)" }}
     >
       <div>
@@ -114,7 +109,8 @@ export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
           label="Cheaper hosts"
         />
       </div>
-    </section>
+    </div>
+
   );
 }
 
@@ -170,6 +166,13 @@ export function ArbitrageList({
 
   return (
     <section>
+      {/**
+       * Dispatch 232. The Compare hero's five framing figures ride with the
+       * list itself, so every rung that merges arbitrage in — Certify,
+       * Rightsize, Govern — states them without a trip to Compare.
+       */}
+      <ArbitrageStats ctl={ctl} />
+
       <SectionTitle
         eyebrow="List A · arbitrage saves"
         title="Same model, cheaper host"
