@@ -28,6 +28,13 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
   return (
     <>
       {/**
+       * Dispatch 232. The five framing figures that used to live only on the
+       * standalone Compare hero are folded in here, so a customer whose rung is
+       * above Compare never has to visit Compare to see them. Same source
+       * array, same computation, no extra fetch.
+       */}
+      <ArbitrageStats ctl={ctl} />
+      {/**
        * Dispatch 221. Rightsize and Govern render the full transparency lists.
        * Locked alternatives are unreachable there today, but if a future plan
        * gates a mechanism above Rightsize we must not hard-link back to
@@ -40,6 +47,75 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
     </>
   );
 }
+
+/**
+ * The Compare hero's five figures, in a compact strip.
+ *
+ * Computed exactly as CompareLevel computes them: count and money from the
+ * shared figures path (so a locked level still states its real numbers),
+ * best-single-saving from the findings array, coverage from measured window
+ * spend — never the live ticker, whose forward accrual would drift the ratio.
+ */
+export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
+  const { data, activeRange } = ctl;
+  const all = data.hostArbitrage;
+  const found = levelCount(data, "host_arbitrage");
+  const available = levelSaving(data, "host_arbitrage");
+  const measuredSpend = data.totals.spend;
+  const bestPct = all.length > 0 ? Math.max(...all.map((r) => r.savingPct)) : 0;
+  const onCheapestHost = Math.max(0, measuredSpend - available);
+  const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : null;
+
+  return (
+    <section
+      className="grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
+      style={{ background: "var(--gradient-hero)" }}
+    >
+      <div>
+        <p className="eyebrow text-white/60">Cheaper-host check · {activeRange.long}</p>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <HeroStat
+            label="Cheaper hosts identified"
+            value={`${found}`}
+            sub="identical weights, zero quality risk"
+            accent="oklch(0.83 0.11 195)"
+          />
+          <HeroStat
+            label={`Available · ${activeRange.long}`}
+            value={usd(available, 0)}
+            sub="what moving to those hosts would have saved"
+            accent="oklch(0.82 0.16 155)"
+          />
+          <HeroStat
+            label="Best single saving"
+            value={bestPct > 0 ? `${bestPct.toFixed(0)}%` : "—"}
+            sub={bestPct > 0 ? "on one workload's host swap" : "nothing left to move"}
+            accent="oklch(0.86 0.09 265)"
+          />
+          <HeroStat
+            label="On cheapest host"
+            value={coveragePct === null ? "—" : `${Math.round(coveragePct)}%`}
+            sub={
+              coveragePct === null
+                ? "not enough priced traffic yet to judge"
+                : "of your spend already optimal"
+            }
+            accent="oklch(0.9 0.03 285)"
+          />
+        </div>
+      </div>
+      <div className="lg:w-[260px]">
+        <OpportunityRing
+          saving={available}
+          spend={measuredSpend}
+          period={activeRange.long}
+          label="Cheaper hosts"
+        />
+      </div>
+    </section>
+  );
+}
+
 
 /**
  * List A — same model, cheaper host.
