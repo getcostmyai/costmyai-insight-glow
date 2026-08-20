@@ -77,7 +77,7 @@ const NEVER_PAY = [
 ];
 
 function PricingPage() {
-  const [yearly, setYearly] = useState(false);
+  const [yearly, setYearly] = useState(true);
 
   return (
     <MarketingShell>
@@ -123,14 +123,14 @@ function Hero({ yearly, setYearly }: { yearly: boolean; setYearly: (v: boolean) 
 
         <Reveal delay={220} className="mt-10 flex justify-center">
           <div className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
-            <BillingToggle active={!yearly} onClick={() => setYearly(false)}>
-              Monthly
-            </BillingToggle>
             <BillingToggle active={yearly} onClick={() => setYearly(true)}>
               Yearly
               <span className="ml-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[11px] font-semibold text-saving">
                 2 months free
               </span>
+            </BillingToggle>
+            <BillingToggle active={!yearly} onClick={() => setYearly(false)}>
+              Monthly
             </BillingToggle>
           </div>
         </Reveal>
