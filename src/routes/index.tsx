@@ -560,17 +560,18 @@ function Pricing({ stats }: { stats: MarketingStats }) {
           {LEVELS.map((plan, i) => {
             const meta = PLAN_META[plan];
             const price = yearly ? meta.yearly : meta.monthly;
-            const featured = plan === "rightsize";
+            const beta = plan === "rightsize" || plan === "govern";
             return (
               <Reveal
                 key={plan}
                 delay={i * 80}
-                className={`flex flex-col rounded-3xl border p-6 ${
-                  featured
-                    ? "border-primary/40 bg-primary-soft shadow-[var(--shadow-card)]"
-                    : "border-border bg-background shadow-[var(--shadow-card)]"
-                }`}
+                className="relative flex flex-col rounded-3xl border border-border bg-background p-6 shadow-[var(--shadow-card)]"
               >
+                {beta ? (
+                  <span className="absolute -top-3 left-6 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Coming soon — closed beta
+                  </span>
+                ) : null}
                 <p className="text-sm font-semibold tracking-tight">{meta.label}</p>
                 <p className="num mt-4 text-3xl">
                   {price === 0 ? "Free" : `$${price}`}
@@ -579,7 +580,13 @@ function Pricing({ stats }: { stats: MarketingStats }) {
                   )}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {price === 0 ? "No card, ever" : yearly ? "billed annually" : "billed monthly"}
+                  {beta
+                    ? "not on sale yet — price shown for reference"
+                    : price === 0
+                      ? "No card, ever"
+                      : yearly
+                        ? "billed annually"
+                        : "billed monthly"}
                 </p>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{meta.blurb}</p>
 
@@ -592,12 +599,18 @@ function Pricing({ stats }: { stats: MarketingStats }) {
                   ))}
                 </ul>
 
-                <Link
-                  to="/auth"
-                  className={`mt-6 ${featured ? "btn-gradient" : "btn-quiet"} w-full px-5 py-2.5 text-sm`}
-                >
-                  {plan === "compare" ? "Start free" : `Get ${meta.label}`}
-                </Link>
+                {beta ? (
+                  <p className="mt-6 w-full rounded-full border border-dashed border-border px-5 py-2.5 text-center text-sm text-muted-foreground">
+                    In closed beta — invitation only
+                  </p>
+                ) : (
+                  <Link
+                    to="/auth"
+                    className="btn-quiet mt-6 w-full px-5 py-2.5 text-sm"
+                  >
+                    {plan === "compare" ? "Start free" : `Get ${meta.label}`}
+                  </Link>
+                )}
               </Reveal>
             );
           })}
