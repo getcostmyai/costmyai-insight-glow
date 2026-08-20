@@ -247,14 +247,17 @@ describe("round 3 spec", () => {
     }
   });
 
-  // Dispatch 172 reverses item 9's original rule. Hiding levels below the
-  // customer's plan meant a paying customer could not navigate to something
-  // they are entitled to except by guessing the URL. Every level is listed for
-  // every workspace now; the gate stays server-side, not in the nav.
-  it("item 9 · nav lists every level for every workspace, never hides entitled ones", () => {
-    expect(SIDEBAR).toContain("const visibleLevels = LEVELS;");
-    expect(SIDEBAR).not.toContain('scope === "demo"\n      ? LEVELS');
+  // Dispatch 232 restores item 9's original rule, now that it is safe: every
+  // rung merges every rung below it inline, so a below-rung nav entry can only
+  // lead to a subset of what the customer already sees. The nav lists the
+  // customer's own rung plus the rungs above it, locked, as the upsell path.
+  it("item 9 · nav lists own rung and above, never a rung below the plan", () => {
+    expect(SIDEBAR).toContain(
+      "LEVELS.filter((meta) => meta.requiredPlan === null || planAtLeast(meta.requiredPlan, plan))",
+    );
+    expect(SIDEBAR).not.toContain("const visibleLevels = LEVELS;");
   });
+
 
 
   it("item 11 · hero stat cards share one baseline per row via subgrid", () => {
