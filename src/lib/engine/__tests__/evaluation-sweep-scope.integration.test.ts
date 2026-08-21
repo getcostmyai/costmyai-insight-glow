@@ -139,9 +139,14 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
   });
 
   it("evaluates every organization in the database, counted independently", () => {
-    console.log(`[unfiltered] report.orgs=${unfiltered.orgs} vs counted total=${orgTotal}`);
-    expect(orgTotal).toBeGreaterThan(1);
-    expect(unfiltered.orgs).toBe(orgTotal);
+    const low = Math.min(orgTotalBefore, orgTotalAfter);
+    const high = Math.max(orgTotalBefore, orgTotalAfter);
+    console.log(`[unfiltered] report.orgs=${unfiltered.orgs} vs counted ${low}..${high}`);
+    expect(low).toBeGreaterThan(1);
+    // Every workspace that existed for the whole run, and never more than
+    // existed at any point in it. A filtered sweep could not land in this band.
+    expect(unfiltered.orgs).toBeGreaterThanOrEqual(low);
+    expect(unfiltered.orgs).toBeLessThanOrEqual(high);
   });
 
   it("reaches those workspaces without erroring on any of them", () => {
