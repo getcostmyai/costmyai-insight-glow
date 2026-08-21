@@ -284,6 +284,7 @@ describe("Govern against generated synthetic traffic", () => {
     expect(rows.length).toBeGreaterThan(60);
     const spend = Math.round(rows.reduce((s, r) => s + Number(r.cost_usd), 0) * 100) / 100;
     expect(spend).toBeCloseTo(seededSpendUsd, 1);
+    console.log(`[seed] rollup rows=${rows.length} spend=$${spend} over ${WINDOW_DAYS}d seed="${SEED}"`);
     expect(spend).toBeGreaterThan(10_000);
     const days = new Set(rows.map((r) => String(r.bucket_start).slice(0, 10)));
     expect(days.size).toBeGreaterThanOrEqual(29);
@@ -335,6 +336,9 @@ describe("Govern against generated synthetic traffic", () => {
       .eq("status", "activated")
       .maybeSingle();
     expect(rec.data).not.toBeNull();
+    console.log(
+      `[clean] ${CLEAN.modelKey}@${CLEAN.host} -> ${s.to_model}@${s.to_host} saving=$${rec.data!.monthly_saving_usd}/mo badge="${s.badge}"`,
+    );
     expect(Number(rec.data!.monthly_saving_usd)).toBeGreaterThanOrEqual(
       DEFAULT_AUTONOMOUS_POLICY.minMonthlySavingUsd,
     );
@@ -363,6 +367,9 @@ describe("Govern against generated synthetic traffic", () => {
     expect(rec.data!.kind).toBe("quality_match");
     expect(rec.data!.status).toBe("activated");
     const delta = Number(rec.data!.quality_delta);
+    console.log(
+      `[tradeoff] ${TRADEOFF.modelKey}@${TRADEOFF.host} -> ${s.to_model}@${s.to_host} delta=${delta} saving=$${rec.data!.monthly_saving_usd}/mo`,
+    );
     // The whole point of the tradeoff cell: the replacement is not better.
     expect(delta).toBeLessThanOrEqual(0);
     expect(Number(rec.data!.monthly_saving_usd)).toBeGreaterThanOrEqual(
@@ -386,6 +393,9 @@ describe("Govern against generated synthetic traffic", () => {
       expect(r.status).not.toBe("activated");
     }
 
+    console.log(
+      `[refuse] ${TINY.modelKey}@${TINY.host} recs=${rows.map((r) => `${r.kind}:$${r.monthly_saving_usd}/${r.status}`).join(", ")} refusals=${JSON.stringify(firstRun.autonomousRefusals)}`,
+    );
     const { data: switches } = await admin
       .from("switches")
       .select("id")
