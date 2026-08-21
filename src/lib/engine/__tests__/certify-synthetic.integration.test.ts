@@ -55,7 +55,7 @@ import type {
   UsageAggregate,
 } from "@/lib/engine/types";
 import { runPipeline, type EngineOutput } from "@/lib/engine/pipeline";
-import { benchmarksAreCertifiable } from "@/lib/sync-freshness";
+import { BENCHMARK_FEED, benchmarksAreCertifiable } from "@/lib/sync-freshness";
 import { DAY_MS, generateEvents, rollupEvents, type SyntheticEvent } from "@/lib/synthetic/generator";
 import { sizeWorkloads } from "@/lib/synthetic/sizing";
 import type { SyntheticWorkload } from "@/lib/synthetic/workloads";
@@ -447,7 +447,7 @@ beforeAll(async () => {
   const snapshot = await admin
     .from("pricing_snapshots")
     .select("synced_at")
-    .eq("feed", "artificialanalysis")
+    .eq("feed", BENCHMARK_FEED)
     .eq("status", "ok")
     .order("synced_at", { ascending: false })
     .limit(1)
