@@ -73,8 +73,17 @@ function median(values: number[]): number | null {
 /**
  * Recompute every real workspace's recommendations from current prices,
  * benchmarks and traffic, then let Govern act where it is allowed to.
+ *
+ * `opts.orgIds` narrows the sweep to specific workspaces. It exists for the
+ * Govern integration harness, which must run the REAL writer over its own
+ * disposable, isolated workspace and must not touch the shared demo org the
+ * scheduled cron is already executing autonomy on. Production callers pass
+ * nothing and keep sweeping every workspace.
  */
-export async function runEvaluation(trigger: string): Promise<EvaluationReport> {
+export async function runEvaluation(
+  trigger: string,
+  opts: { orgIds?: string[] } = {},
+): Promise<EvaluationReport> {
   const report: EvaluationReport = {
     orgs: 0,
     recommendationsWritten: 0,
@@ -90,12 +99,15 @@ export async function runEvaluation(trigger: string): Promise<EvaluationReport> 
   // an unpaged read silently hands the engine a partial market.
   const { fetchAllRows } = await import("../paginate.server");
 
+  const orgQuery = supabaseAdmin.from("organizations").select("id, plan, is_synthetic, autonomous_enabled");
+
   const [orgs, prices, benchmarks, margins, models, benchmarkSync] = await Promise.all([
     // The synthetic workspace is evaluated too. It is the only standing body of
     // realistic traffic we have, and skipping it meant the scheduled writer had
     // nothing to write against. Its output is stamped is_synthetic at the
     // database boundary, and the human switch paths stay read-only for it.
-    supabaseAdmin.from("organizations").select("id, plan, is_synthetic, autonomous_enabled"),
+    opts.orgIds ? orgQuery.in("id", opts.orgIds) : orgQuery,
+
     fetchAllRows((from, to) =>
       supabaseAdmin
         .from("host_prices")
