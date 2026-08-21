@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-21T09:43:41.001Z",
+  "generatedAt": "2026-08-21T10:58:32.649Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -358,7 +358,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 102,
+      "line": 112,
       "table": "organizations",
       "filters": [
         "is_synthetic"
@@ -367,7 +367,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 113,
+      "line": 123,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -376,7 +376,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 125,
+      "line": 135,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -385,7 +385,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 132,
+      "line": 142,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -394,7 +394,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 139,
+      "line": 149,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -403,7 +403,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 149,
+      "line": 159,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -412,7 +412,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 242,
+      "line": 252,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -421,7 +421,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 253,
+      "line": 263,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -430,7 +430,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 257,
+      "line": 267,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -440,7 +440,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 438,
+      "line": 448,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -449,7 +449,7 @@
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
-      "line": 461,
+      "line": 471,
       "table": "switches",
       "filters": [
         "org_id",
