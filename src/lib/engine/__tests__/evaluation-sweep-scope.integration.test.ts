@@ -138,33 +138,23 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
   });
 });
 
-describe("runEvaluation({ orgIds: [] }), characterised deliberately", () => {
-  /**
-   * DESIGN NOTE, open for decision. An empty array is truthy, so it takes the
-   * filtered branch and asks PostgREST for `id=in.()` — zero workspaces, no
-   * error, no warning. A caller that built the array dynamically and got
-   * nothing back would see a clean, successful, completely empty sweep. This
-   * test pins the behavior as it is today; it is NOT an endorsement of it. If
-   * the guard changes to fall back to a full sweep or to throw, this block is
-   * the one to rewrite.
-   */
-  it("attaches an empty id filter to the wire", () => {
-    expect(emptyArrayOrgUrls.length).toBeGreaterThan(0);
-    const url = decodeURIComponent(emptyArrayOrgUrls[0]!);
-    console.log(`[empty] ${url}`);
-    expect(url).toContain("id=in.(");
+describe("runEvaluation({ orgIds: [] }) is refused as a caller error", () => {
+  it("throws instead of sweeping nobody", () => {
+    console.log(`[empty] threw: ${String(emptyArrayError)}`);
+    expect(emptyArrayError).toBeInstanceOf(Error);
   });
 
-  it("sweeps zero organizations, silently and without error", () => {
-    console.log(`[empty] report.orgs=${emptyArray.orgs} errors=${emptyArray.errors.length}`);
-    expect(emptyArray.orgs).toBe(0);
-    expect(emptyArray.recommendationsWritten).toBe(0);
-    expect(emptyArray.autonomousSwitches).toBe(0);
-    // The part that makes it a footgun: nothing surfaces the miss.
-    expect(emptyArray.errors).toEqual([]);
+  it("says plainly that an empty array is a caller error, not an instruction", () => {
+    const message = (emptyArrayError as Error).message;
+    expect(message).toContain("empty array");
+    expect(message).toContain("caller error");
+    expect(message).toContain("Omit orgIds");
   });
 
-  it("differs from the unfiltered sweep, so the two paths are provably distinct", () => {
-    expect(emptyArray.orgs).not.toBe(unfiltered.orgs);
+  it("emits no query at all before refusing", () => {
+    console.log(`[empty] requests captured: ${emptyArrayUrls.length}`);
+    expect(emptyArrayUrls.filter((u) => u.includes("/rest/v1/organizations"))).toEqual([]);
+    // Not just the organizations read — nothing whatsoever went out.
+    expect(emptyArrayUrls).toEqual([]);
   });
 });
