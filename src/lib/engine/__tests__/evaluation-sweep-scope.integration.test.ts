@@ -18,11 +18,10 @@
  *     total of real rows in `organizations`. The engine must have touched every
  *     one of them.
  *
- * And the empty array is pinned on purpose. `opts.orgIds` is guarded by
- * truthiness, so `[]` is truthy and produces `id=in.()` — a sweep of nobody.
- * That is today's real behavior, and it is characterised here so it is a
- * documented decision under review rather than an unverified footgun. See the
- * note above the empty-array block before changing the guard.
+ * And the empty array is pinned on purpose. It is a caller bug, so the guard
+ * throws before any query is issued — asserted here both by the throw itself
+ * and by zero captured requests, so a future silent zero-sweep cannot return
+ * unnoticed.
  */
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -68,32 +67,55 @@ async function withFetchCapture<T>(fn: () => Promise<T>): Promise<{ result: T; u
   }
 }
 
-/** The number of real workspaces the unfiltered sweep is obliged to reach. */
-let orgTotal = 0;
+/** The number of real workspaces the unfiltered sweep is obliged to reach, counted either side of it. */
+let orgTotalBefore = 0;
+let orgTotalAfter = 0;
 
 let unfiltered: Awaited<ReturnType<typeof runEvaluation>>;
 let unfilteredOrgUrls: string[] = [];
-let emptyArray: Awaited<ReturnType<typeof runEvaluation>>;
-let emptyArrayOrgUrls: string[] = [];
+let emptyArrayError: unknown = null;
+let emptyArrayUrls: string[] = [];
 
-beforeAll(async () => {
+async function countOrgs(): Promise<number> {
   const { count, error } = await admin
     .from("organizations")
     .select("id", { count: "exact", head: true });
   if (error) throw error;
-  orgTotal = count ?? 0;
-  console.log(`[scope] organizations in the database: ${orgTotal}`);
+  return count ?? 0;
+}
+
+beforeAll(async () => {
+  // Counted on both sides of the run. The other integration suites create and
+  // tear down disposable workspaces in parallel, so a single count taken before
+  // the sweep can be stale by the time the sweep reads the table — that is a
+  // measurement race, not an engine defect, and bracketing removes it.
+  orgTotalBefore = await countOrgs();
 
   // No second argument at all — byte-for-byte how both cron routes call it.
   const run = await withFetchCapture(() => runEvaluation(`sweep-scope-unfiltered-${Date.now()}`));
   unfiltered = run.result;
   unfilteredOrgUrls = run.urls.filter((u) => u.includes("/rest/v1/organizations"));
 
-  const empty = await withFetchCapture(() =>
-    runEvaluation(`sweep-scope-empty-${Date.now()}`, { orgIds: [] }),
-  );
-  emptyArray = empty.result;
-  emptyArrayOrgUrls = empty.urls.filter((u) => u.includes("/rest/v1/organizations"));
+  orgTotalAfter = await countOrgs();
+  console.log(`[scope] organizations before=${orgTotalBefore} after=${orgTotalAfter}`);
+
+  // The empty array must be refused before anything is queried, so the capture
+  // has to survive the throw to prove no request went out.
+  const real = globalThis.fetch;
+  captured = [];
+  globalThis.fetch = ((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    captured.push(typeof input === "string" ? input : input instanceof Request ? input.url : String(input));
+    return real(input as never, init as never);
+  }) as typeof fetch;
+  try {
+    await runEvaluation(`sweep-scope-empty-${Date.now()}`, { orgIds: [] });
+    emptyArrayError = null;
+  } catch (err) {
+    emptyArrayError = err;
+  } finally {
+    emptyArrayUrls = [...captured];
+    globalThis.fetch = real;
+  }
 }, 300_000);
 
 afterAll(() => {
@@ -117,9 +139,14 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
   });
 
   it("evaluates every organization in the database, counted independently", () => {
-    console.log(`[unfiltered] report.orgs=${unfiltered.orgs} vs counted total=${orgTotal}`);
-    expect(orgTotal).toBeGreaterThan(1);
-    expect(unfiltered.orgs).toBe(orgTotal);
+    const low = Math.min(orgTotalBefore, orgTotalAfter);
+    const high = Math.max(orgTotalBefore, orgTotalAfter);
+    console.log(`[unfiltered] report.orgs=${unfiltered.orgs} vs counted ${low}..${high}`);
+    expect(low).toBeGreaterThan(1);
+    // Every workspace that existed for the whole run, and never more than
+    // existed at any point in it. A filtered sweep could not land in this band.
+    expect(unfiltered.orgs).toBeGreaterThanOrEqual(low);
+    expect(unfiltered.orgs).toBeLessThanOrEqual(high);
   });
 
   it("reaches those workspaces without erroring on any of them", () => {
@@ -127,33 +154,23 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
   });
 });
 
-describe("runEvaluation({ orgIds: [] }), characterised deliberately", () => {
-  /**
-   * DESIGN NOTE, open for decision. An empty array is truthy, so it takes the
-   * filtered branch and asks PostgREST for `id=in.()` — zero workspaces, no
-   * error, no warning. A caller that built the array dynamically and got
-   * nothing back would see a clean, successful, completely empty sweep. This
-   * test pins the behavior as it is today; it is NOT an endorsement of it. If
-   * the guard changes to fall back to a full sweep or to throw, this block is
-   * the one to rewrite.
-   */
-  it("attaches an empty id filter to the wire", () => {
-    expect(emptyArrayOrgUrls.length).toBeGreaterThan(0);
-    const url = decodeURIComponent(emptyArrayOrgUrls[0]!);
-    console.log(`[empty] ${url}`);
-    expect(url).toContain("id=in.(");
+describe("runEvaluation({ orgIds: [] }) is refused as a caller error", () => {
+  it("throws instead of sweeping nobody", () => {
+    console.log(`[empty] threw: ${String(emptyArrayError)}`);
+    expect(emptyArrayError).toBeInstanceOf(Error);
   });
 
-  it("sweeps zero organizations, silently and without error", () => {
-    console.log(`[empty] report.orgs=${emptyArray.orgs} errors=${emptyArray.errors.length}`);
-    expect(emptyArray.orgs).toBe(0);
-    expect(emptyArray.recommendationsWritten).toBe(0);
-    expect(emptyArray.autonomousSwitches).toBe(0);
-    // The part that makes it a footgun: nothing surfaces the miss.
-    expect(emptyArray.errors).toEqual([]);
+  it("says plainly that an empty array is a caller error, not an instruction", () => {
+    const message = (emptyArrayError as Error).message;
+    expect(message).toContain("empty array");
+    expect(message).toContain("caller error");
+    expect(message).toContain("Omit orgIds");
   });
 
-  it("differs from the unfiltered sweep, so the two paths are provably distinct", () => {
-    expect(emptyArray.orgs).not.toBe(unfiltered.orgs);
+  it("emits no query at all before refusing", () => {
+    console.log(`[empty] requests captured: ${emptyArrayUrls.length}`);
+    expect(emptyArrayUrls.filter((u) => u.includes("/rest/v1/organizations"))).toEqual([]);
+    // Not just the organizations read — nothing whatsoever went out.
+    expect(emptyArrayUrls).toEqual([]);
   });
 });
