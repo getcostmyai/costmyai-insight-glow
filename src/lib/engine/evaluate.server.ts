@@ -92,6 +92,16 @@ export async function runEvaluation(
     errors: [],
   };
 
+  // An empty array is a caller bug, not an instruction to evaluate nobody.
+  // Truthiness alone would send `[]` down the filtered branch and produce a
+  // clean, silent, zero-workspace sweep — the exact shape of a missed run that
+  // reports success. Refuse before any query is issued.
+  if (opts.orgIds && opts.orgIds.length === 0) {
+    throw new Error(
+      "runEvaluation: opts.orgIds was an empty array. That is treated as a caller error, not an instruction to evaluate zero workspaces. Omit orgIds entirely to sweep every workspace, or pass at least one org id.",
+    );
+  }
+
   const since = new Date(Date.now() - EVALUATION_WINDOW_DAYS * DAY_MS).toISOString();
 
   // Reference data is identical for every workspace: read it once, and read
