@@ -72,8 +72,8 @@ let orgTotal = 0;
 
 let unfiltered: Awaited<ReturnType<typeof runEvaluation>>;
 let unfilteredOrgUrls: string[] = [];
-let emptyArray: Awaited<ReturnType<typeof runEvaluation>>;
-let emptyArrayOrgUrls: string[] = [];
+let emptyArrayError: unknown = null;
+let emptyArrayUrls: string[] = [];
 
 beforeAll(async () => {
   const { count, error } = await admin
