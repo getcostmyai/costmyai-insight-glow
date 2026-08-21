@@ -185,8 +185,9 @@ describe("the refusal a declined label earns", () => {
     });
     expect(resolution.refusal).toBe("task_label_low_confidence");
     expect(resolution.detail).toMatch(/declined to label/i);
-    // Honest about what already exists, and promising nothing that does not.
-    expect(resolution.detail).toMatch(/declared tools|response schema/i);
+    // Rewritten when remote classification shipped: the honest next step is no
+    // longer "send a structural signal" but the off-path remote fallback.
+    expect(resolution.detail).toMatch(/remote fallback|COSTMYAI_CLASSIFY_REMOTE/i);
     expect(resolution.detail).toMatch(/cheaper-host switches/i);
     expect(REFUSAL_LABEL["task_label_low_confidence"]).toMatch(/could not name/i);
   });
