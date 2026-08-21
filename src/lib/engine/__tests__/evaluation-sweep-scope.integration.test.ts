@@ -18,11 +18,10 @@
  *     total of real rows in `organizations`. The engine must have touched every
  *     one of them.
  *
- * And the empty array is pinned on purpose. `opts.orgIds` is guarded by
- * truthiness, so `[]` is truthy and produces `id=in.()` — a sweep of nobody.
- * That is today's real behavior, and it is characterised here so it is a
- * documented decision under review rather than an unverified footgun. See the
- * note above the empty-array block before changing the guard.
+ * And the empty array is pinned on purpose. It is a caller bug, so the guard
+ * throws before any query is issued — asserted here both by the throw itself
+ * and by zero captured requests, so a future silent zero-sweep cannot return
+ * unnoticed.
  */
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
