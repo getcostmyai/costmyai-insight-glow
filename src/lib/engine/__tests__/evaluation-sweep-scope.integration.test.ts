@@ -75,18 +75,28 @@ let unfilteredOrgUrls: string[] = [];
 let emptyArrayError: unknown = null;
 let emptyArrayUrls: string[] = [];
 
-beforeAll(async () => {
+async function countOrgs(): Promise<number> {
   const { count, error } = await admin
     .from("organizations")
     .select("id", { count: "exact", head: true });
   if (error) throw error;
-  orgTotal = count ?? 0;
-  console.log(`[scope] organizations in the database: ${orgTotal}`);
+  return count ?? 0;
+}
+
+beforeAll(async () => {
+  // Counted on both sides of the run. The other integration suites create and
+  // tear down disposable workspaces in parallel, so a single count taken before
+  // the sweep can be stale by the time the sweep reads the table — that is a
+  // measurement race, not an engine defect, and bracketing removes it.
+  orgTotalBefore = await countOrgs();
 
   // No second argument at all — byte-for-byte how both cron routes call it.
   const run = await withFetchCapture(() => runEvaluation(`sweep-scope-unfiltered-${Date.now()}`));
   unfiltered = run.result;
   unfilteredOrgUrls = run.urls.filter((u) => u.includes("/rest/v1/organizations"));
+
+  orgTotalAfter = await countOrgs();
+  console.log(`[scope] organizations before=${orgTotalBefore} after=${orgTotalAfter}`);
 
   // The empty array must be refused before anything is queried, so the capture
   // has to survive the throw to prove no request went out.
