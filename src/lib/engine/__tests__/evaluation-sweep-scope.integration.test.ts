@@ -88,11 +88,23 @@ beforeAll(async () => {
   unfiltered = run.result;
   unfilteredOrgUrls = run.urls.filter((u) => u.includes("/rest/v1/organizations"));
 
-  const empty = await withFetchCapture(() =>
-    runEvaluation(`sweep-scope-empty-${Date.now()}`, { orgIds: [] }),
-  );
-  emptyArray = empty.result;
-  emptyArrayOrgUrls = empty.urls.filter((u) => u.includes("/rest/v1/organizations"));
+  // The empty array must be refused before anything is queried, so the capture
+  // has to survive the throw to prove no request went out.
+  const real = globalThis.fetch;
+  captured = [];
+  globalThis.fetch = ((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    captured.push(typeof input === "string" ? input : input instanceof Request ? input.url : String(input));
+    return real(input as never, init as never);
+  }) as typeof fetch;
+  try {
+    await runEvaluation(`sweep-scope-empty-${Date.now()}`, { orgIds: [] });
+    emptyArrayError = null;
+  } catch (err) {
+    emptyArrayError = err;
+  } finally {
+    emptyArrayUrls = [...captured];
+    globalThis.fetch = real;
+  }
 }, 300_000);
 
 afterAll(() => {
