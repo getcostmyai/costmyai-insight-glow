@@ -67,8 +67,9 @@ async function withFetchCapture<T>(fn: () => Promise<T>): Promise<{ result: T; u
   }
 }
 
-/** The number of real workspaces the unfiltered sweep is obliged to reach. */
-let orgTotal = 0;
+/** The number of real workspaces the unfiltered sweep is obliged to reach, counted either side of it. */
+let orgTotalBefore = 0;
+let orgTotalAfter = 0;
 
 let unfiltered: Awaited<ReturnType<typeof runEvaluation>>;
 let unfilteredOrgUrls: string[] = [];
