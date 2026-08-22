@@ -19,8 +19,8 @@ interface SitemapEntry {
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const BASE_URL = baseUrlFrom(request);
+      GET: async () => {
+        const BASE_URL = CANONICAL_BASE_URL;
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
           { path: "/models", changefreq: "daily", priority: "0.9" },
