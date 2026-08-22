@@ -4,9 +4,19 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
 
-import { estimateSavingFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
+import { estimateSpreadFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { trackEstimatorEvent } from "@/lib/telemetry.functions";
+import { AllocationBar, type LineDraft } from "./AllocationBar";
+import { Chip, Label, Row } from "./estimator-ui";
+import type { AggregateEstimatorResult } from "@/lib/estimator/aggregate";
+import {
+  canAddLine,
+  removeLine as removeLineFrom,
+  startingShare,
+  unallocatedPct,
+  type DraftLine,
+} from "@/lib/estimator/lines";
 
 import {
   CONSERVATIVE_HIGH,
@@ -15,13 +25,12 @@ import {
   WORKLOADS,
   type DistributionId,
   type EstimatorResult,
-  type WorkloadId,
 } from "@/lib/estimator/spec";
 
 /** Fixed locale so SSR and client render identical digits. */
 const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(Math.round(n));
 
-const STEPS = ["Spend", "Workload", "Where it runs"] as const;
+const STEPS = ["Spend", "Breakdown"] as const;
 
 /** Quick jumps on the spend slider, in the range most inbound teams sit in. */
 const SPEND_PRESETS = [1000, 5000, 25000, 100000] as const;
