@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-
 import { ShareControls } from "@/components/marketing/ShareControls";
 import { noteCardId, shareUrl } from "@/lib/intelligence/share-url";
+import { useOrigin } from "@/lib/use-origin";
+
 
 /**
  * Per-note share control.
