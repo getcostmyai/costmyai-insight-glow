@@ -33,6 +33,19 @@ const SEGMENT_TONES = [
   "bg-saving/40",
 ];
 
+/**
+ * Models the given provider actually serves. With no provider chosen ("Not
+ * sure") there is nothing to filter by, so the full priced catalog stands.
+ */
+function modelsFor(options: EstimatorOptions | undefined, provider: string | null) {
+  const all = options?.models ?? [];
+  if (!provider) return all;
+  const keys = options?.providers.find((p) => p.label === provider)?.modelKeys;
+  if (!keys) return all;
+  const set = new Set(keys);
+  return all.filter((m) => set.has(m.model_key));
+}
+
 export interface LineDraft {
   workload: WorkloadId;
   provider: string | null;
