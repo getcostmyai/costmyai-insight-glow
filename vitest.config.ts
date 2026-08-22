@@ -23,6 +23,8 @@ export default defineConfig(async (env) => {
   const base = await (viteConfig as any)(env);
   return mergeConfig(base, {
     test: {
+      maxWorkers: 6,
+      minWorkers: 6,
       testTimeout: 60_000,
       hookTimeout: 120_000,
     },
