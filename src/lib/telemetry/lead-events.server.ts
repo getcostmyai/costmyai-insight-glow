@@ -62,6 +62,19 @@ export function resolveVisitorId(request: Request): string {
 }
 
 /**
+ * Resolve the session for this request, refreshing its idle window. Same place
+ * and same conventions as the visitor id above — this is the only point in the
+ * public request flow where telemetry cookies are read and re-attached, so it
+ * is the only place a session can be continued or ended.
+ */
+export function resolveSessionId(request: Request, now: number = Date.now()): string {
+  const existing = readCookie(request.headers.get("cookie"), SESSION_COOKIE);
+  const session = nextSession(existing, now, isSecureRequest(request.url));
+  setResponseHeader("Set-Cookie", session.setCookie);
+  return session.id;
+}
+
+/**
  * Append one lead event.
  *
  * Telemetry must never be able to break the thing it is measuring: every
