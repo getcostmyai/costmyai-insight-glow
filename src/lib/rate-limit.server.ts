@@ -71,6 +71,12 @@ export const RATE_RULES = {
   classify: { name: "classify", limit: 300, windowSec: 60 },
   /** One acceptance record per signup; 10/hour absorbs retries, nothing more. */
   consent: { name: "consent", limit: 10, windowSec: 3600 },
+  /**
+   * Intelligence share clicks. A reader who shares several cards from one
+   * report is normal; 60 per 5 minutes matches the estimator's telemetry
+   * ceiling and bounds the write path the same way.
+   */
+  intelligenceTelemetry: { name: "intelligence-telemetry", limit: 60, windowSec: 300 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({
