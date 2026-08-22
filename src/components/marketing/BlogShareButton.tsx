@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, Link2, Linkedin } from "lucide-react";
 
 import {
@@ -7,6 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useOrigin } from "@/lib/use-origin";
+
 
 /**
  * Inlined X logomark on the same 24-unit grid as lucide icons so it inherits
