@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { aggregateEstimate } from "../aggregate";
+import { aggregateEstimate, LINE_DISTRIBUTION } from "../aggregate";
 import type { EstimatorCatalog } from "../core";
 import { MATERIALITY_USD } from "../spec";
 
@@ -121,5 +121,25 @@ describe("aggregateEstimate", () => {
 
     expect(out.unallocated.sharePct).toBe(0);
     expect(out.unallocated.impliedSpendUsd).toBe(0);
+  });
+});
+
+describe("line share round-trip", () => {
+  it("is bit-exact for every integer dollar amount 1 through 200,000", () => {
+    const share = LINE_DISTRIBUTION.share;
+    expect(share).toBe(0.25);
+
+    let drifted = 0;
+    for (let dollars = 1; dollars <= 200_000; dollars++) {
+      if ((dollars / share) * share !== dollars) drifted++;
+    }
+    expect(drifted).toBe(0);
+  });
+
+  it("is bit-exact for cent-level and fractional amounts too", () => {
+    const share = LINE_DISTRIBUTION.share;
+    for (const amount of [0.01, 12.34, 333.33, 1_234.56, 87_654.21, 1_999_999.99]) {
+      expect((amount / share) * share).toBe(amount);
+    }
   });
 });

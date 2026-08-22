@@ -32,7 +32,9 @@ import { round2 } from "@/lib/engine/cost";
  * spend pre-divided by that share and let it multiply back to exactly the
  * line's own dollars. The engine is untouched; nothing here re-implements it.
  */
-const LINE_DISTRIBUTION = DISTRIBUTIONS[0]; // "dominant", share 0.7
+// "spread", share 0.25 — a power of two, so lineSpend / share * share is
+// bit-exact for every dollar amount rather than merely correct to one ulp.
+export const LINE_DISTRIBUTION = DISTRIBUTIONS[2];
 
 export interface EstimatorLineInput {
   workload: WorkloadId;
