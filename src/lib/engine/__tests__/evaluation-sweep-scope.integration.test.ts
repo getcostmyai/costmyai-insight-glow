@@ -14,9 +14,10 @@
  *     actual PostgREST request for `organizations` is inspected. A filter would
  *     appear as an `id=in.(...)` query parameter. Its absence is the proof that
  *     no filter was attached — not the source reading as though none was.
- *  2. The outcome. `report.orgs` is compared against a separately counted
- *     total of real rows in `organizations`. The engine must have touched every
- *     one of them.
+ *  2. The outcome, by identity. The org ids returned to the engine are read off
+ *     the wire and compared against the ids that existed both immediately
+ *     before and immediately after the run. Every such id must have been swept.
+
  *
  * And the empty array is pinned on purpose. It is a caller bug, so the guard
  * throws before any query is issued — asserted here both by the throw itself
@@ -46,10 +47,14 @@ function organizationRequests(): string[] {
   return captured.filter((u) => u.includes("/rest/v1/organizations"));
 }
 
+/** Org ids returned to the engine by the sweep's own organizations read. */
+let sweptOrgIds: string[] = [];
+
 async function withFetchCapture<T>(fn: () => Promise<T>): Promise<{ result: T; urls: string[] }> {
   const real = globalThis.fetch;
   captured = [];
-  globalThis.fetch = ((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+  sweptOrgIds = [];
+  globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
     const url =
       typeof input === "string"
         ? input
@@ -57,7 +62,20 @@ async function withFetchCapture<T>(fn: () => Promise<T>): Promise<{ result: T; u
           ? input.url
           : String(input);
     captured.push(url);
-    return real(input as never, init as never);
+    const response = await real(input as never, init as never);
+    if (url.includes("/rest/v1/organizations")) {
+      // Read the body the engine is about to receive. Every row it returns is
+      // evaluated, so this IS the set of workspaces the sweep touched.
+      try {
+        const rows = (await response.clone().json()) as Array<{ id?: string }>;
+        if (Array.isArray(rows)) {
+          for (const row of rows) if (row?.id) sweptOrgIds.push(row.id);
+        }
+      } catch {
+        /* head/count requests have no JSON body */
+      }
+    }
+    return response;
   }) as typeof fetch;
   try {
     const result = await fn();
@@ -67,37 +85,40 @@ async function withFetchCapture<T>(fn: () => Promise<T>): Promise<{ result: T; u
   }
 }
 
-/** The number of real workspaces the unfiltered sweep is obliged to reach, counted either side of it. */
-let orgTotalBefore = 0;
-let orgTotalAfter = 0;
+/** Org ids present immediately before / immediately after the sweep. */
+let orgIdsBefore: string[] = [];
+let orgIdsAfter: string[] = [];
+let sweptIds: string[] = [];
 
 let unfiltered: Awaited<ReturnType<typeof runEvaluation>>;
 let unfilteredOrgUrls: string[] = [];
 let emptyArrayError: unknown = null;
 let emptyArrayUrls: string[] = [];
 
-async function countOrgs(): Promise<number> {
-  const { count, error } = await admin
-    .from("organizations")
-    .select("id", { count: "exact", head: true });
+async function orgIds(): Promise<string[]> {
+  const { data, error } = await admin.from("organizations").select("id");
   if (error) throw error;
-  return count ?? 0;
+  return (data ?? []).map((row) => row.id as string);
 }
 
 beforeAll(async () => {
-  // Counted on both sides of the run. The other integration suites create and
-  // tear down disposable workspaces in parallel, so a single count taken before
-  // the sweep can be stale by the time the sweep reads the table — that is a
-  // measurement race, not an engine defect, and bracketing removes it.
-  orgTotalBefore = await countOrgs();
+  // Ids, not counts. Other integration suites create and tear down disposable
+  // workspaces in parallel, so any total counted outside the sweep is a moving
+  // target. The provable claim is about identity: whichever workspaces existed
+  // for the WHOLE window must all have been swept.
+  orgIdsBefore = await orgIds();
 
   // No second argument at all — byte-for-byte how both cron routes call it.
   const run = await withFetchCapture(() => runEvaluation(`sweep-scope-unfiltered-${Date.now()}`));
   unfiltered = run.result;
   unfilteredOrgUrls = run.urls.filter((u) => u.includes("/rest/v1/organizations"));
+  sweptIds = [...sweptOrgIds];
 
-  orgTotalAfter = await countOrgs();
-  console.log(`[scope] organizations before=${orgTotalBefore} after=${orgTotalAfter}`);
+  orgIdsAfter = await orgIds();
+  console.log(
+    `[scope] organizations before=${orgIdsBefore.length} after=${orgIdsAfter.length} swept=${sweptIds.length}`,
+  );
+
 
   // The empty array must be refused before anything is queried, so the capture
   // has to survive the throw to prove no request went out.
@@ -138,16 +159,22 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
     expect(url).toContain("select=id,plan,is_synthetic,autonomous_enabled");
   });
 
-  it("evaluates every organization in the database, counted independently", () => {
-    const low = Math.min(orgTotalBefore, orgTotalAfter);
-    const high = Math.max(orgTotalBefore, orgTotalAfter);
-    console.log(`[unfiltered] report.orgs=${unfiltered.orgs} vs counted ${low}..${high}`);
-    expect(low).toBeGreaterThan(1);
-    // Every workspace that existed for the whole run, and never more than
-    // existed at any point in it. A filtered sweep could not land in this band.
-    expect(unfiltered.orgs).toBeGreaterThanOrEqual(low);
-    expect(unfiltered.orgs).toBeLessThanOrEqual(high);
+  it("evaluates every organization that existed for the whole run", () => {
+    const after = new Set(orgIdsAfter);
+    const stable = orgIdsBefore.filter((id) => after.has(id));
+    const swept = new Set(sweptIds);
+    const missed = stable.filter((id) => !swept.has(id));
+    console.log(
+      `[unfiltered] report.orgs=${unfiltered.orgs} swept=${swept.size} stable=${stable.length} missed=${missed.length}`,
+    );
+    // Orgs created or torn down by concurrent suites during the window are
+    // excluded on purpose: no claim about them is provable. No upper bound is
+    // asserted for the same reason.
+    expect(stable.length).toBeGreaterThan(1);
+    expect(missed).toEqual([]);
+    expect(unfiltered.orgs).toBe(swept.size);
   });
+
 
   it("reaches those workspaces without erroring on any of them", () => {
     expect(unfiltered.errors).toEqual([]);
