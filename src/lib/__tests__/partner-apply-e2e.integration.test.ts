@@ -141,10 +141,10 @@ afterAll(async () => {
  * validator, the rate-limit middleware body and the handler all run for real —
  * only the network hop between browser and worker is absent.
  */
-async function submit(input: ApplicationInput) {
+async function submit(input: ApplicationInput, callerIp: string = CALLER_IP) {
   const request = new Request("https://costmyai.com/partners/apply", {
     method: "POST",
-    headers: { "cf-connecting-ip": CALLER_IP, origin: "https://costmyai.com" },
+    headers: { "cf-connecting-ip": callerIp, origin: "https://costmyai.com" },
   });
   const execute = (
     serverFns as unknown as Record<
@@ -291,12 +291,8 @@ describe("partner-apply pipeline, end to end", () => {
     const before = caught.length;
     let result;
     try {
-      result = await submit({
-        ...base,
-        email: FAIL_EMAIL,
-        // Fresh caller: the limiter budget for CALLER_IP is spent by now.
-        _ip: FAIL_IP,
-      } as ApplicationInput);
+      // Fresh caller: the limiter budget for CALLER_IP is spent by now.
+      result = await submit({ ...base, email: FAIL_EMAIL }, FAIL_IP);
     } finally {
       mailFailure = null;
     }
