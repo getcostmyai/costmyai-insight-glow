@@ -14,9 +14,10 @@
  *     actual PostgREST request for `organizations` is inspected. A filter would
  *     appear as an `id=in.(...)` query parameter. Its absence is the proof that
  *     no filter was attached — not the source reading as though none was.
- *  2. The outcome. `report.orgs` is compared against a separately counted
- *     total of real rows in `organizations`. The engine must have touched every
- *     one of them.
+ *  2. The outcome, by identity. The org ids returned to the engine are read off
+ *     the wire and compared against the ids that existed both immediately
+ *     before and immediately after the run. Every such id must have been swept.
+
  *
  * And the empty array is pinned on purpose. It is a caller bug, so the guard
  * throws before any query is issued — asserted here both by the throw itself
