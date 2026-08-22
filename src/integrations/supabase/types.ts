@@ -1161,6 +1161,8 @@ export type Database = {
       partner_applications: {
         Row: {
           active_clients_bucket: string
+          applicant_email_at: string | null
+          applicant_email_error: string | null
           company: string
           created_at: string
           email: string
@@ -1173,6 +1175,8 @@ export type Database = {
           phone: string
           reviewed_at: string | null
           reviewed_by: string | null
+          reviewer_email_at: string | null
+          reviewer_email_error: string | null
           reviewer_note: string | null
           routed_path: Database["public"]["Enums"]["partner_application_path"]
           starting_soon_bucket: string
@@ -1181,6 +1185,8 @@ export type Database = {
         }
         Insert: {
           active_clients_bucket: string
+          applicant_email_at?: string | null
+          applicant_email_error?: string | null
           company: string
           created_at?: string
           email: string
@@ -1193,6 +1199,8 @@ export type Database = {
           phone: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewer_email_at?: string | null
+          reviewer_email_error?: string | null
           reviewer_note?: string | null
           routed_path: Database["public"]["Enums"]["partner_application_path"]
           starting_soon_bucket: string
@@ -1201,6 +1209,8 @@ export type Database = {
         }
         Update: {
           active_clients_bucket?: string
+          applicant_email_at?: string | null
+          applicant_email_error?: string | null
           company?: string
           created_at?: string
           email?: string
@@ -1213,6 +1223,8 @@ export type Database = {
           phone?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewer_email_at?: string | null
+          reviewer_email_error?: string | null
           reviewer_note?: string | null
           routed_path?: Database["public"]["Enums"]["partner_application_path"]
           starting_soon_bucket?: string
