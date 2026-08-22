@@ -9,6 +9,12 @@
  * for real without posting test data into the production reviewer channel. The
  * stored project secret is never modified.
  *
+ * The two application emails are intercepted the same way and at the same
+ * depth: `LOVABLE_SEND_URL` is repointed at a second local catcher, so
+ * `sendTemplateEmail` renders the real template and performs a real HTTP POST
+ * of the real payload — recipient, subject and body included — which the drill
+ * then asserts on. Nothing is stubbed above the network boundary.
+ *
  * The server function reads the caller IP through `getRequest()`, so each call
  * runs inside a real TanStack request context with a synthetic client IP; that
  * IP is what the shared Postgres limiter keys on.
@@ -40,17 +46,39 @@ guardIntegrationDatabase(admin);
 
 const stamp = Date.now();
 const EMAIL = `partner-apply-drill-${stamp}@costmyai-test.dev`;
+/** Second applicant, used only for the forced-email-failure step. */
+const FAIL_EMAIL = `partner-apply-drill-fail-${stamp}@costmyai-test.dev`;
 /** Unique per run, so the hourly limiter budget is this drill's alone. */
 const CALLER_IP = `203.0.113.${stamp % 200}`;
+/** The failure step needs its own limiter budget. */
+const FAIL_IP = `203.0.113.${(stamp % 200) + 20}`;
 
 interface Caught {
   text: string;
   application: { id: string; email: string; path: string; escalated: boolean };
 }
 
+/** The wire payload `sendLovableEmail` POSTs to the send API. */
+interface CaughtEmail {
+  to: string;
+  from: string;
+  subject: string;
+  html: string;
+  text: string;
+  label: string;
+  idempotency_key: string;
+}
+
 let catcher: Server;
 let caught: Caught[] = [];
 let previousWebhook: string | undefined;
+
+let mailCatcher: Server;
+let mails: CaughtEmail[] = [];
+/** Set for one call to make the send API refuse, proving the wrapping holds. */
+let mailFailure: null | { status: number; body: string } = null;
+let previousSendUrl: string | undefined;
+let previousApiKey: string | undefined;
 
 beforeAll(async () => {
   catcher = createServer((req, res) => {
@@ -67,6 +95,30 @@ beforeAll(async () => {
 
   previousWebhook = process.env["PARTNER_ALERT_WEBHOOK_URL"];
   process.env["PARTNER_ALERT_WEBHOOK_URL"] = `http://127.0.0.1:${port}/reviewer-alert`;
+
+  mailCatcher = createServer((req, res) => {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      if (mailFailure) {
+        // Refuse without recording: a send that the API rejects never happened.
+        res.writeHead(mailFailure.status, { "Content-Type": "application/json" });
+        res.end(mailFailure.body);
+        return;
+      }
+      mails.push(JSON.parse(body) as CaughtEmail);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, message_id: `drill-${mails.length}` }));
+    });
+  });
+  await new Promise<void>((resolve) => mailCatcher.listen(0, "127.0.0.1", resolve));
+  const mailPort = (mailCatcher.address() as AddressInfo).port;
+
+  previousSendUrl = process.env["LOVABLE_SEND_URL"];
+  process.env["LOVABLE_SEND_URL"] = `http://127.0.0.1:${mailPort}/v1/messaging/email/send`;
+  // The helper refuses to run without a key; the catcher does not check it.
+  previousApiKey = process.env["LOVABLE_API_KEY"];
+  if (!previousApiKey) process.env["LOVABLE_API_KEY"] = "drill-key";
 });
 
 afterAll(async () => {
@@ -74,7 +126,13 @@ afterAll(async () => {
   else process.env["PARTNER_ALERT_WEBHOOK_URL"] = previousWebhook;
   await new Promise<void>((resolve) => catcher.close(() => resolve()));
 
+  if (previousSendUrl === undefined) delete process.env["LOVABLE_SEND_URL"];
+  else process.env["LOVABLE_SEND_URL"] = previousSendUrl;
+  if (previousApiKey === undefined) delete process.env["LOVABLE_API_KEY"];
+  await new Promise<void>((resolve) => mailCatcher.close(() => resolve()));
+
   await admin.from("partner_applications").delete().eq("email", EMAIL);
+  await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
 });
 
 /**
@@ -83,10 +141,10 @@ afterAll(async () => {
  * validator, the rate-limit middleware body and the handler all run for real —
  * only the network hop between browser and worker is absent.
  */
-async function submit(input: ApplicationInput) {
+async function submit(input: ApplicationInput, callerIp: string = CALLER_IP) {
   const request = new Request("https://costmyai.com/partners/apply", {
     method: "POST",
-    headers: { "cf-connecting-ip": CALLER_IP, origin: "https://costmyai.com" },
+    headers: { "cf-connecting-ip": callerIp, origin: "https://costmyai.com" },
   });
   const execute = (
     serverFns as unknown as Record<
@@ -154,6 +212,35 @@ describe("partner-apply pipeline, end to end", () => {
     expect(caught).toHaveLength(1);
     expect(caught[0]?.application.id).toBe(firstId);
     expect(caught[0]?.text).toContain("New partner application");
+
+    // Both application emails really left the process on a first submission.
+    expect(mails).toHaveLength(2);
+
+    const internal = mails.find((m) => m.label === "partner-application-alert");
+    expect(internal, "internal alert email never sent").toBeDefined();
+    expect(internal?.to).toBe("mail@costmyai.com");
+    expect(internal?.subject).toContain("New partner application");
+    // The payload a reviewer needs is really in the body, not just referenced.
+    expect(internal?.text).toContain(EMAIL);
+    expect(internal?.text).toContain("101–300");
+    expect(internal?.idempotency_key).toBe(`partner-application-alert-${firstId}`);
+
+    const applicant = mails.find((m) => m.label === "partner-application-received");
+    expect(applicant, "applicant confirmation never sent").toBeDefined();
+    expect(applicant?.to).toBe(EMAIL);
+    expect(applicant?.text).toContain("3 business days");
+    expect(applicant?.idempotency_key).toBe(`partner-application-received-${firstId}`);
+
+    // ...and the row records that they did.
+    const { data: mailState } = await admin
+      .from("partner_applications")
+      .select("reviewer_email_at, reviewer_email_error, applicant_email_at, applicant_email_error")
+      .eq("id", firstId)
+      .single();
+    expect(mailState?.reviewer_email_at).not.toBeNull();
+    expect(mailState?.reviewer_email_error).toBeNull();
+    expect(mailState?.applicant_email_at).not.toBeNull();
+    expect(mailState?.applicant_email_error).toBeNull();
   }, 60_000);
 
   it("STEP 2 — a re-submit on the same email updates the open row instead of duplicating it", async () => {
@@ -169,7 +256,12 @@ describe("partner-apply pipeline, end to end", () => {
       .eq("email", EMAIL);
     expect(data).toHaveLength(1);
     expect(data?.[0]?.company).toBe("TEST DATA — drill, corrected name (delete)");
+    // The Slack path is unchanged: it still fires on every submission.
     expect(caught).toHaveLength(2);
+
+    // The email path is not: a resubmit is not a new application. Counted
+    // against the real catcher, so this is zero sends, not zero inferred.
+    expect(mails).toHaveLength(2);
   }, 60_000);
 
   it("STEP 3 — the limiter refuses the fourth attempt from the same caller", async () => {
@@ -184,8 +276,48 @@ describe("partner-apply pipeline, end to end", () => {
 
     // A refused call must not write, and must not alert.
     expect(caught).toHaveLength(3);
+    expect(mails).toHaveLength(2);
     const { data } = await admin.from("partner_applications").select("id").eq("email", EMAIL);
     expect(data).toHaveLength(1);
+  }, 60_000);
+
+  it("STEP 3b — an email send that fails outright still saves the application", async () => {
+    // The send API refuses both calls for the duration of this submission.
+    mailFailure = {
+      status: 500,
+      body: JSON.stringify({ error: "drill-forced failure", code: "internal_error" }),
+    };
+
+    const before = caught.length;
+    let result;
+    try {
+      // Fresh caller: the limiter budget for CALLER_IP is spent by now.
+      result = await submit({ ...base, email: FAIL_EMAIL }, FAIL_IP);
+    } finally {
+      mailFailure = null;
+    }
+
+    // The application itself survived a total email outage.
+    expect(result?.ok, JSON.stringify(result)).toBe(true);
+    if (!result?.ok) return;
+
+    const { data } = await admin
+      .from("partner_applications")
+      .select("id, reviewer_email_at, reviewer_email_error, applicant_email_at, applicant_email_error, notified_at")
+      .eq("email", FAIL_EMAIL)
+      .single();
+    expect(data?.id).toBe(result.result.id);
+
+    // The Slack path is untouched by the email failure.
+    expect(caught.length).toBe(before + 1);
+    expect(data?.notified_at).not.toBeNull();
+
+    // The failure is recorded, not swallowed — a reviewer can see the applicant
+    // is waiting without an acknowledgement.
+    expect(data?.reviewer_email_at).toBeNull();
+    expect(data?.reviewer_email_error).toBeTruthy();
+    expect(data?.applicant_email_at).toBeNull();
+    expect(data?.applicant_email_error).toBeTruthy();
   }, 60_000);
 
   it("STEP 4 — the meeting route is what the done screen keys its booking link off", async () => {
@@ -212,7 +344,11 @@ describe("partner-apply pipeline, end to end", () => {
 
   it("STEP 5 — cleanup leaves no drill rows behind", async () => {
     await admin.from("partner_applications").delete().eq("email", EMAIL);
-    const { data } = await admin.from("partner_applications").select("id").eq("email", EMAIL);
+    await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
+    const { data } = await admin
+      .from("partner_applications")
+      .select("id")
+      .in("email", [EMAIL, FAIL_EMAIL]);
     expect(data).toHaveLength(0);
   }, 60_000);
 });

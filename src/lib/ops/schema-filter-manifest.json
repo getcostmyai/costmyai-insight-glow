@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-21T10:58:32.649Z",
+  "generatedAt": "2026-08-22T11:18:59.397Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -798,7 +798,7 @@
     },
     {
       "file": "src/lib/partner-application.server.ts",
-      "line": 52,
+      "line": 93,
       "table": "partner_applications",
       "filters": [
         "status"
@@ -807,7 +807,7 @@
     },
     {
       "file": "src/lib/partner-application.server.ts",
-      "line": 114,
+      "line": 192,
       "table": "partner_applications",
       "filters": [
         "status"

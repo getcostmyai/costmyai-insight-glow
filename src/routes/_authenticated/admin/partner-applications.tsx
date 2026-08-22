@@ -310,6 +310,21 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
         </p>
       )}
 
+      {row.reviewerEmailError && (
+        <p className="mt-3 inline-flex items-start gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          Internal application email not delivered: {row.reviewerEmailError}
+        </p>
+      )}
+
+      {row.applicantEmailError && (
+        <p className="mt-3 inline-flex items-start gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          Applicant never got a confirmation: {row.applicantEmailError} — they are waiting without
+          acknowledgement.
+        </p>
+      )}
+
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <input
           value={note}

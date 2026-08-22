@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
 import {
+  REVIEW_TURNAROUND,
   normalizeContact,
   routeApplication,
   validateContact,
@@ -11,6 +12,7 @@ import {
   type StartingSoonBucket,
 } from "./partner-application";
 import { notifyReviewers } from "./partner-application-notify.server";
+import { siteOrigin } from "./partner-welcome.server";
 
 export interface StoredApplication {
   id: string;
@@ -28,6 +30,45 @@ export interface StoredApplication {
   createdAt: string;
   notifiedAt: string | null;
   notifyError: string | null;
+  reviewerEmailAt: string | null;
+  reviewerEmailError: string | null;
+  applicantEmailAt: string | null;
+  applicantEmailError: string | null;
+}
+
+/**
+ * Send one application email without ever letting it break the submission.
+ *
+ * `sendTemplateEmail` throws on every failure except suppression, and it is
+ * reached through a dynamic import so this server-only module never pulls the
+ * send helper (and `process.env`) into a client bundle. Both outcomes come back
+ * as data and are written to the row, so a mail that never left is visible in
+ * the review queue rather than lost.
+ */
+async function sendApplicationEmail(
+  templateName: "partner-application-alert" | "partner-application-received",
+  recipient: string,
+  applicationId: string,
+  templateData: Record<string, unknown>,
+): Promise<{ at: string | null; error: string | null }> {
+  try {
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+    const result = await sendTemplateEmail(templateName, recipient, {
+      templateData,
+      // Second layer under the "insert branch only" rule: even if this ever ran
+      // twice for the same row, Lovable dedupes on the key.
+      idempotencyKey: `${templateName}-${applicationId}`,
+    });
+    if (!result.sent) {
+      return {
+        at: null,
+        error: "This address has bounced, complained or unsubscribed previously",
+      };
+    }
+    return { at: new Date().toISOString(), error: null };
+  } catch (err) {
+    return { at: null, error: err instanceof Error ? err.message : "Email send failed" };
+  }
 }
 
 /**
@@ -69,6 +110,8 @@ export async function submitApplication(input: ApplicationInput) {
     escalated: routing.escalated,
   };
 
+  const isFirstSubmission = !existing.data;
+
   const saved = existing.data
     ? await supabaseAdmin
         .from("partner_applications")
@@ -95,11 +138,46 @@ export async function submitApplication(input: ApplicationInput) {
     escalated: routing.escalated,
   });
 
+  // Email is first-submission only. A re-submit is the same person correcting
+  // the same open application: the reviewer channel should still hear about it
+  // (the webhook above fires every time), but neither we nor the applicant
+  // should get a second "new application" / "we have your application" mail for
+  // a row that already exists.
+  const emails = isFirstSubmission
+    ? await Promise.all([
+        sendApplicationEmail("partner-application-alert", "", saved.data.id, {
+          applicationId: saved.data.id,
+          name: `${contact.firstName} ${contact.lastName}`,
+          email: contact.email,
+          phone: contact.phone,
+          company: contact.company,
+          activeClients: input.activeClients,
+          startingSoon: input.startingSoon,
+          path: routing.path,
+          escalated: routing.escalated,
+          reviewUrl: `${siteOrigin()}/admin/partner-applications`,
+        }),
+        sendApplicationEmail("partner-application-received", contact.email, saved.data.id, {
+          firstName: contact.firstName,
+          company: contact.company,
+          turnaround: REVIEW_TURNAROUND,
+        }),
+      ])
+    : null;
+
   await supabaseAdmin
     .from("partner_applications")
     .update({
       notified_at: alert.sent ? new Date().toISOString() : null,
       notify_error: alert.sent ? null : alert.error,
+      ...(emails
+        ? {
+            reviewer_email_at: emails[0].at,
+            reviewer_email_error: emails[0].error,
+            applicant_email_at: emails[1].at,
+            applicant_email_error: emails[1].error,
+          }
+        : {}),
     })
     .eq("id", saved.data.id);
 
@@ -113,7 +191,7 @@ export async function listApplications(supabase: AdminClient): Promise<StoredApp
   const { data, error } = await supabase
     .from("partner_applications")
     .select(
-      "id, first_name, last_name, email, phone, company, active_clients_bucket, starting_soon_bucket, routed_path, escalated, status, reviewer_note, created_at, notified_at, notify_error",
+      "id, first_name, last_name, email, phone, company, active_clients_bucket, starting_soon_bucket, routed_path, escalated, status, reviewer_note, created_at, notified_at, notify_error, reviewer_email_at, reviewer_email_error, applicant_email_at, applicant_email_error",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -135,6 +213,10 @@ export async function listApplications(supabase: AdminClient): Promise<StoredApp
     createdAt: r.created_at,
     notifiedAt: r.notified_at,
     notifyError: r.notify_error,
+    reviewerEmailAt: r.reviewer_email_at,
+    reviewerEmailError: r.reviewer_email_error,
+    applicantEmailAt: r.applicant_email_at,
+    applicantEmailError: r.applicant_email_error,
   }));
 }
 

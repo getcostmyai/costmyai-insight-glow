@@ -1,18 +1,10 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarCheck,
-  CheckCircle2,
-  Loader2,
-  PlayCircle,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, PlayCircle } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
-import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 import { submitPartnerApplication } from "@/lib/partner-application.functions";
@@ -20,7 +12,6 @@ import {
   ACTIVE_CLIENT_BUCKETS,
   REVIEW_TURNAROUND,
   STARTING_SOON_BUCKETS,
-  routeApplication,
   validateContact,
   type ActiveClientBucket,
   type ApplicantContact,
@@ -71,14 +62,6 @@ function ApplyPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const [outcome, setOutcome] = useState<{ path: "meeting" | "async"; escalated: boolean } | null>(
-    null,
-  );
-
-  const routing = useMemo(
-    () => (activeClients && startingSoon ? routeApplication(activeClients, startingSoon) : null),
-    [activeClients, startingSoon],
-  );
 
   async function send() {
     if (!activeClients || !startingSoon) return;
@@ -89,8 +72,7 @@ function ApplyPage() {
     setSubmitting(true);
     setFailure(null);
     try {
-      const result = await submit({ data: { ...contact, activeClients, startingSoon } });
-      setOutcome({ path: result.path, escalated: result.escalated });
+      await submit({ data: { ...contact, activeClients, startingSoon } });
       setStage("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
@@ -153,7 +135,7 @@ function ApplyPage() {
             <Card>
               <Question
                 title="How many of your clients would likely start in the next 3 weeks?"
-                hint="A rough number is fine — we use it to decide whether we should just talk directly."
+                hint="A rough number is fine — it gives the reviewer a sense of your timing."
               />
               <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {STARTING_SOON_BUCKETS.map((bucket) => (
@@ -176,9 +158,7 @@ function ApplyPage() {
             <Card>
               <h2 className="text-lg font-semibold">Your details</h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                {routing?.path === "meeting"
-                  ? "We'll save your application and put a meeting slot in front of you on the next screen."
-                  : `We'll save your application to the review queue — a person reads every one, and you'll hear back within ${REVIEW_TURNAROUND}.`}
+                {`We'll save your application to the review queue — a person reads every one, and you'll hear back within ${REVIEW_TURNAROUND}.`}
               </p>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -243,38 +223,13 @@ function ApplyPage() {
                   className="btn-gradient inline-flex items-center gap-2 px-5 py-2.5 text-sm disabled:opacity-60"
                 >
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {routing?.path === "meeting" ? "Continue to booking" : "Submit application"}
+                  Submit application
                 </button>
               </div>
             </Card>
           )}
 
-          {stage === "done" && outcome?.path === "meeting" && (
-            <Card>
-              <CalendarCheck className="h-6 w-6 text-primary" />
-              <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-                Your application is saved — now pick a time
-              </h1>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {outcome.escalated
-                  ? "You have real clients ready to start in the next few weeks, so we'd rather talk than queue you."
-                  : "A practice your size gets a direct conversation rather than a queue."}{" "}
-                We already have your details, so if the calendar isn't convenient right now we'll
-                still reach out.
-              </p>
-              <a
-                href={BOOK_DEMO_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="btn-gradient mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm"
-              >
-                Book your partner call
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </Card>
-          )}
-
-          {stage === "done" && outcome?.path === "async" && (
+          {stage === "done" && (
             <div className="mt-6 space-y-4">
               <Card>
                 <CheckCircle2 className="h-6 w-6 text-primary" />
@@ -284,7 +239,8 @@ function ApplyPage() {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   We review every application personally — in batches, by a real person, not by an
                   automatic rule. You'll hear from us within {REVIEW_TURNAROUND}. Nothing is approved
-                  or rejected in the meantime.
+                  or rejected in the meantime. A confirmation is on its way to the address you gave
+                  us.
                 </p>
               </Card>
 
