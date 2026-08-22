@@ -212,6 +212,35 @@ describe("partner-apply pipeline, end to end", () => {
     expect(caught).toHaveLength(1);
     expect(caught[0]?.application.id).toBe(firstId);
     expect(caught[0]?.text).toContain("New partner application");
+
+    // Both application emails really left the process on a first submission.
+    expect(mails).toHaveLength(2);
+
+    const internal = mails.find((m) => m.label === "partner-application-alert");
+    expect(internal, "internal alert email never sent").toBeDefined();
+    expect(internal?.to).toBe("mail@costmyai.com");
+    expect(internal?.subject).toContain("New partner application");
+    // The payload a reviewer needs is really in the body, not just referenced.
+    expect(internal?.text).toContain(EMAIL);
+    expect(internal?.text).toContain("101–300");
+    expect(internal?.idempotency_key).toBe(`partner-application-alert-${firstId}`);
+
+    const applicant = mails.find((m) => m.label === "partner-application-received");
+    expect(applicant, "applicant confirmation never sent").toBeDefined();
+    expect(applicant?.to).toBe(EMAIL);
+    expect(applicant?.text).toContain("3 business days");
+    expect(applicant?.idempotency_key).toBe(`partner-application-received-${firstId}`);
+
+    // ...and the row records that they did.
+    const { data: mailState } = await admin
+      .from("partner_applications")
+      .select("reviewer_email_at, reviewer_email_error, applicant_email_at, applicant_email_error")
+      .eq("id", firstId)
+      .single();
+    expect(mailState?.reviewer_email_at).not.toBeNull();
+    expect(mailState?.reviewer_email_error).toBeNull();
+    expect(mailState?.applicant_email_at).not.toBeNull();
+    expect(mailState?.applicant_email_error).toBeNull();
   }, 60_000);
 
   it("STEP 2 — a re-submit on the same email updates the open row instead of duplicating it", async () => {
@@ -227,7 +256,12 @@ describe("partner-apply pipeline, end to end", () => {
       .eq("email", EMAIL);
     expect(data).toHaveLength(1);
     expect(data?.[0]?.company).toBe("TEST DATA — drill, corrected name (delete)");
+    // The Slack path is unchanged: it still fires on every submission.
     expect(caught).toHaveLength(2);
+
+    // The email path is not: a resubmit is not a new application. Counted
+    // against the real catcher, so this is zero sends, not zero inferred.
+    expect(mails).toHaveLength(2);
   }, 60_000);
 
   it("STEP 3 — the limiter refuses the fourth attempt from the same caller", async () => {
@@ -242,8 +276,52 @@ describe("partner-apply pipeline, end to end", () => {
 
     // A refused call must not write, and must not alert.
     expect(caught).toHaveLength(3);
+    expect(mails).toHaveLength(2);
     const { data } = await admin.from("partner_applications").select("id").eq("email", EMAIL);
     expect(data).toHaveLength(1);
+  }, 60_000);
+
+  it("STEP 3b — an email send that fails outright still saves the application", async () => {
+    // The send API refuses both calls for the duration of this submission.
+    mailFailure = {
+      status: 500,
+      body: JSON.stringify({ error: "drill-forced failure", code: "internal_error" }),
+    };
+
+    const before = caught.length;
+    let result;
+    try {
+      result = await submit({
+        ...base,
+        email: FAIL_EMAIL,
+        // Fresh caller: the limiter budget for CALLER_IP is spent by now.
+        _ip: FAIL_IP,
+      } as ApplicationInput);
+    } finally {
+      mailFailure = null;
+    }
+
+    // The application itself survived a total email outage.
+    expect(result?.ok, JSON.stringify(result)).toBe(true);
+    if (!result?.ok) return;
+
+    const { data } = await admin
+      .from("partner_applications")
+      .select("id, reviewer_email_at, reviewer_email_error, applicant_email_at, applicant_email_error, notified_at")
+      .eq("email", FAIL_EMAIL)
+      .single();
+    expect(data?.id).toBe(result.result.id);
+
+    // The Slack path is untouched by the email failure.
+    expect(caught.length).toBe(before + 1);
+    expect(data?.notified_at).not.toBeNull();
+
+    // The failure is recorded, not swallowed — a reviewer can see the applicant
+    // is waiting without an acknowledgement.
+    expect(data?.reviewer_email_at).toBeNull();
+    expect(data?.reviewer_email_error).toBeTruthy();
+    expect(data?.applicant_email_at).toBeNull();
+    expect(data?.applicant_email_error).toBeTruthy();
   }, 60_000);
 
   it("STEP 4 — the meeting route is what the done screen keys its booking link off", async () => {
@@ -270,7 +348,11 @@ describe("partner-apply pipeline, end to end", () => {
 
   it("STEP 5 — cleanup leaves no drill rows behind", async () => {
     await admin.from("partner_applications").delete().eq("email", EMAIL);
-    const { data } = await admin.from("partner_applications").select("id").eq("email", EMAIL);
+    await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
+    const { data } = await admin
+      .from("partner_applications")
+      .select("id")
+      .in("email", [EMAIL, FAIL_EMAIL]);
     expect(data).toHaveLength(0);
   }, 60_000);
 });
