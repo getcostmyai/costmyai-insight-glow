@@ -400,7 +400,7 @@ export function Estimator() {
 
 
           {/* ---------------- body ---------------- */}
-          <div className="relative min-h-[262px] px-6 py-7 sm:px-8">
+          <div className="relative min-h-[210px] px-6 py-7 sm:px-8">
             {showResult ? (
               <div key="result" className={reduced ? "" : "animate-scale-in"}>
                 {mutation.isPending ? <Pending /> : result ? <AggregateResult r={result} /> : null}
