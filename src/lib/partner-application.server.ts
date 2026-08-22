@@ -152,7 +152,7 @@ export async function listApplications(supabase: AdminClient): Promise<StoredApp
   const { data, error } = await supabase
     .from("partner_applications")
     .select(
-      "id, first_name, last_name, email, phone, company, active_clients_bucket, starting_soon_bucket, routed_path, escalated, status, reviewer_note, created_at, notified_at, notify_error",
+      "id, first_name, last_name, email, phone, company, active_clients_bucket, starting_soon_bucket, routed_path, escalated, status, reviewer_note, created_at, notified_at, notify_error, reviewer_email_at, reviewer_email_error, applicant_email_at, applicant_email_error",
     )
     .order("created_at", { ascending: false })
     .limit(500);
