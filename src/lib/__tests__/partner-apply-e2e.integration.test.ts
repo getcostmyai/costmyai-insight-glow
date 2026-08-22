@@ -89,13 +89,14 @@ async function submit(input: ApplicationInput) {
     headers: { "cf-connecting-ip": CALLER_IP, origin: "https://costmyai.com" },
   });
   const execute = (
-    submitPartnerApplication as unknown as {
-      __executeServer: (opts: {
-        data: ApplicationInput;
-        context: Record<string, unknown>;
-      }) => Promise<{ result?: unknown; error?: unknown }>;
-    }
-  ).__executeServer;
+    serverFns as unknown as Record<
+      string,
+      (opts: { data: ApplicationInput; context: Record<string, unknown> }) => Promise<{
+        result?: unknown;
+        error?: unknown;
+      }>
+    >
+  )["submitPartnerApplication_createServerFn_handler"]!;
 
   const handler = requestHandler(async () =>
     runWithStartContext({ contextAfterGlobalMiddlewares: {}, request } as never, async () => {
