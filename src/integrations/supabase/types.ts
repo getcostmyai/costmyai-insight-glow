@@ -1185,6 +1185,7 @@ export type Database = {
           starting_soon_bucket: string
           status: Database["public"]["Enums"]["partner_application_status"]
           updated_at: string
+          visitor_id: string | null
         }
         Insert: {
           active_clients_bucket: string
@@ -1209,6 +1210,7 @@ export type Database = {
           starting_soon_bucket: string
           status?: Database["public"]["Enums"]["partner_application_status"]
           updated_at?: string
+          visitor_id?: string | null
         }
         Update: {
           active_clients_bucket?: string
@@ -1233,6 +1235,7 @@ export type Database = {
           starting_soon_bucket?: string
           status?: Database["public"]["Enums"]["partner_application_status"]
           updated_at?: string
+          visitor_id?: string | null
         }
         Relationships: []
       }

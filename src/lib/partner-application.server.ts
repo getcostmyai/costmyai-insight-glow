@@ -98,7 +98,21 @@ export async function submitApplication(input: ApplicationInput) {
     .limit(1)
     .maybeSingle();
 
+  // Join the application back to the anonymous visit that produced it, using
+  // the same cma_vid cookie the lead_events path reads — read-only, so a
+  // visitor without one submits with a null rather than a freshly minted id
+  // that never appeared in any event.
+  let visitorId: string | null = null;
+  try {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { existingVisitorId } = await import("./telemetry/lead-events.server");
+    visitorId = existingVisitorId(getRequest());
+  } catch {
+    visitorId = null;
+  }
+
   const row = {
+    visitor_id: visitorId,
     first_name: contact.firstName,
     last_name: contact.lastName,
     email: contact.email,

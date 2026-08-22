@@ -51,6 +51,13 @@ export const RATE_RULES = {
   estimator: { name: "estimator", limit: 15, windowSec: 300 },
   estimatorTelemetry: { name: "estimator-telemetry", limit: 60, windowSec: 300 },
   partnerApplication: { name: "partner-application", limit: 3, windowSec: 3600 },
+  /**
+   * Partner funnel telemetry: at most four events per real pass (page view,
+   * apply start, two step completions). 40 per 5 minutes absorbs back-and-forth
+   * through the steps and several page loads, and bounds the write path the
+   * same way the estimator's own telemetry ceiling does.
+   */
+  partnerTelemetry: { name: "partner-telemetry", limit: 40, windowSec: 300 },
   ingest: { name: "ingest", limit: 600, windowSec: 60 },
   widgetDoc: { name: "widget-doc", limit: 60, windowSec: 60 },
   widgetData: { name: "widget-data", limit: 60, windowSec: 60 },

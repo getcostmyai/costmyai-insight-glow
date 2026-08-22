@@ -1,0 +1,2 @@
+ALTER TABLE public.partner_applications ADD COLUMN IF NOT EXISTS visitor_id uuid;
+CREATE INDEX IF NOT EXISTS partner_applications_visitor_idx ON public.partner_applications (visitor_id) WHERE visitor_id IS NOT NULL;

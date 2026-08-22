@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +8,8 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 import { submitPartnerApplication } from "@/lib/partner-application.functions";
+import { trackPartnerEvent } from "@/lib/partner-telemetry.functions";
+import { shouldFire } from "@/lib/telemetry/fire-once";
 import {
   ACTIVE_CLIENT_BUCKETS,
   REVIEW_TURNAROUND,
@@ -62,6 +64,33 @@ function ApplyPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+
+  /**
+   * Funnel telemetry — forward progress only.
+   *
+   * `partner_apply_started` fires once per page load at stage 1.
+   * `partner_apply_step_completed` fires on 1→2 and 2→3, and is suppressed on a
+   * revisit: going Back and answering the same step again does not re-fire, so
+   * the event count per visit is the number of distinct steps ever cleared, not
+   * the number of clicks. Backward navigation itself is silent. Payload is the
+   * bucket enum only; nothing from the contact step is ever passed here.
+   */
+  const track = useServerFn(trackPartnerEvent);
+  const sentSteps = useRef<Set<1 | 2>>(new Set());
+
+  useEffect(() => {
+    if (!shouldFire("partner_apply_started")) return;
+    void track({ data: { event: "partner_apply_started" } }).catch(() => {});
+  }, [track]);
+
+  function completeStep(step: 1 | 2, value: string) {
+    if (sentSteps.current.has(step)) return;
+    sentSteps.current.add(step);
+    void track({
+      data: { event: "partner_apply_step_completed", step, value },
+    }).catch(() => {});
+  }
+
 
   async function send() {
     if (!activeClients || !startingSoon) return;
@@ -123,6 +152,7 @@ function ApplyPage() {
                     selected={activeClients === bucket}
                     onSelect={() => {
                       setActiveClients(bucket);
+                      completeStep(1, bucket);
                       setStage(2);
                     }}
                   />
@@ -145,6 +175,7 @@ function ApplyPage() {
                     selected={startingSoon === bucket}
                     onSelect={() => {
                       setStartingSoon(bucket);
+                      completeStep(2, bucket);
                       setStage(3);
                     }}
                   />
