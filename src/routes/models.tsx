@@ -198,6 +198,34 @@ function Catalog({ data }: { data: CatalogPayload }) {
   const [vendor, setVendor] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("price");
 
+  const track = useServerFn(trackModelsEvent);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  const onVendor = (next: string | null) => {
+    setVendor(next);
+    void track({ data: { event: "models_filtered", vendor: next } }).catch(() => {});
+  };
+
+  const onSort = (next: SortKey) => {
+    setSort(next);
+    void track({ data: { event: "models_sorted", sortKey: next } }).catch(() => {});
+  };
+
+  /**
+   * Filter-as-you-type, one event per pause — same 450ms settle already proven
+   * for `estimator_split_changed`, so a typed word is one observation rather
+   * than one per keystroke.
+   */
+  const onSearch = (next: string) => {
+    setQ(next);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      if (!next.trim()) return;
+      void track({ data: { event: "models_searched", query: next } }).catch(() => {});
+    }, 450);
+  };
+
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const filtered = data.rows.filter(
