@@ -322,7 +322,7 @@ export function Estimator() {
             How much could you save?
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            Three quick inputs, priced against the live catalog with the same quality bar the
+            Two quick steps, priced against the live catalog with the same quality bar the
             product runs. If the benchmark cannot back a claim, it says so instead of inventing a
             number.
           </p>
