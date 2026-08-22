@@ -681,6 +681,7 @@ export type Database = {
           is_synthetic: boolean
           payload: Json | null
           referred_by_partner_id: string | null
+          session_id: string | null
           visitor_id: string | null
         }
         Insert: {
@@ -690,6 +691,7 @@ export type Database = {
           is_synthetic?: boolean
           payload?: Json | null
           referred_by_partner_id?: string | null
+          session_id?: string | null
           visitor_id?: string | null
         }
         Update: {
@@ -699,6 +701,7 @@ export type Database = {
           is_synthetic?: boolean
           payload?: Json | null
           referred_by_partner_id?: string | null
+          session_id?: string | null
           visitor_id?: string | null
         }
         Relationships: [
