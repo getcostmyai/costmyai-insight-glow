@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-22T11:18:59.397Z",
+  "generatedAt": "2026-08-22T11:56:13.164Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -1088,7 +1088,7 @@
     },
     {
       "file": "src/lib/telemetry/lead-events.server.ts",
-      "line": 87,
+      "line": 112,
       "table": "partners",
       "filters": [
         "status"
