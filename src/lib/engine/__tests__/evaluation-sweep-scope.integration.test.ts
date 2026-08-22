@@ -158,16 +158,22 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
     expect(url).toContain("select=id,plan,is_synthetic,autonomous_enabled");
   });
 
-  it("evaluates every organization in the database, counted independently", () => {
-    const low = Math.min(orgTotalBefore, orgTotalAfter);
-    const high = Math.max(orgTotalBefore, orgTotalAfter);
-    console.log(`[unfiltered] report.orgs=${unfiltered.orgs} vs counted ${low}..${high}`);
-    expect(low).toBeGreaterThan(1);
-    // Every workspace that existed for the whole run, and never more than
-    // existed at any point in it. A filtered sweep could not land in this band.
-    expect(unfiltered.orgs).toBeGreaterThanOrEqual(low);
-    expect(unfiltered.orgs).toBeLessThanOrEqual(high);
+  it("evaluates every organization that existed for the whole run", () => {
+    const after = new Set(orgIdsAfter);
+    const stable = orgIdsBefore.filter((id) => after.has(id));
+    const swept = new Set(sweptIds);
+    const missed = stable.filter((id) => !swept.has(id));
+    console.log(
+      `[unfiltered] report.orgs=${unfiltered.orgs} swept=${swept.size} stable=${stable.length} missed=${missed.length}`,
+    );
+    // Orgs created or torn down by concurrent suites during the window are
+    // excluded on purpose: no claim about them is provable. No upper bound is
+    // asserted for the same reason.
+    expect(stable.length).toBeGreaterThan(1);
+    expect(missed).toEqual([]);
+    expect(unfiltered.orgs).toBe(swept.size);
   });
+
 
   it("reaches those workspaces without erroring on any of them", () => {
     expect(unfiltered.errors).toEqual([]);
