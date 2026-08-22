@@ -48,6 +48,16 @@ export async function recordAccountLeadEvent(
 }
 
 /**
+ * Attach one cookie without clobbering another. `setResponseHeader` *sets*, so
+ * two telemetry cookies on one response would leave only the last one — the
+ * visitor id would be silently dropped the moment a session cookie is minted
+ * beside it.
+ */
+function appendSetCookie(value: string): void {
+  getResponseHeaders().append("Set-Cookie", value);
+}
+
+/**
  * Resolve the visitor id for this request, minting one when the browser has
  * none. Generated server-side so the id cannot be spoofed or reset from the
  * page, and set with the same HttpOnly rules as the referral cookie.
@@ -57,7 +67,7 @@ export function resolveVisitorId(request: Request): string {
   if (isPlausibleVisitorId(existing)) return existing!.trim();
 
   const id = crypto.randomUUID();
-  setResponseHeader("Set-Cookie", serializeVisitorCookie(id, isSecureRequest(request.url)));
+  appendSetCookie(serializeVisitorCookie(id, isSecureRequest(request.url)));
   return id;
 }
 
