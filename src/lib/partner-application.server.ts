@@ -108,6 +108,8 @@ export async function submitApplication(input: ApplicationInput) {
     escalated: routing.escalated,
   };
 
+  const isFirstSubmission = !existing.data;
+
   const saved = existing.data
     ? await supabaseAdmin
         .from("partner_applications")
@@ -134,11 +136,46 @@ export async function submitApplication(input: ApplicationInput) {
     escalated: routing.escalated,
   });
 
+  // Email is first-submission only. A re-submit is the same person correcting
+  // the same open application: the reviewer channel should still hear about it
+  // (the webhook above fires every time), but neither we nor the applicant
+  // should get a second "new application" / "we have your application" mail for
+  // a row that already exists.
+  const emails = isFirstSubmission
+    ? await Promise.all([
+        sendApplicationEmail("partner-application-alert", "", saved.data.id, {
+          applicationId: saved.data.id,
+          name: `${contact.firstName} ${contact.lastName}`,
+          email: contact.email,
+          phone: contact.phone,
+          company: contact.company,
+          activeClients: input.activeClients,
+          startingSoon: input.startingSoon,
+          path: routing.path,
+          escalated: routing.escalated,
+          reviewUrl: `${siteOrigin()}/admin/partner-applications`,
+        }),
+        sendApplicationEmail("partner-application-received", contact.email, saved.data.id, {
+          firstName: contact.firstName,
+          company: contact.company,
+          turnaround: REVIEW_TURNAROUND,
+        }),
+      ])
+    : null;
+
   await supabaseAdmin
     .from("partner_applications")
     .update({
       notified_at: alert.sent ? new Date().toISOString() : null,
       notify_error: alert.sent ? null : alert.error,
+      ...(emails
+        ? {
+            reviewer_email_at: emails[0].at,
+            reviewer_email_error: emails[0].error,
+            applicant_email_at: emails[1].at,
+            applicant_email_error: emails[1].error,
+          }
+        : {}),
     })
     .eq("id", saved.data.id);
 
