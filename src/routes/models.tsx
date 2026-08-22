@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Search } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
+import { trackModelsEvent } from "@/lib/models-telemetry.functions";
+import { shouldFire } from "@/lib/telemetry/fire-once";
 
 export const Route = createFileRoute("/models")({
   head: () => ({
@@ -57,6 +60,14 @@ function hostSpread(row: CatalogRow): number | null {
 
 function ModelsPage() {
   const { data } = useSuspenseQuery(catalogQuery());
+  const track = useServerFn(trackModelsEvent);
+
+  // Module-scope guard, not a ref: hydration and the Suspense boundary both
+  // remount this component for one real visit (see fire-once.ts).
+  useEffect(() => {
+    if (!shouldFire("models_page_viewed")) return;
+    void track({ data: { event: "models_page_viewed" } }).catch(() => {});
+  }, [track]);
 
   return (
     <MarketingShell>
@@ -187,6 +198,34 @@ function Catalog({ data }: { data: CatalogPayload }) {
   const [vendor, setVendor] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("price");
 
+  const track = useServerFn(trackModelsEvent);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  const onVendor = (next: string | null) => {
+    setVendor(next);
+    void track({ data: { event: "models_filtered", vendor: next } }).catch(() => {});
+  };
+
+  const onSort = (next: SortKey) => {
+    setSort(next);
+    void track({ data: { event: "models_sorted", sortKey: next } }).catch(() => {});
+  };
+
+  /**
+   * Filter-as-you-type, one event per pause — same 450ms settle already proven
+   * for `estimator_split_changed`, so a typed word is one observation rather
+   * than one per keystroke.
+   */
+  const onSearch = (next: string) => {
+    setQ(next);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      if (!next.trim()) return;
+      void track({ data: { event: "models_searched", query: next } }).catch(() => {});
+    }, 450);
+  };
+
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const filtered = data.rows.filter(
@@ -216,7 +255,7 @@ function Catalog({ data }: { data: CatalogPayload }) {
             <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <input
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => onSearch(e.target.value)}
               placeholder="Search a model, id or provider"
               aria-label="Search the catalog"
               className="w-full border-0 border-b border-border bg-transparent py-3 pl-8 text-lg tracking-[-0.01em] outline-none placeholder:text-muted-foreground/70 focus:border-primary"
@@ -225,19 +264,19 @@ function Catalog({ data }: { data: CatalogPayload }) {
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
-              <FilterChip active={vendor === null} onClick={() => setVendor(null)}>
+              <FilterChip active={vendor === null} onClick={() => onVendor(null)}>
                 All
               </FilterChip>
 
               {data.vendors.map((v) => (
-                <FilterChip key={v} active={vendor === v} onClick={() => setVendor(v)}>
+                <FilterChip key={v} active={vendor === v} onClick={() => onVendor(v)}>
                   {v}
                 </FilterChip>
               ))}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {SORTS.map((s) => (
-                <FilterChip key={s.key} active={sort === s.key} onClick={() => setSort(s.key)}>
+                <FilterChip key={s.key} active={sort === s.key} onClick={() => onSort(s.key)}>
                   {s.label}
                 </FilterChip>
               ))}

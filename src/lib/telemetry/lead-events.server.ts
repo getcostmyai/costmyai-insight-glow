@@ -27,6 +27,11 @@ export type LeadEventType =
   | "partner_apply_step_completed"
   /* Intelligence sharing. Payload is `{ cardId, platform }` only. */
   | "intelligence_card_shared"
+  /* Model catalog. Search is the one free-text payload — sanitized and capped. */
+  | "models_page_viewed"
+  | "models_filtered"
+  | "models_sorted"
+  | "models_searched"
   | "workspace_created"
   | "plan_changed";
 
