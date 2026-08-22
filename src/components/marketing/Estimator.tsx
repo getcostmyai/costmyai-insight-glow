@@ -694,40 +694,109 @@ function Refused({ r }: { r: Extract<EstimatorResult, { state: "refused" }> }) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+/**
+ * The multi-line answer.
+ *
+ * Every line is shown with its OWN top-level share — never the share nested
+ * inside its engine result, which always reads the internal allocation
+ * constant and says nothing about how the visitor split their spend. Refusals
+ * and sub-threshold lines stay on screen with their real state: a total that
+ * quietly dropped them would overstate what we can certify.
+ */
+function AggregateResult({ r }: { r: AggregateEstimatorResult }) {
+  const reduced = usePrefersReducedMotion();
+  const mounted = useMounted(reduced);
+  const low = useRollingNumber(mounted ? r.totalCertifiedSavingLowUsd : 0, reduced);
+  const high = useRollingNumber(mounted ? r.totalCertifiedSavingUsd : 0, reduced);
+  const certified = r.totalCertifiedSavingUsd > 0;
+
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-border/70 py-2.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium">{value}</span>
+    <div data-testid="aggregate-result">
+      <p className="eyebrow">
+        {certified ? "Certifiable monthly saving" : "Nothing certifiable in this breakdown"}
+      </p>
+      {certified ? (
+        <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
+          ${fmtNum(low)}
+          <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(high)}
+        </p>
+      ) : (
+        <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">
+          No line here clears the bar today.
+        </p>
+      )}
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        Sum of the per-line figures below, nothing else. Lines that refused or came in under the $25
+        floor contribute nothing and are still shown.{" "}
+        <span className="num text-foreground">{r.certifiedSharePct}%</span> of your stated spend is
+        covered by a certifiable line.
+      </p>
+
+      <div className="mt-5 space-y-2.5">
+        {r.lines.map((line, i) => (
+          <div
+            key={`${line.workload}-${i}`}
+            data-testid="result-line"
+            data-share={line.sharePct}
+            data-state={line.result.state}
+            className="rounded-xl border border-border bg-card px-4 py-3"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-sm font-semibold tracking-tight">
+                {WORKLOADS.find((w) => w.id === line.workload)?.label ?? line.workload}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {line.provider ?? "no provider"}
+                {line.modelKey ? ` · ${line.modelKey}` : ""}
+              </span>
+              <span
+                data-testid="result-line-share"
+                className="num ml-auto text-xs tabular-nums text-muted-foreground"
+              >
+                {line.sharePct}% · ${fmtNum(line.lineSpendUsd)}/mo
+              </span>
+            </div>
+
+            {line.result.state === "ok" ? (
+              <p className="num mt-1.5 text-lg tabular-nums text-saving">
+                ${fmtNum(line.result.lowUsd)} – ${fmtNum(line.result.highUsd)}
+                <span className="ml-2 text-xs font-medium tracking-normal text-muted-foreground">
+                  {line.result.fromModelLabel} → {line.result.toModelLabel} ·{" "}
+                  {line.result.toHostLabel}
+                </span>
+              </p>
+            ) : line.result.state === "below_threshold" ? (
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                Under the ${fmtNum(line.result.floorUsd)}/mo floor on its own — real, just too small
+                to act on. Contributes nothing to the total.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                <ShieldAlert className="mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
+                {REFUSAL_TITLE[line.result.reason] ?? "Cannot assess"} — {line.result.headline}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {r.unallocated.sharePct > 0 ? (
+        <p
+          data-testid="result-unallocated"
+          data-share={r.unallocated.sharePct}
+          className="mt-3 text-xs leading-relaxed text-muted-foreground"
+        >
+          <span className="num text-foreground">{r.unallocated.sharePct}%</span> of your spend ($
+          {fmtNum(r.unallocated.impliedSpendUsd)}/mo) was not itemised, so it was not priced at all.
+          No saving is claimed on it.
+        </p>
+      ) : null}
+
+      {certified ? (
+        <StartCompare />
+      ) : (
+        <NotADeadEnd lead="Nothing in this breakdown clears the bar on today's catalog." />
+      )}
     </div>
-
-  );
-}
-
-function Label({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <p className={`eyebrow mb-2.5 ${className}`}>{children}</p>;
-}
-
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 ${
-        active
-          ? "border-primary/45 bg-primary-soft text-primary"
-          : "border-border bg-card text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
