@@ -2,11 +2,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert } from "lucide-react";
 
-import { estimateSavingFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
+import { estimateSpreadFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { trackEstimatorEvent } from "@/lib/telemetry.functions";
+import { AllocationBar, type LineDraft } from "./AllocationBar";
+import { Label } from "./estimator-ui";
+import type { AggregateEstimatorResult } from "@/lib/estimator/aggregate";
+import {
+  canAddLine,
+  removeLine as removeLineFrom,
+  startingShare,
+  unallocatedPct,
+  type DraftLine,
+} from "@/lib/estimator/lines";
 
 import {
   CONSERVATIVE_HIGH,
@@ -14,14 +24,12 @@ import {
   DISTRIBUTIONS,
   WORKLOADS,
   type DistributionId,
-  type EstimatorResult,
-  type WorkloadId,
 } from "@/lib/estimator/spec";
 
 /** Fixed locale so SSR and client render identical digits. */
 const fmtNum = (n: number) => new Intl.NumberFormat("en-US").format(Math.round(n));
 
-const STEPS = ["Spend", "Workload", "Where it runs"] as const;
+const STEPS = ["Spend", "Breakdown"] as const;
 
 /** Quick jumps on the spend slider, in the range most inbound teams sit in. */
 const SPEND_PRESETS = [1000, 5000, 25000, 100000] as const;
@@ -118,16 +126,14 @@ function useRollingNumber(target: number, reduced: boolean) {
  */
 export function Estimator() {
   const { data: options } = useQuery(estimatorOptionsQuery());
-  const run = useServerFn(estimateSavingFn);
+  const run = useServerFn(estimateSpreadFn);
   const reduced = usePrefersReducedMotion();
 
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [spend, setSpend] = useState(4000);
-  const [provider, setProvider] = useState<string | null>(null);
-  const [workload, setWorkload] = useState<WorkloadId>("chat");
-  const [modelKey, setModelKey] = useState<string | null>(null);
   const [distribution, setDistribution] = useState<DistributionId>("even");
+  const [lines, setLines] = useState<DraftLine[]>([]);
 
   /* ---------------------------- telemetry ----------------------------- */
   /**
@@ -165,47 +171,160 @@ export function Estimator() {
   };
 
 
+  /**
+   * Progression events. Each real action reports itself, rather than one
+   * first-touch flag standing in for a whole session of work: the shape of a
+   * breakdown a visitor built is only legible if every add, edit, resize and
+   * removal is recorded with the state it produced.
+   */
+  const progression = (
+    event:
+      | "estimator_line_added"
+      | "estimator_line_changed"
+      | "estimator_line_removed"
+      | "estimator_split_changed",
+    payload: Record<string, unknown>,
+  ) => {
+    markEngaged();
+    void track({ data: { event, payload } }).catch(() => {});
+  };
+
+  type LineShape = { workload: string; provider: string | null; modelKey: string | null; sharePct: number };
+  const splitPending = useRef<{ boundaryIndex: number; before: LineShape[]; after: LineShape[] } | null>(null);
+  const splitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const shapeOf = (list: DraftLine[]): LineShape[] =>
+    list.map((l) => ({
+      workload: l.workload,
+      provider: l.provider,
+      modelKey: l.modelKey,
+      sharePct: l.sharePct,
+    }));
+
+  const addLine = (draft: LineDraft) => {
+    if (!canAddLine(lines).ok) return;
+    const line: DraftLine = {
+      id: `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      ...draft,
+      sharePct: startingShare(lines),
+    };
+    const next = [...lines, line];
+    setLines(next);
+    progression("estimator_line_added", {
+      ...draft,
+      sharePct: line.sharePct,
+      lineCount: next.length,
+      unallocatedPct: unallocatedPct(next),
+    });
+  };
+
+  const editLine = (id: string, draft: LineDraft) => {
+    const before = lines.find((l) => l.id === id);
+    if (!before) return;
+    setLines(lines.map((l) => (l.id === id ? { ...l, ...draft } : l)));
+    progression("estimator_line_changed", {
+      from: { workload: before.workload, provider: before.provider, modelKey: before.modelKey },
+      to: draft,
+      sharePct: before.sharePct,
+    });
+  };
+
+  const removeLine = (id: string) => {
+    const gone = lines.find((l) => l.id === id);
+    if (!gone) return;
+    const next = removeLineFrom(lines, id);
+    setLines(next);
+    progression("estimator_line_removed", {
+      workload: gone.workload,
+      provider: gone.provider,
+      modelKey: gone.modelKey,
+      returnedPct: gone.sharePct,
+      lineCount: next.length,
+      unallocatedPct: unallocatedPct(next),
+    });
+  };
+
+  /** Fired once per completed drag, never per frame. */
+  const commitResize = (before: DraftLine[], after: DraftLine[], boundaryIndex: number) => {
+    if (JSON.stringify(shapeOf(before)) === JSON.stringify(shapeOf(after))) return;
+    // One event per settled adjustment. A drag already commits once, on
+    // release, but keyboard nudges arrive one per keypress: they collapse into
+    // a single event that keeps the original starting shape and the shape the
+    // visitor actually stopped on.
+    const pending = splitPending.current;
+    splitPending.current = {
+      boundaryIndex,
+      before: pending?.before ?? shapeOf(before),
+      after: shapeOf(after),
+    };
+    if (splitTimer.current) clearTimeout(splitTimer.current);
+    splitTimer.current = setTimeout(() => {
+      const settled = splitPending.current;
+      splitPending.current = null;
+      if (!settled) return;
+      if (JSON.stringify(settled.before) === JSON.stringify(settled.after)) return;
+      progression("estimator_split_changed", {
+        boundaryIndex: settled.boundaryIndex,
+        before: settled.before,
+        after: settled.after,
+        unallocatedPct: 100 - settled.after.reduce((s, l) => s + l.sharePct, 0),
+      });
+    }, 450);
+  };
+
   const mutation = useMutation({
     mutationFn: () =>
-      run({ data: { monthlySpendUsd: spend, provider, workload, modelKey, distribution } }),
+      run({
+        data: {
+          totalSpendUsd: spend,
+          lines: lines.map((l) => ({
+            workload: l.workload,
+            provider: l.provider,
+            modelKey: l.modelKey,
+            sharePct: l.sharePct,
+          })),
+        },
+      }),
   });
-  const result = mutation.data as EstimatorResult | undefined;
+  const result = mutation.data as AggregateEstimatorResult | undefined;
 
-  /* -------- indicative figure: server-computed rate × live inputs -------- */
+  /* ------ indicative figure: server-computed rates × the live breakdown ----- */
   const indicative = useMemo(() => {
     const bands = options?.bands;
-    if (!bands) return null;
-    const idx = bands.workloads.indexOf(workload);
-    if (idx < 0) return null;
-    const series = modelKey ? bands.byModel[modelKey] : provider ? bands.byProvider[provider] : null;
-    const rate = series?.[idx];
-    if (rate == null) return null;
-    const share = DISTRIBUTIONS.find((d) => d.id === distribution)?.share ?? 0.45;
-    const modelled = spend * share * rate;
+    if (!bands || lines.length === 0) return null;
+    let modelled = 0;
+    for (const line of lines) {
+      const idx = bands.workloads.indexOf(line.workload);
+      if (idx < 0) continue;
+      const series = line.modelKey
+        ? bands.byModel[line.modelKey]
+        : line.provider
+          ? bands.byProvider[line.provider]
+          : null;
+      const rate = series?.[idx];
+      if (rate == null) continue;
+      modelled += ((spend * line.sharePct) / 100) * rate;
+    }
+    if (modelled <= 0) return null;
     return { low: modelled * CONSERVATIVE_LOW, high: modelled * CONSERVATIVE_HIGH };
-  }, [options, workload, provider, modelKey, distribution, spend]);
+  }, [options, lines, spend]);
 
   /**
-   * What the indicative figure actually rests on. Shown next to the number so
-   * it can never read as if spend alone produced it — including when the user
-   * steps back to Spend after choosing a workload and a provider.
+   * What the indicative figure actually rests on — the itemised part of the
+   * spend only, never the whole number, so it can never read as if spend alone
+   * produced it.
    */
   const basisLabel = useMemo(() => {
-    const w = WORKLOADS.find((x) => x.id === workload)?.label ?? workload;
-    const where = modelKey
-      ? (options?.models.find((m) => m.model_key === modelKey)?.display_name ?? modelKey)
-      : (provider ?? null);
-    return where ? `${w} · ${where}` : w;
-  }, [workload, provider, modelKey, options]);
+    if (lines.length === 0) return "nothing itemised yet";
+    const covered = 100 - unallocatedPct(lines);
+    return `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${covered}% of spend`;
+  }, [lines]);
 
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
   const rolledSpend = useRollingNumber(spend, reduced);
   const spendPct = ((rolledSpend - 200) / (200000 - 200)) * 100;
-
-
-
 
   const goto = (next: number) => {
     setDir(next > step ? 1 : -1);
@@ -217,9 +336,7 @@ export function Estimator() {
     mutation.reset();
     setSpend(4000);
     setDistribution("even");
-    setWorkload("chat");
-    setProvider(null);
-    setModelKey(null);
+    setLines([]);
     setDir(-1);
     setStep(0);
   };
@@ -314,15 +431,7 @@ export function Estimator() {
           <div className="relative min-h-[262px] px-6 py-7 sm:px-8">
             {showResult ? (
               <div key="result" className={reduced ? "" : "animate-scale-in"}>
-                {mutation.isPending ? (
-                  <Pending />
-                ) : result?.state === "ok" ? (
-                  <Success r={result} />
-                ) : result?.state === "below_threshold" ? (
-                  <BelowThreshold r={result} />
-                ) : result ? (
-                  <Refused r={result} />
-                ) : null}
+                {mutation.isPending ? <Pending /> : result ? <AggregateResult r={result} /> : null}
               </div>
             ) : (
               <div
@@ -398,58 +507,17 @@ export function Estimator() {
                     </div>
                   </div>
 
-                ) : step === 1 ? (
-                  <div>
-                    <Label>What does most of that spend do?</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {WORKLOADS.map((w) => (
-                        <Chip
-                          key={w.id}
-                          active={workload === w.id}
-                          onClick={() => { markEngaged(); setWorkload(w.id); }}
-                        >
-                          {w.label}
-                        </Chip>
-                      ))}
-                    </div>
-                    <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-                      Each workload carries an assumed token mix — stated in full with the result,
-                      never hidden inside the number.
-                    </p>
-                  </div>
                 ) : (
-                  <div>
-                    <Label>Provider</Label>
-                    <div className="flex max-h-[104px] flex-wrap gap-2 overflow-y-auto pr-1">
-                      <Chip active={provider === null} onClick={() => { markEngaged(); setProvider(null); }}>
-                        Not sure
-                      </Chip>
-                      {(options?.providers ?? []).map((p) => (
-                        <Chip
-                          key={p.label}
-                          active={provider === p.label}
-                          onClick={() => { markEngaged(); setProvider(p.label); }}
-                        >
-                          {p.label}
-                        </Chip>
-                      ))}
-                    </div>
-                    <Label className="mt-6">
-                      Specific model <span className="font-normal normal-case opacity-70">(optional, sharpens it)</span>
-                    </Label>
-                    <select
-                      value={modelKey ?? ""}
-                      onChange={(e) => { markEngaged(); setModelKey(e.target.value || null); }}
-                      className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-primary/50"
-                    >
-                      <option value="">No specific model</option>
-                      {(options?.models ?? []).map((m) => (
-                        <option key={m.model_key} value={m.model_key}>
-                          {m.display_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <AllocationBar
+                    lines={lines}
+                    totalSpendUsd={spend}
+                    options={options}
+                    onLinesChange={setLines}
+                    onResizeCommit={commitResize}
+                    onAddLine={addLine}
+                    onEditLine={editLine}
+                    onRemoveLine={removeLine}
+                  />
                 )}
               </div>
             )}
@@ -477,7 +545,7 @@ export function Estimator() {
                 One-time estimate off an assumed token mix. A real connection reads your traffic
                 continuously.
               </p>
-            ) : step < 2 ? (
+            ) : step < 1 ? (
               <button
                 type="button"
                 onClick={() => goto(step + 1)}
@@ -488,9 +556,11 @@ export function Estimator() {
             ) : (
               <button
                 type="button"
+                data-testid="estimator-submit"
                 onClick={() => mutation.mutate()}
-                disabled={mutation.isPending}
-                className="btn-gradient px-5 py-2.5 text-sm disabled:opacity-70"
+                disabled={mutation.isPending || lines.length === 0}
+                title={lines.length === 0 ? "Add at least one workload first" : undefined}
+                className="btn-gradient px-5 py-2.5 text-sm disabled:opacity-40"
               >
                 Get the real number <ArrowRight className="h-4 w-4" />
               </button>
@@ -565,91 +635,6 @@ function NotADeadEnd({ lead }: { lead: string }) {
 }
 
 
-function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
-  const reduced = usePrefersReducedMotion();
-  const mounted = useMounted(reduced);
-  // Count both ends of the range up from zero, so the answer lands rather than appears.
-  const low = useRollingNumber(mounted ? r.lowUsd : 0, reduced);
-  const high = useRollingNumber(mounted ? r.highUsd : 0, reduced);
-  const share = Math.min(100, Math.max(2, r.sharePct));
-
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="eyebrow">Estimated monthly saving</p>
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-saving transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{
-            opacity: mounted ? 1 : 0,
-            transform: mounted ? "translateY(0) scale(1)" : "translateY(2px) scale(0.96)",
-            transitionDelay: "260ms",
-          }}
-        >
-          <Sparkles className="h-3 w-3" /> {r.savingPct}% cheaper per call
-        </span>
-      </div>
-      <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
-        ${fmtNum(low)}
-        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(high)}
-      </p>
-
-      {/* Share of spend the estimate actually covers, drawn rather than asserted. */}
-      <div className="mt-4">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-saving transition-[width] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ width: `${mounted ? share : 0}%`, transitionDelay: "200ms" }}
-          />
-        </div>
-        <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
-          Applied to <span className="num text-foreground">{r.sharePct}%</span> of your stated spend
-        </p>
-      </div>
-
-
-      <div className="mt-5 grid gap-x-8 sm:grid-cols-2">
-        <Row label="From" value={r.fromModelLabel} />
-        <Row label="To" value={`${r.toModelLabel} · ${r.toHostLabel}`} />
-        <Row label="Quality bar" value={`${r.suite} / ${r.taskClass} ±${r.margin}`} />
-        <Row label="Share of spend" value={`${r.sharePct}%`} />
-      </div>
-
-
-      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-        Basis: conservative half-to-four-fifths of the modelled price delta, applied to{" "}
-        <span className="num">{r.sharePct}%</span> of your stated spend, at an assumed {r.assumedMix}
-        . Prices and scores from the live CostMyAI catalog; the equal-quality test is the same
-        measured margin the product certifies against.
-      </p>
-
-      <StartCompare />
-    </div>
-  );
-}
-
-function BelowThreshold({ r }: { r: Extract<EstimatorResult, { state: "below_threshold" }> }) {
-  return (
-    <div>
-      <p className="eyebrow">Below the savings threshold</p>
-      <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">
-        Too small to recommend a switch.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        At this spend level the potential saving (floor: ${fmtNum(r.floorUsd)}/mo) is too small to
-        recommend a switch. Switching costs would likely exceed the saving. Revisit at higher volume
-        or a different workload.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        There is a cheaper equal-quality option to {r.fromModelLabel} on {r.taskClass} work — it
-        just comes to under ${fmtNum(Math.max(1, r.highUsd))} a month for you. We would rather say
-        that than manufacture a minimum worth switching for.
-      </p>
-      <NotADeadEnd lead="The math worked here; the answer is simply too small to act on today." />
-    </div>
-  );
-}
-
-/** Each refusal is named for what it actually is, not for its internal code. */
 const REFUSAL_TITLE: Record<string, string> = {
   benchmark_not_discriminating: "Switch not certifiable",
   no_valid_instrument: "No instrument measures this work",
@@ -660,74 +645,100 @@ const REFUSAL_TITLE: Record<string, string> = {
   no_baseline_score: "Cannot assess — model unscored",
 };
 
-const REFUSAL_LEAD: Record<string, string> = {
+function AggregateResult({ r }: { r: AggregateEstimatorResult }) {
+  const reduced = usePrefersReducedMotion();
+  const mounted = useMounted(reduced);
+  const low = useRollingNumber(mounted ? r.totalCertifiedSavingLowUsd : 0, reduced);
+  const high = useRollingNumber(mounted ? r.totalCertifiedSavingUsd : 0, reduced);
+  const certified = r.totalCertifiedSavingUsd > 0;
 
-  task_label_low_confidence:
-    "Your container read this traffic locally and declined to name what kind of work it is, and certification is per task type. Requests carrying a structural signal — declared tools, or a constrained response schema — classify with certainty and do get certified.",
-  no_valid_instrument:
-    "No independent evaluation measures this kind of work today, so no switch on it can be certified. We would rather name that than quote a number nobody measured.",
-  benchmark_not_discriminating:
-    "No model currently differentiates enough on this to certify a switch — on your own traffic the picture is far sharper than a single assumed workload shape.",
-  no_cheaper_equal:
-    "On today's catalog this one is not overpriced, but your bill is more than one model.",
-  model_not_in_catalog:
-    "We cannot assess a model we have no verified price for.",
-  shape_only:
-    "We cannot assess a spend figure without knowing what you actually run.",
-  no_baseline_score:
-    "We cannot assess quality on a model nobody independently scored.",
-};
-
-function Refused({ r }: { r: Extract<EstimatorResult, { state: "refused" }> }) {
   return (
-    <div>
-      <div className="flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 text-primary" />
-        <p className="eyebrow">{REFUSAL_TITLE[r.reason] ?? r.reason.replace(/_/g, " ")}</p>
+    <div data-testid="aggregate-result">
+      <p className="eyebrow">
+        {certified ? "Certifiable monthly saving" : "Nothing certifiable in this breakdown"}
+      </p>
+      {certified ? (
+        <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
+          ${fmtNum(low)}
+          <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(high)}
+        </p>
+      ) : (
+        <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">
+          No line here clears the bar today.
+        </p>
+      )}
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        Sum of the per-line figures below, nothing else. Lines that refused or came in under the $25
+        floor contribute nothing and are still shown.{" "}
+        <span className="num text-foreground">{r.certifiedSharePct}%</span> of your stated spend is
+        covered by a certifiable line.
+      </p>
+
+      <div className="mt-5 space-y-2.5">
+        {r.lines.map((line, i) => (
+          <div
+            key={`${line.workload}-${i}`}
+            data-testid="result-line"
+            data-share={line.sharePct}
+            data-state={line.result.state}
+            className="rounded-xl border border-border bg-card px-4 py-3"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-sm font-semibold tracking-tight">
+                {WORKLOADS.find((w) => w.id === line.workload)?.label ?? line.workload}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {line.provider ?? "no provider"}
+                {line.modelKey ? ` · ${line.modelKey}` : ""}
+              </span>
+              <span
+                data-testid="result-line-share"
+                className="num ml-auto text-xs tabular-nums text-muted-foreground"
+              >
+                {line.sharePct}% · ${fmtNum(line.lineSpendUsd)}/mo
+              </span>
+            </div>
+
+            {line.result.state === "ok" ? (
+              <p className="num mt-1.5 text-lg tabular-nums text-saving">
+                ${fmtNum(line.result.lowUsd)} – ${fmtNum(line.result.highUsd)}
+                <span className="ml-2 text-xs font-medium tracking-normal text-muted-foreground">
+                  {line.result.fromModelLabel} → {line.result.toModelLabel} ·{" "}
+                  {line.result.toHostLabel}
+                </span>
+              </p>
+            ) : line.result.state === "below_threshold" ? (
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                Under the ${fmtNum(line.result.floorUsd)}/mo floor on its own — real, just too small
+                to act on. Contributes nothing to the total.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                <ShieldAlert className="mr-1 inline h-3.5 w-3.5 text-muted-foreground" />
+                {REFUSAL_TITLE[line.result.reason] ?? "Cannot assess"} — {line.result.headline}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
-      <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">{r.headline}</p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{r.detail}</p>
-      <NotADeadEnd
-        lead={REFUSAL_LEAD[r.reason] ?? "The engine names what it cannot prove."}
-      />
+
+      {r.unallocated.sharePct > 0 ? (
+        <p
+          data-testid="result-unallocated"
+          data-share={r.unallocated.sharePct}
+          className="mt-3 text-xs leading-relaxed text-muted-foreground"
+        >
+          <span className="num text-foreground">{r.unallocated.sharePct}%</span> of your spend ($
+          {fmtNum(r.unallocated.impliedSpendUsd)}/mo) was not itemised, so it was not priced at all.
+          No saving is claimed on it.
+        </p>
+      ) : null}
+
+      {certified ? (
+        <StartCompare />
+      ) : (
+        <NotADeadEnd lead="Nothing in this breakdown clears the bar on today's catalog." />
+      )}
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-border/70 py-2.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium">{value}</span>
-    </div>
-
-  );
-}
-
-function Label({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <p className={`eyebrow mb-2.5 ${className}`}>{children}</p>;
-}
-
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 ${
-        active
-          ? "border-primary/45 bg-primary-soft text-primary"
-          : "border-border bg-card text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
