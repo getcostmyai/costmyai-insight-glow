@@ -120,13 +120,14 @@ export async function recordLeadEvent(
     await supabaseAdmin.from("lead_events").insert({
       event_type: eventType,
       visitor_id: visitorId,
+      session_id: sessionId,
       referred_by_partner_id: partnerId,
       payload: (payload ?? null) as never,
     });
 
-    return { visitorId };
+    return { visitorId, sessionId };
   } catch (err) {
     console.error("lead event not recorded", err instanceof Error ? err.message : String(err));
-    return { visitorId: null };
+    return { visitorId: null, sessionId: null };
   }
 }
