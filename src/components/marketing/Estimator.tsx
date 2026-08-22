@@ -482,32 +482,8 @@ export function Estimator() {
                       </div>
                       <span className="num text-[11px] font-medium text-muted-foreground">$200k</span>
                     </div>
-
-                    <Label className="mt-8">How is it spread?</Label>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      {DISTRIBUTIONS.map((d, i) => {
-                        const on = distribution === d.id;
-                        return (
-                          <button
-                            key={d.id}
-                            type="button"
-                            onClick={() => { markEngaged(); setDistribution(d.id); }}
-                            className={`group rounded-2xl border px-3.5 py-3 text-left transition-all duration-200 hover:-translate-y-0.5 ${
-                              on
-                                ? "border-primary/45 bg-primary-soft shadow-[0_6px_20px_-12px_var(--primary)]"
-                                : "border-border bg-card hover:border-primary/25"
-                            }`}
-                          >
-                            <SpreadGlyph bars={SPREAD_GLYPHS[i] ?? SPREAD_GLYPHS[1]!} on={on} />
-                            <p className="mt-2.5 text-sm font-semibold tracking-tight">{d.label}</p>
-                            <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-                              {d.hint}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
+
 
                 ) : (
                   <AllocationBar
