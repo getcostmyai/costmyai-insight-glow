@@ -2,6 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 
 import type { EstimatorInput, EstimatorResult } from "./estimator/spec";
+import type {
+  AggregateEstimatorResult,
+  EstimatorLineInput,
+} from "./estimator/aggregate";
 
 /**
  * Public estimator endpoint. Anon RLS covers the catalog tables it reads, and
