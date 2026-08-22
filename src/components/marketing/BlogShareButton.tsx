@@ -44,11 +44,10 @@ export function BlogShareButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  const origin = useOrigin();
 
-  const origin = hydrated && typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}/blog/${slug}`;
+
   const enc = encodeURIComponent(url);
   const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`;
   const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${enc}`;
