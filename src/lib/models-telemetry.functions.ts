@@ -31,7 +31,7 @@ export type ModelSortKey = (typeof MODEL_SORT_KEYS)[number];
 export const SEARCH_QUERY_MAX = 200;
 
 /** Vendor labels come from the catalog itself; this bounds the string anyway. */
-const VENDOR = /^[\w .+\-/&()]{1,80}$/;
+const VENDOR = /^[\w .+\-/&()~:@]{1,80}$/;
 
 /** Control characters, including the DEL block — never stored. */
 // eslint-disable-next-line no-control-regex
