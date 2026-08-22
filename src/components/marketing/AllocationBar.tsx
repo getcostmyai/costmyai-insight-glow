@@ -142,7 +142,10 @@ export function AllocationBar(props: AllocationBarProps) {
       tone: "bg-secondary",
       label: "Not itemised",
     },
-  ].filter((s) => s.kind === "line" || s.pct > 0);
+  ];
+  // The remainder segment stays in the list even at 0%: its boundary is the
+  // only handle that can hand spend back, so removing it would strand the
+  // visitor with no way to un-allocate by dragging.
 
   let running = 0;
   const boundaries = segments.slice(0, -1).map((s, i) => {
