@@ -15,18 +15,54 @@ import viteConfig from "./vite.config";
  * The timeouts below are deliberately generous. A test that genuinely hangs
  * still fails; a test that is merely queued behind other network calls no
  * longer reports itself as a broken feature.
+ *
+ * Serial phase (this session). `delisted-price.integration.test.ts` inserts a
+ * synthetic `host_prices` row at $0.001/Mtok. `host_prices` is a single global
+ * table with no tenant or test boundary — every suite that runs a live
+ * evaluation reads it unfiltered — so for the seconds that row is listed it is
+ * the cheapest destination in the market for every concurrently-running suite,
+ * which is exactly how govern-synthetic and certify-synthetic picked up one-off
+ * contamination. Vitest's real mechanism for "run this after everything else"
+ * is `sequence.groupOrder` across projects: groups run lowest to highest, and
+ * only projects sharing a group order run at the same time. The polluting file
+ * therefore gets group 1 and runs alone once group 0 has finished.
  */
+const SERIAL_FILES = ["src/lib/engine/__tests__/delisted-price.integration.test.ts"];
+
 export default defineConfig(async (env) => {
   // The app's vite config is a callback (it resolves plugins per-mode), so it
   // has to be invoked before it can be merged.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const base = await (viteConfig as any)(env);
+  const shared = {
+    maxWorkers: 6,
+    minWorkers: 6,
+    testTimeout: 60_000,
+    hookTimeout: 120_000,
+  };
   return mergeConfig(base, {
     test: {
-      maxWorkers: 6,
-      minWorkers: 6,
-      testTimeout: 60_000,
-      hookTimeout: 120_000,
+      ...shared,
+      projects: [
+        {
+          extends: true,
+          test: {
+            ...shared,
+            name: "parallel",
+            exclude: ["**/node_modules/**", "**/dist/**", ...SERIAL_FILES],
+          },
+        },
+        {
+          extends: true,
+          test: {
+            ...shared,
+            name: "serial",
+            include: SERIAL_FILES,
+            sequence: { groupOrder: 1 },
+          },
+        },
+      ],
     },
   });
 });
+
