@@ -189,7 +189,7 @@ export function AllocationBar(props: AllocationBarProps) {
       <div className="mt-4 space-y-2">
         {lines.map((line, i) => {
           const label = WORKLOADS.find((w) => w.id === line.workload)?.label ?? line.workload;
-          const before = lines;
+          
           return (
             <div
               key={line.id}
