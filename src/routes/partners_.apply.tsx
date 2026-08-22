@@ -229,32 +229,7 @@ function ApplyPage() {
             </Card>
           )}
 
-          {stage === "done" && outcome?.path === "meeting" && (
-            <Card>
-              <CalendarCheck className="h-6 w-6 text-primary" />
-              <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-                Your application is saved — now pick a time
-              </h1>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {outcome.escalated
-                  ? "You have real clients ready to start in the next few weeks, so we'd rather talk than queue you."
-                  : "A practice your size gets a direct conversation rather than a queue."}{" "}
-                We already have your details, so if the calendar isn't convenient right now we'll
-                still reach out.
-              </p>
-              <a
-                href={BOOK_DEMO_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="btn-gradient mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm"
-              >
-                Book your partner call
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </Card>
-          )}
-
-          {stage === "done" && outcome?.path === "async" && (
+          {stage === "done" && (
             <div className="mt-6 space-y-4">
               <Card>
                 <CheckCircle2 className="h-6 w-6 text-primary" />
@@ -264,7 +239,8 @@ function ApplyPage() {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   We review every application personally — in batches, by a real person, not by an
                   automatic rule. You'll hear from us within {REVIEW_TURNAROUND}. Nothing is approved
-                  or rejected in the meantime.
+                  or rejected in the meantime. A confirmation is on its way to the address you gave
+                  us.
                 </p>
               </Card>
 
