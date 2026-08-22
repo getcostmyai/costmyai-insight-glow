@@ -105,6 +105,7 @@ export function AllocationBar(props: AllocationBarProps) {
   };
   const slide = (id: string, next: number) => onLinesChange(setShare(lines, id, next));
   const settle = (id: string, next: number) => {
+    console.log("DBG settle", id, next, gestureStart.current?.map((l) => l.sharePct));
     const before = gestureStart.current ?? lines;
     gestureStart.current = null;
     const after = setShare(before, id, next);
