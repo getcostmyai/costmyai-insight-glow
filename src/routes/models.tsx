@@ -60,6 +60,14 @@ function hostSpread(row: CatalogRow): number | null {
 
 function ModelsPage() {
   const { data } = useSuspenseQuery(catalogQuery());
+  const track = useServerFn(trackModelsEvent);
+
+  // Module-scope guard, not a ref: hydration and the Suspense boundary both
+  // remount this component for one real visit (see fire-once.ts).
+  useEffect(() => {
+    if (!shouldFire("models_page_viewed")) return;
+    void track({ data: { event: "models_page_viewed" } }).catch(() => {});
+  }, [track]);
 
   return (
     <MarketingShell>
