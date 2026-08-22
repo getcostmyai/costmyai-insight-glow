@@ -4,8 +4,19 @@ import type {} from "@tanstack/react-start";
 import { POSTS } from "@/lib/blog/posts";
 import { notesNewestFirst } from "@/lib/intelligence/notes";
 
-// TODO: replace with your project URL once a project name or custom domain is set.
-const BASE_URL = "";
+// The origin the sitemap is served from. Derived from the request, so it is
+// correct on preview, on production and behind a custom domain without a
+// constant to keep in sync — same source of truth as the share URLs.
+function baseUrlFrom(request: Request): string {
+  const url = new URL(request.url);
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    if (forwardedHost) {
+      return `${request.headers.get("x-forwarded-proto") ?? "https"}://${forwardedHost}`;
+    }
+  }
+  return url.origin;
+}
 
 interface SitemapEntry {
   path: string;
@@ -16,7 +27,8 @@ interface SitemapEntry {
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        const BASE_URL = baseUrlFrom(request);
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
           { path: "/models", changefreq: "daily", priority: "0.9" },

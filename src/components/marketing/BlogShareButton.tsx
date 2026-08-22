@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, Link2, Linkedin } from "lucide-react";
 
 import {
@@ -7,6 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useOrigin } from "@/lib/use-origin";
+
 
 /**
  * Inlined X logomark on the same 24-unit grid as lucide icons so it inherits
@@ -42,11 +44,10 @@ export function BlogShareButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  const origin = useOrigin();
 
-  const origin = hydrated && typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}/blog/${slug}`;
+
   const enc = encodeURIComponent(url);
   const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`;
   const tweet = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${enc}`;

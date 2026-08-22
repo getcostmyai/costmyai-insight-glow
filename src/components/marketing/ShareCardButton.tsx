@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Share2 } from "lucide-react";
 
 import {
@@ -9,6 +8,8 @@ import {
 } from "@/components/ui/tooltip";
 import { ShareControls } from "@/components/marketing/ShareControls";
 import { shareUrl } from "@/lib/intelligence/share-url";
+import { useOrigin } from "@/lib/use-origin";
+
 
 /**
  * Per-card share control.
@@ -36,8 +37,9 @@ export function ShareCardButton({
   title: string;
   className?: string;
 }) {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  // Server-resolved, so it is already correct in the first rendered HTML.
+  const origin = useOrigin();
+
 
   if (!month) {
     return (
@@ -61,12 +63,9 @@ export function ShareCardButton({
     );
   }
 
-  // The origin is only known in the browser, so it is resolved after hydration.
-  // Rendering it during the first paint made the server and client disagree on
-  // every share href.
-  const origin = hydrated && typeof window !== "undefined" ? window.location.origin : "";
   const url = shareUrl(origin, `/intelligence/${month}`, cardId, cardId);
   const image = `${origin}/api/public/og/intelligence/${month}?card=${encodeURIComponent(cardId)}`;
+
 
   return (
     <ShareControls
