@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Search } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
+import { trackModelsEvent } from "@/lib/models-telemetry.functions";
+import { shouldFire } from "@/lib/telemetry/fire-once";
 
 export const Route = createFileRoute("/models")({
   head: () => ({
