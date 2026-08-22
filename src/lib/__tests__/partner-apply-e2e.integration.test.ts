@@ -21,6 +21,7 @@
  */
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { randomUUID } from "node:crypto";
 
 import { createClient } from "@supabase/supabase-js";
 import { requestHandler } from "@tanstack/start-server-core";
