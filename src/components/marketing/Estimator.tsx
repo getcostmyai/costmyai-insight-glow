@@ -163,47 +163,139 @@ export function Estimator() {
   };
 
 
+  /**
+   * Progression events. Each real action reports itself, rather than one
+   * first-touch flag standing in for a whole session of work: the shape of a
+   * breakdown a visitor built is only legible if every add, edit, resize and
+   * removal is recorded with the state it produced.
+   */
+  const progression = (
+    event:
+      | "estimator_line_added"
+      | "estimator_line_changed"
+      | "estimator_line_removed"
+      | "estimator_split_changed",
+    payload: Record<string, unknown>,
+  ) => {
+    markEngaged();
+    void track({ data: { event, payload } }).catch(() => {});
+  };
+
+  const shapeOf = (list: DraftLine[]) =>
+    list.map((l) => ({
+      workload: l.workload,
+      provider: l.provider,
+      modelKey: l.modelKey,
+      sharePct: l.sharePct,
+    }));
+
+  const addLine = (draft: LineDraft) => {
+    if (!canAddLine(lines).ok) return;
+    const line: DraftLine = {
+      id: `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      ...draft,
+      sharePct: startingShare(lines),
+    };
+    const next = [...lines, line];
+    setLines(next);
+    progression("estimator_line_added", {
+      ...draft,
+      sharePct: line.sharePct,
+      lineCount: next.length,
+      unallocatedPct: unallocatedPct(next),
+    });
+  };
+
+  const editLine = (id: string, draft: LineDraft) => {
+    const before = lines.find((l) => l.id === id);
+    if (!before) return;
+    setLines(lines.map((l) => (l.id === id ? { ...l, ...draft } : l)));
+    progression("estimator_line_changed", {
+      from: { workload: before.workload, provider: before.provider, modelKey: before.modelKey },
+      to: draft,
+      sharePct: before.sharePct,
+    });
+  };
+
+  const removeLine = (id: string) => {
+    const gone = lines.find((l) => l.id === id);
+    if (!gone) return;
+    const next = removeLineFrom(lines, id);
+    setLines(next);
+    progression("estimator_line_removed", {
+      workload: gone.workload,
+      provider: gone.provider,
+      modelKey: gone.modelKey,
+      returnedPct: gone.sharePct,
+      lineCount: next.length,
+      unallocatedPct: unallocatedPct(next),
+    });
+  };
+
+  /** Fired once per completed drag, never per frame. */
+  const commitResize = (before: DraftLine[], after: DraftLine[], boundaryIndex: number) => {
+    if (JSON.stringify(shapeOf(before)) === JSON.stringify(shapeOf(after))) return;
+    progression("estimator_split_changed", {
+      boundaryIndex,
+      before: shapeOf(before),
+      after: shapeOf(after),
+      unallocatedPct: unallocatedPct(after),
+    });
+  };
+
   const mutation = useMutation({
     mutationFn: () =>
-      run({ data: { monthlySpendUsd: spend, provider, workload, modelKey, distribution } }),
+      run({
+        data: {
+          totalSpendUsd: spend,
+          lines: lines.map((l) => ({
+            workload: l.workload,
+            provider: l.provider,
+            modelKey: l.modelKey,
+            sharePct: l.sharePct,
+          })),
+        },
+      }),
   });
-  const result = mutation.data as EstimatorResult | undefined;
+  const result = mutation.data as AggregateEstimatorResult | undefined;
 
-  /* -------- indicative figure: server-computed rate × live inputs -------- */
+  /* ------ indicative figure: server-computed rates × the live breakdown ----- */
   const indicative = useMemo(() => {
     const bands = options?.bands;
-    if (!bands) return null;
-    const idx = bands.workloads.indexOf(workload);
-    if (idx < 0) return null;
-    const series = modelKey ? bands.byModel[modelKey] : provider ? bands.byProvider[provider] : null;
-    const rate = series?.[idx];
-    if (rate == null) return null;
-    const share = DISTRIBUTIONS.find((d) => d.id === distribution)?.share ?? 0.45;
-    const modelled = spend * share * rate;
+    if (!bands || lines.length === 0) return null;
+    let modelled = 0;
+    for (const line of lines) {
+      const idx = bands.workloads.indexOf(line.workload);
+      if (idx < 0) continue;
+      const series = line.modelKey
+        ? bands.byModel[line.modelKey]
+        : line.provider
+          ? bands.byProvider[line.provider]
+          : null;
+      const rate = series?.[idx];
+      if (rate == null) continue;
+      modelled += ((spend * line.sharePct) / 100) * rate;
+    }
+    if (modelled <= 0) return null;
     return { low: modelled * CONSERVATIVE_LOW, high: modelled * CONSERVATIVE_HIGH };
-  }, [options, workload, provider, modelKey, distribution, spend]);
+  }, [options, lines, spend]);
 
   /**
-   * What the indicative figure actually rests on. Shown next to the number so
-   * it can never read as if spend alone produced it — including when the user
-   * steps back to Spend after choosing a workload and a provider.
+   * What the indicative figure actually rests on — the itemised part of the
+   * spend only, never the whole number, so it can never read as if spend alone
+   * produced it.
    */
   const basisLabel = useMemo(() => {
-    const w = WORKLOADS.find((x) => x.id === workload)?.label ?? workload;
-    const where = modelKey
-      ? (options?.models.find((m) => m.model_key === modelKey)?.display_name ?? modelKey)
-      : (provider ?? null);
-    return where ? `${w} · ${where}` : w;
-  }, [workload, provider, modelKey, options]);
+    if (lines.length === 0) return "nothing itemised yet";
+    const covered = 100 - unallocatedPct(lines);
+    return `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${covered}% of spend`;
+  }, [lines]);
 
   const showResult = Boolean(result) || mutation.isPending;
   const headline = showResult ? 0 : (indicative?.high ?? 0);
   const rolled = useRollingNumber(headline, reduced);
   const rolledSpend = useRollingNumber(spend, reduced);
   const spendPct = ((rolledSpend - 200) / (200000 - 200)) * 100;
-
-
-
 
   const goto = (next: number) => {
     setDir(next > step ? 1 : -1);
@@ -215,9 +307,7 @@ export function Estimator() {
     mutation.reset();
     setSpend(4000);
     setDistribution("even");
-    setWorkload("chat");
-    setProvider(null);
-    setModelKey(null);
+    setLines([]);
     setDir(-1);
     setStep(0);
   };
