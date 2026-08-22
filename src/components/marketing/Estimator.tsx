@@ -201,22 +201,23 @@ export function Estimator() {
       sharePct: l.sharePct,
     }));
 
-  const addLine = (draft: LineDraft) => {
+  const addLine = (draft: LineDraft, sharePct: number) => {
     if (!canAddLine(lines).ok) return;
     const line: DraftLine = {
       id: `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       ...draft,
-      sharePct: startingShare(lines),
+      sharePct,
     };
-    const next = [...lines, line];
+    const next = addLineAt(lines, line, sharePct);
     setLines(next);
     progression("estimator_line_added", {
       ...draft,
-      sharePct: line.sharePct,
+      sharePct: next.find((l) => l.id === line.id)?.sharePct ?? sharePct,
       lineCount: next.length,
       unallocatedPct: unallocatedPct(next),
     });
   };
+
 
   const editLine = (id: string, draft: LineDraft) => {
     const before = lines.find((l) => l.id === id);
