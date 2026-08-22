@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react'
 
 import { template as opsAlert } from './ops-alert'
+import { template as partnerApplicationAlert } from './partner-application-alert'
+import { template as partnerApplicationReceived } from './partner-application-received'
 import { template as partnerWelcome } from './partner-welcome'
 
 export interface TemplateEntry {
