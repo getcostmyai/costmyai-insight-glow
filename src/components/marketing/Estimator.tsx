@@ -477,7 +477,7 @@ export function Estimator() {
                 One-time estimate off an assumed token mix. A real connection reads your traffic
                 continuously.
               </p>
-            ) : step < 2 ? (
+            ) : step < 1 ? (
               <button
                 type="button"
                 onClick={() => goto(step + 1)}
@@ -488,9 +488,11 @@ export function Estimator() {
             ) : (
               <button
                 type="button"
+                data-testid="estimator-submit"
                 onClick={() => mutation.mutate()}
-                disabled={mutation.isPending}
-                className="btn-gradient px-5 py-2.5 text-sm disabled:opacity-70"
+                disabled={mutation.isPending || lines.length === 0}
+                title={lines.length === 0 ? "Add at least one workload first" : undefined}
+                className="btn-gradient px-5 py-2.5 text-sm disabled:opacity-40"
               >
                 Get the real number <ArrowRight className="h-4 w-4" />
               </button>
