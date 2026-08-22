@@ -124,10 +124,8 @@ export function Estimator() {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [spend, setSpend] = useState(4000);
-  const [provider, setProvider] = useState<string | null>(null);
-  const [workload, setWorkload] = useState<WorkloadId>("chat");
-  const [modelKey, setModelKey] = useState<string | null>(null);
   const [distribution, setDistribution] = useState<DistributionId>("even");
+  const [lines, setLines] = useState<DraftLine[]>([]);
 
   /* ---------------------------- telemetry ----------------------------- */
   /**
