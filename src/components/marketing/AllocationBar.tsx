@@ -332,7 +332,7 @@ export function AllocationBar(props: AllocationBarProps) {
             className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-primary/50"
           >
             <option value="">No specific model</option>
-            {(options?.models ?? []).map((m) => (
+            {modelsFor(options, picker.draft.provider).map((m) => (
               <option key={m.model_key} value={m.model_key}>
                 {m.display_name}
               </option>
