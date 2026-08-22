@@ -37,6 +37,38 @@ export const estimateSavingFn = createServerFn({ method: "POST" })
   });
 
 
+/**
+ * Multi-line estimator endpoint. Same catalog read, same engine: it calls the
+ * unchanged resolveEstimate once per named line through aggregateEstimate, and
+ * records the whole aggregate as the completion payload — including refusals
+ * and the unallocated remainder, which is exactly the honest shape of the
+ * answer the visitor was shown.
+ */
+export const estimateSpreadFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { totalSpendUsd: number; lines: EstimatorLineInput[] }) => ({
+    totalSpendUsd: Math.max(0, Math.min(2_000_000, Number(data.totalSpendUsd) || 0)),
+    lines: (Array.isArray(data.lines) ? data.lines : []).slice(0, 6).map((line) => ({
+      workload: line.workload,
+      provider: line.provider ? String(line.provider).slice(0, 120) : null,
+      modelKey: line.modelKey ? String(line.modelKey).slice(0, 120) : null,
+      sharePct: Math.max(0, Math.min(100, Math.round(Number(line.sharePct) || 0))),
+    })),
+  }))
+  .handler(async ({ data }): Promise<AggregateEstimatorResult> => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { enforceRateLimit, callerIdentity, RATE_RULES } = await import("./rate-limit.server");
+    await enforceRateLimit(RATE_RULES.estimator, callerIdentity(getRequest()));
+
+    const { readEstimatorCatalog } = await import("./estimator/estimate.server");
+    const { aggregateEstimate } = await import("./estimator/aggregate");
+    const result = aggregateEstimate(await readEstimatorCatalog(), data);
+
+    const { recordLeadEvent } = await import("./telemetry/lead-events.server");
+    await recordLeadEvent("estimator_completed", result);
+
+    return result;
+  });
+
 export const estimatorOptionsQuery = () =>
   queryOptions({
     queryKey: ["estimator-options"],
