@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-22T14:22:45.378Z",
+  "generatedAt": "2026-08-22T16:16:54.426Z",
   "queries": [
     {
       "file": "src/lib/benchmark.functions.ts",
@@ -29,13 +29,6 @@
         "is_active"
       ],
       "snippet": ".from(\"model_catalog\") .select(\"model_key\") .eq(\"is_active\", true)"
-    },
-    {
-      "file": "src/lib/billing.functions.ts",
-      "line": 111,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\") .select(\"stripe_subscription_id\") .eq(\"id\", data.orgId)"
     },
     {
       "file": "src/lib/billing.functions.ts",
@@ -84,13 +77,6 @@
         "status"
       ],
       "snippet": ".from(\"subscriptions\") .select(\"plan, status, current_period_end\") .eq(\"org_id\", data.orgId)"
-    },
-    {
-      "file": "src/lib/billing/guard.server.ts",
-      "line": 65,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\").select(\"plan\").eq(\"id\", orgId).maybeSingle()"
     },
     {
       "file": "src/lib/billing/guard.server.ts",
@@ -200,15 +186,6 @@
         "status"
       ],
       "snippet": ".from(\"switches\") .select( \"id, from_model, from_host, to_model, to_host, basis, badge, autonomous, status, ac"
-    },
-    {
-      "file": "src/lib/dashboard.server.ts",
-      "line": 478,
-      "table": "organizations",
-      "filters": [
-        "is_synthetic"
-      ],
-      "snippet": ".from(\"organizations\") .select(\"name, plan, is_synthetic, autonomous_enabled\") .eq(\"id\", orgId)"
     },
     {
       "file": "src/lib/dashboard.server.ts",
@@ -355,15 +332,6 @@
         "org_id"
       ],
       "snippet": ".from(\"usage_rollups\") .select(\"requests\") .eq(\"org_id\", orgId)"
-    },
-    {
-      "file": "src/lib/engine/evaluate.server.ts",
-      "line": 112,
-      "table": "organizations",
-      "filters": [
-        "is_synthetic"
-      ],
-      "snippet": ".from(\"organizations\").select(\"id, plan, is_synthetic, autonomous_enabled\")"
     },
     {
       "file": "src/lib/engine/evaluate.server.ts",
@@ -611,13 +579,6 @@
         "status"
       ],
       "snippet": ".from(\"usage_events\") .select(\"id, org_id, occurred_at, status, parse_status, input_tokens, output_tokens, env"
-    },
-    {
-      "file": "src/lib/ingest/rollup-sweep.server.ts",
-      "line": 69,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\").select(\"id\")"
     },
     {
       "file": "src/lib/ingest/routing.server.ts",
@@ -878,22 +839,6 @@
     },
     {
       "file": "src/lib/partners.functions.ts",
-      "line": 293,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\") .select(\"referred_by_partner_id, referred_at\") .eq(\"id\", data.orgId)"
-    },
-    {
-      "file": "src/lib/partners.functions.ts",
-      "line": 445,
-      "table": "organizations",
-      "filters": [
-        "is_synthetic"
-      ],
-      "snippet": ".from(\"organizations\") .select(\"id, referred_by_partner_id, created_at\") .eq(\"is_synthetic\", false)"
-    },
-    {
-      "file": "src/lib/partners.functions.ts",
       "line": 448,
       "table": "partners",
       "filters": [
@@ -1061,15 +1006,6 @@
     },
     {
       "file": "src/lib/synthetic/tick.server.ts",
-      "line": 46,
-      "table": "organizations",
-      "filters": [
-        "is_synthetic"
-      ],
-      "snippet": ".from(\"organizations\") .select(\"id\") .eq(\"is_synthetic\", true)"
-    },
-    {
-      "file": "src/lib/synthetic/tick.server.ts",
       "line": 57,
       "table": "usage_events",
       "filters": [
@@ -1088,33 +1024,12 @@
     },
     {
       "file": "src/lib/telemetry/lead-events.server.ts",
-      "line": 135,
+      "line": 137,
       "table": "partners",
       "filters": [
         "status"
       ],
       "snippet": ".from(\"partners\") .select(\"id\") .ilike(\"referral_code\", code)"
-    },
-    {
-      "file": "src/lib/workspace.functions.ts",
-      "line": 33,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\").select(\"id, name, slug, plan\").order(\"created_at\")"
-    },
-    {
-      "file": "src/lib/workspace.functions.ts",
-      "line": 191,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\") .select(\"plan, first_visitor_id, referred_by_partner_id\") .eq(\"id\", data.orgId)"
-    },
-    {
-      "file": "src/routes/api/public/payments/webhook.ts",
-      "line": 163,
-      "table": "organizations",
-      "filters": [],
-      "snippet": ".from(\"organizations\") .select(\"first_visitor_id, referred_by_partner_id\") .eq(\"id\", orgId)"
     },
     {
       "file": "src/routes/api/public/payments/webhook.ts",
