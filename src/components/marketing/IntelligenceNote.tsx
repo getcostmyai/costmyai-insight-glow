@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Reveal } from "@/components/marketing/Reveal";
+import { NoteShareButton } from "@/components/marketing/NoteShareButton";
 import { DecompositionBar } from "@/components/marketing/IntelligenceCharts";
 import {
   LABELS,
@@ -171,6 +172,8 @@ export function IntelligenceNoteView({ note }: { note: Note }) {
               <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 {formatNoteDate(note.published)} · {note.minutes} min read
               </span>
+              {/* Sits on the byline rail, same place a reader looks for the date. */}
+              <NoteShareButton slug={note.slug} title={note.title} />
             </div>
             <p className="mt-5 max-w-2xl border-t border-border/60 pt-5 text-sm leading-relaxed text-muted-foreground">
               {meta.statement}
