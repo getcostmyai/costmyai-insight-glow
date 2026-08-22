@@ -11,12 +11,13 @@ import { AllocationBar, type LineDraft } from "./AllocationBar";
 import { Label } from "./estimator-ui";
 import type { AggregateEstimatorResult } from "@/lib/estimator/aggregate";
 import {
+  addLineAt,
   canAddLine,
   removeLine as removeLineFrom,
-  startingShare,
   unallocatedPct,
   type DraftLine,
 } from "@/lib/estimator/lines";
+
 
 import {
   CONSERVATIVE_HIGH,
@@ -201,22 +202,23 @@ export function Estimator() {
       sharePct: l.sharePct,
     }));
 
-  const addLine = (draft: LineDraft) => {
+  const addLine = (draft: LineDraft, sharePct: number) => {
     if (!canAddLine(lines).ok) return;
     const line: DraftLine = {
       id: `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       ...draft,
-      sharePct: startingShare(lines),
+      sharePct,
     };
-    const next = [...lines, line];
+    const next = addLineAt(lines, line, sharePct);
     setLines(next);
     progression("estimator_line_added", {
       ...draft,
-      sharePct: line.sharePct,
+      sharePct: next.find((l) => l.id === line.id)?.sharePct ?? sharePct,
       lineCount: next.length,
       unallocatedPct: unallocatedPct(next),
     });
   };
+
 
   const editLine = (id: string, draft: LineDraft) => {
     const before = lines.find((l) => l.id === id);
@@ -317,7 +319,7 @@ export function Estimator() {
   const basisLabel = useMemo(() => {
     if (lines.length === 0) return "nothing itemised yet";
     const covered = 100 - unallocatedPct(lines);
-    return `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${covered}% of spend`;
+    return `${lines.length} ${lines.length === 1 ? "workload" : "workloads"} · ${covered}% of spend`;
   }, [lines]);
 
   const showResult = Boolean(result) || mutation.isPending;
