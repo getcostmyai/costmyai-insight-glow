@@ -615,91 +615,6 @@ function NotADeadEnd({ lead }: { lead: string }) {
 }
 
 
-function Success({ r }: { r: Extract<EstimatorResult, { state: "ok" }> }) {
-  const reduced = usePrefersReducedMotion();
-  const mounted = useMounted(reduced);
-  // Count both ends of the range up from zero, so the answer lands rather than appears.
-  const low = useRollingNumber(mounted ? r.lowUsd : 0, reduced);
-  const high = useRollingNumber(mounted ? r.highUsd : 0, reduced);
-  const share = Math.min(100, Math.max(2, r.sharePct));
-
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="eyebrow">Estimated monthly saving</p>
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-saving transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{
-            opacity: mounted ? 1 : 0,
-            transform: mounted ? "translateY(0) scale(1)" : "translateY(2px) scale(0.96)",
-            transitionDelay: "260ms",
-          }}
-        >
-          <Sparkles className="h-3 w-3" /> {r.savingPct}% cheaper per call
-        </span>
-      </div>
-      <p className="num mt-2 text-4xl leading-none tabular-nums text-saving sm:text-5xl">
-        ${fmtNum(low)}
-        <span className="mx-2 font-normal text-saving/40">–</span>${fmtNum(high)}
-      </p>
-
-      {/* Share of spend the estimate actually covers, drawn rather than asserted. */}
-      <div className="mt-4">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-saving transition-[width] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ width: `${mounted ? share : 0}%`, transitionDelay: "200ms" }}
-          />
-        </div>
-        <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
-          Applied to <span className="num text-foreground">{r.sharePct}%</span> of your stated spend
-        </p>
-      </div>
-
-
-      <div className="mt-5 grid gap-x-8 sm:grid-cols-2">
-        <Row label="From" value={r.fromModelLabel} />
-        <Row label="To" value={`${r.toModelLabel} · ${r.toHostLabel}`} />
-        <Row label="Quality bar" value={`${r.suite} / ${r.taskClass} ±${r.margin}`} />
-        <Row label="Share of spend" value={`${r.sharePct}%`} />
-      </div>
-
-
-      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-        Basis: conservative half-to-four-fifths of the modelled price delta, applied to{" "}
-        <span className="num">{r.sharePct}%</span> of your stated spend, at an assumed {r.assumedMix}
-        . Prices and scores from the live CostMyAI catalog; the equal-quality test is the same
-        measured margin the product certifies against.
-      </p>
-
-      <StartCompare />
-    </div>
-  );
-}
-
-function BelowThreshold({ r }: { r: Extract<EstimatorResult, { state: "below_threshold" }> }) {
-  return (
-    <div>
-      <p className="eyebrow">Below the savings threshold</p>
-      <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">
-        Too small to recommend a switch.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        At this spend level the potential saving (floor: ${fmtNum(r.floorUsd)}/mo) is too small to
-        recommend a switch. Switching costs would likely exceed the saving. Revisit at higher volume
-        or a different workload.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        There is a cheaper equal-quality option to {r.fromModelLabel} on {r.taskClass} work — it
-        just comes to under ${fmtNum(Math.max(1, r.highUsd))} a month for you. We would rather say
-        that than manufacture a minimum worth switching for.
-      </p>
-      <NotADeadEnd lead="The math worked here; the answer is simply too small to act on today." />
-    </div>
-  );
-}
-
-/** Each refusal is named for what it actually is, not for its internal code. */
 const REFUSAL_TITLE: Record<string, string> = {
   benchmark_not_discriminating: "Switch not certifiable",
   no_valid_instrument: "No instrument measures this work",
@@ -728,31 +643,6 @@ const REFUSAL_LEAD: Record<string, string> = {
     "We cannot assess quality on a model nobody independently scored.",
 };
 
-function Refused({ r }: { r: Extract<EstimatorResult, { state: "refused" }> }) {
-  return (
-    <div>
-      <div className="flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 text-primary" />
-        <p className="eyebrow">{REFUSAL_TITLE[r.reason] ?? r.reason.replace(/_/g, " ")}</p>
-      </div>
-      <p className="mt-2 text-2xl font-semibold leading-snug tracking-tight">{r.headline}</p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{r.detail}</p>
-      <NotADeadEnd
-        lead={REFUSAL_LEAD[r.reason] ?? "The engine names what it cannot prove."}
-      />
-    </div>
-  );
-}
-
-/**
- * The multi-line answer.
- *
- * Every line is shown with its OWN top-level share — never the share nested
- * inside its engine result, which always reads the internal allocation
- * constant and says nothing about how the visitor split their spend. Refusals
- * and sub-threshold lines stay on screen with their real state: a total that
- * quietly dropped them would overstate what we can certify.
- */
 function AggregateResult({ r }: { r: AggregateEstimatorResult }) {
   const reduced = usePrefersReducedMotion();
   const mounted = useMounted(reduced);
