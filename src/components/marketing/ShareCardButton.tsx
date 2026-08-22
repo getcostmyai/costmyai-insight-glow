@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Share2 } from "lucide-react";
 
 import {
@@ -9,6 +8,8 @@ import {
 } from "@/components/ui/tooltip";
 import { ShareControls } from "@/components/marketing/ShareControls";
 import { shareUrl } from "@/lib/intelligence/share-url";
+import { useOrigin } from "@/lib/use-origin";
+
 
 /**
  * Per-card share control.
