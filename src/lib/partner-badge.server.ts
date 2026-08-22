@@ -1,5 +1,4 @@
 import { esc, renderSvgToPng } from "@/lib/brand/render.server";
-import { createPublicServerClient } from "@/lib/supabase-public.server";
 
 /**
  * Partner badge and LinkedIn banners.
@@ -25,8 +24,11 @@ export const BADGE_CODE_RE = /^[A-Z0-9-]{3,32}$/i;
 /** Null for any code that is not an active partner. */
 export async function readPartnerBadge(code: string): Promise<PartnerBadge | null> {
   if (!BADGE_CODE_RE.test(code)) return null;
-  const supabase = createPublicServerClient();
-  const { data, error } = await supabase
+  // Badge facts are read with the trusted server client: `partner_badge()` is no
+  // longer callable by anonymous API clients, and the function itself still only
+  // returns public badge fields for an active partner.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
     .rpc("partner_badge", { _code: code })
     .maybeSingle();
   if (error) throw error;
