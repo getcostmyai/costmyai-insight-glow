@@ -54,34 +54,56 @@ export function canAddLine(lines: DraftLine[]): { ok: boolean; reason: string | 
 }
 
 /**
- * Resize the boundary between segment `index` and segment `index + 1`, where
- * the segment list is [...lines, unallocated]. `nextLeftPct` is the requested
- * new size of the left segment; the pair's combined width is conserved, so no
- * other segment moves.
+ * The largest share one workload may hold: everything except the floor every
+ * *other* named workload needs to stay labelled. `id` is the workload being
+ * sized — omit it when sizing one that is not placed yet.
  */
-export function resizeBoundary(
-  lines: DraftLine[],
-  index: number,
-  nextLeftPct: number,
-): DraftLine[] {
-  const remainder = unallocatedPct(lines);
-  const sizes = [...lines.map((l) => l.sharePct), remainder];
-  if (index < 0 || index >= sizes.length - 1) return lines;
-
-  const pair = sizes[index] + sizes[index + 1];
-  // The remainder may go to zero; a named line may not go below its floor.
-  const leftMin = index < lines.length ? MIN_LINE_PCT : 0;
-  const rightMin = index + 1 < lines.length ? MIN_LINE_PCT : 0;
-
-  const left = Math.max(leftMin, Math.min(pair - rightMin, Math.round(nextLeftPct)));
-  const right = pair - left;
-
-  return lines.map((line, i) => {
-    if (i === index) return { ...line, sharePct: left };
-    if (i === index + 1) return { ...line, sharePct: right };
-    return line;
-  });
+export function maxShareFor(lines: DraftLine[], id?: string): number {
+  const others = lines.filter((l) => l.id !== id).length;
+  return 100 - others * MIN_LINE_PCT;
 }
+
+/**
+ * Move one workload's share to `next`.
+ *
+ * Growth is carved out of the unallocated remainder first. Only once the
+ * remainder is exhausted does it encroach on other named workloads, largest
+ * first, and never below their floor — so a slider can genuinely reach a full
+ * allocation instead of stopping dead at whatever happened to be left over.
+ * Shrinking always hands the freed share straight back to the remainder.
+ */
+export function setShare(lines: DraftLine[], id: string, next: number): DraftLine[] {
+  const target = lines.find((l) => l.id === id);
+  if (!target) return lines;
+
+  const want = Math.max(MIN_LINE_PCT, Math.min(maxShareFor(lines, id), Math.round(next)));
+  const sizes = new Map(lines.map((l) => [l.id, l.sharePct]));
+  sizes.set(id, want);
+
+  // Anything the remainder could not cover is taken from the other workloads.
+  let deficit = want - target.sharePct - unallocatedPct(lines);
+  while (deficit > 0) {
+    const donor = lines
+      .filter((l) => l.id !== id && (sizes.get(l.id) ?? 0) > MIN_LINE_PCT)
+      .sort((a, b) => (sizes.get(b.id) ?? 0) - (sizes.get(a.id) ?? 0))[0];
+    if (!donor) break;
+    const give = Math.min(deficit, (sizes.get(donor.id) ?? 0) - MIN_LINE_PCT);
+    sizes.set(donor.id, (sizes.get(donor.id) ?? 0) - give);
+    deficit -= give;
+  }
+
+  return lines.map((l) => ({ ...l, sharePct: sizes.get(l.id) ?? l.sharePct }));
+}
+
+/**
+ * Place a new workload at the share the visitor chose in the picker, applying
+ * the same carve-from-the-remainder-first rule as any later adjustment.
+ */
+export function addLineAt(lines: DraftLine[], line: DraftLine, sharePct: number): DraftLine[] {
+  const seeded = [...lines, { ...line, sharePct: Math.min(sharePct, unallocatedPct(lines)) }];
+  return setShare(seeded, line.id, sharePct);
+}
+
 
 /** Removing a line returns its exact share to the remainder, untouched elsewhere. */
 export function removeLine(lines: DraftLine[], id: string): DraftLine[] {
