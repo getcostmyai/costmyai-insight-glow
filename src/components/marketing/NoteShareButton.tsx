@@ -25,10 +25,8 @@ export function NoteShareButton({
   title: string;
   className?: string;
 }) {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  const origin = useOrigin();
 
-  const origin = hydrated && typeof window !== "undefined" ? window.location.origin : "";
   const cardId = noteCardId(slug);
   const url = shareUrl(origin, `/intelligence/notes/${slug}`, cardId);
 
