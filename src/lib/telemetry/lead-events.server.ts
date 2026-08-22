@@ -5,6 +5,7 @@ import {
   readCookie,
   readReferralCookie,
 } from "@/lib/partners/referral-cookie";
+import { SESSION_COOKIE, nextSession } from "./session-cookie";
 import {
   VISITOR_COOKIE,
   isPlausibleVisitorId,
