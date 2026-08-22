@@ -11,12 +11,13 @@ import { AllocationBar, type LineDraft } from "./AllocationBar";
 import { Label } from "./estimator-ui";
 import type { AggregateEstimatorResult } from "@/lib/estimator/aggregate";
 import {
+  addLineAt,
   canAddLine,
   removeLine as removeLineFrom,
-  startingShare,
   unallocatedPct,
   type DraftLine,
 } from "@/lib/estimator/lines";
+
 
 import {
   CONSERVATIVE_HIGH,
@@ -318,7 +319,7 @@ export function Estimator() {
   const basisLabel = useMemo(() => {
     if (lines.length === 0) return "nothing itemised yet";
     const covered = 100 - unallocatedPct(lines);
-    return `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${covered}% of spend`;
+    return `${lines.length} ${lines.length === 1 ? "workload" : "workloads"} · ${covered}% of spend`;
   }, [lines]);
 
   const showResult = Boolean(result) || mutation.isPending;

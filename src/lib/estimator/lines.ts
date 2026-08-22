@@ -48,7 +48,7 @@ export function canAddLine(lines: DraftLine[]): { ok: boolean; reason: string | 
     return { ok: false, reason: `Six workloads is the limit — past that the shares stop meaning anything.` };
   }
   if (unallocatedPct(lines) < MIN_LINE_PCT) {
-    return { ok: false, reason: `Nothing left to allocate — shrink a line first.` };
+    return { ok: false, reason: `Nothing left to allocate — shrink a workload first.` };
   }
   return { ok: true, reason: null };
 }
