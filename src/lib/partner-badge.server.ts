@@ -1,5 +1,4 @@
 import { esc, renderSvgToPng } from "@/lib/brand/render.server";
-import { createPublicServerClient } from "@/lib/supabase-public.server";
 
 /**
  * Partner badge and LinkedIn banners.
