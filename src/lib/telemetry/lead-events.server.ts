@@ -25,6 +25,8 @@ export type LeadEventType =
   | "partner_page_viewed"
   | "partner_apply_started"
   | "partner_apply_step_completed"
+  /* Intelligence sharing. Payload is `{ cardId, platform }` only. */
+  | "intelligence_card_shared"
   | "workspace_created"
   | "plan_changed";
 
