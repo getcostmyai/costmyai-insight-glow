@@ -174,6 +174,10 @@ export async function listApplications(supabase: AdminClient): Promise<StoredApp
     createdAt: r.created_at,
     notifiedAt: r.notified_at,
     notifyError: r.notify_error,
+    reviewerEmailAt: r.reviewer_email_at,
+    reviewerEmailError: r.reviewer_email_error,
+    applicantEmailAt: r.applicant_email_at,
+    applicantEmailError: r.applicant_email_error,
   }));
 }
 
