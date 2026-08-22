@@ -37,8 +37,9 @@ export function ShareCardButton({
   title: string;
   className?: string;
 }) {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  // Server-resolved, so it is already correct in the first rendered HTML.
+  const origin = useOrigin();
+
 
   if (!month) {
     return (
