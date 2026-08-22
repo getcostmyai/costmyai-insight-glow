@@ -1,4 +1,4 @@
-import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
+import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
 
 import {
   isSecureRequest,
