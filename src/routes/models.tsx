@@ -255,7 +255,7 @@ function Catalog({ data }: { data: CatalogPayload }) {
             <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <input
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => onSearch(e.target.value)}
               placeholder="Search a model, id or provider"
               aria-label="Search the catalog"
               className="w-full border-0 border-b border-border bg-transparent py-3 pl-8 text-lg tracking-[-0.01em] outline-none placeholder:text-muted-foreground/70 focus:border-primary"
@@ -264,19 +264,19 @@ function Catalog({ data }: { data: CatalogPayload }) {
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
-              <FilterChip active={vendor === null} onClick={() => setVendor(null)}>
+              <FilterChip active={vendor === null} onClick={() => onVendor(null)}>
                 All
               </FilterChip>
 
               {data.vendors.map((v) => (
-                <FilterChip key={v} active={vendor === v} onClick={() => setVendor(v)}>
+                <FilterChip key={v} active={vendor === v} onClick={() => onVendor(v)}>
                   {v}
                 </FilterChip>
               ))}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {SORTS.map((s) => (
-                <FilterChip key={s.key} active={sort === s.key} onClick={() => setSort(s.key)}>
+                <FilterChip key={s.key} active={sort === s.key} onClick={() => onSort(s.key)}>
                   {s.label}
                 </FilterChip>
               ))}
