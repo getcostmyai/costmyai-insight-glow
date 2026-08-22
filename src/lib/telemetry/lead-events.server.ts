@@ -95,10 +95,11 @@ export function resolveSessionId(request: Request, now: number = Date.now()): st
 export async function recordLeadEvent(
   eventType: LeadEventType,
   payload: unknown = null,
-): Promise<{ visitorId: string | null }> {
+): Promise<{ visitorId: string | null; sessionId: string | null }> {
   try {
     const request = getRequest();
     const visitorId = resolveVisitorId(request);
+    const sessionId = resolveSessionId(request);
     const code = readReferralCookie(request.headers.get("cookie"));
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
