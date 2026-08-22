@@ -94,13 +94,24 @@ export function AllocationBar(props: AllocationBarProps) {
   const dollars = (pct: number) =>
     `$${new Intl.NumberFormat("en-US").format(Math.round((totalSpendUsd * pct) / 100))}`;
 
-  /** Live while dragging; the settled value is committed by the parent. */
+  /**
+   * The shape the slider started from. A drag re-renders on every frame, so
+   * reading "before" out of the current render would compare the settled value
+   * against itself and report no change at all.
+   */
+  const gestureStart = useRef<DraftLine[] | null>(null);
+  const beginGesture = () => {
+    if (!gestureStart.current) gestureStart.current = lines;
+  };
   const slide = (id: string, next: number) => onLinesChange(setShare(lines, id, next));
-  const commit = (id: string, before: DraftLine[], next: number) => {
+  const settle = (id: string, next: number) => {
+    const before = gestureStart.current ?? lines;
+    gestureStart.current = null;
     const after = setShare(before, id, next);
     onLinesChange(after);
     onResizeCommit(before, after, before.findIndex((l) => l.id === id));
   };
+
 
   /* ------------------------------- render ------------------------------- */
 
