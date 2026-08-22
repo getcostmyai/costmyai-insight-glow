@@ -69,49 +69,51 @@ export function AllocationBar(props: AllocationBarProps) {
 
   /* ------------------------------ dragging ------------------------------ */
 
-  const onPointerMove = useCallback(
-    (event: PointerEvent) => {
+  /**
+   * The window listeners are registered once and read everything they need
+   * through refs. Binding them to freshly-created callbacks would tear them
+   * down on the very first re-render the drag itself causes, which silently
+   * turns a drag into a single click.
+   */
+  const latestRef = useRef(lines);
+  const changeRef = useRef(onLinesChange);
+  const commitRef = useRef(onResizeCommit);
+  useEffect(() => {
+    latestRef.current = lines;
+    changeRef.current = onLinesChange;
+    commitRef.current = onResizeCommit;
+  });
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
       const drag = dragRef.current;
       const track = trackRef.current;
       if (!drag || !track) return;
       const rect = track.getBoundingClientRect();
       const pct = ((event.clientX - rect.left) / rect.width) * 100;
-      // Pointer position is the boundary, so the left segment's new size is the
-      // pointer minus everything before it.
+      // The pointer marks the boundary, so the left segment's new size is the
+      // pointer minus every segment ahead of it.
       const preceding = drag.before
         .slice(0, drag.index)
         .reduce((sum, l) => sum + l.sharePct, 0);
-      onLinesChange(resizeBoundary(drag.before, drag.index, pct - preceding));
-    },
-    [onLinesChange],
-  );
-
-  const endDrag = useCallback(() => {
-    const drag = dragRef.current;
-    dragRef.current = null;
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", endDrag);
-    if (!drag) return;
-    // Read the committed state from the caller on the next tick via the same
-    // array identity it already holds: the parent is the source of truth.
-    onResizeCommit(drag.before, latestRef.current, drag.index);
-  }, [onPointerMove, onResizeCommit]);
-
-  const latestRef = useRef(lines);
-  useEffect(() => {
-    latestRef.current = lines;
-  }, [lines]);
-
-  useEffect(() => () => {
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", endDrag);
-  }, [onPointerMove, endDrag]);
+      changeRef.current(resizeBoundary(drag.before, drag.index, pct - preceding));
+    };
+    const up = () => {
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (drag) commitRef.current(drag.before, latestRef.current, drag.index);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, []);
 
   const startDrag = (index: number) => (event: React.PointerEvent) => {
     event.preventDefault();
     dragRef.current = { index, before: lines };
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", endDrag);
   };
 
   /** Keyboard equivalent: one percent per press, committed on each press. */
