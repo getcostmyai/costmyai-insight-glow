@@ -136,6 +136,7 @@ afterAll(async () => {
 
   await admin.from("partner_applications").delete().eq("email", EMAIL);
   await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
+  await admin.from("rate_limit_counters").delete().in("bucket_key", [CALLER_KEY, FAIL_KEY]);
 });
 
 /**
