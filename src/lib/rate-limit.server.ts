@@ -77,6 +77,13 @@ export const RATE_RULES = {
    * ceiling and bounds the write path the same way.
    */
   intelligenceTelemetry: { name: "intelligence-telemetry", limit: 60, windowSec: 300 },
+  /**
+   * Model-catalog filter/search telemetry. Browsing the catalog is an
+   * exploratory act — several vendor chips, a few sorts and a handful of
+   * debounced searches in one sitting is normal use, so this sits above the
+   * other telemetry ceilings while still bounding the write path.
+   */
+  modelsTelemetry: { name: "models-telemetry", limit: 120, windowSec: 300 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({
