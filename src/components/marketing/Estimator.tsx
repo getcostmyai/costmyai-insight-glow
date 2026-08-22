@@ -314,15 +314,7 @@ export function Estimator() {
           <div className="relative min-h-[262px] px-6 py-7 sm:px-8">
             {showResult ? (
               <div key="result" className={reduced ? "" : "animate-scale-in"}>
-                {mutation.isPending ? (
-                  <Pending />
-                ) : result?.state === "ok" ? (
-                  <Success r={result} />
-                ) : result?.state === "below_threshold" ? (
-                  <BelowThreshold r={result} />
-                ) : result ? (
-                  <Refused r={result} />
-                ) : null}
+                {mutation.isPending ? <Pending /> : result ? <AggregateResult r={result} /> : null}
               </div>
             ) : (
               <div
