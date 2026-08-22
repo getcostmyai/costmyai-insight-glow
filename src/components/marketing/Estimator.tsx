@@ -127,7 +127,7 @@ function useRollingNumber(target: number, reduced: boolean) {
  */
 export function Estimator() {
   const { data: options } = useQuery(estimatorOptionsQuery());
-  const run = useServerFn(estimateSavingFn);
+  const run = useServerFn(estimateSpreadFn);
   const reduced = usePrefersReducedMotion();
 
   const [step, setStep] = useState(0);
