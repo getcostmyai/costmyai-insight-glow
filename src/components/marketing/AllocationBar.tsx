@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Plus, X } from "lucide-react";
 
 import { Chip, Label } from "./estimator-ui";
 import type { EstimatorOptions } from "@/lib/estimator.functions";
 import {
   MAX_LINES,
+  MIN_LINE_PCT,
   canAddLine,
-  resizeBoundary,
+  maxShareFor,
+  setShare,
   startingShare,
   unallocatedPct,
   type DraftLine,
@@ -14,14 +16,13 @@ import {
 import { WORKLOADS, type WorkloadId } from "@/lib/estimator/spec";
 
 /**
- * The allocation bar.
+ * The allocation control.
  *
- * One total spend, carved into named lines plus an explicit remainder that is
- * never priced. Every named line shows its own workload, provider and model
- * inline, so the bar is the breakdown rather than a picture of one. A line is
- * always carved out of the remainder and, when removed, gives that exact share
- * back to it — dragging is the only thing that ever moves spend between two
- * named lines, and only between the two either side of the handle.
+ * One total spend, split across named workloads plus an explicit remainder that
+ * is never priced. Each placed workload owns a slider; the bar above is a live
+ * read-out of the same state, not an input. Growth always carves out of the
+ * remainder first and only encroaches on other workloads once it is gone, so a
+ * visitor can reach a full allocation without ever having to clear space first.
  */
 
 const SEGMENT_TONES = [
@@ -56,13 +57,20 @@ export interface AllocationBarProps {
   lines: DraftLine[];
   totalSpendUsd: number;
   options: EstimatorOptions | undefined;
-  /** Live update while dragging — no telemetry, no commit. */
+  /** Live update while a slider moves — no telemetry, no commit. */
   onLinesChange: (lines: DraftLine[]) => void;
-  /** Fired once on pointer release, with the real before/after shares. */
+  /** Fired once the slider settles, with the real before/after shares. */
   onResizeCommit: (before: DraftLine[], after: DraftLine[], boundaryIndex: number) => void;
-  onAddLine: (draft: LineDraft) => void;
+  onAddLine: (draft: LineDraft, sharePct: number) => void;
   onEditLine: (id: string, draft: LineDraft) => void;
   onRemoveLine: (id: string) => void;
+}
+
+interface PickerState {
+  mode: "add" | "edit";
+  id?: string;
+  draft: LineDraft;
+  sharePct: number;
 }
 
 export function AllocationBar(props: AllocationBarProps) {
@@ -70,72 +78,28 @@ export function AllocationBar(props: AllocationBarProps) {
   const remainder = unallocatedPct(lines);
   const addState = canAddLine(lines);
 
-  const [picker, setPicker] = useState<{ mode: "add" | "edit"; id?: string; draft: LineDraft } | null>(
-    null,
-  );
+  const newDraft = (): PickerState => ({
+    mode: "add",
+    draft: { workload: "chat", provider: null, modelKey: null },
+    sharePct: startingShare(lines),
+  });
 
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<{ index: number; before: DraftLine[] } | null>(null);
+  // Reaching this step with nothing placed opens the picker straight away:
+  // an empty bar with an "add" button is a screen that asks for a click before
+  // it will let anyone do anything.
+  const [picker, setPicker] = useState<PickerState | null>(() =>
+    props.lines.length === 0 ? newDraft() : null,
+  );
 
   const dollars = (pct: number) =>
     `$${new Intl.NumberFormat("en-US").format(Math.round((totalSpendUsd * pct) / 100))}`;
 
-  /* ------------------------------ dragging ------------------------------ */
-
-  /**
-   * The window listeners are registered once and read everything they need
-   * through refs. Binding them to freshly-created callbacks would tear them
-   * down on the very first re-render the drag itself causes, which silently
-   * turns a drag into a single click.
-   */
-  const latestRef = useRef(lines);
-  const changeRef = useRef(onLinesChange);
-  const commitRef = useRef(onResizeCommit);
-  useEffect(() => {
-    latestRef.current = lines;
-    changeRef.current = onLinesChange;
-    commitRef.current = onResizeCommit;
-  });
-
-  useEffect(() => {
-    const move = (event: PointerEvent) => {
-      const drag = dragRef.current;
-      const track = trackRef.current;
-      if (!drag || !track) return;
-      const rect = track.getBoundingClientRect();
-      const pct = ((event.clientX - rect.left) / rect.width) * 100;
-      // The pointer marks the boundary, so the left segment's new size is the
-      // pointer minus every segment ahead of it.
-      const preceding = drag.before
-        .slice(0, drag.index)
-        .reduce((sum, l) => sum + l.sharePct, 0);
-      changeRef.current(resizeBoundary(drag.before, drag.index, pct - preceding));
-    };
-    const up = () => {
-      const drag = dragRef.current;
-      dragRef.current = null;
-      if (drag) commitRef.current(drag.before, latestRef.current, drag.index);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-  }, []);
-
-  const startDrag = (index: number) => (event: React.PointerEvent) => {
-    event.preventDefault();
-    dragRef.current = { index, before: lines };
-  };
-
-  /** Keyboard equivalent: one percent per press, committed on each press. */
-  const nudge = (index: number, delta: number) => {
-    const before = lines;
-    const sizes = [...lines.map((l) => l.sharePct), remainder];
-    const next = resizeBoundary(before, index, sizes[index] + delta);
-    onLinesChange(next);
-    onResizeCommit(before, next, index);
+  /** Live while dragging; the settled value is committed by the parent. */
+  const slide = (id: string, next: number) => onLinesChange(setShare(lines, id, next));
+  const commit = (id: string, before: DraftLine[], next: number) => {
+    const after = setShare(before, id, next);
+    onLinesChange(after);
+    onResizeCommit(before, after, before.findIndex((l) => l.id === id));
   };
 
   /* ------------------------------- render ------------------------------- */
@@ -156,32 +120,32 @@ export function AllocationBar(props: AllocationBarProps) {
       label: "Not itemised",
     },
   ];
-  // The remainder segment stays in the list even at 0%: its boundary is the
-  // only handle that can hand spend back, so removing it would strand the
-  // visitor with no way to un-allocate by dragging.
-
-  let running = 0;
-  const boundaries = segments.slice(0, -1).map((s, i) => {
-    running += s.pct;
-    return { index: i, at: running };
-  });
 
   const modelName = (key: string | null) =>
     key ? (options?.models.find((m) => m.model_key === key)?.display_name ?? key) : null;
 
+  const pickerMax = picker
+    ? picker.mode === "edit"
+      ? maxShareFor(lines, picker.id)
+      : maxShareFor(lines)
+    : 100;
+
   return (
     <div>
-      <Label>Break the spend down</Label>
+      <Label>Split it across your workloads</Label>
 
       {lines.length === 0 ? (
         <div
           data-testid="alloc-empty"
           className="flex h-12 items-center justify-center rounded-xl border border-dashed border-border bg-secondary text-sm text-muted-foreground"
         >
-          Your spend, not yet broken down.
+          Your spend, not yet split across workloads.
         </div>
       ) : (
-        <div ref={trackRef} className="relative h-12 w-full overflow-hidden rounded-xl bg-secondary">
+        <div
+          aria-hidden="true"
+          className="relative h-12 w-full overflow-hidden rounded-xl bg-secondary"
+        >
           <div className="flex h-full w-full">
             {segments.map((s) => (
               <div
@@ -191,7 +155,7 @@ export function AllocationBar(props: AllocationBarProps) {
                 data-share={s.pct}
                 data-label={s.label}
                 style={{ width: `${s.pct}%` }}
-                className={`flex h-full min-w-0 items-center justify-center overflow-hidden border-r border-background/60 last:border-r-0 ${s.tone} ${
+                className={`flex h-full min-w-0 items-center justify-center overflow-hidden border-r border-background/60 transition-[width] duration-150 last:border-r-0 ${s.tone} ${
                   s.kind === "unallocated" ? "border border-dashed border-border" : ""
                 }`}
               >
@@ -207,76 +171,92 @@ export function AllocationBar(props: AllocationBarProps) {
               </div>
             ))}
           </div>
-
-          {boundaries.map((b) => (
-            <div
-              key={b.index}
-              role="separator"
-              aria-label={`Resize boundary ${b.index + 1}`}
-              aria-valuenow={b.at}
-              tabIndex={0}
-              data-testid="alloc-handle"
-              data-boundary={b.index}
-              onPointerDown={startDrag(b.index)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowLeft") { e.preventDefault(); nudge(b.index, -1); }
-                if (e.key === "ArrowRight") { e.preventDefault(); nudge(b.index, 1); }
-              }}
-              style={{ left: `calc(${b.at}% - 7px)` }}
-              className="absolute inset-y-0 z-10 w-[14px] cursor-col-resize touch-none before:absolute before:inset-y-2 before:left-1/2 before:w-[3px] before:-translate-x-1/2 before:rounded-full before:bg-background/80"
-            />
-          ))}
         </div>
       )}
 
-      {/* --------------------------- line list --------------------------- */}
+      {/* ------------------------- workload sliders ------------------------ */}
       <div className="mt-4 space-y-2">
-        {lines.map((line, i) => (
-          <div
-            key={line.id}
-            data-testid="alloc-line"
-            data-line-share={line.sharePct}
-            data-workload={line.workload}
-            className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-border bg-card px-3.5 py-2.5"
-          >
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${SEGMENT_TONES[i % SEGMENT_TONES.length]}`} />
-            <span className="text-sm font-semibold tracking-tight">
-              {WORKLOADS.find((w) => w.id === line.workload)?.label ?? line.workload}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {line.provider ?? "Provider not set"}
-              {modelName(line.modelKey) ? ` · ${modelName(line.modelKey)}` : ""}
-            </span>
-            <span className="num ml-auto text-sm tabular-nums">
-              {line.sharePct}%{" "}
-              <span className="text-xs text-muted-foreground">· {dollars(line.sharePct)}/mo</span>
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                setPicker({
-                  mode: "edit",
-                  id: line.id,
-                  draft: { workload: line.workload, provider: line.provider, modelKey: line.modelKey },
-                })
-              }
-              className="btn-quiet px-2.5 py-1 text-xs"
+        {lines.map((line, i) => {
+          const label = WORKLOADS.find((w) => w.id === line.workload)?.label ?? line.workload;
+          const before = lines;
+          return (
+            <div
+              key={line.id}
+              data-testid="alloc-line"
+              data-line-share={line.sharePct}
+              data-workload={line.workload}
+              className="rounded-xl border border-border bg-card px-3.5 py-2.5"
             >
-              Edit
-            </button>
-            <button
-              type="button"
-              aria-label={`Remove ${line.workload} line`}
-              onClick={() => props.onRemoveLine(line.id)}
-              className="btn-quiet px-2 py-1 text-xs"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${SEGMENT_TONES[i % SEGMENT_TONES.length]}`}
+                />
+                <span className="text-sm font-semibold tracking-tight">{label}</span>
+                <span className="text-xs text-muted-foreground">
+                  {line.provider ?? "Provider not set"}
+                  {modelName(line.modelKey) ? ` · ${modelName(line.modelKey)}` : ""}
+                </span>
+                <span className="num ml-auto text-sm tabular-nums">
+                  {line.sharePct}%{" "}
+                  <span className="text-xs text-muted-foreground">
+                    · {dollars(line.sharePct)}/mo
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPicker({
+                      mode: "edit",
+                      id: line.id,
+                      draft: {
+                        workload: line.workload,
+                        provider: line.provider,
+                        modelKey: line.modelKey,
+                      },
+                      sharePct: line.sharePct,
+                    })
+                  }
+                  className="btn-quiet px-2.5 py-1 text-xs"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${label} workload`}
+                  onClick={() => props.onRemoveLine(line.id)}
+                  className="btn-quiet px-2 py-1 text-xs"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <input
+                type="range"
+                min={MIN_LINE_PCT}
+                max={maxShareFor(lines, line.id)}
+                step={1}
+                value={line.sharePct}
+                data-testid="alloc-slider"
+                data-workload={line.workload}
+                aria-label={`${label} share of spend`}
+                onChange={(e) => slide(line.id, Number(e.target.value))}
+                onPointerUp={(e) => commit(line.id, before, Number(e.currentTarget.value))}
+                onKeyUp={(e) => commit(line.id, before, Number(e.currentTarget.value))}
+                className="slider-brand mt-2.5 w-full cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${line.sharePct}%, var(--secondary) ${line.sharePct}%, var(--secondary) 100%)`,
+                }}
+              />
+            </div>
+          );
+        })}
 
         {remainder > 0 ? (
-          <p data-testid="alloc-unallocated" data-share={remainder} className="px-1 text-xs text-muted-foreground">
+          <p
+            data-testid="alloc-unallocated"
+            data-share={remainder}
+            className="px-1 text-xs text-muted-foreground"
+          >
             <span className="num text-foreground">{remainder}%</span> · {dollars(remainder)}/mo not
             itemised. We price only what you name — the rest is left alone, not assumed.
           </p>
@@ -352,23 +332,55 @@ export function AllocationBar(props: AllocationBarProps) {
             ))}
           </select>
 
+          {picker.mode === "add" ? (
+            <>
+              <Label className="mt-5">
+                Share of spend ·{" "}
+                <span className="num normal-case">
+                  {picker.sharePct}% · {dollars(picker.sharePct)}/mo
+                </span>
+              </Label>
+              <input
+                type="range"
+                min={MIN_LINE_PCT}
+                max={pickerMax}
+                step={1}
+                value={Math.min(picker.sharePct, pickerMax)}
+                data-testid="picker-share"
+                aria-label="Share of spend for this workload"
+                onChange={(e) => setPicker({ ...picker, sharePct: Number(e.target.value) })}
+                className="slider-brand w-full cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${picker.sharePct}%, var(--secondary) ${picker.sharePct}%, var(--secondary) 100%)`,
+                }}
+              />
+            </>
+          ) : null}
+
           <div className="mt-4 flex items-center gap-2">
             <button
               type="button"
+              data-testid="picker-confirm"
               onClick={() => {
-                if (picker.mode === "add") props.onAddLine(picker.draft);
+                if (picker.mode === "add") props.onAddLine(picker.draft, picker.sharePct);
                 else props.onEditLine(picker.id!, picker.draft);
                 setPicker(null);
               }}
               className="btn-gradient px-4 py-2 text-sm"
             >
               {picker.mode === "add"
-                ? `Add line · ${startingShare(lines)}% of spend`
-                : "Save line"}
+                ? `Add this workload at ${Math.min(picker.sharePct, pickerMax)}%`
+                : "Save this workload"}
             </button>
-            <button type="button" onClick={() => setPicker(null)} className="btn-quiet px-4 py-2 text-sm">
-              Cancel
-            </button>
+            {lines.length > 0 || picker.mode === "edit" ? (
+              <button
+                type="button"
+                onClick={() => setPicker(null)}
+                className="btn-quiet px-4 py-2 text-sm"
+              >
+                Cancel
+              </button>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -377,16 +389,14 @@ export function AllocationBar(props: AllocationBarProps) {
             type="button"
             data-testid="alloc-add"
             disabled={!addState.ok}
-            onClick={() =>
-              setPicker({ mode: "add", draft: { workload: "chat", provider: null, modelKey: null } })
-            }
+            onClick={() => setPicker(newDraft())}
             className="btn-quiet px-4 py-2 text-sm disabled:opacity-40"
           >
             <Plus className="h-4 w-4" /> Add a workload
           </button>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             {addState.ok
-              ? `Each line is priced on its own. Up to ${MAX_LINES}; whatever you leave unallocated is never priced.`
+              ? `Each workload is priced on its own. Up to ${MAX_LINES}; whatever you leave unallocated is never priced.`
               : addState.reason}
           </p>
         </div>
