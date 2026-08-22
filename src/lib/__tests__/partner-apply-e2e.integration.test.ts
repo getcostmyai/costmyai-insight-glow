@@ -53,6 +53,8 @@ const FAIL_EMAIL = `partner-apply-drill-fail-${stamp}@costmyai-test.dev`;
 const CALLER_IP = randomUUID();
 /** The failure step needs its own limiter budget. */
 const FAIL_IP = randomUUID();
+const CALLER_KEY = `partner-application:${CALLER_IP}`;
+const FAIL_KEY = `partner-application:${FAIL_IP}`;
 
 interface Caught {
   text: string;
