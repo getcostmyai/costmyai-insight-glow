@@ -398,58 +398,17 @@ export function Estimator() {
                     </div>
                   </div>
 
-                ) : step === 1 ? (
-                  <div>
-                    <Label>What does most of that spend do?</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {WORKLOADS.map((w) => (
-                        <Chip
-                          key={w.id}
-                          active={workload === w.id}
-                          onClick={() => { markEngaged(); setWorkload(w.id); }}
-                        >
-                          {w.label}
-                        </Chip>
-                      ))}
-                    </div>
-                    <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-                      Each workload carries an assumed token mix — stated in full with the result,
-                      never hidden inside the number.
-                    </p>
-                  </div>
                 ) : (
-                  <div>
-                    <Label>Provider</Label>
-                    <div className="flex max-h-[104px] flex-wrap gap-2 overflow-y-auto pr-1">
-                      <Chip active={provider === null} onClick={() => { markEngaged(); setProvider(null); }}>
-                        Not sure
-                      </Chip>
-                      {(options?.providers ?? []).map((p) => (
-                        <Chip
-                          key={p.label}
-                          active={provider === p.label}
-                          onClick={() => { markEngaged(); setProvider(p.label); }}
-                        >
-                          {p.label}
-                        </Chip>
-                      ))}
-                    </div>
-                    <Label className="mt-6">
-                      Specific model <span className="font-normal normal-case opacity-70">(optional, sharpens it)</span>
-                    </Label>
-                    <select
-                      value={modelKey ?? ""}
-                      onChange={(e) => { markEngaged(); setModelKey(e.target.value || null); }}
-                      className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-primary/50"
-                    >
-                      <option value="">No specific model</option>
-                      {(options?.models ?? []).map((m) => (
-                        <option key={m.model_key} value={m.model_key}>
-                          {m.display_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <AllocationBar
+                    lines={lines}
+                    totalSpendUsd={spend}
+                    options={options}
+                    onLinesChange={setLines}
+                    onResizeCommit={commitResize}
+                    onAddLine={addLine}
+                    onEditLine={editLine}
+                    onRemoveLine={removeLine}
+                  />
                 )}
               </div>
             )}
