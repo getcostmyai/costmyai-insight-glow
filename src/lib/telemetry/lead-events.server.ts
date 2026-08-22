@@ -21,6 +21,10 @@ export type LeadEventType =
   | "estimator_line_removed"
   | "estimator_split_changed"
   | "estimator_completed"
+  /* Partner funnel. Bucket enums only — never applicant contact details. */
+  | "partner_page_viewed"
+  | "partner_apply_started"
+  | "partner_apply_step_completed"
   | "workspace_created"
   | "plan_changed";
 
@@ -75,6 +79,20 @@ export function resolveVisitorId(request: Request): string {
   appendSetCookie(serializeVisitorCookie(id, isSecureRequest(request.url)));
   return id;
 }
+
+/**
+ * Read the visitor id this browser already carries, without minting one.
+ *
+ * The read half of `resolveVisitorId`, same cookie and same plausibility rule
+ * — split out so a write path that is not itself telemetry (the partner
+ * application row) can join back to the anonymous visit without inventing an
+ * id for a visitor who has none.
+ */
+export function existingVisitorId(request: Request): string | null {
+  const raw = readCookie(request.headers.get("cookie"), VISITOR_COOKIE);
+  return isPlausibleVisitorId(raw) ? raw!.trim() : null;
+}
+
 
 /**
  * Resolve the session for this request, refreshing its idle window. Same place

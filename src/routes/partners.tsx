@@ -1,5 +1,9 @@
+import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { trackPartnerEvent } from "@/lib/partner-telemetry.functions";
+import { shouldFire } from "@/lib/telemetry/fire-once";
 import { ArrowRight, BadgeCheck, Infinity as InfinityIcon, Receipt, ShieldCheck } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
@@ -71,6 +75,14 @@ const STEPS = [
 
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
+  // One view per page load. Unlike the estimator this is the whole page, so
+  // mounting *is* seeing — no viewport observer needed.
+  const track = useServerFn(trackPartnerEvent);
+  useEffect(() => {
+    if (!shouldFire("partner_page_viewed")) return;
+    void track({ data: { event: "partner_page_viewed" } }).catch(() => {});
+  }, [track]);
+
   const range = formatRateRange(ladder);
   const tiers = ladder.tiers;
   const topRate = tiers.length ? Math.max(...tiers.map((t) => t.ratePct)) : 0;
