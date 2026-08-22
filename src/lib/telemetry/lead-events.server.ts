@@ -80,7 +80,7 @@ export function resolveVisitorId(request: Request): string {
 export function resolveSessionId(request: Request, now: number = Date.now()): string {
   const existing = readCookie(request.headers.get("cookie"), SESSION_COOKIE);
   const session = nextSession(existing, now, isSecureRequest(request.url));
-  setResponseHeader("Set-Cookie", session.setCookie);
+  appendSetCookie(session.setCookie);
   return session.id;
 }
 
