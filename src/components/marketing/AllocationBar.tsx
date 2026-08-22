@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 
 import { Chip, Label } from "./estimator-ui";
