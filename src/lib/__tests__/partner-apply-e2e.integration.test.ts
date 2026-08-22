@@ -21,7 +21,12 @@ import { requestHandler } from "@tanstack/start-server-core";
 import { runWithStartContext } from "@tanstack/start-storage-context";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { submitPartnerApplication } from "@/lib/partner-application.functions";
+// The server half of the server function. TanStack splits every
+// `createServerFn` into a client stub and this handler; the stub would try a
+// network RPC, the handler is what the worker actually runs on an inbound
+// request — validator, rate-limit guard and body included.
+// @ts-expect-error virtual module produced by the TanStack server-fn plugin
+import * as serverFns from "@/lib/partner-application.functions?tss-serverfn-split";
 import type { ApplicationInput } from "@/lib/partner-application";
 import { guardIntegrationDatabase } from "./support/isolation";
 
