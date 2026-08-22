@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw, ShieldAlert } from "lucide-react";
 
 import { estimateSpreadFn, estimatorOptionsQuery } from "@/lib/estimator.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { trackEstimatorEvent } from "@/lib/telemetry.functions";
 import { AllocationBar, type LineDraft } from "./AllocationBar";
-import { Chip, Label, Row } from "./estimator-ui";
+import { Label } from "./estimator-ui";
 import type { AggregateEstimatorResult } from "@/lib/estimator/aggregate";
 import {
   canAddLine,
@@ -24,7 +24,6 @@ import {
   DISTRIBUTIONS,
   WORKLOADS,
   type DistributionId,
-  type EstimatorResult,
 } from "@/lib/estimator/spec";
 
 /** Fixed locale so SSR and client render identical digits. */
@@ -623,24 +622,6 @@ const REFUSAL_TITLE: Record<string, string> = {
   model_not_in_catalog: "Cannot assess",
   shape_only: "Cannot assess without a named model",
   no_baseline_score: "Cannot assess — model unscored",
-};
-
-const REFUSAL_LEAD: Record<string, string> = {
-
-  task_label_low_confidence:
-    "Your container read this traffic locally and declined to name what kind of work it is, and certification is per task type. Requests carrying a structural signal — declared tools, or a constrained response schema — classify with certainty and do get certified.",
-  no_valid_instrument:
-    "No independent evaluation measures this kind of work today, so no switch on it can be certified. We would rather name that than quote a number nobody measured.",
-  benchmark_not_discriminating:
-    "No model currently differentiates enough on this to certify a switch — on your own traffic the picture is far sharper than a single assumed workload shape.",
-  no_cheaper_equal:
-    "On today's catalog this one is not overpriced, but your bill is more than one model.",
-  model_not_in_catalog:
-    "We cannot assess a model we have no verified price for.",
-  shape_only:
-    "We cannot assess a spend figure without knowing what you actually run.",
-  no_baseline_score:
-    "We cannot assess quality on a model nobody independently scored.",
 };
 
 function AggregateResult({ r }: { r: AggregateEstimatorResult }) {
