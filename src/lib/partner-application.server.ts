@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/integrations/supabase/types";
 import {
+  REVIEW_TURNAROUND,
   normalizeContact,
   routeApplication,
   validateContact,
@@ -11,6 +12,7 @@ import {
   type StartingSoonBucket,
 } from "./partner-application";
 import { notifyReviewers } from "./partner-application-notify.server";
+import { siteOrigin } from "./partner-welcome.server";
 
 export interface StoredApplication {
   id: string;
