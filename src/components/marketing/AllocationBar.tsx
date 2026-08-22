@@ -250,9 +250,12 @@ export function AllocationBar(props: AllocationBarProps) {
                 data-testid="alloc-slider"
                 data-workload={line.workload}
                 aria-label={`${label} share of spend`}
+                onPointerDown={beginGesture}
+                onKeyDown={beginGesture}
                 onChange={(e) => slide(line.id, Number(e.target.value))}
-                onPointerUp={(e) => commit(line.id, before, Number(e.currentTarget.value))}
-                onKeyUp={(e) => commit(line.id, before, Number(e.currentTarget.value))}
+                onPointerUp={(e) => settle(line.id, Number(e.currentTarget.value))}
+                onKeyUp={(e) => settle(line.id, Number(e.currentTarget.value))}
+
                 className="slider-brand mt-2.5 w-full cursor-pointer"
                 style={{
                   background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${line.sharePct}%, var(--secondary) ${line.sharePct}%, var(--secondary) 100%)`,
