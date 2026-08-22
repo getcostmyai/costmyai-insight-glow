@@ -4,19 +4,11 @@ import type {} from "@tanstack/react-start";
 import { POSTS } from "@/lib/blog/posts";
 import { notesNewestFirst } from "@/lib/intelligence/notes";
 
-// The origin the sitemap is served from. Derived from the request, so it is
-// correct on preview, on production and behind a custom domain without a
-// constant to keep in sync — same source of truth as the share URLs.
-function baseUrlFrom(request: Request): string {
-  const url = new URL(request.url);
-  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    if (forwardedHost) {
-      return `${request.headers.get("x-forwarded-proto") ?? "https"}://${forwardedHost}`;
-    }
-  }
-  return url.origin;
-}
+// Canonical production host. Sitemaps must list the URL Google should index,
+// not the origin the request happens to be served from (preview, localhost,
+// etc.). This keeps entries stable and avoids scanner warnings about preview
+// domains leaking into the sitemap.
+const CANONICAL_BASE_URL = "https://costmyai-insight-glow.lovable.app";
 
 interface SitemapEntry {
   path: string;
