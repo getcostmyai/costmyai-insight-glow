@@ -72,27 +72,40 @@ afterAll(async () => {
   await admin.from("partner_applications").delete().eq("email", EMAIL);
 });
 
-/** Invoke the server function exactly as the published site does: inside a request. */
+/**
+ * Invoke the server function the way the server runtime does: `__executeServer`
+ * is the entry point the RPC handler calls once a request has arrived, so the
+ * validator, the rate-limit middleware body and the handler all run for real —
+ * only the network hop between browser and worker is absent.
+ */
 async function submit(input: ApplicationInput) {
+  const request = new Request("https://costmyai.com/partners/apply", {
+    method: "POST",
+    headers: { "cf-connecting-ip": CALLER_IP, origin: "https://costmyai.com" },
+  });
+  const execute = (
+    submitPartnerApplication as unknown as {
+      __executeServer: (opts: {
+        data: ApplicationInput;
+        context: Record<string, unknown>;
+      }) => Promise<{ result?: unknown; error?: unknown }>;
+    }
+  ).__executeServer;
+
   const handler = requestHandler(async () =>
-    runWithStartContext({ contextAfterGlobalMiddlewares: {} } as never, async () => {
-      try {
-        return Response.json({ ok: true, result: await submitPartnerApplication({ data: input }) });
-      } catch (error) {
+    runWithStartContext({ contextAfterGlobalMiddlewares: {}, request } as never, async () => {
+      const outcome = await execute({ data: input, context: {} });
+      if (outcome.error) {
+        const error = outcome.error;
         return Response.json({
           ok: false,
           message: error instanceof Error ? error.message : String(error),
         });
       }
+      return Response.json({ ok: true, result: outcome.result });
     }),
   );
-  const response = await handler(
-    new Request("https://costmyai.com/partners/apply", {
-      method: "POST",
-      headers: { "cf-connecting-ip": CALLER_IP, origin: "https://costmyai.com" },
-    }),
-    {} as never,
-  );
+  const response = await handler(request, {} as never);
   return (await (response as Response).json()) as
     | { ok: true; result: { id: string; path: "meeting" | "async"; escalated: boolean } }
     | { ok: false; message: string };
