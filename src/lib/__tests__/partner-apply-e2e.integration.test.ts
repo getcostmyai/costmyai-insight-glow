@@ -104,10 +104,10 @@ const base: ApplicationInput = {
   email: EMAIL,
   phone: "+43 660 1234567",
   company: "TEST DATA — partner apply drill (delete)",
-  // 101+ active clients routes to the meeting path.
-  activeClients: "101+",
+  // 101–300 active clients is at-scale, so this routes to the meeting path.
+  activeClients: "101–300",
   startingSoon: "3+",
-} as ApplicationInput;
+};
 
 describe("partner-apply pipeline, end to end", () => {
   let firstId = "";
