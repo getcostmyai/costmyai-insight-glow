@@ -349,10 +349,16 @@ describe("partner-apply pipeline, end to end", () => {
   it("STEP 5 — cleanup leaves no drill rows behind", async () => {
     await admin.from("partner_applications").delete().eq("email", EMAIL);
     await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
+    await admin.from("rate_limit_counters").delete().in("bucket_key", [CALLER_KEY, FAIL_KEY]);
     const { data } = await admin
       .from("partner_applications")
       .select("id")
       .in("email", [EMAIL, FAIL_EMAIL]);
     expect(data).toHaveLength(0);
+    const { data: buckets } = await admin
+      .from("rate_limit_counters")
+      .select("bucket_key")
+      .in("bucket_key", [CALLER_KEY, FAIL_KEY]);
+    expect(buckets).toHaveLength(0);
   }, 60_000);
 });
