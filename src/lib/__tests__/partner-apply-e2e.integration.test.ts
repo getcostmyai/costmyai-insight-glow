@@ -21,6 +21,7 @@
  */
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { randomUUID } from "node:crypto";
 
 import { createClient } from "@supabase/supabase-js";
 import { requestHandler } from "@tanstack/start-server-core";
@@ -49,9 +50,11 @@ const EMAIL = `partner-apply-drill-${stamp}@costmyai-test.dev`;
 /** Second applicant, used only for the forced-email-failure step. */
 const FAIL_EMAIL = `partner-apply-drill-fail-${stamp}@costmyai-test.dev`;
 /** Unique per run, so the hourly limiter budget is this drill's alone. */
-const CALLER_IP = `203.0.113.${stamp % 200}`;
+const CALLER_IP = randomUUID();
 /** The failure step needs its own limiter budget. */
-const FAIL_IP = `203.0.113.${(stamp % 200) + 20}`;
+const FAIL_IP = randomUUID();
+const CALLER_KEY = `partner-application:${CALLER_IP}`;
+const FAIL_KEY = `partner-application:${FAIL_IP}`;
 
 interface Caught {
   text: string;
@@ -133,6 +136,7 @@ afterAll(async () => {
 
   await admin.from("partner_applications").delete().eq("email", EMAIL);
   await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
+  await admin.from("rate_limit_counters").delete().in("bucket_key", [CALLER_KEY, FAIL_KEY]);
 });
 
 /**
@@ -345,10 +349,16 @@ describe("partner-apply pipeline, end to end", () => {
   it("STEP 5 — cleanup leaves no drill rows behind", async () => {
     await admin.from("partner_applications").delete().eq("email", EMAIL);
     await admin.from("partner_applications").delete().eq("email", FAIL_EMAIL);
+    await admin.from("rate_limit_counters").delete().in("bucket_key", [CALLER_KEY, FAIL_KEY]);
     const { data } = await admin
       .from("partner_applications")
       .select("id")
       .in("email", [EMAIL, FAIL_EMAIL]);
     expect(data).toHaveLength(0);
+    const { data: buckets } = await admin
+      .from("rate_limit_counters")
+      .select("bucket_key")
+      .in("bucket_key", [CALLER_KEY, FAIL_KEY]);
+    expect(buckets).toHaveLength(0);
   }, 60_000);
 });
