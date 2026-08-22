@@ -189,7 +189,11 @@ export function Estimator() {
     void track({ data: { event, payload } }).catch(() => {});
   };
 
-  const shapeOf = (list: DraftLine[]) =>
+  type LineShape = { workload: string; provider: string | null; modelKey: string | null; sharePct: number };
+  const splitPending = useRef<{ boundaryIndex: number; before: LineShape[]; after: LineShape[] } | null>(null);
+  const splitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const shapeOf = (list: DraftLine[]): LineShape[] =>
     list.map((l) => ({
       workload: l.workload,
       provider: l.provider,
