@@ -33,6 +33,19 @@ const SEGMENT_TONES = [
   "bg-saving/40",
 ];
 
+/**
+ * Models the given provider actually serves. With no provider chosen ("Not
+ * sure") there is nothing to filter by, so the full priced catalog stands.
+ */
+function modelsFor(options: EstimatorOptions | undefined, provider: string | null) {
+  const all = options?.models ?? [];
+  if (!provider) return all;
+  const keys = options?.providers.find((p) => p.label === provider)?.modelKeys;
+  if (!keys) return all;
+  const set = new Set(keys);
+  return all.filter((m) => set.has(m.model_key));
+}
+
 export interface LineDraft {
   workload: WorkloadId;
   provider: string | null;
@@ -298,7 +311,21 @@ export function AllocationBar(props: AllocationBarProps) {
               <Chip
                 key={p.label}
                 active={picker.draft.provider === p.label}
-                onClick={() => setPicker({ ...picker, draft: { ...picker.draft, provider: p.label } })}
+                onClick={() =>
+                  setPicker({
+                    ...picker,
+                    draft: {
+                      ...picker.draft,
+                      provider: p.label,
+                      // Drop a model the new provider does not actually serve,
+                      // rather than leaving a stale invalid selection behind.
+                      modelKey:
+                        picker.draft.modelKey && p.modelKeys.includes(picker.draft.modelKey)
+                          ? picker.draft.modelKey
+                          : null,
+                    },
+                  })
+                }
               >
                 {p.label}
               </Chip>
@@ -318,7 +345,7 @@ export function AllocationBar(props: AllocationBarProps) {
             className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-primary/50"
           >
             <option value="">No specific model</option>
-            {(options?.models ?? []).map((m) => (
+            {modelsFor(options, picker.draft.provider).map((m) => (
               <option key={m.model_key} value={m.model_key}>
                 {m.display_name}
               </option>

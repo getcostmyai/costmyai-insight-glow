@@ -81,7 +81,8 @@ export const estimatorOptionsQuery = () =>
   });
 
 export interface EstimatorOptions {
-  providers: { label: string; models: number }[];
+  /** `modelKeys` are keys only; display names come from `models` below. */
+  providers: { label: string; models: number; modelKeys: string[] }[];
   models: { model_key: string; display_name: string }[];
   /**
    * Pre-computed saving *rates* (fractions) produced by the same

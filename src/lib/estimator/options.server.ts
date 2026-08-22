@@ -38,8 +38,10 @@ export async function readEstimatorOptions(): Promise<EstimatorOptions> {
 
   const pricedModels = new Set(prices.map((p) => p.model_key));
 
+  // modelKeys only — display names are resolved client-side from `models`,
+  // so no name is duplicated across every provider that serves it.
   const providers = [...byLabel.values()]
-    .map((h) => ({ label: h.label, models: h.models.size }))
+    .map((h) => ({ label: h.label, models: h.models.size, modelKeys: [...h.models].sort() }))
     .sort((a, b) => b.models - a.models || a.label.localeCompare(b.label));
 
   const modelChoices = models
