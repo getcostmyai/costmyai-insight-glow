@@ -298,7 +298,21 @@ export function AllocationBar(props: AllocationBarProps) {
               <Chip
                 key={p.label}
                 active={picker.draft.provider === p.label}
-                onClick={() => setPicker({ ...picker, draft: { ...picker.draft, provider: p.label } })}
+                onClick={() =>
+                  setPicker({
+                    ...picker,
+                    draft: {
+                      ...picker.draft,
+                      provider: p.label,
+                      // Drop a model the new provider does not actually serve,
+                      // rather than leaving a stale invalid selection behind.
+                      modelKey:
+                        picker.draft.modelKey && p.modelKeys.includes(picker.draft.modelKey)
+                          ? picker.draft.modelKey
+                          : null,
+                    },
+                  })
+                }
               >
                 {p.label}
               </Chip>
