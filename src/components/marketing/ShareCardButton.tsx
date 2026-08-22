@@ -63,12 +63,9 @@ export function ShareCardButton({
     );
   }
 
-  // The origin is only known in the browser, so it is resolved after hydration.
-  // Rendering it during the first paint made the server and client disagree on
-  // every share href.
-  const origin = hydrated && typeof window !== "undefined" ? window.location.origin : "";
   const url = shareUrl(origin, `/intelligence/${month}`, cardId, cardId);
   const image = `${origin}/api/public/og/intelligence/${month}?card=${encodeURIComponent(cardId)}`;
+
 
   return (
     <ShareControls
