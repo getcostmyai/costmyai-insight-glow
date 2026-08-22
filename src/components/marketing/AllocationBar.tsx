@@ -101,6 +101,7 @@ export function AllocationBar(props: AllocationBarProps) {
    */
   const gestureStart = useRef<DraftLine[] | null>(null);
   const beginGesture = () => {
+    console.log("DBG begin");
     if (!gestureStart.current) gestureStart.current = lines;
   };
   const slide = (id: string, next: number) => onLinesChange(setShare(lines, id, next));
