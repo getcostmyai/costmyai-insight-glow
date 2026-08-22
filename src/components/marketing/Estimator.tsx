@@ -22,9 +22,7 @@ import {
 import {
   CONSERVATIVE_HIGH,
   CONSERVATIVE_LOW,
-  DISTRIBUTIONS,
   WORKLOADS,
-  type DistributionId,
 } from "@/lib/estimator/spec";
 
 /** Fixed locale so SSR and client render identical digits. */
@@ -34,32 +32,6 @@ const STEPS = ["Spend", "Breakdown"] as const;
 
 /** Quick jumps on the spend slider, in the range most inbound teams sit in. */
 const SPEND_PRESETS = [1000, 5000, 25000, 100000] as const;
-
-/** Bar heights (0-1) that show, at a glance, what each spread shape means. */
-const SPREAD_GLYPHS: number[][] = [
-  [1, 0.28, 0.2, 0.16],
-  [0.72, 0.62, 0.55, 0.48],
-  [0.42, 0.38, 0.34, 0.3],
-];
-
-function SpreadGlyph({ bars, on }: { bars: number[]; on: boolean }) {
-  return (
-    <div className="flex h-7 items-end gap-1" aria-hidden>
-      {bars.map((h, i) => (
-        <span
-          key={i}
-          className={`w-2 origin-bottom rounded-sm transition-[height,background-color,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            on ? "bg-primary scale-y-100" : "bg-border scale-y-[0.92] group-hover:bg-primary/40 group-hover:scale-y-100"
-          }`}
-          style={{
-            height: `${Math.round(h * 100)}%`,
-            transitionDelay: `${i * 45}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 /** True one frame after mount, so entry transitions have a from-state to run from. */
 function useMounted(reduced: boolean) {
@@ -133,7 +105,6 @@ export function Estimator() {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [spend, setSpend] = useState(4000);
-  const [distribution, setDistribution] = useState<DistributionId>("even");
   const [lines, setLines] = useState<DraftLine[]>([]);
 
   /* ---------------------------- telemetry ----------------------------- */
@@ -337,7 +308,6 @@ export function Estimator() {
   const reset = () => {
     mutation.reset();
     setSpend(4000);
-    setDistribution("even");
     setLines([]);
     setDir(-1);
     setStep(0);
@@ -483,8 +453,6 @@ export function Estimator() {
                       <span className="num text-[11px] font-medium text-muted-foreground">$200k</span>
                     </div>
                   </div>
-
-
                 ) : (
                   <AllocationBar
                     lines={lines}
