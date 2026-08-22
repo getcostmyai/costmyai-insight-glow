@@ -78,7 +78,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+  origin?: string;
+}>()({
+  // Resolved once, from the real request, before anything renders. Every
+  // absolute URL in the app (share links, OG image links) reads this rather
+  // than window.location.origin, which is unknown until hydration. On the
+  // client the browser already knows the origin, so no server call is made.
+  beforeLoad: async (): Promise<{ origin: string }> => {
+    if (typeof window !== "undefined") return { origin: window.location.origin };
+    const { getRequestOrigin } = await import("@/lib/origin.functions");
+    return { origin: await getRequestOrigin() };
+  },
+
   head: () => ({
     meta: [
       { charSet: "utf-8" },
