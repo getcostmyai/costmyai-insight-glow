@@ -1,10 +1,11 @@
-import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
+import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
 
 import {
   isSecureRequest,
   readCookie,
   readReferralCookie,
 } from "@/lib/partners/referral-cookie";
+import { SESSION_COOKIE, nextSession } from "./session-cookie";
 import {
   VISITOR_COOKIE,
   isPlausibleVisitorId,
@@ -47,6 +48,16 @@ export async function recordAccountLeadEvent(
 }
 
 /**
+ * Attach one cookie without clobbering another. `setResponseHeader` *sets*, so
+ * two telemetry cookies on one response would leave only the last one — the
+ * visitor id would be silently dropped the moment a session cookie is minted
+ * beside it.
+ */
+function appendSetCookie(value: string): void {
+  getResponseHeaders().append("Set-Cookie", value);
+}
+
+/**
  * Resolve the visitor id for this request, minting one when the browser has
  * none. Generated server-side so the id cannot be spoofed or reset from the
  * page, and set with the same HttpOnly rules as the referral cookie.
@@ -56,8 +67,21 @@ export function resolveVisitorId(request: Request): string {
   if (isPlausibleVisitorId(existing)) return existing!.trim();
 
   const id = crypto.randomUUID();
-  setResponseHeader("Set-Cookie", serializeVisitorCookie(id, isSecureRequest(request.url)));
+  appendSetCookie(serializeVisitorCookie(id, isSecureRequest(request.url)));
   return id;
+}
+
+/**
+ * Resolve the session for this request, refreshing its idle window. Same place
+ * and same conventions as the visitor id above — this is the only point in the
+ * public request flow where telemetry cookies are read and re-attached, so it
+ * is the only place a session can be continued or ended.
+ */
+export function resolveSessionId(request: Request, now: number = Date.now()): string {
+  const existing = readCookie(request.headers.get("cookie"), SESSION_COOKIE);
+  const session = nextSession(existing, now, isSecureRequest(request.url));
+  appendSetCookie(session.setCookie);
+  return session.id;
 }
 
 /**
@@ -71,10 +95,11 @@ export function resolveVisitorId(request: Request): string {
 export async function recordLeadEvent(
   eventType: LeadEventType,
   payload: unknown = null,
-): Promise<{ visitorId: string | null }> {
+): Promise<{ visitorId: string | null; sessionId: string | null }> {
   try {
     const request = getRequest();
     const visitorId = resolveVisitorId(request);
+    const sessionId = resolveSessionId(request);
     const code = readReferralCookie(request.headers.get("cookie"));
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -95,13 +120,14 @@ export async function recordLeadEvent(
     await supabaseAdmin.from("lead_events").insert({
       event_type: eventType,
       visitor_id: visitorId,
+      session_id: sessionId,
       referred_by_partner_id: partnerId,
       payload: (payload ?? null) as never,
     });
 
-    return { visitorId };
+    return { visitorId, sessionId };
   } catch (err) {
     console.error("lead event not recorded", err instanceof Error ? err.message : String(err));
-    return { visitorId: null };
+    return { visitorId: null, sessionId: null };
   }
 }
