@@ -31,14 +31,12 @@ export const Route = createFileRoute("/")({
       { title: "CostMyAI — stop overpaying for AI" },
       {
         name: "description",
-        content:
-          "CostMyAI reads only metadata from your stack and proves where the same quality costs less. Same-provider swaps it executes for you, automatically on Govern; a move to another provider waits until you allow routing to it. No provider keys, no prompt content.",
+        content: "You're likely overspending on AI. We prove it. You save. You grow.",
       },
       { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
       {
         property: "og:description",
-        content:
-          "Certified, benchmark-backed model and host switches. Metadata only, independent benchmarks, and an honest refusal whenever a saving cannot be proven.",
+        content: "You're likely overspending on AI. We prove it. You save. You grow.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
