@@ -50,9 +50,9 @@ const EMAIL = `partner-apply-drill-${stamp}@costmyai-test.dev`;
 /** Second applicant, used only for the forced-email-failure step. */
 const FAIL_EMAIL = `partner-apply-drill-fail-${stamp}@costmyai-test.dev`;
 /** Unique per run, so the hourly limiter budget is this drill's alone. */
-const CALLER_IP = `203.0.113.${stamp % 200}`;
+const CALLER_IP = randomUUID();
 /** The failure step needs its own limiter budget. */
-const FAIL_IP = `203.0.113.${(stamp % 200) + 20}`;
+const FAIL_IP = randomUUID();
 
 interface Caught {
   text: string;
