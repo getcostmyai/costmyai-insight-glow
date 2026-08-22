@@ -243,12 +243,29 @@ export function Estimator() {
   /** Fired once per completed drag, never per frame. */
   const commitResize = (before: DraftLine[], after: DraftLine[], boundaryIndex: number) => {
     if (JSON.stringify(shapeOf(before)) === JSON.stringify(shapeOf(after))) return;
-    progression("estimator_split_changed", {
+    // One event per settled adjustment. A drag already commits once, on
+    // release, but keyboard nudges arrive one per keypress: they collapse into
+    // a single event that keeps the original starting shape and the shape the
+    // visitor actually stopped on.
+    const pending = splitPending.current;
+    splitPending.current = {
       boundaryIndex,
-      before: shapeOf(before),
+      before: pending?.before ?? shapeOf(before),
       after: shapeOf(after),
-      unallocatedPct: unallocatedPct(after),
-    });
+    };
+    if (splitTimer.current) clearTimeout(splitTimer.current);
+    splitTimer.current = setTimeout(() => {
+      const settled = splitPending.current;
+      splitPending.current = null;
+      if (!settled) return;
+      if (JSON.stringify(settled.before) === JSON.stringify(settled.after)) return;
+      progression("estimator_split_changed", {
+        boundaryIndex: settled.boundaryIndex,
+        before: settled.before,
+        after: settled.after,
+        unallocatedPct: 100 - settled.after.reduce((s, l) => s + l.sharePct, 0),
+      });
+    }, 450);
   };
 
   const mutation = useMutation({
