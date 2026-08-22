@@ -28,6 +28,45 @@ export interface StoredApplication {
   createdAt: string;
   notifiedAt: string | null;
   notifyError: string | null;
+  reviewerEmailAt: string | null;
+  reviewerEmailError: string | null;
+  applicantEmailAt: string | null;
+  applicantEmailError: string | null;
+}
+
+/**
+ * Send one application email without ever letting it break the submission.
+ *
+ * `sendTemplateEmail` throws on every failure except suppression, and it is
+ * reached through a dynamic import so this server-only module never pulls the
+ * send helper (and `process.env`) into a client bundle. Both outcomes come back
+ * as data and are written to the row, so a mail that never left is visible in
+ * the review queue rather than lost.
+ */
+async function sendApplicationEmail(
+  templateName: "partner-application-alert" | "partner-application-received",
+  recipient: string,
+  applicationId: string,
+  templateData: Record<string, unknown>,
+): Promise<{ at: string | null; error: string | null }> {
+  try {
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+    const result = await sendTemplateEmail(templateName, recipient, {
+      templateData,
+      // Second layer under the "insert branch only" rule: even if this ever ran
+      // twice for the same row, Lovable dedupes on the key.
+      idempotencyKey: `${templateName}-${applicationId}`,
+    });
+    if (!result.sent) {
+      return {
+        at: null,
+        error: "This address has bounced, complained or unsubscribed previously",
+      };
+    }
+    return { at: new Date().toISOString(), error: null };
+  } catch (err) {
+    return { at: null, error: err instanceof Error ? err.message : "Email send failed" };
+  }
 }
 
 /**
