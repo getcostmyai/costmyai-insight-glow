@@ -25,4 +25,6 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'partner-welcome': partnerWelcome,
   'ops-alert': opsAlert,
+  'partner-application-alert': partnerApplicationAlert,
+  'partner-application-received': partnerApplicationReceived,
 }
