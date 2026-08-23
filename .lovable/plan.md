@@ -87,4 +87,8 @@ The permission sentence from item 4 should also appear where the first share con
 - CSV/JSON export follows the existing public widget route pattern under `src/routes/api/public/`, reading the same payload the page renders so the download can never disagree with the page.
 - Citation and download both target `ctx.citableMonth`, matching the existing share behaviour.
 - Visual language stays as it is now: mesh hero, wash-brand tiers, ribbon in three orientations, no cards, no serif numbers, no em-dashes.
+- Number of the month, direction line and post drafts derive from the payload already rendered, chosen by a deterministic rule so the live page and the frozen month agree.
+- PNG export and the monthly notification reuse the existing share-image renderer and the existing email sending setup respectively.
+- The cross-month trend chart reads the frozen archive payloads and stays hidden until enough closed months exist.
 - No engine, pricing or data-collection logic changes.
+
