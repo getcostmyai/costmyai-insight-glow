@@ -13,6 +13,8 @@
  * scheduled collector.
  */
 
+import { TEST_EMAIL_DOMAINS } from "@/lib/admin/customers";
+
 import { SHAPE_WATCH_JOB } from "./jobs";
 
 export type ShapeWatchSource = "ingest" | "pricing-feed";
@@ -24,7 +26,16 @@ export interface ShapeWatchReport {
   /** How many distinct things this report covers (events, providers). */
   count: number;
   detail?: unknown;
+  /** Whose traffic raised this, when there is a workspace behind it. */
+  orgId?: string;
 }
+
+/**
+ * Test workspaces are named `<something> <Date.now()>`. A real customer is not
+ * going to end a workspace name with a 13-digit epoch. Same convention the
+ * isolation sweep uses.
+ */
+const TEST_ORG_NAME = /\s1[0-9]{12}$/;
 
 /**
  * Is this report being raised by the integration suite rather than by real
@@ -32,20 +43,54 @@ export interface ShapeWatchReport {
  *
  * Dispatch 112. The alerts this watch writes are real rows on the ops board,
  * and the integration suite raises them on purpose — a fixture that declares
- * `cohere` a brand-new provider, an event carrying `no-such-model-at-all`.
- * Every shape-watch alert on the board over a full week turned out to be one
- * of those. A board that is permanently red for reasons nobody caused is a
- * board nobody reads, which is the failure mode this watch exists to prevent.
+ * `cohere` a brand-new provider, an event carrying `no-such-model-at-all`. A
+ * board that is permanently red for reasons nobody caused is a board nobody
+ * reads, which is the failure mode this watch exists to prevent.
  *
- * So test-raised reports are stamped at the moment they are written, and the
- * isolation sweep removes them by that stamp. Vitest sets VITEST in the
- * process it runs; production never does. Reports that arrive over HTTP are
- * written by the app server, which has no such variable — those are attributed
- * by workspace instead (see the `orgId` the ingest caller passes).
+ * Two origins, so two answers, because one mechanism cannot cover both:
+ *
+ *   1. In-process reports (the pricing feed under a fixture) are stamped from
+ *      the environment: Vitest sets VITEST in the process it runs, production
+ *      never does.
+ *   2. Reports raised over HTTP are written by the app server, which has no
+ *      such variable and must never trust a header for this — a public ingest
+ *      endpoint that lets the caller mark its own alerts "just a test" is a way
+ *      to hide a real one. So the origin is resolved server-side from the
+ *      workspace itself: a test-harness contact domain, or the epoch-suffixed
+ *      workspace name the suite always creates. Both are facts the caller
+ *      cannot assert about itself.
  */
-function testAttribution(): { testRun: true } | Record<string, never> {
-  const inTest = process.env["VITEST"] === "true" || process.env["COSTMYAI_TEST_RUN"] === "1";
-  return inTest ? { testRun: true } : {};
+function envAttribution(): boolean {
+  return process.env["VITEST"] === "true" || process.env["COSTMYAI_TEST_RUN"] === "1";
+}
+
+async function orgAttribution(orgId: string): Promise<string | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: org } = await supabaseAdmin
+      .from("organizations")
+      .select("name, created_by")
+      .eq("id", orgId)
+      .maybeSingle();
+    if (!org) return "workspace no longer exists";
+    if (TEST_ORG_NAME.test(String(org.name ?? ""))) return "test-harness workspace name";
+    if (org.created_by) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", org.created_by)
+        .maybeSingle();
+      const domain = String(profile?.email ?? "").trim().toLowerCase().split("@")[1] ?? "";
+      if ((TEST_EMAIL_DOMAINS as readonly string[]).includes(domain)) {
+        return "test-harness contact domain";
+      }
+    }
+    return null;
+  } catch {
+    // Never let attribution take down the watch: an unattributed alert is
+    // noise, an unwritten one is a blind spot.
+    return null;
+  }
 }
 
 /**
@@ -62,6 +107,14 @@ export async function reportUnrecognisedShape(report: ShapeWatchReport): Promise
         : report.detail === undefined || report.detail === null
           ? {}
           : { detail: report.detail };
+
+    const reason = envAttribution()
+      ? "test process"
+      : report.orgId
+        ? await orgAttribution(report.orgId)
+        : null;
+    const stamp = reason ? { testRun: true, testReason: reason } : {};
+
     await recordRun({
       job: SHAPE_WATCH_JOB,
       started: new Date(),
@@ -71,7 +124,7 @@ export async function reportUnrecognisedShape(report: ShapeWatchReport): Promise
       outcome: "failed",
       rowsWritten: report.count,
       error: `[${report.source}] ${report.summary}`,
-      detail: { ...base, ...testAttribution() },
+      detail: { ...base, ...stamp },
     });
 
     return true;
@@ -80,3 +133,4 @@ export async function reportUnrecognisedShape(report: ShapeWatchReport): Promise
     return false;
   }
 }
+

@@ -53,7 +53,7 @@ export async function collectJobHealth(nowMs = Date.now()): Promise<JobHealth[]>
     JOB_REGISTRY.map(async (spec) => {
       const { data, error } = await supabaseAdmin
         .from("sync_runs")
-        .select("job, started_at, outcome, rows_written, error")
+        .select("job, started_at, outcome, rows_written, error, detail")
         .eq("job", spec.job)
         .order("started_at", { ascending: false })
         .limit(20);
@@ -65,6 +65,10 @@ export async function collectJobHealth(nowMs = Date.now()): Promise<JobHealth[]>
           outcome: row.outcome ?? null,
           rowsWritten: row.rows_written ?? null,
           error: row.error ?? null,
+          testRun:
+            !!row.detail &&
+            typeof row.detail === "object" &&
+            (row.detail as Record<string, unknown>)["testRun"] === true,
         })),
       );
     }),

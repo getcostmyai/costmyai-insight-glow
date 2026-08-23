@@ -52,31 +52,11 @@ export async function readAdminOverview(
       breakdownPromise,
 
       guard("Job health", async () => {
-        const { data, error } = await supabaseAdmin
-          .from("sync_runs")
-          .select("job, started_at, outcome, rows_written, error")
-          .in(
-            "job",
-            JOB_REGISTRY.map((j) => j.job),
-          )
-          .order("started_at", { ascending: false })
-          .limit(400);
-        if (error) throw error;
-        const byJob = new Map<string, JobRunSummary[]>();
-        for (const row of data ?? []) {
-          const job = String(row.job);
-          byJob.set(job, [
-            ...(byJob.get(job) ?? []),
-            {
-              startedAt: String(row.started_at),
-              outcome: row.outcome ?? null,
-              rowsWritten: row.rows_written ?? null,
-              error: row.error ?? null,
-            },
-          ]);
-        }
-        const now = Date.now();
-        const judged = JOB_REGISTRY.map((spec) => judgeJob(spec, byJob.get(spec.job) ?? [], now));
+        // One bounded read per job (shared with the alert sweep). A single
+        // global window let a monthly job be crowded out by a minutely one and
+        // reported as "never run".
+        const { collectJobHealth } = await import("@/lib/ops/alerts.server");
+        const judged = await collectJobHealth(Date.now());
         return {
           total: judged.length,
           healthy: judged.filter((j) => j.verdict === "healthy").length,
@@ -84,6 +64,7 @@ export async function readAdminOverview(
           failing: judged.filter((j) => j.verdict === "failing" || j.verdict === "never-run").length,
         };
       }),
+
 
       guard("Intelligence leads", async () => {
         const { count, error } = await supabaseAdmin

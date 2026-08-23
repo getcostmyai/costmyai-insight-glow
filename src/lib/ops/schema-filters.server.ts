@@ -16,6 +16,8 @@
 
 import { recordRun } from "@/lib/engine/evaluate.server";
 
+import { describeError } from "./errors";
+
 import exemptions from "./schema-filter-exemptions.json";
 import manifest from "./schema-filter-manifest.json";
 import {
@@ -47,7 +49,9 @@ export async function runSchemaFilterCheck(): Promise<SchemaFilterRunResult> {
   const { data, error } = await supabaseAdmin.rpc("schema_filter_state" as never, {
     _predicates: STATE_PREDICATES,
   } as never);
-  if (error) throw error;
+  // Rethrown as a real Error: the raw PostgrestError is a plain object and
+  // stringifies to "[object Object]" wherever it is later recorded.
+  if (error) throw new Error(`schema_filter_state failed: ${describeError(error)}`);
 
   const state = data as unknown as {
     columns: { table: string; column: string }[];
@@ -98,7 +102,7 @@ export async function runAndRecordSchemaFilterCheck(): Promise<SchemaFilterRunRe
     });
     return result;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = describeError(err);
     await recordRun({
       job: SCHEMA_FILTER_JOB,
       started,

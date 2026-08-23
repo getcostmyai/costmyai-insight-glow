@@ -195,6 +195,7 @@ async function watchUnparsedShapes(
       .slice(0, 5)
       .join(", ")}${pairs.length > 5 ? ` and ${pairs.length - 5} more` : ""}`,
     detail: { pairs, events: unparsed.length, orgId },
+    orgId,
   });
 }
 
