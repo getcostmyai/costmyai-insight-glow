@@ -460,7 +460,7 @@ function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: Report
       <PriceDriftRibbon
         moves={data.changesTotal}
         orientation="horizontal"
-        className="pointer-events-none absolute inset-x-0 top-1/2 h-[60%] -translate-y-1/2 opacity-40 [mask-image:linear-gradient(90deg,transparent,#000_18%,#000_82%,transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 opacity-40 [mask-image:linear-gradient(90deg,transparent,#000_18%,#000_82%,transparent)]"
       />
       <div className="relative mx-auto max-w-6xl">
         <div className="rule-brand mb-14 h-px w-full" aria-hidden />
