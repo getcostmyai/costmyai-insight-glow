@@ -160,7 +160,14 @@ function Hero({ data }: { data: CatalogPayload }) {
           >
             cheapest API call report
           </Link>{" "}
-          for the ranked view.
+          for the ranked view, or the{" "}
+          <Link
+            to="/tools/llm-price-comparison"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            pricing comparison calculator
+          </Link>{" "}
+          to price it against your own volumes.
         </Reveal>
 
 
