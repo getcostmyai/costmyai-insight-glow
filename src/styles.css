@@ -185,6 +185,29 @@
     rgba(123, 97, 255, 0.13) 0%,
     rgba(255, 255, 255, 0) 85%
   );
+  /*
+   * Tier 1. Louder than --wash-section and, crucially, multi-hue: two lobes
+   * from opposite ends of the widened family so a tinted band reads as brand
+   * colour rather than as grey. Both fall to zero above the vertical middle,
+   * which is where body copy starts.
+   */
+  --wash-brand:
+    radial-gradient(
+      ellipse 90% 70% at 14% 0%,
+      rgba(var(--brand-indigo), 0.2) 0%,
+      rgba(var(--brand-indigo), 0) 78%
+    ),
+    radial-gradient(
+      ellipse 80% 66% at 88% 4%,
+      rgba(var(--brand-magenta), 0.14) 0%,
+      rgba(var(--brand-magenta), 0) 74%
+    ),
+    radial-gradient(
+      ellipse 120% 60% at 50% 100%,
+      rgba(var(--brand-coral), 0.1) 0%,
+      rgba(var(--brand-coral), 0) 80%
+    );
+
   --texture-dots: radial-gradient(
     circle,
     color-mix(in oklab, var(--muted-foreground) 9%, transparent) 1px,
