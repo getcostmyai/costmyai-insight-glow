@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { IntelligencePayload } from "../intelligence.server";
-import { directionLine, numberOfTheMonth, postDraft, trackingWindow } from "../highlights";
+import { directionLine, numberOfTheMonth, postDraft } from "../highlights";
 
 const base = (over: Partial<IntelligencePayload> = {}): IntelligencePayload =>
   ({
