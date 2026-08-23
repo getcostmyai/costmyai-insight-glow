@@ -11,6 +11,7 @@ export type InternalPath =
   | "/intelligence"
   | "/pricing"
   | "/legal/methodology"
+  | "/reports/cheapest-api-calls"
   | "/standard";
 
 export type Block =
@@ -862,6 +863,79 @@ export const POSTS: BlogPost[] = [
         headline: "The four-rung framework this all builds toward, in one place",
         label: "Read The CostMyAI Standard",
         to: "/standard",
+      },
+    ],
+  },
+  {
+    slug: "cheapest-api-call",
+    title: "What actually makes an API call cheap",
+    deck: "Per-token list price is the headline. The cheapest API call is decided by which host you buy the same model from, and by how your traffic splits between input and output.",
+    description:
+      "How to find the cheapest API call for a given model: compare hosts for the same weights, weight input against output tokens, and price the blend you actually send.",
+    keyword: "cheapest api call",
+    published: "2026-08-23",
+    minutes: 5,
+    blocks: [
+      {
+        t: "p",
+        v: "The question people type into a search box is short: what is the cheapest API call. The honest answer is that a price per million tokens is not a price per call, and the two can rank providers in opposite orders. A model that looks cheapest on a rate card can be the most expensive thing in your bill once your real ratio of input to output tokens is applied to it.",
+      },
+      { t: "h2", v: "Three numbers decide the cost of a call" },
+      {
+        t: "defs",
+        items: [
+          {
+            term: "Input price",
+            text: "What you pay per million tokens sent. Prompt-heavy workloads, long system prompts, retrieved context and pasted documents live here, and this is where caching discounts apply when a host offers them.",
+          },
+          {
+            term: "Output price",
+            text: "What you pay per million tokens generated, usually several times the input price. Summarisation is cheap on this axis; drafting, code generation and reasoning traces are not.",
+          },
+          {
+            term: "Your blend",
+            text: "The ratio between the two in your actual traffic. Ranking models on a 50/50 blend when your workload runs 10:1 input to output produces a recommendation that does not survive contact with your invoice.",
+          },
+        ],
+      },
+      {
+        t: "p",
+        v: "Multiply those three together and the cheapest call is rarely the cheapest headline number. It is the model whose price shape matches the shape of your requests.",
+      },
+      { t: "h2", v: "The same model is not one price" },
+      {
+        t: "p",
+        v: "The largest avoidable overspend we see is not model choice at all. It is buying identical weights from the wrong host. The same open-weights model served by several providers, or a frontier model available both first-party and through a hyperscaler, can differ meaningfully in price while producing the same outputs. Nothing about your product changes when you move that traffic. Only the invoice changes.",
+      },
+      {
+        t: "p",
+        v: "This is why we treat the same-model gap as a separate line of enquiry from model substitution. Swapping models is a quality decision that has to be proven. Swapping hosts for the same model is a procurement decision, and the burden of proof is far lower.",
+      },
+      {
+        t: "cta",
+        headline: "Cheapest host per model, priced from the live catalog",
+        label: "Open the cheapest API calls report",
+        to: "/reports/cheapest-api-calls",
+      },
+      { t: "h2", v: "Cheap per call is not cheap per outcome" },
+      {
+        t: "p",
+        v: "A cheaper model that needs two attempts, longer prompts, or a larger retrieval window to reach the same answer is not cheaper. Cost per useful result is the only figure that pays a bill, and it moves with retries, with output length, and with how often a human has to intervene. Any comparison that stops at the rate card is quietly assuming those are all constant across models, which they are not.",
+      },
+      {
+        t: "p",
+        v: "The practical test before you switch anything for price: does the output still clear your bar on the tasks you actually run, and does the total token count to get there stay flat. If either fails, the saving was arithmetic rather than money.",
+      },
+      { t: "h2", v: "Prices do not hold still" },
+      {
+        t: "p",
+        v: "Whatever the cheapest call is today, it is a snapshot. Provider price changes, new model tiers and caching discounts move the ranking without any announcement reaching your engineering team. A comparison you ran last quarter is a historical document, which is why we keep the underlying price history append-only and re-derive the ranking rather than publishing a static table.",
+      },
+      {
+        t: "cta",
+        headline: "See every model, every host, priced side by side",
+        label: "Browse the model catalog",
+        to: "/models",
       },
     ],
   },
