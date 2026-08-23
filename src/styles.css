@@ -544,7 +544,30 @@
 
 /* Slow parallax breathing. Two lobes drift against each other, which is what
    keeps the field alive without ever becoming a moving distraction. */
-/* Price-drift ribbon strands: each one breathes on its own phase, so the band
+/* Architecture wire: a wide brand gradient sliding under a narrow mask. */
+@keyframes wire-flow {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-66.6%, 0, 0);
+  }
+}
+
+@utility wire-flow {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(var(--brand-indigo)) 0%,
+    rgb(var(--brand-violet)) 8%,
+    rgb(var(--brand-magenta)) 16%,
+    rgb(var(--brand-coral)) 24%,
+    rgb(var(--brand-indigo)) 33.333%
+  );
+  animation: wire-flow 14s linear infinite;
+  will-change: transform;
+}
+
+
    as a whole never appears to move in lockstep. */
 @keyframes drift-strand {
   0%,
