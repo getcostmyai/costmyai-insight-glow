@@ -1,10 +1,13 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, Check, ChevronDown, ShieldCheck } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
 import type { PlanTier } from "@/lib/engine/types";
@@ -12,29 +15,31 @@ import type { PlanTier } from "@/lib/engine/types";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — CostMyAI" },
+      { title: "Pricing — pay for the level you're on | CostMyAI" },
       {
         name: "description",
         content:
-          "Compare is free forever. Certify adds quality-matched model switches, Rightsize adds oversized-workload detection, Govern switches autonomously inside the equivalence band.",
+          "Compare is free forever and finds the cheapest host for models you already run. Certify proves a switch is safe, Rightsize catches oversized workloads, Govern switches autonomously inside the equivalence band.",
       },
-      { property: "og:title", content: "Pricing — CostMyAI" },
+      { property: "og:title", content: "Pricing — pay for the level you're on" },
       {
         property: "og:description",
         content:
-          "Four levels, one path: Compare free, then Certify, Rightsize and Govern. No provider keys, no placement fees.",
+          "Four levels, one path: Compare free, then Certify, Rightsize and Govern. No provider keys, no placement fees, no cut of your savings.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.costmyai.com/pricing" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/pricing" }],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: PricingPage,
 });
 
 const ORDER: PlanTier[] = ["compare", "certify", "rightsize", "govern"];
 
 // Feature bullets live in src/lib/plan-features.ts — one list, every surface.
-
 
 const NEVER_PAY = [
   {
@@ -52,13 +57,15 @@ const NEVER_PAY = [
 ];
 
 function PricingPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   const [yearly, setYearly] = useState(true);
+  const moves = stats.priceChangesTracked;
 
   return (
     <MarketingShell>
-      <Hero yearly={yearly} setYearly={setYearly} />
-      <Plans yearly={yearly} />
-      <NeverPay />
+      <Hero yearly={yearly} setYearly={setYearly} moves={moves} />
+      <Plans yearly={yearly} moves={moves} />
+      <NeverPay moves={moves} />
       <Faq />
       <ClosingCta />
     </MarketingShell>
@@ -67,11 +74,29 @@ function PricingPage() {
 
 /* ---------------------------------- hero --------------------------------- */
 
-function Hero({ yearly, setYearly }: { yearly: boolean; setYearly: (v: boolean) => void }) {
+function Hero({
+  yearly,
+  setYearly,
+  moves,
+}: {
+  yearly: boolean;
+  setYearly: (v: boolean) => void;
+  moves: number;
+}) {
   return (
-    <section className="relative overflow-hidden wash-hero">
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-4xl px-5 pb-16 pt-24 text-center sm:px-8 sm:pt-36">
+    <section className="relative overflow-hidden border-b border-border">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="diagonal"
+        className="absolute inset-x-0 bottom-0 h-[30%] opacity-[0.10] [mask-image:linear-gradient(180deg,transparent,#000_80%)]"
+      />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-4xl px-5 pb-20 pt-24 text-center sm:px-8 sm:pb-24 sm:pt-36">
         <Reveal
           as="p"
           className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -84,7 +109,7 @@ function Hero({ yearly, setYearly }: { yearly: boolean; setYearly: (v: boolean) 
           as="h1"
           className="mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[4.6rem]"
         >
-          Pay for the level <span className="text-gradient-brand">you're on.</span>
+          Pay for the level <span className="text-gradient-brand-wide">you're on.</span>
         </Reveal>
 
         <Reveal
@@ -97,7 +122,7 @@ function Hero({ yearly, setYearly }: { yearly: boolean; setYearly: (v: boolean) 
         </Reveal>
 
         <Reveal delay={220} className="mt-10 flex justify-center">
-          <div className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
+          <div className="inline-flex items-center gap-1 rounded-full border border-border bg-background/70 p-1 backdrop-blur">
             <BillingToggle active={yearly} onClick={() => setYearly(true)}>
               Yearly
               <span className="ml-1.5 rounded-full bg-saving-soft px-2 py-0.5 text-[11px] font-semibold text-saving">
@@ -116,36 +141,44 @@ function Hero({ yearly, setYearly }: { yearly: boolean; setYearly: (v: boolean) 
 
 /* --------------------------------- plans --------------------------------- */
 
-function Plans({ yearly }: { yearly: boolean }) {
+/**
+ * The ladder, not a card wall: four rungs on a hairline rail, each one wider
+ * than the last in what it includes. Same restraint as the rest of the site.
+ */
+function Plans({ yearly, moves }: { yearly: boolean; moves: number }) {
   return (
-    <section className="px-5 pb-28 pt-4 sm:px-8 sm:pb-36">
-      <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-4">
+    <section className="relative overflow-hidden px-5 py-20 sm:px-8 sm:py-24">
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[12%] opacity-[0.14] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl border-t border-border">
         {ORDER.map((plan, i) => {
           const meta = PLAN_META[plan];
           const price = yearly ? meta.yearly : meta.monthly;
           const beta = plan === "rightsize" || plan === "govern";
-          const featured = false;
 
           return (
-            <Reveal key={plan} delay={i * 90} className="flex">
-              <div
-                className={`relative flex w-full flex-col rounded-3xl border p-7 transition-transform duration-500 hover:-translate-y-1 ${
-                  featured
-                    ? "border-primary/45 bg-card shadow-[var(--shadow-float)]"
-                    : "border-border bg-card shadow-[var(--shadow-card)]"
-                }`}
-              >
-                {beta ? (
-                  <span className="absolute -top-3 left-7 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Coming soon — closed beta
+            <Reveal
+              key={plan}
+              delay={i * 80}
+              className="grid gap-8 border-b border-border py-12 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16 sm:py-14"
+            >
+              <div>
+                <div className="flex items-baseline gap-3">
+                  <span className="num text-[11px] tracking-[0.18em] text-primary">
+                    {`0${i + 1}`}
                   </span>
-                ) : null}
+                  <h2 className="text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
+                    {meta.label}
+                  </h2>
+                </div>
 
-                <p className="text-sm font-semibold tracking-tight">{meta.label}</p>
-                <p className="mt-4">
+                <p className="mt-6">
                   <span
-                    className={`num text-[2.75rem] font-semibold leading-none tracking-[-0.045em] ${
-                      featured ? "text-gradient-brand" : "text-foreground"
+                    className={`num text-[3.2rem] font-semibold leading-none tracking-[-0.05em] sm:text-[4rem] ${
+                      price === 0 ? "text-gradient-brand-wide" : "text-foreground"
                     }`}
                   >
                     {price === 0 ? "Free" : `$${price}`}
@@ -154,34 +187,50 @@ function Plans({ yearly }: { yearly: boolean }) {
                     <span className="text-sm font-medium text-muted-foreground"> /mo</span>
                   )}
                 </p>
-                <p className="mt-2 text-xs text-muted-foreground">
+                <p className="mt-3 text-xs uppercase tracking-[0.14em] text-muted-foreground">
                   {beta
                     ? "not on sale yet — price shown for reference"
                     : price === 0
-                      ? "No card required"
+                      ? "no card required"
                       : yearly
                         ? "billed yearly"
                         : "billed monthly, cancel anytime"}
                 </p>
 
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{meta.blurb}</p>
+                <p className="mt-6 max-w-md text-base leading-relaxed text-muted-foreground">
+                  {meta.blurb}
+                </p>
 
                 {beta ? (
-                  <p className="mt-6 w-full rounded-full border border-dashed border-border px-5 py-2.5 text-center text-sm text-muted-foreground">
+                  <p className="mt-7 inline-flex rounded-full border border-dashed border-border px-5 py-2.5 text-sm text-muted-foreground">
                     In closed beta — invitation only
                   </p>
                 ) : (
-                  <Link to="/auth" className="btn-quiet mt-6 w-full px-5 py-2.5 text-sm">
+                  <Link
+                    to="/auth"
+                    className={
+                      price === 0
+                        ? "btn-gradient mt-7 inline-flex px-5 py-2.5 text-sm"
+                        : "btn-quiet mt-7 inline-flex px-5 py-2.5 text-sm"
+                    }
+                  >
                     {price === 0 ? "Start free" : `Start ${meta.label}`}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}
+              </div>
 
-                <ul className="mt-7 space-y-3 border-t border-border pt-6">
+              <div className="lg:pt-2">
+                <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  {i === 0 ? "What you get" : `Everything below, plus`}
+                </p>
+                <ul className="mt-6 grid gap-x-10 gap-y-4 sm:grid-cols-2">
                   {PLAN_FEATURES[plan].map((line: string) => (
                     <li key={line} className="flex items-start gap-2.5">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-saving" />
-                      <span className="text-sm leading-relaxed text-muted-foreground">{line}</span>
+                      <span className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                        {line}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -196,10 +245,15 @@ function Plans({ yearly }: { yearly: boolean }) {
 
 /* ------------------------------- never pay -------------------------------- */
 
-function NeverPay() {
+function NeverPay({ moves }: { moves: number }) {
   return (
-    <section className="border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden border-y border-border wash-brand">
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="horizontal"
+        className="absolute inset-x-0 top-0 h-[28%] opacity-[0.12] [mask-image:linear-gradient(0deg,transparent,#000)]"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead
           eyebrow="What you never pay for"
           title="The price is the price."
@@ -223,7 +277,7 @@ function NeverPay() {
         </div>
 
         <Reveal delay={120} className="mx-auto mt-20 max-w-3xl text-center">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary/10">
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
           <h3 className="mt-6 text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
@@ -265,7 +319,7 @@ function Faq() {
   const [open, setOpen] = useState(-1);
 
   return (
-    <section id="faq" className="scroll-mt-24 wash-section">
+    <section id="faq" className="scroll-mt-24">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead eyebrow="FAQ" title="Before you pick a level." />
         <div className="mx-auto mt-16 max-w-3xl">
@@ -312,10 +366,12 @@ function Faq() {
 
 function ClosingCta() {
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32">
-      <Reveal className="mx-auto max-w-3xl text-center">
+    <section className="relative overflow-hidden border-t border-border px-5 py-24 sm:px-8 sm:py-32">
+      <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift opacity-70" aria-hidden />
+      <Reveal className="relative mx-auto max-w-3xl text-center">
         <h2 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[3.6rem]">
-          Start on <span className="text-gradient-brand">free.</span> Move up when the savings do.
+          Start on <span className="text-gradient-brand-wide">free.</span> Move up when the savings
+          do.
         </h2>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link to="/auth" className="btn-gradient px-6 py-3 text-[15px]">
