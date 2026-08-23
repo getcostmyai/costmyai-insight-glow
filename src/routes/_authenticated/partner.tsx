@@ -433,7 +433,7 @@ function NotAPartner() {
           — the rate rises with referred revenue. You aren't part of a partner account yet.
         </p>
         <a
-          href="mailto:partners@costmyai.com?subject=Partner%20program"
+          href="mailto:mail@costmyai.com?subject=Partner%20program"
           className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
         >
           Apply to become a partner
