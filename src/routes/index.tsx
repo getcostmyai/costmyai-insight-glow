@@ -23,6 +23,7 @@ import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { FAQ_ITEMS, HOMEPAGE_FAQ_IDS, findFaqItem } from "@/lib/faq/questions";
 import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
+import { PLAN_FEATURES } from "@/lib/plan-features";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -453,33 +454,6 @@ function BuiltFor() {
 
 
 /* ------------------------------ 08 · pricing ----------------------------- */
-
-const PLAN_FEATURES: Record<string, string[]> = {
-  compare: [
-    "Same model, cheaper host — on your own traffic",
-    "Live price catalog across every tracked provider",
-    "Metadata-only ingest, no provider keys",
-    "Unlimited workloads, free forever",
-  ],
-  certify: [
-    "Everything in Compare",
-    "Quality-matched cheaper models, benchmark-backed",
-    "Measured equivalence margin on every claim",
-    "Named refusals when nothing can be proven",
-  ],
-  rightsize: [
-    "Everything in Certify",
-    "Oversized-workload detection per task class",
-    "Manual switching with one-click rollback",
-    "Objectives: cost, latency ceiling, quality floor",
-  ],
-  govern: [
-    "Everything in Rightsize",
-    "Autonomous switching inside the equivalence band",
-    "Full audit trail on every automated decision",
-    "Billing reconciliation against your own invoices",
-  ],
-};
 
 const LEVELS = ["compare", "certify", "rightsize", "govern"] as const;
 

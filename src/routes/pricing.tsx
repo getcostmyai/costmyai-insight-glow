@@ -6,6 +6,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { PLAN_META } from "@/lib/engine/types";
+import { PLAN_FEATURES } from "@/lib/plan-features";
 import type { PlanTier } from "@/lib/engine/types";
 
 export const Route = createFileRoute("/pricing")({
@@ -32,34 +33,8 @@ export const Route = createFileRoute("/pricing")({
 
 const ORDER: PlanTier[] = ["compare", "certify", "rightsize", "govern"];
 
-const INCLUDES: Record<PlanTier, string[]> = {
-  compare: [
-    "Same model, cheaper host — across every priced host",
-    "Live gateway metadata ingestion (metadata only)",
-    "Spend, tokens and requests over 24h / 7d / 30d",
-    "One workspace member",
-  ],
-  certify: [
-    "Everything in Compare",
-    "Quality-matched cheaper models, cheapest that clears the bar",
-    "Published evaluation, score and measurement margin per claim",
-    "Refusals with reasons when nothing clears",
-  ],
-  rightsize: [
-    "Everything in Certify",
-    "Oversized-workload detection per task class",
-    "Manual switch activation, pause and one-click rollback",
-    "Objectives: cost, latency ceiling, quality floor",
-    "Team members and invites",
-  ],
-  govern: [
-    "Everything in Rightsize",
-    "Autonomous switching inside the equivalence band",
-    "Continuous re-evaluation as prices and scores move",
-    "Full audit trail of every automated decision",
-    "Invoice reconciliation you push to us",
-  ],
-};
+// Feature bullets live in src/lib/plan-features.ts — one list, every surface.
+
 
 const NEVER_PAY = [
   {
@@ -203,7 +178,7 @@ function Plans({ yearly }: { yearly: boolean }) {
                 )}
 
                 <ul className="mt-7 space-y-3 border-t border-border pt-6">
-                  {INCLUDES[plan].map((line) => (
+                  {PLAN_FEATURES[plan].map((line: string) => (
                     <li key={line} className="flex items-start gap-2.5">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-saving" />
                       <span className="text-sm leading-relaxed text-muted-foreground">{line}</span>
