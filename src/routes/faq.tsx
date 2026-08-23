@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { FAQ_CLUSTERS, FAQ_ITEMS, faqJsonLd } from "@/lib/faq/questions";
 
 const TITLE = "AI cost FAQ — pricing, safe model switching, key security";
@@ -17,26 +20,41 @@ export const Route = createFileRoute("/faq")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.costmyai.com/faq" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/faq" }],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: FaqPage,
 });
 
 function FaqPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd() }} />
 
       <div className="flex flex-col">
-        <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+            aria-hidden
+          />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="diagonal"
+            className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+          />
+          <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
+          <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
             <Reveal className="max-w-4xl">
               <p className="eyebrow">FAQ</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
                 The questions people
                 <br />
-                actually <span className="text-gradient-brand">search for</span>.
+                actually <span className="text-gradient-brand-wide">search for</span>.
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                 Not invented questions with convenient answers. These are the ones teams running AI
@@ -71,10 +89,18 @@ function FaqPage() {
           <section
             key={cluster.id}
             id={cluster.id}
-            className={`scroll-mt-24 border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32 ${
-              ci % 2 === 1 ? "wash-section" : ""
+            className={`relative overflow-hidden scroll-mt-24 border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32 ${
+              ci % 2 === 1 ? "wash-brand" : ""
             }`}
           >
+            {ci === 1 ? (
+              <PriceDriftRibbon
+                moves={stats.priceChangesTracked}
+                orientation="vertical"
+                className="absolute inset-y-0 right-0 hidden w-[14%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+              />
+            ) : null}
+
             <div className="mx-auto max-w-6xl">
               <Reveal className="max-w-3xl">
                 <p className="eyebrow">{String(ci + 1).padStart(2, "0")}</p>
