@@ -139,6 +139,21 @@ const FAQ = [
   },
 ] as const;
 
+function partnerFaqJsonLd() {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  });
+}
+
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
