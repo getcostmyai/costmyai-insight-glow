@@ -162,6 +162,27 @@ export async function readAdminOverview(
     }),
   );
 
+  // Site-wide distinct visitor and session counts. Distinct counts cannot be
+  // summed across event types, so they are counted once over the raw rows in
+  // the window. Rows with no session id pre-date session tracking and are
+  // bucketed separately rather than counted as sessions.
+  const distinct = await guard("Visitor totals", async () => {
+    const { data, error } = await supabaseAdmin
+      .from("lead_events")
+      .select("visitor_id, session_id")
+      .eq("is_synthetic", false)
+      .gte("created_at", new Date(Date.now() - windowDays * 86_400_000).toISOString())
+      .limit(50_000);
+    if (error) throw error;
+    const visitors = new Set<string>();
+    const sessions = new Set<string>();
+    for (const row of data ?? []) {
+      if (row.visitor_id) visitors.add(String(row.visitor_id));
+      if (row.session_id) sessions.add(String(row.session_id));
+    }
+    return { visitors: visitors.size, sessions: sessions.size };
+  });
+
   const summary: AdminSummary = {
     jobs,
     leadsPending,
@@ -177,11 +198,8 @@ export async function readAdminOverview(
     events,
     totals: {
       events: events.reduce((s, e) => s + e.events, 0),
-      // Distinct-visitor totals cannot be summed across rows; the funnel's own
-      // first stage is not a site-wide total either. This is the honest one:
-      // total events, and the legacy rows called out separately.
-      visitors: 0,
-      sessions: 0,
+      visitors: distinct?.visitors ?? 0,
+      sessions: distinct?.sessions ?? 0,
       legacyEvents: events.reduce((s, e) => s + e.legacyEvents, 0),
     },
     summary,
