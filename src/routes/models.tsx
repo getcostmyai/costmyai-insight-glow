@@ -153,7 +153,14 @@ function Hero({ data }: { data: CatalogPayload }) {
         >
           A <span className="text-foreground">serving provider</span> sells access to a model. When
           the same model is sold by several providers at different rates, that gap is the arbitrage
-          — and it is the number we act on.
+          — and it is the number we act on. See the{" "}
+          <Link
+            to="/reports/cheapest-api-calls"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            cheapest API call report
+          </Link>{" "}
+          for the ranked view.
         </Reveal>
 
 
