@@ -8,14 +8,21 @@ import { ArrowRight, BadgeCheck, Infinity as InfinityIcon, Receipt, ShieldCheck 
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 
 type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
 
 export const Route = createFileRoute("/partners")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(partnerLadderQuery()),
+      context.queryClient.ensureQueryData(marketingStatsQuery()),
+    ]);
+  },
   head: () => ({
     meta: [
       { title: "Become a Partner — lifetime commission on every account you refer" },
@@ -31,11 +38,14 @@ export const Route = createFileRoute("/partners")({
           "Lifetime commission on referred revenue, paid on real invoices — never estimated.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.costmyai.com/partners" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/partners" }],
   }),
   component: PartnersPage,
 });
+
 
 const PROMISES = [
   {
@@ -75,6 +85,7 @@ const STEPS = [
 
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   // One view per page load. Unlike the estimator this is the whole page, so
   // mounting *is* seeing — no viewport observer needed.
   const track = useServerFn(trackPartnerEvent);
@@ -86,18 +97,20 @@ function PartnersPage() {
   const range = formatRateRange(ladder);
   const tiers = ladder.tiers;
   const topRate = tiers.length ? Math.max(...tiers.map((t) => t.ratePct)) : 0;
+  const moves = stats.priceChangesTracked;
 
   return (
     <MarketingShell>
-      <Hero range={range} topRate={topRate} />
-      <Ladder tiers={tiers} topRate={topRate} />
+      <Hero range={range} topRate={topRate} moves={moves} />
+      <Ladder tiers={tiers} topRate={topRate} moves={moves} />
       <Promises />
-      <BeyondCommission />
+      <BeyondCommission moves={moves} />
       <Steps />
       <ClosingCta />
     </MarketingShell>
   );
 }
+
 
 /* --------------------------- beyond the commission ------------------------ */
 
@@ -129,10 +142,17 @@ const BEYOND = [
   },
 ] as const;
 
-function BeyondCommission() {
+function BeyondCommission({ moves }: { moves: number }) {
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32">
-      <div className="mx-auto max-w-6xl">
+    <section className="relative overflow-hidden border-t border-border wash-brand">
+      {/* The echo: same band, quarter-turned, pinned to the gutter. */}
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[16%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+
         <SectionHead
           eyebrow="Beyond the commission"
           title="What a partner account actually gets you."
@@ -170,11 +190,30 @@ function BeyondCommission() {
 
 /* ---------------------------------- hero --------------------------------- */
 
-function Hero({ range, topRate }: { range: string | null; topRate: number }) {
+function Hero({
+  range,
+  topRate,
+  moves,
+}: {
+  range: string | null;
+  topRate: number;
+  moves: number;
+}) {
   return (
-    <section className="relative overflow-hidden wash-hero">
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
+    <section className="relative overflow-hidden border-b border-border">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      {/* First sighting of the band: a shallow diagonal, almost gone. */}
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="diagonal"
+        className="absolute inset-x-0 bottom-0 h-[22%] opacity-[0.10] [mask-image:linear-gradient(180deg,transparent_0%,transparent_55%,#000_100%)]"
+      />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
       <div className="relative mx-auto max-w-4xl px-5 pb-24 pt-24 text-center sm:px-8 sm:pb-32 sm:pt-36">
+
         <Reveal
           as="p"
           className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -268,13 +307,21 @@ function Stat({ children }: { children: React.ReactNode }) {
 function Ladder({
   tiers,
   topRate,
+  moves,
 }: {
   tiers: PartnerLadder["tiers"];
   topRate: number;
+  moves: number;
 }) {
   return (
-    <section className="border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden border-y border-border wash-brand">
+      {/* The statement placement: a whisper at the bottom edge, never behind body copy. */}
+      <PriceDriftRibbon
+        moves={moves}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+
         <SectionHead
           eyebrow="Commission ladder"
           title="The more you refer, the higher every future invoice pays."
@@ -323,7 +370,7 @@ function Ladder({
 
 function Promises() {
   return (
-    <section className="wash-section">
+    <section className="border-t border-border">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead
           eyebrow="The deal"
@@ -358,7 +405,7 @@ function Promises() {
 
 function Steps() {
   return (
-    <section className="border-y border-border bg-card">
+    <section className="border-t border-border">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead
           eyebrow="How it works"
@@ -410,8 +457,11 @@ function Steps() {
 
 function ClosingCta() {
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32">
-      <Reveal className="mx-auto max-w-3xl text-center">
+    <section className="relative overflow-hidden border-t border-border">
+      <div className="absolute inset-0 mesh-brand mesh-drift opacity-70" aria-hidden />
+      <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      <Reveal className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-32">
+
         <h2 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[3.6rem]">
           Start earning on the <span className="text-gradient-brand">next</span> recommendation you
           make.
