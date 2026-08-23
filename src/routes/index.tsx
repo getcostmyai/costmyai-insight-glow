@@ -306,9 +306,8 @@ function StillMoving({ stats }: { stats: MarketingStats }) {
               market price moves observed this month.
             </p>
           ) : null}
-
-          </Link>
         </Reveal>
+
       </div>
     </section>
   );
