@@ -42,7 +42,7 @@ Six short Q/A pairs reusing the existing `FAQ_CLUSTERS` items in `src/lib/faq/qu
 
 ## Technical notes
 
-- Copy edits land in `src/lib/how-it-works.ts` (shared with the homepage teaser) and `src/routes/how-it-works.tsx`.
+- Copy edits land in `src/lib/how-it-works.ts` (shared with the homepage teaser) and `src/routes/how-it-works.tsx`. The hero subhead lives only in `src/routes/how-it-works.tsx`.
 - The snippet block reads `PROVIDER_PRESETS` from `src/lib/ingest/contract.ts`. Confirm that module is client-safe before importing into a marketing route; if it pulls server-only code, lift the preset array into a browser-safe module and have both surfaces import that.
 - New sections follow the logged marketing visual standard: no cards, hairline rails, tiered wash/mesh backgrounds, existing `Reveal`. Ribbon placements stay exactly as they are.
 - FAQ JSON-LD goes in the route `head()`, questions and answers matching the rendered text verbatim.
