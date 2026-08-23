@@ -23,7 +23,10 @@ Read as someone who has the pain (AI bill rising, no idea which workload), alrea
 **A. Make the connect step concrete and honest.**
 Replace the vague "one environment variable" claim on this page with what actually happens, and show it. Add a compact snippet block under step 01 with provider tabs (OpenAI / Anthropic / Gemini) rendering from the existing `PROVIDER_PRESETS` in `src/lib/ingest/contract.ts` — the same source the in-product Quickstart uses, so marketing and product can never drift. Show the env-var line and the SDK one-liner. Keep the claim honest: your application keeps sending its own provider key, and the only line that changes is the base URL.
 
-**B. Add a "Before you start" strip between hero and steps.**
+**B. Fix the hero subhead.**
+Remove the nonsensical "no manual exports" phrase. Replace with a single honest line that previews the page: the connector runs in your environment, you keep your provider keys, and the only change is your SDK base URL.
+
+**C. Add a "Before you start" strip between hero and steps.**
 Four short facts, no cards, hairline separated: no provider keys required; works with your existing SDK; setup measured in minutes, not a migration; Compare's price catalog is useful the moment you sign up, verdicts arrive once real traffic has flowed.
 
 **C. Split step 01 copy.**
