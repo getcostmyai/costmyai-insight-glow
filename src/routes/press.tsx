@@ -49,11 +49,12 @@ function PressPage() {
             <Reveal className="max-w-4xl">
               <p className="eyebrow">Press</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
-                Press <span className="text-gradient-brand-wide">kit</span>.
+                Press and <span className="text-gradient-brand-wide">media</span>.
               </h1>
               <p className="mt-7 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                CostMyAI is a neutral Financial Governance platform for AI spend. It never holds
-                provider keys, and it refuses to recommend a switch it cannot prove is safe.
+                Everything needed to write about CostMyAI accurately: boilerplate you can paste, how
+                to name us, what our numbers mean, and where to cite them from. Logo files and
+                approved screenshots are sent on request, same working day.
               </p>
             </Reveal>
           </div>
@@ -62,39 +63,62 @@ function PressPage() {
         <section className="px-5 pb-28 sm:px-8 sm:pb-36">
           <div className="mx-auto max-w-6xl">
             <ul className="divide-y divide-border/60 border-t border-border/60">
-              <Block title="The short version">
-                AI spend behaves like variable cost, not subscription cost, and most organizations
-                are still managing it like the old model. CostMyAI reads real usage from inside a
-                customer's own environment, without ever taking custody of provider credentials, and
-                applies switching decisions backed by independent, published benchmarks rather than a
-                private evaluation or a paid placement.
+              <Block title="Boilerplate">
+                <span className="text-foreground">
+                  CostMyAI is a Financial Governance platform for AI spend. It measures what an
+                  organization actually pays across every model and provider it uses, then certifies
+                  which workloads can move to a cheaper model without losing quality. It never takes
+                  custody of provider API keys: the component that reads usage runs inside the
+                  customer's own environment. CostMyAI is built in Vienna, Austria.
+                </span>{" "}
+                Copy that paragraph as is. It is the wording we can stand behind.
               </Block>
-              <Block title="What makes this different">
-                CostMyAI is the only platform in this category that publishes its own refusal rate,
-                the share of evaluated switches it will not recommend because the evidence does not
-                clear the bar, rather than only publishing the switches that look good.
+              <Block title="How to name us">
+                CostMyAI, one word, capital C, capital M, capital A, capital I. Not Cost My AI, not
+                CostMyAi. The category is Financial Governance for AI spend, not AI cost tracking:
+                tracking reports what already happened, governance decides what happens next.
+              </Block>
+              <Block title="Why the category exists">
+                AI spend behaves like variable cost, not subscription cost, and most organizations
+                still manage it like the old model. A price per token that falls every quarter does
+                nothing for a bill that rises because agentic workloads consume ten to thirty times
+                more tokens per completed task. CostMyAI reads real billed usage from inside the
+                customer's environment and applies switching decisions backed by independent,
+                published benchmarks rather than a private evaluation or a paid placement.
+              </Block>
+              <Block title="The claim worth checking">
+                CostMyAI publishes its own refusal rate: the share of evaluated switches it will not
+                recommend, because the evidence does not clear the quality bar. Every other platform
+                in this category publishes only the switches that look good. If a cheaper model
+                cannot be proven equivalent for that exact task, the honest output is no
+                recommendation, and we show how often that happens.
               </Block>
               <Block title="The origin">
-                Built in Vienna. Started as a solo build by someone who spent over a decade running a
-                seven figure arts organization before this, then years in enterprise SaaS sales at
-                C-level, and noticed the same pattern in a completely different room: the gap between
-                what people think something costs and what it actually costs, and how much money
-                hides in that gap once nobody is watching closely enough. AI spend turned out to be
-                the largest version of that gap. CostMyAI is built to close it before the invoice,
-                not explain it after.
+                Built in Vienna, as a solo build. The founder spent over a decade running a seven
+                figure arts organization, then years in enterprise SaaS sales at C-level, and saw
+                the same pattern in two completely different rooms: a gap between what people think
+                something costs and what it actually costs, and how much money hides in that gap
+                once nobody is watching closely. AI spend turned out to be the largest version of
+                that gap. CostMyAI exists to close it before the invoice, not explain it after.
               </Block>
-              <Block title="Data and citations">
-                Journalists and analysts citing CostMyAI's own live pricing, benchmark, or market
-                structure data should reference the frozen, dated snapshot at /intelligence/[month]
-                rather than the live page, since the live figures update continuously and a frozen
-                snapshot stays accurate to what was actually cited.
+              <Block title="Citing our data">
+                Live pricing, benchmark and market structure figures update continuously, so a live
+                page will not match what you quoted by the time you publish. Cite the frozen, dated
+                monthly snapshot instead: each edition of{" "}
+                <Link
+                  to="/intelligence"
+                  className="font-semibold text-foreground underline underline-offset-4 transition-colors hover:text-primary"
+                >
+                  Intelligence
+                </Link>{" "}
+                stays accurate to the day it was published.
               </Block>
-              <Block title="Assets">
-                Logo files and approved screenshots are being prepared as a downloadable bundle. Until
-                that bundle is published here, request assets directly by email and we will send them
-                the same day.
+              <Block title="Assets and interviews">
+                There is no downloadable bundle on this page yet. Email us and you get logo files,
+                approved product screenshots and founder availability the same working day. Say what
+                you are writing and the deadline you are working to.
               </Block>
-              <Block title="Media inquiries">
+              <Block title="Media contact">
                 <a
                   href="mailto:mail@costmyai.com"
                   className="font-semibold text-foreground transition-colors hover:text-primary"
@@ -107,7 +131,7 @@ function PressPage() {
             <Reveal>
               <div className="mt-14 flex flex-wrap items-center gap-3">
                 <a href="mailto:mail@costmyai.com" className="btn-gradient px-6 py-3 text-sm">
-                  Request the press kit
+                  Request assets or an interview
                 </a>
                 <Link
                   to="/intelligence"
@@ -117,6 +141,7 @@ function PressPage() {
                 </Link>
               </div>
             </Reveal>
+
           </div>
         </section>
       </div>
