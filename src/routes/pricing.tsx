@@ -32,34 +32,8 @@ export const Route = createFileRoute("/pricing")({
 
 const ORDER: PlanTier[] = ["compare", "certify", "rightsize", "govern"];
 
-const INCLUDES: Record<PlanTier, string[]> = {
-  compare: [
-    "Same model, cheaper host — across every priced host",
-    "Live gateway metadata ingestion (metadata only)",
-    "Spend, tokens and requests over 24h / 7d / 30d",
-    "One workspace member",
-  ],
-  certify: [
-    "Everything in Compare",
-    "Quality-matched cheaper models, cheapest that clears the bar",
-    "Published evaluation, score and measurement margin per claim",
-    "Refusals with reasons when nothing clears",
-  ],
-  rightsize: [
-    "Everything in Certify",
-    "Oversized-workload detection per task class",
-    "Manual switch activation, pause and one-click rollback",
-    "Objectives: cost, latency ceiling, quality floor",
-    "Team members and invites",
-  ],
-  govern: [
-    "Everything in Rightsize",
-    "Autonomous switching inside the equivalence band",
-    "Continuous re-evaluation as prices and scores move",
-    "Full audit trail of every automated decision",
-    "Invoice reconciliation you push to us",
-  ],
-};
+// Feature bullets live in src/lib/plan-features.ts — one list, every surface.
+
 
 const NEVER_PAY = [
   {
