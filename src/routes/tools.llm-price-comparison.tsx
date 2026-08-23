@@ -126,9 +126,14 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
           own traffic. Set your monthly volume and every tracked model reprices against it, at the
           cheapest provider actually serving it.
         </Reveal>
+      </div>
+    </section>
 
+    <section className="relative border-b border-border">
+      <div className="relative mx-auto max-w-6xl px-5 pb-20 sm:px-8">
         {/* Controls */}
         <Reveal delay={220} className="mt-14 border-y border-border py-8">
+
           <div className="grid gap-10 sm:grid-cols-3">
             <VolumeSlider
               id="input-tokens"
