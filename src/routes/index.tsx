@@ -73,13 +73,13 @@ function HomePage() {
       <Hero stats={stats} />
       <ProviderMarquee stats={stats} />
 
-      <Estimator />
-      <StillMoving />
-      <Forecast />
-
       <HowItWorks />
-      <Architecture />
+      <StillMoving />
+      <Estimator />
+
       <BuiltFor />
+      <Forecast />
+      <Architecture />
       <Pricing stats={stats} />
       <Neutrality />
       <Faq stats={stats} />
