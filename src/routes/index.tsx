@@ -298,6 +298,16 @@ function StillMoving({ stats }: { stats: MarketingStats }) {
             Read the full argument, and what we can and cannot prove
             <ArrowRight className="h-4 w-4" />
           </Link>
+          {stats.live ? (
+            <p className="mt-8 text-sm text-muted-foreground">
+              <span className="num font-semibold text-foreground">
+                {stats.priceChangesTracked.toLocaleString("en-GB")}
+              </span>{" "}
+              market price moves observed this month.
+            </p>
+          ) : null}
+
+          </Link>
         </Reveal>
       </div>
     </section>
