@@ -25,13 +25,19 @@ export function LegalPage({
   return (
     <MarketingShell>
       <div className="flex flex-col">
-        <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+            aria-hidden
+          />
+          <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
             <Reveal className="max-w-4xl">
               <p className="eyebrow">{eyebrow}</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
-                {title} {accent ? <span className="text-gradient-brand">{accent}</span> : null}
+                {title} {accent ? <span className="text-gradient-brand-wide">{accent}</span> : null}
               </h1>
+
               <p className="mt-7 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                 {intro}
               </p>
