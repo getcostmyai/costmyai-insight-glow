@@ -34,9 +34,9 @@ export const Route = createFileRoute("/")({
     const homepageFaqItems = HOMEPAGE_FAQ_IDS.map((id) => findFaqItem(id)).filter(
       (i): i is NonNullable<typeof i> => Boolean(i),
     );
-    const title = "CostMyAI — Connect once. Governed decisions on every workload.";
+    const title = "CostMyAI — stop overpaying for AI.";
     const description =
-      "Run a small connector in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. Your provider keys and prompt content stay exactly where they are.";
+      "You're likely overspending on AI. We prove it. You save. You grow.";
     return {
       meta: [
         { title },
