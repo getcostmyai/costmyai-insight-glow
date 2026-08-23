@@ -544,6 +544,18 @@
 
 /* Slow parallax breathing. Two lobes drift against each other, which is what
    keeps the field alive without ever becoming a moving distraction. */
+/* Price-drift ribbon strands: each one breathes on its own phase, so the band
+   as a whole never appears to move in lockstep. */
+@keyframes drift-strand {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+  }
+  50% {
+    transform: translate3d(-1.5%, 2%, 0) scaleY(1.09);
+  }
+}
+
 @keyframes mesh-drift {
   0%,
   100% {
