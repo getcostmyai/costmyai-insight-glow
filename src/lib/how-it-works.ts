@@ -30,7 +30,7 @@ export const HOW_STEPS: readonly HowStep[] = [
   {
     n: "02",
     title: "Map",
-    body: "We read your real spend, group it by workload, and benchmark every model against the live catalog — which re-syncs continuously, so a verdict is always measured against today's prices, not last quarter's. The buy-side view, not the vendor's.",
+    body: "We read your real spend, group it by workload, and benchmark every model against the live catalog, which re-syncs continuously, so a verdict is always measured against today's prices, not last quarter's. The buy-side view, not the vendor's.",
     detail: [
       "Traffic is grouped by workload rather than by raw model name, so a verdict covers the job you are actually running.",
       "Prices come from the tracked provider feeds and are re-synced continuously, with every host priced separately.",
