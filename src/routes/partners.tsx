@@ -165,6 +165,7 @@ function PartnersPage() {
       <Promises />
       <BeyondCommission moves={moves} />
       <Steps />
+      <PartnerFaq />
       <Neutrality />
       <ClosingCta />
     </MarketingShell>
