@@ -131,9 +131,9 @@ function BeforeYouStart() {
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="grid gap-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
           {facts.map((f) => (
-            <div key={f} className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Check className="h-4 w-4 shrink-0 text-primary" />
-              <span>{f}</span>
+            <div key={f} className="flex items-start gap-3 text-sm text-muted-foreground">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="text-balance">{f}</span>
             </div>
           ))}
         </div>
@@ -374,7 +374,7 @@ function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
             alt={`The ${label} dashboard in CostMyAI, showing the switches and measurements available at that level`}
             loading="lazy"
             onError={() => setFailed(true)}
-            className="absolute inset-0 h-full w-full object-cover object-top"
+            className="absolute inset-0 h-full w-full object-cover object-left-top"
           />
         )}
       </div>
