@@ -8,9 +8,9 @@ import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
 
 const URL = "https://www.costmyai.com/reports/cheapest-api-calls";
-const TITLE = "Cheapest API call: AI model prices per 1M tokens | CostMyAI";
+const TITLE = "Cheapest API call 2026: prices compared by model and provider | CostMyAI";
 const DESCRIPTION =
-  "Which provider sells the cheapest API call for each AI model? Live per-provider prices in USD per million tokens, the cheapest verified host, and the gap to the dearest one.";
+  "Cheapest LLM API prices compared for 2026: which provider sells the cheapest API call for each model, live rates in USD per million tokens, and the gap to the dearest host.";
 
 export const Route = createFileRoute("/reports/cheapest-api-calls")({
   head: () => ({
