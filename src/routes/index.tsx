@@ -325,7 +325,7 @@ function Architecture() {
  */
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-24 wash-section">
+    <section id="how" className="scroll-mt-24 wash-brand">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
         <SectionHead
           eyebrow="How It Works"
