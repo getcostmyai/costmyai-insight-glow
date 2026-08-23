@@ -350,8 +350,9 @@ function Headline({
 
 function Notes() {
   return (
-    <section className="border-t border-border bg-card px-5 py-20 sm:px-8 sm:py-28">
+    <section className="wash-brand border-t border-border px-5 py-20 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-3xl">
+
         <Reveal as="h2" className="text-[1.8rem] font-semibold tracking-[-0.035em] sm:text-[2.4rem]">
           What this calculator does and does not assume
         </Reveal>
