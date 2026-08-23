@@ -90,7 +90,8 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
   const dearest = rows[rows.length - 1];
 
   return (
-    <section className="relative overflow-hidden border-b border-border">
+    <>
+    <section className="relative overflow-hidden">
       <div
         className="pointer-events-none absolute inset-x-0 -top-24 h-[46rem] mesh-brand mesh-drift [mask-image:linear-gradient(180deg,#000_55%,transparent)]"
         aria-hidden
@@ -102,7 +103,7 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
       />
       <div className="absolute inset-x-0 top-0 h-[46rem] texture-dots opacity-60" aria-hidden />
 
-      <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pt-36">
+      <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pt-36">
         <Reveal
           as="p"
           className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -280,6 +281,7 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
