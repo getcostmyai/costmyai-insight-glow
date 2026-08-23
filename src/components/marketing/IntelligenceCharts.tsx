@@ -164,7 +164,7 @@ export function HostHistogram({ buckets }: { buckets: HostBucket[] }) {
       <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
         Providers per model, across {totalModels.toLocaleString("en-GB")} models with at least one
         real (non-aggregator) endpoint. Most weights are single-sourced; a small tail is served
-        everywhere — and that tail is where the spread lives.
+        everywhere, and that tail is where the spread lives.
       </p>
     </div>
   );
