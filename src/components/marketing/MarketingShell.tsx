@@ -157,6 +157,7 @@ export function MarketingFooter() {
               <FooterLink to="/" hash="estimator">
                 Estimator
               </FooterLink>
+              <FooterLink to="/tools/llm-price-comparison">LLM Price Comparison</FooterLink>
               <FooterLink to="/models">Models</FooterLink>
               <FooterLink to="/intelligence">Intelligence</FooterLink>
               <FooterLink to="/pricing">Plans</FooterLink>
