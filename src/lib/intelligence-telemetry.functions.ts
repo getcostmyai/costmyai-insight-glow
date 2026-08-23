@@ -13,7 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
  * generators actually produce (kebab/slug characters, bounded length), so this
  * cannot become a free-text write channel.
  */
-export const SHARE_PLATFORMS = ["linkedin", "x", "copy_link", "og_image"] as const;
+export const SHARE_PLATFORMS = ["linkedin", "x", "copy_link", "og_image", "copy_post", "download_data"] as const;
 export type SharePlatform = (typeof SHARE_PLATFORMS)[number];
 
 const CARD_ID = /^[a-z0-9][a-z0-9._-]{0,119}$/;
