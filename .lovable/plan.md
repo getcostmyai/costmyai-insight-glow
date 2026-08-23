@@ -1,5 +1,7 @@
 # How It Works — clarity pass for an evaluating newcomer
 
+User note: the current hero subhead says "Four steps, no manual exports." That phrase makes no sense here and should be removed/replaced.
+
 Read as someone who has the pain (AI bill rising, no idea which workload), already believes the problem, and is now checking whether this is real and whether they can run it. Today the page tells them what CostMyAI *believes*. It does not answer what they *do*, what it *costs them in effort*, or what they *see first*.
 
 ## What is unclear today
@@ -21,7 +23,10 @@ Read as someone who has the pain (AI bill rising, no idea which workload), alrea
 **A. Make the connect step concrete and honest.**
 Replace the vague "one environment variable" claim on this page with what actually happens, and show it. Add a compact snippet block under step 01 with provider tabs (OpenAI / Anthropic / Gemini) rendering from the existing `PROVIDER_PRESETS` in `src/lib/ingest/contract.ts` — the same source the in-product Quickstart uses, so marketing and product can never drift. Show the env-var line and the SDK one-liner. Keep the claim honest: your application keeps sending its own provider key, and the only line that changes is the base URL.
 
-**B. Add a "Before you start" strip between hero and steps.**
+**B. Fix the hero subhead.**
+Remove the nonsensical "no manual exports" phrase. Replace with a single honest line that previews the page: the connector runs in your environment, you keep your provider keys, and the only change is your SDK base URL.
+
+**C. Add a "Before you start" strip between hero and steps.**
 Four short facts, no cards, hairline separated: no provider keys required; works with your existing SDK; setup measured in minutes, not a migration; Compare's price catalog is useful the moment you sign up, verdicts arrive once real traffic has flowed.
 
 **C. Split step 01 copy.**
@@ -37,7 +42,7 @@ Six short Q/A pairs reusing the existing `FAQ_CLUSTERS` items in `src/lib/faq/qu
 
 ## Technical notes
 
-- Copy edits land in `src/lib/how-it-works.ts` (shared with the homepage teaser) and `src/routes/how-it-works.tsx`.
+- Copy edits land in `src/lib/how-it-works.ts` (shared with the homepage teaser) and `src/routes/how-it-works.tsx`. The hero subhead lives only in `src/routes/how-it-works.tsx`.
 - The snippet block reads `PROVIDER_PRESETS` from `src/lib/ingest/contract.ts`. Confirm that module is client-safe before importing into a marketing route; if it pulls server-only code, lift the preset array into a browser-safe module and have both surfaces import that.
 - New sections follow the logged marketing visual standard: no cards, hairline rails, tiered wash/mesh backgrounds, existing `Reveal`. Ribbon placements stay exactly as they are.
 - FAQ JSON-LD goes in the route `head()`, questions and answers matching the rendered text verbatim.
