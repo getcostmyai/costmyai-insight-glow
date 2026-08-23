@@ -92,21 +92,24 @@ function HomePage() {
 
 function Hero({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="relative overflow-hidden wash-hero">
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
+    <section className="relative overflow-hidden">
+      {/* The ambient field: saturated at its source, gone long before it
+          reaches the headline. Its own layer, so the drift never moves text. */}
+      <div className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift" aria-hidden />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
       <div className="relative mx-auto max-w-4xl px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-16 sm:pt-24">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
-          Stop overpaying <span className="text-gradient-brand">for AI.</span>
+          Stop overpaying <span className="text-gradient-brand-wide">for AI.</span>
         </Reveal>
 
         <Reveal
           delay={120}
           as="p"
-          className="mx-auto mt-5 max-w-2xl text-lg leading-snug text-muted-foreground sm:text-xl sm:leading-relaxed"
+          className="mx-auto mt-5 max-w-2xl text-lg leading-snug sm:text-xl sm:leading-relaxed"
         >
-          You're likely overspending on AI.
+          <span className="text-foreground">You're likely overspending on AI.</span>
           <br />
-          We prove it. You save. You grow.
+          <span className="text-muted-foreground">We prove it. You save. You grow.</span>
         </Reveal>
 
         <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -719,7 +722,8 @@ function Faq(_props: { stats: MarketingStats }) {
 function ClosingCta() {
   return (
     <section className="px-5 py-20 sm:px-8">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] fill-gradient-brand px-8 py-16 text-center text-primary-foreground sm:px-16">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] fill-gradient-brand-wide px-8 py-16 text-center text-primary-foreground sm:px-16">
+        <div className="absolute inset-0 mesh-brand mesh-drift opacity-70 mix-blend-screen" aria-hidden />
         <div className="absolute inset-0 texture-dots opacity-20" aria-hidden />
         <div className="relative">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">

@@ -102,6 +102,8 @@ export function CountUp({
 
   useEffect(() => {
     if (!inView || prefersReducedMotion()) {
+      from.current = value;
+      settled.current = true;
       setShown(value);
       return;
     }
