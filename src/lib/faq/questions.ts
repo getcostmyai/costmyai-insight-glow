@@ -146,3 +146,14 @@ export const faqJsonLd = () =>
       acceptedAnswer: { "@type": "Answer", text: i.a },
     })),
   });
+
+export const faqJsonLdFor = (ids: readonly string[]) =>
+  JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.filter((i) => ids.includes(i.id)).map((i) => ({
+      "@type": "Question",
+      name: i.q,
+      acceptedAnswer: { "@type": "Answer", text: i.a },
+    })),
+  });
