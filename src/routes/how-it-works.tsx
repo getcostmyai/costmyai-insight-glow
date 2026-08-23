@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META, PLAN_ORDER } from "@/lib/engine/types";
 import type { PlanTier } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
@@ -38,16 +41,18 @@ export const Route = createFileRoute("/how-it-works")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/how-it-works" }],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: HowItWorksPage,
 });
 
 function HowItWorksPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <Hero />
+      <Hero stats={stats} />
       <Steps />
-      <Architecture />
-      <Plans />
+      <Architecture stats={stats} />
+      <Plans stats={stats} />
       <Close />
     </MarketingShell>
   );
@@ -55,17 +60,30 @@ function HowItWorksPage() {
 
 /* --------------------------------- hero ---------------------------------- */
 
-function Hero() {
+function Hero({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="border-b border-border">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden border-b border-border">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      {/* First sighting of the band: a shallow diagonal, almost gone. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="diagonal"
+        className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+      />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <Reveal className="max-w-3xl">
           <p className="eyebrow">How It Works</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-[3.5rem] sm:leading-[1.03]">
-            Connect once. Governed decisions on every workload.
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.045em] sm:text-[3.75rem] sm:leading-[1.02]">
+            Connect once.{" "}
+            <span className="text-gradient-brand-wide">Governed decisions</span> on every workload.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Four steps, no manual exports — from one environment variable to a benchmark-backed
+            Four steps, no manual exports. From one environment variable to a benchmark-backed
             verdict on every workload, and a switch you can defend afterwards.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -91,7 +109,8 @@ function Hero() {
 
 function Steps() {
   return (
-    <section className="wash-section">
+    <section className="wash-brand">
+
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-4xl">
           {HOW_STEPS.map((s, i) => (
@@ -133,10 +152,17 @@ function Steps() {
 
 /* ----------------------------- architecture ------------------------------ */
 
-function Architecture() {
+function Architecture({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="border-t border-border">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border">
+      {/* The statement placement: full-strength band across the bottom quarter. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-40 [mask-image:linear-gradient(180deg,transparent,#000_55%)]"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+        <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
+
         <Reveal className="mx-auto max-w-3xl text-center">
           <p className="eyebrow">The request path</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
@@ -158,10 +184,17 @@ function Architecture() {
 
 /* --------------------------------- plans --------------------------------- */
 
-function Plans() {
+function Plans({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="border-t border-border wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border wash-brand">
+      {/* The echo: same band, quarter-turned, pinned to the gutter. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[16%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+
         <Reveal className="mx-auto max-w-3xl text-center">
           <p className="eyebrow">Level by level</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
@@ -229,8 +262,9 @@ function PlanBlock({ plan, index }: { plan: PlanTier; index: number }) {
 function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
   const [failed, setFailed] = useState(false);
   return (
-    <figure className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="relative aspect-[16/10] w-full bg-muted/40">
+    <figure className="overflow-hidden rounded-xl border border-border/60 shadow-[0_40px_80px_-40px_rgba(23,15,60,0.4)]">
+      <div className="relative aspect-[16/10] w-full">
+        <div className="absolute inset-0 mesh-brand opacity-40" aria-hidden />
         {failed ? null : (
           <img
             src={dashboardShot(plan)}
@@ -240,19 +274,13 @@ function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
             className="absolute inset-0 h-full w-full object-cover object-top"
           />
         )}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: "var(--gradient-brand)",
-            opacity: failed ? 0.06 : 0,
-          }}
-        />
       </div>
-      <figcaption className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        {label} — the workspace view at this level.
+      <div className="rule-brand" aria-hidden />
+      <figcaption className="px-4 py-3 text-xs text-muted-foreground">
+        {label}: the workspace view at this level.
       </figcaption>
     </figure>
+
   );
 }
 
@@ -260,8 +288,11 @@ function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
 
 function Close() {
   return (
-    <section className="border-t border-border">
-      <div className="mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border">
+      <div className="absolute inset-0 mesh-brand mesh-drift opacity-70" aria-hidden />
+      <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      <div className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-28">
+
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
             One environment variable. Then the evidence.
