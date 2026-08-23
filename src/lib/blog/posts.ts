@@ -1042,7 +1042,159 @@ export const POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: "return-on-ai",
+    title: "Return on AI: the ratio CFOs are asking for instead of a usage dashboard",
+    deck: "Cost control answers what you spent. Return on AI answers whether it was worth it. Here is how to build the ratio without inventing numbers.",
+    description:
+      "Return on AI measures outcome against cost, not activity. How to define the numerator and denominator honestly, and why AI value management is replacing usage dashboards.",
+    keyword: "return on AI",
+    published: "2026-08-23",
+    minutes: 6,
+    blocks: [
+      {
+        t: "p",
+        v: "Most AI reporting still answers the wrong question. A usage dashboard tells you how many tokens moved, which team moved them, and what the invoice came to. It cannot tell you whether any of that was worth doing. That gap is why finance leaders have started asking for a single ratio instead: return on AI, the value delivered divided by the fully loaded cost of delivering it.",
+      },
+      { t: "h2", v: "Why activity metrics stopped being enough" },
+      {
+        t: "p",
+        v: "In the first wave of adoption, activity was a reasonable proxy for progress. Rising token volume meant teams were actually using the thing. That proxy has expired. Volume now rises for reasons that have nothing to do with value: agent retries, longer context windows, redundant retrieval, and workloads nobody has revisited since launch. A dashboard that celebrates growing usage is, in a lot of organizations, celebrating waste.",
+      },
+      {
+        t: "p",
+        v: "Return on AI forces the harder conversation because it has a denominator. Every incremental call has to justify itself against an outcome, and outcomes are measured in the same units the rest of the business already reports in.",
+      },
+      { t: "h2", v: "Building the denominator honestly" },
+      {
+        t: "p",
+        v: "The cost side is the part you can actually be precise about, and most organizations still get it wrong by understating it. A fully loaded AI cost is not just the model invoice. It includes inference spend across every host, the retrieval and vector infrastructure the workload depends on, the evaluation runs that keep it honest, the human review time it still requires, and the engineering time spent maintaining the pipeline. Leave any of those out and the ratio flatters itself.",
+      },
+      {
+        t: "p",
+        v: "The denominator also has to be attributable to a workload, not to a department. Departmental allocation hides the specific thing that is expensive. Workload-level cost is what makes the ratio actionable, because a workload is the unit you can actually change.",
+      },
+      {
+        t: "cta",
+        headline: "See what the same workload costs across every host",
+        label: "Open the model catalog",
+        to: "/models",
+      },
+      { t: "h2", v: "Building the numerator without inventing it" },
+      {
+        t: "p",
+        v: "The numerator is where most return on AI exercises quietly become fiction. Hours saved multiplied by a blended hourly rate is the standard move, and it is almost always inflated, because saved hours are only worth money if they were reallocated to something that produced revenue or avoided a real cost. If nobody left, nobody was redeployed, and no external spend fell, the saving exists in a slide and nowhere else.",
+      },
+      {
+        t: "p",
+        v: "The defensible numerators are narrower and duller: external spend that actually disappeared from a budget line, revenue attributable to a measurable conversion change, penalties or errors avoided with a documented prior rate, and cycle time reductions that removed a real bottleneck with a known cost. If a value claim cannot survive being asked where the money physically went, it does not belong in the ratio.",
+      },
+      { t: "h2", v: "Value management is not the same as cost control" },
+      {
+        t: "p",
+        v: "AI value management sits one layer above cost governance. Cost governance keeps spend defensible: right models, right hosts, right guardrails, no silent quality loss. Value management decides which workloads deserve to exist at all. A workload can be perfectly optimized and still be worth cancelling, and no amount of routing or caching will surface that. Only the ratio does.",
+      },
+      {
+        t: "p",
+        v: "The practical consequence is a portfolio view. Some workloads earn a clear multiple and should be funded harder. Some sit near break-even and are worth optimizing before any further investment. Some are negative and have survived purely because nobody put a denominator next to them.",
+      },
+      {
+        t: "cta",
+        headline: "The four-rung framework behind measurable AI governance",
+        label: "Read The CostMyAI Standard",
+        to: "/standard",
+      },
+      { t: "h2", v: "Where to start" },
+      {
+        t: "p",
+        v: "Pick your three largest AI workloads by spend. Compute a fully loaded monthly cost for each one at the workload level. Write down the single outcome each workload is supposed to produce, and the evidence that it did. Publish the three ratios, including the uncomfortable ones. The exercise is more valuable for what it disqualifies than for what it justifies, and it takes days rather than quarters.",
+      },
+      {
+        t: "p",
+        v: "Return on AI is not a new dashboard. It is a discipline of refusing to report activity as if it were value, and it starts with cost data granular enough to divide by something real.",
+      },
+    ],
+  },
+  {
+    slug: "ai-cost-forecast-gap",
+    title: "Why AI costs overshoot the forecast, and what to do in the first week",
+    deck: "The gap is rarely a pricing surprise. It is retries, context growth, and workloads nobody re-examined. Here is how to close it.",
+    description:
+      "AI budgets overshoot because token volume grows for reasons forecasts never modelled: retries, context creep, and new workloads. The specific causes and the fixes.",
+    keyword: "AI cost forecast",
+    published: "2026-08-23",
+    minutes: 6,
+    blocks: [
+      {
+        t: "p",
+        v: "The most common finance complaint about AI is not that it is expensive. It is that it is unpredictable in one direction. Budgets set in good faith are overrun by margins that would be a scandal in any other line item, and the post-mortem almost never finds a price increase. Unit prices generally fell. Volume did something the forecast never modelled.",
+      },
+      { t: "h2", v: "The five things that actually blow the number" },
+      {
+        t: "defs",
+        items: [
+          {
+            term: "Retries and agent loops",
+            text: "An agentic workflow does not make one call, it makes a chain of them, and every failed step, tool call, and self-correction is billed. A workflow forecast at one call per task can settle at eight in production without anyone changing the code.",
+          },
+          {
+            term: "Context creep",
+            text: "Prompts grow. A system prompt gains guardrails, retrieval returns more chunks, conversation history is carried further. Input tokens per call rise quietly for months, and input tokens are the bulk of most bills.",
+          },
+          {
+            term: "Reasoning output",
+            text: "Reasoning-style models emit tokens you never see and always pay for. A model swap that looked cost-neutral on the published rate card can double effective cost per task.",
+          },
+          {
+            term: "Unmodelled workloads",
+            text: "The forecast covered the two workloads that existed at planning time. By month four there are nine, several launched by teams who never touched the budget line.",
+          },
+          {
+            term: "Host drift",
+            text: "The same model is available from several hosts at materially different prices. Traffic lands wherever the first integration pointed, and nobody re-checks after the market moves.",
+          },
+        ],
+      },
+      { t: "h2", v: "Forecast the driver, not the invoice" },
+      {
+        t: "p",
+        v: "A forecast built by extrapolating last quarter's invoice is guessing at the output of a system it does not model. A forecast built on drivers is auditable: calls per unit of business activity, tokens per call split into input and output, and the price per token of the model and host actually serving that workload. When the number moves, you can say which of the three moved and by how much. That is the entire difference between a forecast and a hope.",
+      },
+      {
+        t: "cta",
+        headline: "See where the cheapest host for your model actually is",
+        label: "Open the cheapest API calls report",
+        to: "/reports/cheapest-api-calls",
+      },
+      { t: "h2", v: "Track variance weekly, not at month end" },
+      {
+        t: "p",
+        v: "Most overruns are visible in week one and discovered in week five. A workload whose tokens per call jumped forty percent after a prompt change announces itself immediately if anyone is watching that ratio, and hides completely inside a monthly total. Weekly variance against the driver forecast, per workload, catches the structural break while it is still cheap to reverse.",
+      },
+      {
+        t: "p",
+        v: "The threshold matters as much as the cadence. An alert on every fluctuation gets muted within a fortnight. An alert on a sustained change in tokens per call, or on a new workload appearing with no forecast line, stays credible because it fires rarely and is right when it does.",
+      },
+      { t: "h2", v: "Budget a range, and say why" },
+      {
+        t: "p",
+        v: "A single-point AI budget is a fiction with a decimal place. The honest artefact is a range with a stated basis: the floor assumes current usage patterns hold, the mid case assumes planned launches ship on schedule, the ceiling assumes usage per user rises at the rate it has been rising. Finance can plan against a range with reasoning behind it. Nobody can plan against a confident number that turns out to be wrong by half.",
+      },
+      {
+        t: "cta",
+        headline: "What the market actually did this month",
+        label: "Read the latest intelligence",
+        to: "/intelligence",
+      },
+      { t: "h2", v: "The first week of work" },
+      {
+        t: "p",
+        v: "Split current spend by workload rather than by provider. For the top three, record calls per task and tokens per call as they stand today, because that is the baseline every future variance is measured against. Check whether each one is served by the cheapest host offering the identical model. Then set a weekly review on those two ratios. None of this requires new tooling, and it converts the overshoot from an annual surprise into a weekly, fixable signal.",
+      },
+    ],
+  },
 ];
+
 
 
 export const postBySlug = (slug: string): BlogPost | null =>
