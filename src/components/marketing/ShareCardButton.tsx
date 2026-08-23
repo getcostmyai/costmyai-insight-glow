@@ -29,12 +29,15 @@ export function ShareCardButton({
   cardId,
   month,
   title,
+  postText,
   className = "",
 }: {
   cardId: string;
   /** The frozen month this card should be cited from, or null if none exists yet. */
   month: string | null;
   title: string;
+  /** Optional ready-to-paste post, carrying the figure and its source line. */
+  postText?: string;
   className?: string;
 }) {
   // Server-resolved, so it is already correct in the first rendered HTML.
@@ -73,6 +76,7 @@ export function ShareCardButton({
       title={title}
       url={url}
       imageUrl={image}
+      postText={postText}
       className={className}
       copyLabel="Copy permanent link"
     />
