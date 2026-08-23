@@ -80,7 +80,7 @@ function HomePage() {
       <Estimator />
 
       <BuiltFor />
-      <Forecast />
+      <Forecast stats={stats} />
       <Architecture />
       <Pricing stats={stats} />
       <Neutrality />
