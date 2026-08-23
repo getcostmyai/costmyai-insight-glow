@@ -390,13 +390,19 @@ function Notes() {
   );
 }
 
-function Cta() {
+function Cta({ moves }: { moves: number }) {
   return (
-    <section className="border-t border-border px-5 py-24 sm:px-8 sm:py-32">
-      <Reveal className="mx-auto max-w-3xl text-center">
+    <section className="relative overflow-hidden border-t border-border px-5 py-24 sm:px-8 sm:py-32">
+      <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+      <PriceDriftRibbon
+        moves={moves}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+      />
+      <Reveal className="relative mx-auto max-w-3xl text-center">
         <h2 className="text-[2rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[3.2rem]">
-          Stop estimating. <span className="text-gradient-brand">Price your real traffic.</span>
+          Stop estimating. <span className="text-gradient-brand-wide">Price your real traffic.</span>
         </h2>
+
         <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Compare reads your actual usage instead of a slider, and shows what the same calls would
           have cost on the cheapest verified host. Free, forever.
