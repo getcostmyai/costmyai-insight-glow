@@ -58,16 +58,16 @@ export function resetConsent() {
   window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: null }));
 }
 
-// The canonical gtag shim. It MUST be a real function that pushes the raw
-// `arguments` object: gtag.js only interprets array-like `arguments` entries in
-// dataLayer and silently discards real Arrays (as a rest parameter would build),
-// with no error — which is exactly how analytics went dark before.
-// eslint-disable-next-line prefer-rest-params
-function gtag() {
+// The canonical gtag shim. It MUST be a real function expression that pushes the
+// raw `arguments` object: gtag.js only interprets array-like `arguments` entries
+// in dataLayer and silently discards real Arrays (which a rest parameter would
+// build), with no error — that is exactly how analytics went dark before.
+const gtag: (...args: unknown[]) => void = function () {
   window.dataLayer = window.dataLayer ?? [];
   // eslint-disable-next-line prefer-rest-params
   window.dataLayer.push(arguments);
-}
+};
+
 
 
 let loaded = false;
