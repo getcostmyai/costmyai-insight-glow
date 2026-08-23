@@ -90,7 +90,16 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
   const dearest = rows[rows.length - 1];
 
   return (
-    <section className="relative overflow-hidden wash-hero">
+    <section className="relative overflow-hidden border-b border-border">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[90%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="diagonal"
+        className="absolute inset-x-0 top-0 h-[45%] opacity-[0.12] [mask-image:linear-gradient(180deg,#000,transparent)]"
+      />
       <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
       <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pt-36">
         <Reveal
@@ -104,8 +113,9 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
           as="h1"
           className="mt-6 max-w-4xl text-[2.7rem] font-semibold leading-[1] tracking-[-0.045em] sm:text-[4.2rem]"
         >
-          LLM pricing comparison, <span className="text-gradient-brand">at your volume.</span>
+          LLM pricing comparison, <span className="text-gradient-brand-wide">at your volume.</span>
         </Reveal>
+
         <Reveal
           delay={150}
           as="p"
