@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
@@ -54,14 +55,24 @@ function AboutPage() {
   return (
     <MarketingShell>
       <div className="flex flex-col">
-        <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+            aria-hidden
+          />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="diagonal"
+            className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+          />
+          <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
             <Reveal className="max-w-4xl">
               <p className="eyebrow">About</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
                 The gap nobody sees
                 <br />
-                until the <span className="text-gradient-brand">invoice</span>.
+                until the <span className="text-gradient-brand-wide">invoice</span>.
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                 The same task, run through different AI models, can cost more than a hundred times
@@ -135,8 +146,13 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="wash-section border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto grid max-w-6xl gap-14 sm:grid-cols-2">
+        <section className="relative overflow-hidden wash-brand border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="vertical"
+            className="absolute inset-y-0 right-0 hidden w-[14%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+          />
+          <div className="relative mx-auto grid max-w-6xl gap-14 sm:grid-cols-2">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 Why this exists
@@ -163,13 +179,18 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+          />
+          <div className="relative mx-auto max-w-3xl text-center">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 See it applied to
                 <br />
-                <span className="text-gradient-brand">your own spend.</span>
+                <span className="text-gradient-brand-wide">your own spend.</span>
               </h2>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
