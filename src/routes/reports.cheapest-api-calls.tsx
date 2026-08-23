@@ -237,6 +237,101 @@ function Table({ data }: { data: CatalogPayload }) {
   );
 }
 
+/**
+ * Provider-by-provider view: how often each serving host is the cheapest way
+ * to buy a model it carries, and what it charges on median. This is the cut
+ * buyers actually search for — "which provider is cheapest" — as opposed to
+ * the per-model ranking above.
+ */
+function ByProvider({ data }: { data: CatalogPayload }) {
+  const providers = useMemo(() => {
+    const acc = new Map<string, { carried: number; wins: number; rates: number[] }>();
+    for (const row of data.rows) {
+      const hosts = serving(row);
+      if (!hosts.length) continue;
+      const best = hosts.reduce((a, h) => (a.input <= h.input ? a : h));
+      for (const h of hosts) {
+        const entry = acc.get(h.host_label) ?? { carried: 0, wins: 0, rates: [] };
+        entry.carried += 1;
+        entry.rates.push(h.input);
+        if (hosts.length > 1 && h.host_label === best.host_label) entry.wins += 1;
+        acc.set(h.host_label, entry);
+      }
+    }
+    return [...acc.entries()]
+      .map(([host, v]) => {
+        const sorted = [...v.rates].sort((a, b) => a - b);
+        const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+        return { host, carried: v.carried, wins: v.wins, median };
+      })
+      .filter((p) => p.carried >= 2)
+      .sort((a, b) => b.wins - a.wins || a.median - b.median)
+      .slice(0, 20);
+  }, [data.rows]);
+
+  if (!providers.length) return null;
+
+  return (
+    <section className="px-5 py-20 sm:px-8 sm:py-28">
+      <div className="mx-auto max-w-6xl">
+        <Reveal as="h2" className="text-[1.9rem] font-semibold tracking-[-0.035em] sm:text-[2.6rem]">
+          Which provider is cheapest, host by host
+        </Reveal>
+        <Reveal
+          as="p"
+          delay={60}
+          className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground"
+        >
+          For every model sold by more than one provider, exactly one host has the lowest input
+          rate. This counts those wins. A provider that carries many models but wins few is
+          convenient rather than cheap.
+        </Reveal>
+
+        <div className="mt-10">
+          <div className="hidden grid-cols-[2fr_1fr_1fr_1fr] gap-6 border-b border-border pb-3 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:grid">
+            <span>Provider</span>
+            <span className="text-right">Models carried</span>
+            <span className="text-right">Cheapest on</span>
+            <span className="text-right">Median $ / 1M in</span>
+          </div>
+          {providers.map((p, i) => (
+            <Reveal
+              key={p.host}
+              delay={Math.min(i, 8) * 40}
+              className="grid grid-cols-2 gap-4 border-b border-border py-4 sm:grid-cols-[2fr_1fr_1fr_1fr] sm:gap-6"
+            >
+              <p className="truncate text-base font-semibold tracking-[-0.02em]">{p.host}</p>
+              <p className="num text-right text-sm text-muted-foreground sm:self-center">
+                {p.carried}
+              </p>
+              <p className="num text-right text-sm font-semibold sm:self-center">
+                {p.wins}
+                {p.wins > 0 ? (
+                  <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
+                    {Math.round((p.wins / p.carried) * 100)}%
+                  </span>
+                ) : null}
+              </p>
+              <p className="num text-right text-sm sm:self-center">${p.median.toFixed(2)}</p>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal as="p" className="mt-8 text-sm text-muted-foreground">
+          Want this priced against your own volumes?{" "}
+          <Link
+            to="/tools/llm-price-comparison"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Use the LLM pricing comparison calculator
+          </Link>
+          .
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 function Method() {
   return (
     <section className="px-5 py-20 sm:px-8 sm:py-28">
