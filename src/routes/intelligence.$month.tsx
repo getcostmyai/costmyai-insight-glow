@@ -114,6 +114,11 @@ function FrozenMonthPage() {
                     ? " This is a restatement, filed as a new row that references the original."
                     : ""}
                 </p>
+                <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground/90">
+                  What this is: a public monthly record of what AI model prices actually did, which
+                  providers moved them, and which model is still the cheapest one good enough for a
+                  given job.
+                </p>
                 {frozen.note ? (
                   <p className="mt-4 max-w-2xl text-sm text-muted-foreground/80">{frozen.note}</p>
                 ) : null}
