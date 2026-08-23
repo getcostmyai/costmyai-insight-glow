@@ -10,10 +10,10 @@ import { WIDGET_CACHE_TTL_MS, WIDGET_ROTATE_MS, type WidgetPayload } from "./wid
  * — no query string, no postMessage, no attribute — selects or labels content;
  * the rotation set is fixed server-side.
  *
- * Palette is the one already locked for the share images this session
- * (src/lib/intelligence/share-image.server.ts): warm white ground, spend purple
- * accent, saving green for a cut and destructive red for a rise. No new palette
- * is invented here, and no serif ever touches a number.
+ * Palette follows the site-wide marketing standard: warm white ground, the wide
+ * brand gradient (indigo through amber) used for the "My" of the wordmark and
+ * for the mesh wash, saving green for a cut and destructive red for a rise. No
+ * new palette is invented here, and no serif ever touches a number.
  */
 const PALETTE = {
   bg: "#FAFAFC",
@@ -21,13 +21,27 @@ const PALETTE = {
   body: "#4B4C57",
   muted: "#70717A",
   hairline: "#E6E6EA",
-  brand: "#7945EC",
+  brand: "#7C3AED",
+  indigo: "#6366F1",
+  violet: "#7C3AED",
+  magenta: "#C03CC8",
+  coral: "#FB715C",
+  amber: "#FBB059",
   up: "#E23439",
   down: "#008C53",
 } as const;
 
+/** The wide brand gradient, identical in intent to --gradient-brand-wide. */
+const GRADIENT_WIDE = `linear-gradient(100deg, ${PALETTE.indigo} 0%, ${PALETTE.violet} 34%, ${PALETTE.magenta} 62%, ${PALETTE.coral} 88%, ${PALETTE.amber} 100%)`;
+
+/** The mesh wash, flattened to static radials for a document with no tokens. */
+const MESH = `radial-gradient(78% 108% at 8% -10%, rgba(99,102,241,.28) 0%, rgba(99,102,241,0) 72%),
+      radial-gradient(62% 92% at 102% 4%, rgba(192,60,200,.20) 0%, rgba(192,60,200,0) 70%),
+      radial-gradient(58% 86% at 88% 108%, rgba(251,113,92,.14) 0%, rgba(251,113,92,0) 74%)`;
+
 const SANS =
   "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif";
+
 
 /** Every dynamic string goes through this before it reaches the document. */
 const esc = (s: string) =>
