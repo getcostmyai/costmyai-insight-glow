@@ -32,10 +32,10 @@ export const Route = createFileRoute("/intelligence/notes/$slug")({
         { property: "og:title", content: n.title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
-        { property: "og:url", content: `https://www.costmyai.com/intelligence/notes/${params.slug}` },
+        { property: "og:url", content: `/intelligence/notes/${params.slug}` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `https://www.costmyai.com/intelligence/notes/${params.slug}` }],
+      links: [{ rel: "canonical", href: `/intelligence/notes/${params.slug}` }],
     };
   },
   notFoundComponent: NoteNotFound,

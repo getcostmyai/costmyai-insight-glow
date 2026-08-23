@@ -38,10 +38,10 @@ export const Route = createFileRoute("/intelligence/$month")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
-        { property: "og:url", content: `https://www.costmyai.com/intelligence/${params.month}` },
+        { property: "og:url", content: `/intelligence/${params.month}` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `https://www.costmyai.com/intelligence/${params.month}` }],
+      links: [{ rel: "canonical", href: `/intelligence/${params.month}` }],
     };
   },
   notFoundComponent: MonthNotFound,
