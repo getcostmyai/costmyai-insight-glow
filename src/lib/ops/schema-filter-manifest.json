@@ -1,7 +1,34 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-22T16:16:54.426Z",
+  "generatedAt": "2026-08-23T16:57:29.718Z",
   "queries": [
+    {
+      "file": "src/lib/admin/overview.server.ts",
+      "line": 81,
+      "table": "intelligence_leads",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"intelligence_leads\") .select(\"id\", { count: \"exact\", head: true }) .eq(\"status\", \"open\")"
+    },
+    {
+      "file": "src/lib/admin/overview.server.ts",
+      "line": 90,
+      "table": "partner_applications",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"partner_applications\") .select(\"id\", { count: \"exact\", head: true }) .eq(\"status\", \"pending\")"
+    },
+    {
+      "file": "src/lib/admin/overview.server.ts",
+      "line": 171,
+      "table": "lead_events",
+      "filters": [
+        "is_synthetic"
+      ],
+      "snippet": ".from(\"lead_events\") .select(\"visitor_id, session_id\") .eq(\"is_synthetic\", false)"
+    },
     {
       "file": "src/lib/benchmark.functions.ts",
       "line": 72,
