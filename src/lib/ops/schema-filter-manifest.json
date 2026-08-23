@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-23T17:20:45.217Z",
+  "generatedAt": "2026-08-23T18:21:28.586Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -40,7 +40,7 @@
     },
     {
       "file": "src/lib/admin/overview.server.ts",
-      "line": 90,
+      "line": 71,
       "table": "intelligence_leads",
       "filters": [
         "status"
@@ -49,7 +49,7 @@
     },
     {
       "file": "src/lib/admin/overview.server.ts",
-      "line": 99,
+      "line": 80,
       "table": "partner_applications",
       "filters": [
         "status"
@@ -58,7 +58,7 @@
     },
     {
       "file": "src/lib/admin/overview.server.ts",
-      "line": 212,
+      "line": 193,
       "table": "lead_events",
       "filters": [
         "is_synthetic"
@@ -597,7 +597,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 221,
+      "line": 222,
       "table": "usage_events",
       "filters": [
         "org_id",
@@ -607,7 +607,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 235,
+      "line": 236,
       "table": "host_prices",
       "filters": [
         "is_fixture"
@@ -616,7 +616,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 253,
+      "line": 254,
       "table": "model_catalog",
       "filters": [
         "is_active"
