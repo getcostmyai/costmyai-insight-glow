@@ -184,10 +184,17 @@ function Architecture({ stats }: { stats: MarketingStats }) {
 
 /* --------------------------------- plans --------------------------------- */
 
-function Plans() {
+function Plans({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="border-t border-border wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border wash-brand">
+      {/* The echo: same band, quarter-turned, pinned to the gutter. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[16%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+
         <Reveal className="mx-auto max-w-3xl text-center">
           <p className="eyebrow">Level by level</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
