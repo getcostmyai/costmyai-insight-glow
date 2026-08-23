@@ -134,15 +134,21 @@ function FaqPage() {
           </section>
         ))}
 
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+          />
+          <div className="relative mx-auto max-w-3xl text-center">
             <Reveal>
               <p className="eyebrow">{FAQ_ITEMS.length} answers, no asterisks</p>
               <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 Now see the same rigor
                 <br />
-                <span className="text-gradient-brand">on your own spend.</span>
+                <span className="text-gradient-brand-wide">on your own spend.</span>
               </h2>
+
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
                   Start free
