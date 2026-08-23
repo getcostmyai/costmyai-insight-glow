@@ -5,6 +5,15 @@ import {
   readCookie,
   readReferralCookie,
 } from "@/lib/partners/referral-cookie";
+import {
+  EMPTY_SOURCE,
+  SOURCE_COOKIE,
+  isEmptySource,
+  parseSource,
+  readFirstTouch,
+  serializeSourceCookie,
+  type FirstTouchSource,
+} from "./source-cookie";
 import { SESSION_COOKIE, nextSession } from "./session-cookie";
 import {
   VISITOR_COOKIE,
@@ -32,6 +41,8 @@ export type LeadEventType =
   | "models_filtered"
   | "models_sorted"
   | "models_searched"
+  /* Site-wide page views. Payload is `{ path, routeId, source? }` only. */
+  | "page_viewed"
   | "workspace_created"
   | "plan_changed";
 
@@ -112,6 +123,34 @@ export function resolveSessionId(request: Request, now: number = Date.now()): st
   const session = nextSession(existing, now, isSecureRequest(request.url));
   appendSetCookie(session.setCookie);
   return session.id;
+}
+
+/**
+ * Read the first-touch acquisition source this browser already carries.
+ * Read-only: never mints, never overwrites.
+ */
+export function currentSource(request: Request): FirstTouchSource | null {
+  return parseSource(readCookie(request.headers.get("cookie"), SOURCE_COOKIE));
+}
+
+/**
+ * Capture the acquisition source **once**, on the first document request that
+ * carries one. Exactly the `cma_ref` rule: if the cookie already exists it is
+ * left alone, so a later campaign link cannot overwrite the channel that
+ * actually brought the visitor.
+ *
+ * Only ever called from the SSR document request, because that is the only
+ * request whose `Referer` is the external site rather than our own page.
+ */
+export function captureFirstTouchSource(request: Request): FirstTouchSource {
+  const existing = currentSource(request);
+  if (existing) return existing;
+
+  const source = readFirstTouch(request.url, request.headers.get("referer"));
+  if (isEmptySource(source)) return EMPTY_SOURCE;
+
+  appendSetCookie(serializeSourceCookie(source, isSecureRequest(request.url)));
+  return source;
 }
 
 /**

@@ -84,6 +84,13 @@ export const RATE_RULES = {
    * other telemetry ceilings while still bounding the write path.
    */
   modelsTelemetry: { name: "models-telemetry", limit: 120, windowSec: 300 },
+  /**
+   * Site-wide page views. One write per route change, so the honest rate for a
+   * person reading several pages (and re-entering via back/forward) is well
+   * under this; 200 per 5 minutes bounds the write path without clipping a
+   * genuine browse.
+   */
+  pageTelemetry: { name: "page-telemetry", limit: 200, windowSec: 300 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({
