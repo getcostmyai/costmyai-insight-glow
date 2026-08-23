@@ -405,7 +405,7 @@ function Promises() {
 
 function Steps() {
   return (
-    <section className="border-y border-border bg-card">
+    <section className="border-t border-border">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead
           eyebrow="How it works"
