@@ -27,22 +27,39 @@ import { PLAN_FEATURES } from "@/lib/plan-features";
 import { HOW_STEPS } from "@/lib/how-it-works";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "CostMyAI — stop overpaying for AI" },
-      {
-        name: "description",
-        content: "You're likely overspending on AI. We prove it. You save. You grow.",
-      },
-      { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
-      {
-        property: "og:description",
-        content: "You're likely overspending on AI. We prove it. You save. You grow.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => {
+    const homepageFaqItems = HOMEPAGE_FAQ_IDS.map((id) => findFaqItem(id)).filter(
+      (i): i is NonNullable<typeof i> => Boolean(i),
+    );
+    return {
+      meta: [
+        { title: "CostMyAI — stop overpaying for AI" },
+        {
+          name: "description",
+          content: "You're likely overspending on AI. We prove it. You save. You grow.",
+        },
+        { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
+        {
+          property: "og:description",
+          content: "You're likely overspending on AI. We prove it. You save. You grow.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: homepageFaqItems.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+          })),
+        }),
+      }],
+    };
+  },
   loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: HomePage,
 });

@@ -15,6 +15,7 @@ export const Route = createFileRoute("/blog/$slug")({
     }
     const { post } = loaderData;
     const title = `${post.title} | CostMyAI`;
+    const url = `https://www.costmyai.com/blog/${post.slug}`;
     return {
       meta: [
         { title },
@@ -27,6 +28,20 @@ export const Route = createFileRoute("/blog/$slug")({
         { name: "twitter:card", content: "summary_large_image" },
       ],
       links: [{ rel: "canonical", href: `/blog/${post.slug}` }],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: post.title,
+          description: post.description,
+          author: { "@type": "Organization", name: "CostMyAI" },
+          publisher: { "@type": "Organization", name: "CostMyAI" },
+          datePublished: post.published,
+          url,
+          mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        }),
+      }],
     };
   },
   notFoundComponent: PostNotFound,
