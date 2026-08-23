@@ -500,6 +500,35 @@
 }
 
 /*
+ * Tier 1 — the tinted band. Applied edge to edge on a section, never on a text
+ * container: the lobes stay in the corners and the middle of the band, where
+ * the copy lives, is effectively untinted.
+ */
+@utility wash-brand {
+  background-image: var(--wash-brand);
+  background-repeat: no-repeat;
+}
+
+/*
+ * Section boundary rule. A plain 1px border between two tinted bands reads as
+ * a seam; this one carries brand colour at the centre and fades to nothing at
+ * both ends, so the transition looks intended.
+ */
+@utility rule-brand {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--brand-violet), 0.35) 35%,
+    rgba(var(--brand-magenta), 0.45) 50%,
+    rgba(var(--brand-violet), 0.35) 65%,
+    transparent 100%
+  );
+}
+
+
+/*
  * The ambient brand field. Always rendered on its own absolutely-positioned
  * layer behind content, never as the background of a text container — the
  * lobes are saturated at their source and only readable because nothing sits
