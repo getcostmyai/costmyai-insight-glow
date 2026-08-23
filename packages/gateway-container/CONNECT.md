@@ -80,7 +80,7 @@ ports — that is normal and expected.
 ```bash
 docker run -d --name costmyai-openai --restart unless-stopped \
   -e COSTMYAI_INGEST_TOKEN=cma_live_xxxxxxxxxxxxxxxxxxxxxxxx \
-  -e COSTMYAI_BASE_URL=https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app \
+  -e COSTMYAI_BASE_URL=https://www.costmyai.com \
   -e COSTMYAI_UPSTREAM_URL=https://api.openai.com \
   -v costmyai-openai-spool:/var/lib/costmyai/spool \
   -p 8787:8787 \
@@ -92,7 +92,7 @@ docker run -d --name costmyai-openai --restart unless-stopped \
 ```bash
 docker run -d --name costmyai-anthropic --restart unless-stopped \
   -e COSTMYAI_INGEST_TOKEN=cma_live_xxxxxxxxxxxxxxxxxxxxxxxx \
-  -e COSTMYAI_BASE_URL=https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app \
+  -e COSTMYAI_BASE_URL=https://www.costmyai.com \
   -e COSTMYAI_UPSTREAM_URL=https://api.anthropic.com \
   -v costmyai-anthropic-spool:/var/lib/costmyai/spool \
   -p 8788:8787 \
