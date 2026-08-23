@@ -461,7 +461,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
   const [yearly, setYearly] = useState(true);
 
   return (
-    <section id="pricing" className="scroll-mt-24 wash-section">
+    <section id="pricing" className="scroll-mt-24 wash-brand">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Pricing"
