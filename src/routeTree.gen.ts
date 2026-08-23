@@ -31,6 +31,7 @@ import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.ind
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ApiIndexRouteImport } from './routes/api.index'
+import { Route as ToolsLlmPriceComparisonRouteImport } from './routes/tools.llm-price-comparison'
 import { Route as ReportsCheapestApiCallsRouteImport } from './routes/reports.cheapest-api-calls'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
@@ -197,6 +198,11 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
 const ApiIndexRoute = ApiIndexRouteImport.update({
   id: '/api/',
   path: '/api/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsLlmPriceComparisonRoute = ToolsLlmPriceComparisonRouteImport.update({
+  id: '/tools/llm-price-comparison',
+  path: '/tools/llm-price-comparison',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsCheapestApiCallsRoute = ReportsCheapestApiCallsRouteImport.update({
@@ -545,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
   '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
+  '/tools/llm-price-comparison': typeof ToolsLlmPriceComparisonRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -623,6 +630,7 @@ export interface FileRoutesByTo {
   '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
   '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
+  '/tools/llm-price-comparison': typeof ToolsLlmPriceComparisonRoute
   '/api': typeof ApiIndexRoute
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
@@ -706,6 +714,7 @@ export interface FileRoutesById {
   '/partners_/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
   '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
+  '/tools/llm-price-comparison': typeof ToolsLlmPriceComparisonRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -789,6 +798,7 @@ export interface FileRouteTypes {
     | '/partners/apply'
     | '/r/$code'
     | '/reports/cheapest-api-calls'
+    | '/tools/llm-price-comparison'
     | '/api/'
     | '/blog/'
     | '/demo/'
@@ -867,6 +877,7 @@ export interface FileRouteTypes {
     | '/partners/apply'
     | '/r/$code'
     | '/reports/cheapest-api-calls'
+    | '/tools/llm-price-comparison'
     | '/api'
     | '/blog'
     | '/demo'
@@ -949,6 +960,7 @@ export interface FileRouteTypes {
     | '/partners_/apply'
     | '/r/$code'
     | '/reports/cheapest-api-calls'
+    | '/tools/llm-price-comparison'
     | '/api/'
     | '/blog/'
     | '/demo/'
@@ -1021,6 +1033,7 @@ export interface RootRouteChildren {
   PartnersApplyRoute: typeof PartnersApplyRoute
   RCodeRoute: typeof RCodeRoute
   ReportsCheapestApiCallsRoute: typeof ReportsCheapestApiCallsRoute
+  ToolsLlmPriceComparisonRoute: typeof ToolsLlmPriceComparisonRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
@@ -1207,6 +1220,13 @@ declare module '@tanstack/react-router' {
       path: '/api'
       fullPath: '/api/'
       preLoaderRoute: typeof ApiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/llm-price-comparison': {
+      id: '/tools/llm-price-comparison'
+      path: '/tools/llm-price-comparison'
+      fullPath: '/tools/llm-price-comparison'
+      preLoaderRoute: typeof ToolsLlmPriceComparisonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports/cheapest-api-calls': {
@@ -1731,6 +1751,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersApplyRoute: PartnersApplyRoute,
   RCodeRoute: RCodeRoute,
   ReportsCheapestApiCallsRoute: ReportsCheapestApiCallsRoute,
+  ToolsLlmPriceComparisonRoute: ToolsLlmPriceComparisonRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
