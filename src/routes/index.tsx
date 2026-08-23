@@ -275,10 +275,10 @@ function StillMoving({ stats }: { stats: MarketingStats }) {
           behind the argument — strands crossing the headline read as noise. */}
       <PriceDriftRibbon
         moves={stats.priceChangesTracked}
-        className="absolute inset-x-0 bottom-0 h-[38%] opacity-45 [mask-image:linear-gradient(180deg,transparent,#000_45%)]"
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-40 [mask-image:linear-gradient(180deg,transparent,#000_55%)]"
       />
 
-      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+      <div className="relative mx-auto max-w-6xl px-5 pb-44 pt-24 sm:px-8 sm:pb-52 sm:pt-32">
         <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
         <div className="rule-brand absolute inset-x-5 bottom-0 sm:inset-x-8" aria-hidden />
 
