@@ -81,8 +81,10 @@ export function PriceDriftRibbon({
       const t = count === 1 ? 0.5 : i / (count - 1);
       return {
         d: ribbonPath(1337 + i * 977, HEIGHT * (0.18 + t * 0.64), 34 + t * 26),
-        opacity: 0.16 + Math.sin(t * Math.PI) * 0.5,
-        width: 1 + Math.sin(t * Math.PI) * 1.4,
+        // Rounded: full float precision serialises differently on the server
+        // than in the DOM and React reports it as a hydration mismatch.
+        opacity: Number((0.16 + Math.sin(t * Math.PI) * 0.5).toFixed(3)),
+        width: Number((1 + Math.sin(t * Math.PI) * 1.4).toFixed(2)),
         delay: -(i * 0.9),
       };
     });
