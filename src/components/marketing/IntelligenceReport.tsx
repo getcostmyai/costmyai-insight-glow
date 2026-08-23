@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, Check, Copy, Download } from "lucide-react";
 
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
@@ -17,6 +18,15 @@ import type { IntelligencePayload } from "@/lib/intelligence.functions";
 import type { PriceMove } from "@/lib/intelligence/intelligence.server";
 import { bandCardId, moveCardId, repricerCardId, spreadCardId } from "@/lib/intelligence/share-cards";
 import { LABELS, notesForMonth, notesNewestFirst } from "@/lib/intelligence/notes";
+import {
+  citationLine,
+  directionLine,
+  numberOfTheMonth,
+  postDraft,
+  trackingWindow,
+} from "@/lib/intelligence/highlights";
+import { shareUrl } from "@/lib/intelligence/share-url";
+import { useOrigin } from "@/lib/use-origin";
 
 /**
  * The Intelligence report body.
@@ -265,23 +275,37 @@ export function IntelligenceReport({
   return (
     <>
       {hero}
+      <Verdict data={d} ctx={ctx} />
       <PriceMoves data={d} ctx={ctx} />
       <MarketStructure data={d} ctx={ctx} />
       <QualityPerDollar data={d} ctx={ctx} />
+      {/*
+        Method sits before the reuse block on purpose. A reader who is about to
+        quote us should have read how the number is produced before they are
+        handed a citation line for it.
+      */}
+      <Method ctx={ctx} />
+      <CiteAndReuse data={d} ctx={ctx} />
       <EmbedWidgetSection />
       <NotesRail ctx={ctx} />
       <Archive ctx={ctx} />
-
-      <Method ctx={ctx} />
-
     </>
   );
 }
 
 
 export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
+  const window = trackingWindow(data);
   return (
-    <Reveal delay={120} className="mt-20 grid gap-14 sm:grid-cols-3 sm:gap-8">
+    <>
+      {window ? (
+        <Reveal delay={90}>
+          <p className="mt-10 max-w-2xl border-l-2 border-primary/40 pl-4 text-sm leading-relaxed text-muted-foreground">
+            {window}
+          </p>
+        </Reveal>
+      ) : null}
+    <Reveal delay={120} className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-8">
       <Figure
         size="xl"
         value={data.liveModels}
@@ -308,6 +332,236 @@ export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: Rep
         ctx={ctx}
       />
     </Reveal>
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * The month in one figure and one sentence.
+ *
+ * A reader who came to quote us should not have to read three charts to find
+ * out what happened. Both readings are derived by fixed rule in `highlights.ts`
+ * from the same payload the charts below render, so the summary can never
+ * flatter the data.
+ * ------------------------------------------------------------------------- */
+
+const GLOSSARY = [
+  {
+    term: "MTok",
+    body: "One million tokens. Every price on this page is US dollars per million tokens, so models with different token accounting stay comparable.",
+  },
+  {
+    term: "Price move",
+    body: "One observed change to a live listed price, recorded in the append-only ledger with its direction. A model appearing for the first time is a new listing, never a move.",
+  },
+  {
+    term: "Provider spread",
+    body: "The gap between the cheapest and dearest host serving identical weights. It is a routing choice, not a quality difference.",
+  },
+  {
+    term: "Equivalence band",
+    body: "The score range around your current model, widened by the benchmark's own measurement margin, that a candidate must sit inside before a switch is offered.",
+  },
+] as const;
+
+function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
+  const headline = numberOfTheMonth(data);
+  const direction = directionLine(data);
+  const window = trackingWindow(data);
+  if (!headline && !direction) return null;
+
+  return (
+    <section className="border-t border-border/60 px-5 py-20 sm:px-8 sm:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-20">
+          {headline ? (
+            <Reveal>
+              <p className="eyebrow">Number of the month</p>
+              <p
+                className={`num mt-6 text-6xl font-semibold tabular-nums tracking-[-0.05em] sm:text-7xl ${
+                  headline.tone === "down" ? "text-saving" : "text-destructive"
+                }`}
+              >
+                {headline.value}
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <p className="text-base font-medium tracking-tight">{headline.label}</p>
+                <ShareCardButton
+                  cardId={headline.cardId}
+                  month={ctx.citableMonth}
+                  title={`${headline.value} — ${headline.label}`}
+                  postText={
+                    ctx.citableMonth
+                      ? postDraft({
+                          value: headline.value,
+                          label: headline.label,
+                          detail: headline.detail,
+                          window,
+                          url: `https://costmyai.com/intelligence/${ctx.citableMonth}`,
+                        })
+                      : undefined
+                  }
+                />
+              </div>
+              <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+                {headline.detail}
+              </p>
+            </Reveal>
+          ) : null}
+
+          <Reveal delay={80}>
+            {direction ? (
+              <>
+                <p className="eyebrow">Direction</p>
+                <p className="mt-6 text-2xl font-medium leading-snug tracking-[-0.02em] sm:text-[1.75rem] sm:leading-[1.25]">
+                  {direction}
+                </p>
+              </>
+            ) : null}
+
+            <div className="mt-12 border-t border-border/60 pt-8">
+              <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Four terms this page uses
+              </p>
+              <dl className="mt-6 grid gap-6 sm:grid-cols-2">
+                {GLOSSARY.map((g) => (
+                  <div key={g.term}>
+                    <dt className="text-sm font-semibold tracking-tight">{g.term}</dt>
+                    <dd className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                      {g.body}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Cite and reuse.
+ *
+ * The page is written to be quoted, so the citation, the permanent link and the
+ * underlying table are offered outright instead of being reconstructed by hand.
+ * Everything points at a frozen month; the live month is still moving and is
+ * never a safe citation target.
+ * ------------------------------------------------------------------------- */
+
+function CopyLine({ label, text }: { label: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div>
+      <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </p>
+      <div className="mt-3 flex items-start gap-3 border-t border-border/60 pt-3">
+        <p className="min-w-0 flex-1 break-words font-mono text-xs leading-relaxed text-muted-foreground">
+          {text}
+        </p>
+        <button
+          type="button"
+          aria-label={copied ? `${label} copied` : `Copy ${label.toLowerCase()}`}
+          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border/70 px-3 text-xs transition-colors hover:border-foreground/40"
+          onClick={() => {
+            void navigator.clipboard?.writeText(text).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }}
+        >
+          {copied ? <Check className="h-3 w-3 text-saving" /> : <Copy className="h-3 w-3" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CiteAndReuse({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
+  const origin = useOrigin();
+  const month = ctx.frozenMonth ?? ctx.citableMonth;
+  const dataMonth = ctx.frozenMonth ?? "live";
+  const permalink = month ? shareUrl(origin, `/intelligence/${month}`, "cite") : null;
+
+  return (
+    <section className="wash-brand px-5 py-24 sm:px-8 sm:py-28">
+      <div className="mx-auto max-w-6xl">
+        <div id="cite" className="scroll-mt-28">
+          <SectionHead eyebrow="Cite and reuse" title="Take the numbers with you">
+            Every figure here is free to quote, repost or chart, with attribution to CostMyAI. We
+            would rather be the cited source than the hidden one.
+          </SectionHead>
+        </div>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-2 lg:gap-20">
+          <div className="space-y-10">
+            {month && permalink ? (
+              <>
+                <CopyLine
+                  label="Citation"
+                  text={citationLine({
+                    monthLabel: data.monthLabel,
+                    url: `${origin}/intelligence/${month}`,
+                    retrievedAt: new Date(data.generatedAt),
+                  })}
+                />
+                <CopyLine label="Permanent link" text={permalink} />
+              </>
+            ) : (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                No month has closed yet, so there is no frozen figure to cite. The live page is
+                still moving and would not read the same tomorrow. The first citable month appears
+                at the next month boundary.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Download the table
+            </p>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Same figures, same identifiers as the anchors on this page, so a chart you build from
+              the file matches the page it came from.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a
+                href={`/api/public/data/intelligence/${dataMonth}?format=csv`}
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm transition-colors hover:border-foreground/40"
+              >
+                <Download className="h-3.5 w-3.5" />
+                CSV
+              </a>
+              <a
+                href={`/api/public/data/intelligence/${dataMonth}?format=json`}
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm transition-colors hover:border-foreground/40"
+              >
+                <Download className="h-3.5 w-3.5" />
+                JSON
+              </a>
+              {month ? (
+                <a
+                  href={`/api/public/og/intelligence/${month}?card=kpi-moves`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm transition-colors hover:border-foreground/40"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Feed image, 1200 by 630
+                </a>
+              ) : null}
+            </div>
+            <p className="mt-6 text-xs leading-relaxed text-muted-foreground/80">
+              Every figure card on this page carries its own image and a ready post with the source
+              line already in it.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
