@@ -8,14 +8,21 @@ import { ArrowRight, BadgeCheck, Infinity as InfinityIcon, Receipt, ShieldCheck 
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 
 type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
 
 export const Route = createFileRoute("/partners")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(partnerLadderQuery()),
+      context.queryClient.ensureQueryData(marketingStatsQuery()),
+    ]);
+  },
   head: () => ({
     meta: [
       { title: "Become a Partner — lifetime commission on every account you refer" },
@@ -31,11 +38,14 @@ export const Route = createFileRoute("/partners")({
           "Lifetime commission on referred revenue, paid on real invoices — never estimated.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.costmyai.com/partners" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/partners" }],
   }),
   component: PartnersPage,
 });
+
 
 const PROMISES = [
   {
