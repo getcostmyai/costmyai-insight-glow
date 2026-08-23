@@ -92,15 +92,16 @@ function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
   return (
     <section className="relative overflow-hidden border-b border-border">
       <div
-        className="pointer-events-none absolute inset-x-0 -top-24 h-[90%] mesh-brand mesh-drift"
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[46rem] mesh-brand mesh-drift [mask-image:linear-gradient(180deg,#000_55%,transparent)]"
         aria-hidden
       />
       <PriceDriftRibbon
         moves={moves}
         orientation="diagonal"
-        className="absolute inset-x-0 top-0 h-[45%] opacity-[0.12] [mask-image:linear-gradient(180deg,#000,transparent)]"
+        className="absolute inset-x-0 top-0 h-[26rem] opacity-[0.12] [mask-image:linear-gradient(180deg,#000,transparent)]"
       />
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
+      <div className="absolute inset-x-0 top-0 h-[46rem] texture-dots opacity-60" aria-hidden />
+
       <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pt-36">
         <Reveal
           as="p"
