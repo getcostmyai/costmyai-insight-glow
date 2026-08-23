@@ -68,8 +68,9 @@ export const FAQ_CLUSTERS: FaqCluster[] = [
   },
   {
     id: "keys-and-trust",
-    title: "API keys, credentials, and trust",
-    lead: "Your provider keys stay in your environment. That is architecture, not policy.",
+    title: "API keys, your data, and billing",
+    lead: "Your provider keys stay in your environment. That is architecture, not policy. Plus the one billing question everybody asks.",
+
     items: [
       {
         id: "safe-to-share-api-keys",
