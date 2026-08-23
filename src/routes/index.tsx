@@ -190,10 +190,21 @@ const FORECAST_PRINCIPLES = [
   },
 ];
 
-function Forecast() {
+function Forecast({ stats }: { stats: MarketingStats }) {
   return (
-    <section id="forecast" className="scroll-mt-24 border-y border-border wash-brand bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
+    <section
+      id="forecast"
+      className="relative scroll-mt-24 overflow-hidden border-y border-border wash-brand bg-card"
+    >
+      {/* The same band, stood on end in the right gutter: movement beside the
+          argument rather than another stripe across it. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[18%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
+
         <SectionHead
           eyebrow="Spend Forecast"
           title="Your month-end AI bill, before the invoice arrives."
