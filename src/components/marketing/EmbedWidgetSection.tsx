@@ -35,8 +35,13 @@ export function EmbedWidgetSection() {
   const snippet = snippetFor(origin);
 
   return (
-    <section id="embed" className="border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
+    <section
+      id="embed"
+      className="relative overflow-hidden border-t border-border/60 wash-brand px-5 py-28 sm:px-8 sm:py-36"
+    >
+      <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
       <div className="mx-auto max-w-6xl">
+
         <Reveal>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Embed
