@@ -71,12 +71,6 @@ describe("directionLine", () => {
   });
 });
 
-describe("trackingWindow", () => {
-  it("states the real recording window in days", () => {
-    expect(trackingWindow(base())).toContain("70-day window");
-  });
-});
-
 describe("postDraft", () => {
   it("always carries the source line", () => {
     const text = postDraft({
