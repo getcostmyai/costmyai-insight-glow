@@ -31,6 +31,7 @@ import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.ind
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as ApiIndexRouteImport } from './routes/api.index'
+import { Route as ReportsCheapestApiCallsRouteImport } from './routes/reports.cheapest-api-calls'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
@@ -196,6 +197,11 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
 const ApiIndexRoute = ApiIndexRouteImport.update({
   id: '/api/',
   path: '/api/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsCheapestApiCallsRoute = ReportsCheapestApiCallsRouteImport.update({
+  id: '/reports/cheapest-api-calls',
+  path: '/reports/cheapest-api-calls',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -538,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
+  '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -615,6 +622,7 @@ export interface FileRoutesByTo {
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
+  '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
   '/api': typeof ApiIndexRoute
   '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
@@ -697,6 +705,7 @@ export interface FileRoutesById {
   '/partner_/login': typeof PartnerLoginRoute
   '/partners_/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
+  '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
   '/api/': typeof ApiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -779,6 +788,7 @@ export interface FileRouteTypes {
     | '/partner/login'
     | '/partners/apply'
     | '/r/$code'
+    | '/reports/cheapest-api-calls'
     | '/api/'
     | '/blog/'
     | '/demo/'
@@ -856,6 +866,7 @@ export interface FileRouteTypes {
     | '/partner/login'
     | '/partners/apply'
     | '/r/$code'
+    | '/reports/cheapest-api-calls'
     | '/api'
     | '/blog'
     | '/demo'
@@ -937,6 +948,7 @@ export interface FileRouteTypes {
     | '/partner_/login'
     | '/partners_/apply'
     | '/r/$code'
+    | '/reports/cheapest-api-calls'
     | '/api/'
     | '/blog/'
     | '/demo/'
@@ -1008,6 +1020,7 @@ export interface RootRouteChildren {
   PartnerLoginRoute: typeof PartnerLoginRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
   RCodeRoute: typeof RCodeRoute
+  ReportsCheapestApiCallsRoute: typeof ReportsCheapestApiCallsRoute
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
@@ -1194,6 +1207,13 @@ declare module '@tanstack/react-router' {
       path: '/api'
       fullPath: '/api/'
       preLoaderRoute: typeof ApiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports/cheapest-api-calls': {
+      id: '/reports/cheapest-api-calls'
+      path: '/reports/cheapest-api-calls'
+      fullPath: '/reports/cheapest-api-calls'
+      preLoaderRoute: typeof ReportsCheapestApiCallsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -1710,6 +1730,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnerLoginRoute: PartnerLoginRoute,
   PartnersApplyRoute: PartnersApplyRoute,
   RCodeRoute: RCodeRoute,
+  ReportsCheapestApiCallsRoute: ReportsCheapestApiCallsRoute,
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
