@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import {
   BandExplainer,
   ProofMatrix,
@@ -10,7 +11,9 @@ import {
   RungStack,
 } from "@/components/marketing/StandardVisuals";
 import { intelligenceQuery } from "@/lib/intelligence.functions";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import type { BandWinner } from "@/lib/intelligence/intelligence.server";
+
 
 /**
  * The CostMyAI Standard — the pillar page. Blog articles are supporting
