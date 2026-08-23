@@ -125,6 +125,56 @@
     rgba(99, 102, 241, 0.82) 0%,
     rgba(124, 58, 237, 0.82) 100%
   );
+
+  /*
+   * Widened brand family. Same indigo → violet spine as --gradient-brand, but
+   * carried on through magenta into a warm coral, so the family reads as one
+   * continuous light source rather than as flat purple. Decoration only:
+   * semantic KPI colors (saving / opportunity / spend) never borrow from here,
+   * because those encode meaning and may not drift with a mood.
+   */
+  --brand-indigo: 99, 102, 241;
+  --brand-violet: 124, 58, 237;
+  --brand-magenta: 192, 60, 200;
+  --brand-coral: 251, 113, 92;
+  --brand-amber: 251, 176, 89;
+
+  --gradient-brand-wide: linear-gradient(
+    120deg,
+    rgb(var(--brand-indigo)) 0%,
+    rgb(var(--brand-violet)) 34%,
+    rgb(var(--brand-magenta)) 62%,
+    rgb(var(--brand-coral)) 88%,
+    rgb(var(--brand-amber)) 100%
+  );
+
+  /*
+   * The ambient field. Four overlapping radials, not one wash: the overlap is
+   * what gives it internal structure and keeps it from reading as a tint. Each
+   * lobe falls to zero well inside its own box, so text never sits on color.
+   */
+  --mesh-brand:
+    radial-gradient(
+      42% 46% at 18% 12%,
+      rgba(var(--brand-indigo), 0.5) 0%,
+      rgba(var(--brand-indigo), 0) 72%
+    ),
+    radial-gradient(
+      46% 52% at 78% 6%,
+      rgba(var(--brand-magenta), 0.42) 0%,
+      rgba(var(--brand-magenta), 0) 70%
+    ),
+    radial-gradient(
+      38% 44% at 62% 40%,
+      rgba(var(--brand-coral), 0.34) 0%,
+      rgba(var(--brand-coral), 0) 72%
+    ),
+    radial-gradient(
+      60% 58% at 40% 0%,
+      rgba(var(--brand-violet), 0.44) 0%,
+      rgba(var(--brand-violet), 0) 76%
+    );
+
   --wash-hero: radial-gradient(
     ellipse 130% 100% at 50% 0%,
     rgba(123, 97, 255, 0.17) 0%,
@@ -140,6 +190,7 @@
     color-mix(in oklab, var(--muted-foreground) 9%, transparent) 1px,
     transparent 1px
   );
+
 
 
   --shadow-card: 0 1px 2px oklch(0.2 0.02 280 / 0.04), 0 8px 24px -12px oklch(0.2 0.02 280 / 0.12);
@@ -175,6 +226,30 @@
   --sidebar-foreground: oklch(0.9 0.005 285);
   --sidebar-accent: oklch(0.28 0.06 292);
   --sidebar-border: oklch(1 0 0 / 8%);
+
+  /* Same lobes, quieter: on a near-black ground the field would otherwise
+     glare rather than glow. */
+  --mesh-brand:
+    radial-gradient(
+      42% 46% at 18% 12%,
+      rgba(var(--brand-indigo), 0.34) 0%,
+      rgba(var(--brand-indigo), 0) 72%
+    ),
+    radial-gradient(
+      46% 52% at 78% 6%,
+      rgba(var(--brand-magenta), 0.28) 0%,
+      rgba(var(--brand-magenta), 0) 70%
+    ),
+    radial-gradient(
+      38% 44% at 62% 40%,
+      rgba(var(--brand-coral), 0.2) 0%,
+      rgba(var(--brand-coral), 0) 72%
+    ),
+    radial-gradient(
+      60% 58% at 40% 0%,
+      rgba(var(--brand-violet), 0.3) 0%,
+      rgba(var(--brand-violet), 0) 76%
+    );
 }
 
 @layer base {
@@ -381,6 +456,51 @@
   background-image: var(--wash-section);
 }
 
+/*
+ * The ambient brand field. Always rendered on its own absolutely-positioned
+ * layer behind content, never as the background of a text container — the
+ * lobes are saturated at their source and only readable because nothing sits
+ * on top of them.
+ */
+@utility mesh-brand {
+  background-image: var(--mesh-brand);
+  background-repeat: no-repeat;
+}
+
+/* Slow parallax breathing. Two lobes drift against each other, which is what
+   keeps the field alive without ever becoming a moving distraction. */
+@keyframes mesh-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  50% {
+    transform: translate3d(-2.5%, 1.5%, 0) scale(1.14);
+  }
+}
+
+@utility mesh-drift {
+  animation: mesh-drift 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* The one place a card is allowed: a frame around real product imagery. */
+@utility gradient-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-3xl);
+  background-image: var(--mesh-brand);
+  background-color: color-mix(in oklab, var(--primary-soft) 70%, var(--card));
+  box-shadow: var(--shadow-float);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-drift {
+    animation: none;
+  }
+}
+
+
 @utility texture-dots {
   background-image: var(--texture-dots);
   background-size: 26px 26px;
@@ -399,6 +519,17 @@
 
 @utility fill-gradient-brand-soft {
   background-image: var(--gradient-brand-soft);
+}
+
+@utility fill-gradient-brand-wide {
+  background-image: var(--gradient-brand-wide);
+}
+
+@utility text-gradient-brand-wide {
+  background-image: var(--gradient-brand-wide);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Provider marquee — one continuous lane, duplicated for a seamless loop. */

@@ -90,6 +90,11 @@ export function CountUp({
 }) {
   const { ref, inView } = useInView<HTMLSpanElement>();
   const [shown, setShown] = useState(value);
+  // Where this run starts from. Zero on first arrival, the value currently on
+  // screen when a refreshed stat comes in — a live number that jumped back to
+  // zero to re-count would read as a reset rather than a change.
+  const from = useRef(0);
+  const settled = useRef(false);
   const fmt = useMemo(
     () => format ?? ((n: number) => Math.round(n).toLocaleString("en-GB")),
     [format],
@@ -97,16 +102,22 @@ export function CountUp({
 
   useEffect(() => {
     if (!inView || prefersReducedMotion()) {
+      from.current = value;
+      settled.current = true;
       setShown(value);
       return;
     }
+    const origin = settled.current ? from.current : 0;
+    settled.current = true;
     let raf = 0;
     const start = performance.now();
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
       // easeOutExpo — fast arrival, long settle.
       const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
-      setShown(value * eased);
+      const next = origin + (value - origin) * eased;
+      from.current = next;
+      setShown(next);
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

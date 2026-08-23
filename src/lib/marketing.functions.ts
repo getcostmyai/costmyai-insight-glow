@@ -19,4 +19,10 @@ export const marketingStatsQuery = () =>
     queryKey: ["marketing-stats"],
     queryFn: () => getMarketingStats(),
     staleTime: 5 * 60_000,
+    // The hero counters are the one place on the site where a number is
+    // presented as living. It only earns that if it actually moves, so the
+    // page re-reads them while it is open rather than animating a fixed value
+    // on a loop.
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });

@@ -17,6 +17,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram";
 import { Estimator } from "@/components/marketing/Estimator";
 import { ForecastDiagram } from "@/components/marketing/ForecastDiagram";
+import { GradientPanel } from "@/components/marketing/GradientPanel";
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -92,21 +93,24 @@ function HomePage() {
 
 function Hero({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="relative overflow-hidden wash-hero">
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
+    <section className="relative overflow-hidden">
+      {/* The ambient field: saturated at its source, gone long before it
+          reaches the headline. Its own layer, so the drift never moves text. */}
+      <div className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift" aria-hidden />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
       <div className="relative mx-auto max-w-4xl px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-16 sm:pt-24">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
-          Stop overpaying <span className="text-gradient-brand">for AI.</span>
+          Stop overpaying <span className="text-gradient-brand-wide">for AI.</span>
         </Reveal>
 
         <Reveal
           delay={120}
           as="p"
-          className="mx-auto mt-5 max-w-2xl text-lg leading-snug text-muted-foreground sm:text-xl sm:leading-relaxed"
+          className="mx-auto mt-5 max-w-2xl text-lg leading-snug sm:text-xl sm:leading-relaxed"
         >
-          You're likely overspending on AI.
+          <span className="text-foreground">You're likely overspending on AI.</span>
           <br />
-          We prove it. You save. You grow.
+          <span className="text-muted-foreground">We prove it. You save. You grow.</span>
         </Reveal>
 
         <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -348,6 +352,14 @@ function HowItWorks() {
               </li>
             ))}
           </ol>
+        </Reveal>
+
+        <Reveal delay={120} className="mt-14">
+          <GradientPanel
+            src="/images/how-it-works/compare-dashboard.png"
+            alt="The CostMyAI Compare dashboard showing per-workload spend and certified cheaper alternatives"
+            caption="Compare, the first rung: every workload priced, every cheaper route named."
+          />
         </Reveal>
 
         <Reveal delay={140} className="mt-10 text-center">
@@ -719,13 +731,21 @@ function Faq(_props: { stats: MarketingStats }) {
 function ClosingCta() {
   return (
     <section className="px-5 py-20 sm:px-8">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] fill-gradient-brand px-8 py-16 text-center text-primary-foreground sm:px-16">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] fill-gradient-brand-wide px-8 py-16 text-center text-primary-foreground sm:px-16">
+        <div className="absolute inset-0 mesh-brand mesh-drift opacity-70 mix-blend-screen" aria-hidden />
         <div className="absolute inset-0 texture-dots opacity-20" aria-hidden />
+        {/* The wide gradient runs out into coral, where white body copy would
+            fall below a readable contrast ratio. A centred scrim keeps the
+            colour at the edges and the words legible. */}
+        <div
+          className="absolute inset-0 bg-[radial-gradient(70%_80%_at_50%_50%,rgba(23,15,60,0.34)_0%,rgba(23,15,60,0)_100%)]"
+          aria-hidden
+        />
         <div className="relative">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Ship faster. Spend less. Never get blindsided by a price change.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed opacity-90">
+          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed opacity-95">
             Connect once and get a complete, defensible breakdown of every workload in under 60
             seconds — what holds quality cheaper, what does not, and exactly what we refuse to
             certify.
