@@ -53,6 +53,7 @@ import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as IntelligenceNotesIndexRouteImport } from './routes/intelligence.notes.index'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
 import { Route as IntelligenceNotesSlugRouteImport } from './routes/intelligence.notes.$slug'
 import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
@@ -311,6 +312,11 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const PartnerVerifyCodeRoute = PartnerVerifyCodeRouteImport.update({
   id: '/partner_/verify/$code',
   path: '/partner/verify/$code',
@@ -569,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -648,6 +655,7 @@ export interface FileRoutesByTo {
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -732,6 +740,7 @@ export interface FileRoutesById {
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -816,6 +825,7 @@ export interface FileRouteTypes {
     | '/api/public/build-info'
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
+    | '/admin/'
     | '/workspace/'
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
@@ -895,6 +905,7 @@ export interface FileRouteTypes {
     | '/api/public/build-info'
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
+    | '/admin'
     | '/workspace'
     | '/intelligence/notes'
     | '/api/public/badge/$code'
@@ -978,6 +989,7 @@ export interface FileRouteTypes {
     | '/api/public/build-info'
     | '/intelligence/notes/$slug'
     | '/partner_/verify/$code'
+    | '/_authenticated/admin/'
     | '/_authenticated/workspace/'
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
@@ -1376,6 +1388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/partner_/verify/$code': {
       id: '/partner_/verify/$code'
       path: '/partner/verify/$code'
@@ -1672,6 +1691,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
   AuthenticatedBetaPlanRoute: typeof AuthenticatedBetaPlanRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1687,6 +1707,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
   AuthenticatedAdminReferralsRoute: AuthenticatedAdminReferralsRoute,
   AuthenticatedBetaPlanRoute: AuthenticatedBetaPlanRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
