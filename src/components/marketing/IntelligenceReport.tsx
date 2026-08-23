@@ -485,6 +485,21 @@ function CiteAndReuse({ data, ctx }: { data: IntelligencePayload; ctx: ReportCon
   const month = ctx.frozenMonth ?? ctx.citableMonth;
   const dataMonth = ctx.frozenMonth ?? "live";
   const permalink = month ? shareUrl(origin, `/intelligence/${month}`, "cite") : null;
+  /*
+   * The citation always names the month it points at. On the live page that is
+   * the newest frozen month, not the open one on screen, so the label is
+   * derived from the linked month key rather than from the payload.
+   */
+  const citedLabel =
+    month === ctx.frozenMonth
+      ? data.monthLabel
+      : month
+        ? new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-GB", {
+            month: "long",
+            year: "numeric",
+            timeZone: "UTC",
+          })
+        : data.monthLabel;
 
   return (
     <section className="wash-brand px-5 py-24 sm:px-8 sm:py-28">
@@ -503,7 +518,7 @@ function CiteAndReuse({ data, ctx }: { data: IntelligencePayload; ctx: ReportCon
                 <CopyLine
                   label="Citation"
                   text={citationLine({
-                    monthLabel: data.monthLabel,
+                    monthLabel: citedLabel,
                     url: `${origin}/intelligence/${month}`,
                     retrievedAt: new Date(data.generatedAt),
                   })}
