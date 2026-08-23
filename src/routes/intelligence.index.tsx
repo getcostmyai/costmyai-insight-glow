@@ -3,6 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+
 import {
   HeroCta,
   HeroFigures,
@@ -55,14 +57,26 @@ function IntelligencePage() {
         data={live.data}
         ctx={ctx}
         hero={
-          <section className="wash-hero px-5 pb-20 pt-24 sm:px-8 sm:pb-24 sm:pt-36">
-            <div className="mx-auto max-w-6xl">
+          <section className="relative overflow-hidden border-b border-border">
+            <div
+              className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+              aria-hidden
+            />
+            {/* First sighting of the band: a shallow diagonal, almost gone. */}
+            <PriceDriftRibbon
+              moves={live.data.changesTotal}
+              orientation="diagonal"
+              className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+            />
+            <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
+            <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pb-24 sm:pt-36">
               <Reveal className="max-w-4xl">
                 <p className="eyebrow">Intelligence</p>
                 <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-7xl">
                   The market moves.
                   <br />
-                  We <span className="text-gradient-brand">prove</span> by how much.
+                  We <span className="text-gradient-brand-wide">prove</span> by how much.
                 </h1>
                 <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                   Every number on this page is computed from the same live catalog and the same
@@ -79,6 +93,7 @@ function IntelligencePage() {
               <HeroFigures data={live.data} ctx={ctx} />
             </div>
           </section>
+
         }
       />
     </MarketingShell>

@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { ShareCardButton } from "@/components/marketing/ShareCardButton";
 import { EmbedWidgetSection } from "@/components/marketing/EmbedWidgetSection";
 
@@ -207,7 +208,7 @@ function pricePillar(frozenMonth: string | null) {
       }
     : {
         title: "Live price sync",
-        body: "Per-host prices refresh continuously from public provider feeds. A recommendation is priced against the catalog as it stands the moment you see it — not a quarterly snapshot.",
+        body: "Per-host prices refresh continuously from public provider feeds. A recommendation is priced against the catalog as it stands the moment you see it, not a quarterly snapshot.",
       };
 }
 
@@ -230,7 +231,7 @@ const PILLARS = [
   },
   {
     title: "Refusals with reasons",
-    body: "When nothing clears, you get a stated reason — not a weaker suggestion. A quiet downgrade would cost you more than the saving is worth.",
+    body: "When nothing clears, you get a stated reason, not a weaker suggestion. A quiet downgrade would cost you more than the saving is worth.",
   },
 ] as const;
 
@@ -332,11 +333,10 @@ export function HeroCta() {
 function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const maxChanges = Math.max(1, ...data.repricers.map((r) => r.changes));
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-28">
+    <section className="wash-brand px-5 py-24 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <SectionHead eyebrow="Price moves" title={`What changed in ${data.monthLabel}`}>
-          Recorded from the append-only price ledger — every observed move, per model and per host,
-          on both the input and output side.
+          Recorded from the append-only price ledger: every observed move, per model and per host, on both the input and output side.
         </SectionHead>
 
         <Reveal delay={80} className="mt-16">
@@ -404,7 +404,7 @@ function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportConte
           <Reveal className="max-w-2xl">
             <h3 className="text-sm font-semibold tracking-tight">Who reprices most</h3>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              Ranked over everything we hold — we began recording price moves on{" "}
+              Ranked over everything we hold. We began recording price moves on{" "}
               {dateLabel(data.trackingSince)}, so this is a short window, not a 90-day history.
             </p>
           </Reveal>
@@ -455,8 +455,15 @@ function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportConte
 function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const maxSpread = Math.max(1, ...data.spreads.map((s) => s.spreadPct));
   return (
-    <section className="border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
-      <div className="mx-auto max-w-6xl">
+    <section className="relative overflow-hidden px-5 py-28 sm:px-8 sm:py-36">
+      {/* Second beat: the band, full width and stated plainly. */}
+      <PriceDriftRibbon
+        moves={data.changesTotal}
+        orientation="horizontal"
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 opacity-40 [mask-image:linear-gradient(90deg,transparent,#000_18%,#000_82%,transparent)]"
+      />
+      <div className="relative mx-auto max-w-6xl">
+        <div className="rule-brand mb-14 h-px w-full" aria-hidden />
         <SectionHead eyebrow="Market structure" title="The same weights cost wildly different money">
           Identical model, different real provider. Aggregator listings are excluded, so every gap
           below is a genuine provider-to-provider spread you could act on today.
@@ -558,7 +565,7 @@ function QualityPerDollar({ data, ctx }: { data: IntelligencePayload; ctx: Repor
         >
           For each task class we take the leading published score, subtract that evaluation&apos;s
           measured margin, and pick the cheapest model still above the line. Only suites with a real
-          measured margin appear — a benchmark without one cannot back a claim.
+          measured margin appear, because a benchmark without one cannot back a claim.
         </SectionHead>
 
         <ul className="mt-16 divide-y divide-border/60 border-t border-border/60">
@@ -621,7 +628,7 @@ function QualityPerDollar({ data, ctx }: { data: IntelligencePayload; ctx: Repor
                       </p>
                       <p className="mt-2 text-xs text-muted-foreground">
                         spread {s.spread.toFixed(2)} vs margin ±{s.margin.toFixed(2)} across{" "}
-                        {s.models} scored models — {s.ratio <= 1 ? "saturated" : "discriminating"}.
+                        {s.models} scored models, {s.ratio <= 1 ? "saturated" : "discriminating"}.
                       </p>
                     </div>
                     <SaturationGauge row={s} />
@@ -702,7 +709,7 @@ function Archive({ ctx }: { ctx: ReportContext }) {
         <SectionHead eyebrow="Archive" title="Every closed month, frozen and permanently linkable">
           At 00:00 UTC on the first of each month we write that month&apos;s final figures once and
           never touch them again. A correction is filed as a new restatement row that points back at
-          the original — the number you cited stays exactly as you cited it.
+          the original, so the number you cited stays exactly as you cited it.
         </SectionHead>
         {ctx.archive.length === 0 ? (
           <p className="mt-10 text-sm text-muted-foreground">
@@ -746,8 +753,14 @@ function Archive({ ctx }: { ctx: ReportContext }) {
 
 function Method({ ctx }: { ctx: ReportContext }) {
   return (
-    <section className="border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
-      <div className="mx-auto max-w-6xl">
+    <section className="relative overflow-hidden border-t border-border/60 px-5 py-28 sm:px-8 sm:py-36">
+      {/* Third beat: a vertical echo in the gutter, quiet. */}
+      <PriceDriftRibbon
+        moves={64}
+        orientation="vertical"
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-[18%] opacity-[0.18] [mask-image:linear-gradient(180deg,transparent,#000_25%,#000_75%,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl">
         <SectionHead eyebrow="Method" title="How a switch gets measured" />
         <ul className="mt-16 divide-y divide-border/60 border-t border-border/60">
           {[pricePillar(ctx.frozenMonth), ...PILLARS].map((p, i) => (

@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { LabelChip } from "@/components/marketing/IntelligenceNote";
 import { formatNoteDate, notesNewestFirst, type Note } from "@/lib/intelligence/notes";
 
@@ -41,14 +42,24 @@ function NotesIndex() {
 
   return (
     <MarketingShell>
-      <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
-        <div className="mx-auto max-w-5xl">
+      <section className="relative overflow-hidden border-b border-border">
+        <div
+          className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+          aria-hidden
+        />
+        <PriceDriftRibbon
+          moves={notes.length * 7 + 40}
+          orientation="diagonal"
+          className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+        />
+        <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+        <div className="relative mx-auto max-w-5xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
           <Reveal>
             <p className="eyebrow">Intelligence</p>
             <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-[1.05] tracking-[-0.045em] sm:text-7xl">
               The figures are the commodity.
               <br />
-              <span className="text-gradient-brand">The reading is the work.</span>
+              <span className="text-gradient-brand-wide">The reading is the work.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
               Every note carries a provenance label before its first sentence: a proven mechanism,
@@ -59,7 +70,7 @@ function NotesIndex() {
         </div>
       </section>
 
-      <section className="px-5 pb-24 sm:px-8 sm:pb-32">
+      <section className="wash-brand px-5 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-20">
         <div className="mx-auto max-w-5xl">
           {notes.length === 0 ? (
             <Reveal>

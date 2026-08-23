@@ -164,7 +164,7 @@ export function HostHistogram({ buckets }: { buckets: HostBucket[] }) {
       <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
         Providers per model, across {totalModels.toLocaleString("en-GB")} models with at least one
         real (non-aggregator) endpoint. Most weights are single-sourced; a small tail is served
-        everywhere — and that tail is where the spread lives.
+        everywhere, and that tail is where the spread lives.
       </p>
     </div>
   );
@@ -242,7 +242,12 @@ export function SaturationGauge({ row }: { row: SaturationRow }) {
   const clamped = Math.min(row.ratio, MAX);
   const polar = (deg: number, radius = r) => {
     const rad = (deg * Math.PI) / 180;
-    return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
+    // Rounded: trig differs in the last float bit between runtimes, which SSR
+    // hydration reports as an attribute mismatch.
+    return [
+      Number((cx + radius * Math.cos(rad)).toFixed(3)),
+      Number((cy + radius * Math.sin(rad)).toFixed(3)),
+    ];
   };
   const arc = (fromDeg: number, toDeg: number) => {
     const [x1, y1] = polar(fromDeg);
