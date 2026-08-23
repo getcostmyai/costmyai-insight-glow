@@ -358,7 +358,6 @@ const GLOSSARY = [
 function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const headline = numberOfTheMonth(data);
   const direction = directionLine(data);
-  const windowLine = trackingWindow(data);
   if (!headline && !direction) return null;
 
   return (
@@ -387,7 +386,6 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                           value: headline.value,
                           label: headline.label,
                           detail: headline.detail,
-                          window: windowLine,
                           url: `https://costmyai.com/intelligence/${ctx.citableMonth}`,
                         })
                       : undefined
