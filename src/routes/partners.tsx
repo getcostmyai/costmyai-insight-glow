@@ -85,6 +85,7 @@ const STEPS = [
 
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   // One view per page load. Unlike the estimator this is the whole page, so
   // mounting *is* seeing — no viewport observer needed.
   const track = useServerFn(trackPartnerEvent);
@@ -96,18 +97,20 @@ function PartnersPage() {
   const range = formatRateRange(ladder);
   const tiers = ladder.tiers;
   const topRate = tiers.length ? Math.max(...tiers.map((t) => t.ratePct)) : 0;
+  const moves = stats.priceChangesTracked;
 
   return (
     <MarketingShell>
-      <Hero range={range} topRate={topRate} />
-      <Ladder tiers={tiers} topRate={topRate} />
+      <Hero range={range} topRate={topRate} moves={moves} />
+      <Ladder tiers={tiers} topRate={topRate} moves={moves} />
       <Promises />
-      <BeyondCommission />
+      <BeyondCommission moves={moves} />
       <Steps />
       <ClosingCta />
     </MarketingShell>
   );
 }
+
 
 /* --------------------------- beyond the commission ------------------------ */
 
