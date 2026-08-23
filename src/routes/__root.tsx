@@ -17,7 +17,7 @@ import { CookieConsent } from "@/components/CookieConsent";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { trackPageViewed } from "@/lib/page-telemetry.functions";
-import { shouldFire } from "@/lib/telemetry/fire-once";
+import { shouldFirePersisted } from "@/lib/telemetry/fire-once";
 
 
 
@@ -204,7 +204,7 @@ function RootComponent() {
   // already written unprompted by every other lead event.
   const trackPage = useServerFn(trackPageViewed);
   useEffect(() => {
-    if (!shouldFire(`page_viewed:${pathname}`)) return;
+    if (!shouldFirePersisted(`page_viewed:${pathname}`)) return;
     void trackPage({ data: { path: pathname, routeId } }).catch(() => {});
   }, [pathname, routeId, trackPage]);
 
