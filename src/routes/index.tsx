@@ -74,7 +74,7 @@ function HomePage() {
       <ProviderMarquee stats={stats} />
 
       <HowItWorks />
-      <StillMoving />
+      <StillMoving stats={stats} />
       <Estimator />
 
       <BuiltFor />
