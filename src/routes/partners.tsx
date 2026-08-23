@@ -25,17 +25,17 @@ export const Route = createFileRoute("/partners")({
   },
   head: () => ({
     meta: [
-      { title: "Become a Partner — lifetime commission on every account you refer" },
+      { title: "Become a Partner — be the advisor who found the money" },
       {
         name: "description",
         content:
-          "Refer teams to CostMyAI and earn a share of what they pay, for as long as they pay. A 60-day referral window, attribution frozen for the life of the account, commission written only on real paid invoices.",
+          "For fractional CTOs, technical advisors and the agencies that built the product. Bring clients a lower AI bill without touching their product, and earn lifetime commission on every invoice they pay.",
       },
       { property: "og:title", content: "Become a CostMyAI partner" },
       {
         property: "og:description",
         content:
-          "Lifetime commission on referred revenue, paid on real invoices — never estimated.",
+          "Bring your clients a lower AI bill without touching their product. Lifetime commission, written only on real paid invoices.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.costmyai.com/partners" },
@@ -46,6 +46,43 @@ export const Route = createFileRoute("/partners")({
   component: PartnersPage,
 });
 
+
+const QUALIFIERS = [
+  {
+    n: "01",
+    t: "Your clients ship real product, and their AI spend keeps moving.",
+    b: "New features, new models, growing usage. Not a pilot, not a flat line. That movement is the whole reason a cost problem exists and the reason it comes back every quarter.",
+  },
+  {
+    n: "02",
+    t: "When infrastructure or vendor cost comes up, you are the one they ask.",
+    b: "Fractional CTO, technical advisor, or the agency that built the thing and still owns the technical relationship. If that conversation routes through someone else, this program will not do much for you.",
+  },
+  {
+    n: "03",
+    t: "You want one more reason to be visibly right.",
+    b: "Finding a client money they had not noticed losing is not a pitch, it is the job. That is the test we care about most: does recommending us cost you social capital, or earn it?",
+  },
+] as const;
+
+const SAFETY = [
+  {
+    title: "The free level already produces the number",
+    body: "Your client connects and reads their own spend before paying us anything. You are not asking them to buy something on your word, you are asking them to look.",
+  },
+  {
+    title: "Nothing in their product changes to find it",
+    body: "No rewrite, no migration, no vendor lock-in as the price of the diagnosis. Reading comes first and switching is always a separate, explicit decision they make.",
+  },
+  {
+    title: "It lands inside the week, not the quarter",
+    body: "Connect, read, and you have a figure for the next call. A recommendation that needs a two-month evaluation before it proves anything is not one you can make repeatedly.",
+  },
+  {
+    title: "If there is nothing to save, it says so",
+    body: "A well-run stack sees a small number and we do not dress it up. That is what makes the big numbers usable in front of your client.",
+  },
+] as const;
 
 const PROMISES = [
   {
@@ -102,10 +139,14 @@ function PartnersPage() {
   return (
     <MarketingShell>
       <Hero range={range} topRate={topRate} moves={moves} />
-      <Ladder tiers={tiers} topRate={topRate} moves={moves} />
+      <IsThisYou />
+      <TheCase moves={moves} />
+      <TheConversation />
+      <Ladder tiers={tiers} topRate={topRate} />
       <Promises />
       <BeyondCommission moves={moves} />
       <Steps />
+      <Neutrality />
       <ClosingCta />
     </MarketingShell>
   );
@@ -122,13 +163,13 @@ function PartnersPage() {
 const BEYOND = [
   {
     state: "Live today",
-    title: "A badge that can be checked, not just displayed",
-    body: "On activation you get a Certified Partner badge and LinkedIn banners generated from your own record, plus a verification link on costmyai.com carrying your name, tier and join date. Anyone can open the link. Nobody can issue one for themselves.",
+    title: "The market data before it is published",
+    body: "The public Intelligence page only publishes a month once it is frozen. Your partner dashboard shows the month while it is still moving — price moves, cuts and new listings across every model and host we track. It is the difference between telling a client what happened and telling them what is happening.",
   },
   {
     state: "Live today",
-    title: "The market data before it is published",
-    body: "The public Intelligence page only publishes a month once it is frozen. Your partner dashboard shows the month while it is still moving — price moves, cuts and new listings across every model and host we track.",
+    title: "A badge that can be checked, not just displayed",
+    body: "On activation you get a Certified Partner badge and LinkedIn banners generated from your own record, plus a verification link on costmyai.com carrying your name, tier and join date. Anyone can open the link. Nobody can issue one for themselves.",
   },
   {
     state: "Commitment",
@@ -155,7 +196,7 @@ function BeyondCommission({ moves }: { moves: number }) {
 
         <SectionHead
           eyebrow="Beyond the commission"
-          title="What a partner account actually gets you."
+          title="What you get that your competition does not have."
           lead="Two of these work the day you are activated. Two are commitments we honour when you take us up on them, and we say so rather than dressing them up as features."
         />
 
@@ -226,8 +267,8 @@ function Hero({
           as="h1"
           className="mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[4.6rem]"
         >
-          You recommend it once.{" "}
-          <span className="text-gradient-brand">It pays for the life of the account.</span>
+          Be the advisor who{" "}
+          <span className="text-gradient-brand">found the money.</span>
         </Reveal>
 
         <Reveal
@@ -235,8 +276,9 @@ function Hero({
           as="p"
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
-          If you advise teams on their AI stack, CostMyAI is an easy first recommendation: the free
-          level already cuts their bill — and every invoice they ever pay keeps paying you back.
+          For fractional CTOs, technical advisors and the agencies that built the product and still
+          own the relationship. Bring a client a lower AI bill without touching their product — and
+          keep earning on every invoice they ever pay.
         </Reveal>
 
         <Reveal delay={220} className="mt-11 flex flex-wrap items-center justify-center gap-3">
@@ -279,7 +321,16 @@ function Hero({
               label: "Top commission rate",
             },
             { node: <Stat>Lifetime</Stat>, label: "Commission on every invoice they ever pay" },
-            { node: <Stat>Opportunity</Stat>, label: "Be the advisor who turns a cost line into a win" },
+            {
+              node: (
+                <CountUp
+                  value={moves}
+                  format={(n) => Math.round(n).toLocaleString("en-US")}
+                  className="num block text-4xl font-semibold tabular-nums tracking-[-0.045em] text-foreground sm:text-6xl"
+                />
+              ),
+              label: "Price moves tracked — yours before we publish them",
+            },
           ].map((s, i) => (
             <Reveal key={s.label} delay={300 + i * 90}>
               {s.node}
@@ -302,30 +353,126 @@ function Stat({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* --------------------------------- ladder -------------------------------- */
+/* -------------------------------- is this you ----------------------------- */
 
-function Ladder({
-  tiers,
-  topRate,
-  moves,
-}: {
-  tiers: PartnerLadder["tiers"];
-  topRate: number;
-  moves: number;
-}) {
+function IsThisYou() {
   return (
-    <section className="relative overflow-hidden border-y border-border wash-brand">
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="Fit"
+          title="Is this you?"
+          lead="Three statements. If you nod at all three, this works from your first client conversation. If one is a maybe, it is still worth a call — we would rather talk than guess."
+        />
+
+        <div className="mx-auto mt-16 max-w-4xl">
+          {QUALIFIERS.map((q, i) => (
+            <Reveal
+              key={q.n}
+              delay={i * 90}
+              className="group grid gap-3 border-t border-border py-9 sm:grid-cols-[5rem_1fr] sm:gap-8 sm:py-11"
+            >
+              <span
+                aria-hidden
+                className="num pointer-events-none select-none text-[2.4rem] leading-none text-gradient-brand opacity-30 transition-opacity duration-500 group-hover:opacity-100 sm:text-[3rem]"
+              >
+                {q.n}
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-xl font-semibold tracking-[-0.03em] sm:text-2xl">{q.t}</h3>
+                <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                  {q.b}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
+
+        <Reveal delay={140} className="mx-auto mt-16 max-w-3xl text-center">
+          <p className="text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            The reason this compounds: you already paid for the trust once. If you sit inside four
+            companies at a time, one decision to recommend us reaches all four — and every client
+            you take on after that arrives already covered.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------- the case --------------------------------- */
+
+function TheCase({ moves }: { moves: number }) {
+  return (
+    <section className="relative overflow-hidden border-t border-border wash-brand">
       {/* The statement placement: a whisper at the bottom edge, never behind body copy. */}
       <PriceDriftRibbon
         moves={moves}
         className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
       />
       <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="What you put in front of a client"
+          title="A recommendation that costs you nothing to make."
+          lead="An advisor stakes their standing on every suggestion. Here is exactly what your client experiences, so you can judge that risk before you spend it."
+        />
+
+        <div className="mx-auto mt-16 grid max-w-4xl gap-y-0 sm:grid-cols-2 sm:gap-x-12">
+          {SAFETY.map((s, i) => (
+            <Reveal key={s.title} delay={i * 90} className="border-t border-border py-9 sm:py-11">
+              <h3 className="text-lg font-semibold tracking-[-0.025em] sm:text-xl">{s.title}</h3>
+              <p className="mt-2 text-base leading-relaxed text-muted-foreground">{s.body}</p>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------- the conversation ---------------------------- */
+
+function TheConversation() {
+  return (
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-32">
+        <Reveal
+          as="p"
+          className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+        >
+          The sentence
+        </Reveal>
+        <Reveal
+          delay={80}
+          as="p"
+          className="mt-8 text-[1.7rem] font-semibold leading-[1.2] tracking-[-0.035em] sm:text-[2.5rem]"
+        >
+          &ldquo;I found a way to cut your AI bill{" "}
+          <span className="text-gradient-brand">without touching your product.</span> Give me an
+          hour and I will show you the number.&rdquo;
+        </Reveal>
+        <Reveal delay={160} as="p" className="mt-8 text-base leading-relaxed text-muted-foreground">
+          That is the whole pitch, and it is one you can make in a check-in without changing the
+          subject. What we will not do is put words in your mouth: we do not promise a percentage
+          before we have read the client&rsquo;s spend, and we will not let you either.
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* --------------------------------- ladder -------------------------------- */
+
+function Ladder({ tiers, topRate }: { tiers: PartnerLadder["tiers"]; topRate: number }) {
+  return (
+    <section className="relative overflow-hidden border-y border-border wash-brand">
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
 
         <SectionHead
           eyebrow="Commission ladder"
-          title="The more you refer, the higher every future invoice pays."
-          lead="Your rate is set by lifetime referred revenue and applies to everything your referrals pay from that point on. Read live from the same table that prices your payouts."
+          title="Every client you bring lifts the rate on all the others."
+          lead="Your rate is set by lifetime referred revenue across your whole client base, and applies to everything your referrals pay from that point on. Read live from the same table that prices your payouts."
         />
 
         <div className="mt-20 grid grid-cols-2 items-end gap-x-4 gap-y-12 sm:grid-cols-5 sm:gap-x-6">
@@ -435,17 +582,28 @@ function Steps() {
           ))}
           <div className="border-t border-border" />
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <Reveal delay={120} className="mx-auto mt-20 max-w-3xl text-center">
+/* ------------------------------- neutrality ------------------------------- */
+
+function Neutrality() {
+  return (
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <Reveal className="mx-auto max-w-3xl text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary">
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
-          <h3 className="mt-6 text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
-            Neutrality applies to partners too.
-          </h3>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+          <h2 className="mt-6 text-[2.1rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[3.2rem]">
+            The client relationship stays yours.
+          </h2>
+          <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
             You see which workspaces are yours, which level they are on, and every dollar you have
-            earned. You never see their spend, their usage or their people.
+            earned. You never see their spend, their usage or their people — and we never go around
+            you to sell them something. Neutrality applies to partners too.
           </p>
         </Reveal>
       </div>
@@ -463,8 +621,8 @@ function ClosingCta() {
       <Reveal className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-32">
 
         <h2 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[3.6rem]">
-          Start earning on the <span className="text-gradient-brand">next</span> recommendation you
-          make.
+          Your <span className="text-gradient-brand">next</span> client call is the one to use it
+          on.
         </h2>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link to="/partners/apply" className="btn-gradient px-6 py-3 text-[15px]">
