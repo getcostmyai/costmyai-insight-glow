@@ -1,5 +1,7 @@
 # How It Works — clarity pass for an evaluating newcomer
 
+User note: the current hero subhead says "Four steps, no manual exports." That phrase makes no sense here and should be removed/replaced.
+
 Read as someone who has the pain (AI bill rising, no idea which workload), already believes the problem, and is now checking whether this is real and whether they can run it. Today the page tells them what CostMyAI *believes*. It does not answer what they *do*, what it *costs them in effort*, or what they *see first*.
 
 ## What is unclear today
