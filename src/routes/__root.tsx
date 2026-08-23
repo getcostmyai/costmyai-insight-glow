@@ -88,9 +88,17 @@ export const Route = createRootRouteWithContext<{
   // client the browser already knows the origin, so no server call is made.
   beforeLoad: async (): Promise<{ origin: string }> => {
     if (typeof window !== "undefined") return { origin: window.location.origin };
-    const { getRequestOrigin } = await import("@/lib/origin.functions");
-    return { origin: await getRequestOrigin() };
+    // Same server pass also captures the acquisition source (referrer origin +
+    // UTM), first-touch only. This is the only request whose Referer is the
+    // external site that actually sent the visitor.
+    const [{ getRequestOrigin }, { captureFirstTouch }] = await Promise.all([
+      import("@/lib/origin.functions"),
+      import("@/lib/source.functions"),
+    ]);
+    const [origin] = await Promise.all([getRequestOrigin(), captureFirstTouch()]);
+    return { origin };
   },
+
 
   head: () => ({
     meta: [
