@@ -262,8 +262,9 @@ function PlanBlock({ plan, index }: { plan: PlanTier; index: number }) {
 function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
   const [failed, setFailed] = useState(false);
   return (
-    <figure className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="relative aspect-[16/10] w-full bg-muted/40">
+    <figure className="overflow-hidden rounded-xl border border-border/60 shadow-[0_40px_80px_-40px_rgba(23,15,60,0.4)]">
+      <div className="relative aspect-[16/10] w-full">
+        <div className="absolute inset-0 mesh-brand opacity-40" aria-hidden />
         {failed ? null : (
           <img
             src={dashboardShot(plan)}
@@ -273,19 +274,13 @@ function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
             className="absolute inset-0 h-full w-full object-cover object-top"
           />
         )}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: "var(--gradient-brand)",
-            opacity: failed ? 0.06 : 0,
-          }}
-        />
       </div>
-      <figcaption className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        {label} — the workspace view at this level.
+      <div className="rule-brand" aria-hidden />
+      <figcaption className="px-4 py-3 text-xs text-muted-foreground">
+        {label}: the workspace view at this level.
       </figcaption>
     </figure>
+
   );
 }
 
