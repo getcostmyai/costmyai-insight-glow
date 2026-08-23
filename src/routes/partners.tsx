@@ -120,6 +120,25 @@ const STEPS = [
   },
 ] as const;
 
+const FAQ = [
+  {
+    q: "How is my reputation protected if the client does not save anything?",
+    a: "The free tier lets the client read their own spend before anyone pays. If there is nothing to save, the tool says so. You are not selling a promise; you are offering a number they can verify themselves.",
+  },
+  {
+    q: "When do payouts actually land?",
+    a: "We run partner payouts on the 1st of each month. Your balance must be at least $50 to trigger a transfer; anything below that rolls forward and is never lost. Every line in your ledger is written by the payment webhook on a real paid invoice.",
+  },
+  {
+    q: "How does the commission structure work across multiple clients?",
+    a: "Your rate is set by lifetime referred revenue across every workspace you have brought in, and it applies to all future invoices from that point on. The attribution window is 60 days, first click wins, and once a workspace is attached it stays attached for life.",
+  },
+  {
+    q: "What client data can I see, and what stays private?",
+    a: "You see your own dashboard: attributed workspaces, tier progress, and earned commission. You do not see client spend, usage, team members, or internal data. We also never contact your referrals to upsell them — the client relationship remains yours.",
+  },
+] as const;
+
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
