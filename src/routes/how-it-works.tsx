@@ -241,10 +241,10 @@ function ConnectSnippet() {
 function Architecture({ stats }: { stats: MarketingStats }) {
   return (
     <section className="relative overflow-hidden border-t border-border">
-      {/* The statement placement: full-strength band across the bottom quarter. */}
+      {/* The statement placement: a whisper at the bottom edge, never behind body copy. */}
       <PriceDriftRibbon
         moves={stats.priceChangesTracked}
-        className="absolute inset-x-0 bottom-0 h-[26%] opacity-40 [mask-image:linear-gradient(180deg,transparent,#000_55%)]"
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
       />
       <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
         <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
