@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
 export const Route = createFileRoute("/contact")({
@@ -22,18 +25,27 @@ export const Route = createFileRoute("/contact")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: ContactPage,
 });
 
 function ContactPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <section className="wash-hero px-5 pb-28 pt-24 sm:px-8 sm:pb-40 sm:pt-32">
-        <div className="mx-auto max-w-6xl">
+      <section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+        <PriceDriftRibbon
+          moves={stats.priceChangesTracked}
+          orientation="diagonal"
+          className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+        />
+        <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-5 pb-28 pt-24 sm:px-8 sm:pb-40 sm:pt-32">
           <Reveal className="max-w-4xl">
             <p className="eyebrow">Contact</p>
             <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
-              Get in <span className="text-gradient-brand">touch</span>.
+              Get in <span className="text-gradient-brand-wide">touch</span>.
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
               Real question, real person on the other end. No ticket queue.

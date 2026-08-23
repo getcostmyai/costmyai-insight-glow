@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/api/")({
   head: () => ({
@@ -28,6 +31,7 @@ export const Route = createFileRoute("/api/")({
     ],
     links: [{ rel: "canonical", href: "/api" }],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: ApiPage,
 });
 
@@ -45,16 +49,27 @@ const WHAT_IT_DOES_NOT = [
 ];
 
 function ApiPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
       <div className="flex flex-col">
-        <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+            aria-hidden
+          />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="diagonal"
+            className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+          />
+          <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
             <Reveal className="max-w-4xl">
               <p className="eyebrow">API</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
                 Not a REST API you query for your own dashboard data,{" "}
-                <span className="text-gradient-brand">not yet</span>.
+                <span className="text-gradient-brand-wide">not yet</span>.
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                 This page describes how CostMyAI actually connects to your AI usage today, and what
@@ -142,7 +157,7 @@ function ApiPage() {
           </div>
         </section>
 
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+        <section className="wash-brand border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-12 sm:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] sm:gap-24">
               <Reveal>
@@ -170,12 +185,17 @@ function ApiPage() {
           </div>
         </section>
 
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+          />
+          <div className="relative mx-auto max-w-3xl text-center">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 Tell us what you&apos;re trying to{" "}
-                <span className="text-gradient-brand">connect</span>.
+                <span className="text-gradient-brand-wide">connect</span>.
               </h2>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <a
