@@ -17,7 +17,7 @@ task, not two.
 Current value:
 
 ```
-https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app
+https://www.costmyai.com
 ```
 
 This is the stable production URL: immutable across project renames, and the

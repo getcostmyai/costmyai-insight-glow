@@ -27,7 +27,7 @@ One container per provider — `COSTMYAI_UPSTREAM_URL` names the upstream it fro
 ```bash
 docker run -d --name costmyai --restart unless-stopped \
   -e COSTMYAI_INGEST_TOKEN=cma_live_xxxxxxxxxxxxxxxxxxxxxxxx \
-  -e COSTMYAI_BASE_URL=https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app \
+  -e COSTMYAI_BASE_URL=https://www.costmyai.com \
   -e COSTMYAI_UPSTREAM_URL=https://api.openai.com \
   -v costmyai-spool:/var/lib/costmyai/spool \
   -p 8787:8787 \

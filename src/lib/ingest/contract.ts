@@ -236,7 +236,7 @@ export const CONTAINER_DEFAULTS = {
    * constant — every surface re-renders from it, and
    * `scripts/audit/onboarding.ts` re-proves that the new value really answers.
    */
-  appUrl: "https://project--e64eb6e2-38b5-4107-b0fb-2e2b0ab7a1d4.lovable.app",
+  appUrl: "https://www.costmyai.com",
 } as const;
 
 export function containerImageRef(): string {
