@@ -109,7 +109,8 @@ function Hero({ stats }: { stats: MarketingStats }) {
 
 function Steps() {
   return (
-    <section className="wash-section">
+    <section className="wash-brand">
+
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-4xl">
           {HOW_STEPS.map((s, i) => (
