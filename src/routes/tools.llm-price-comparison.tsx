@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
 
 const URL = "https://www.costmyai.com/tools/llm-price-comparison";
@@ -25,7 +27,11 @@ export const Route = createFileRoute("/tools/llm-price-comparison")({
     ],
     links: [{ rel: "canonical", href: URL }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery()),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(catalogQuery()),
+      context.queryClient.ensureQueryData(marketingStatsQuery()),
+    ]),
   component: LlmPriceComparisonPage,
 });
 
@@ -41,16 +47,18 @@ const money = (v: number) =>
 
 function LlmPriceComparisonPage() {
   const { data } = useSuspenseQuery(catalogQuery());
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <Calculator data={data} />
+      <Calculator data={data} moves={stats.priceChangesTracked} />
       <Notes />
-      <Cta />
+      <Cta moves={stats.priceChangesTracked} />
     </MarketingShell>
   );
 }
 
-function Calculator({ data }: { data: CatalogPayload }) {
+function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
+
   // Volumes are expressed in millions of tokens per month — the unit every
   // published price list uses, so nobody has to convert anything.
   const [inputM, setInputM] = useState(50);
