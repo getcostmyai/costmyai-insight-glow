@@ -188,9 +188,22 @@ function RootComponent() {
 
   // SPA page views. trackPageView is inert until consent has loaded gtag.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const routeId = useRouterState({
+    select: (s) => s.matches[s.matches.length - 1]?.routeId ?? "",
+  });
   useEffect(() => {
     trackPageView(pathname);
   }, [pathname]);
+
+  // First-party page views, every route, one generic mechanism. Not gated on
+  // consent: it carries nothing beyond the page plus the visitor/session ids
+  // already written unprompted by every other lead event.
+  const trackPage = useServerFn(trackPageViewed);
+  useEffect(() => {
+    if (!shouldFire(`page_viewed:${pathname}`)) return;
+    void trackPage({ data: { path: pathname, routeId } }).catch(() => {});
+  }, [pathname, routeId, trackPage]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
