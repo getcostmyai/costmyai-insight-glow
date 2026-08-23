@@ -673,8 +673,7 @@ function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportConte
           <Reveal className="max-w-2xl">
             <h3 className="text-sm font-semibold tracking-tight">Who reprices most</h3>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              Ranked over everything we hold. We began recording price moves on{" "}
-              {dateLabel(data.trackingSince)}, so this is a short window, not a 90-day history.
+              Ranked over everything we hold. The leaderboard updates as more price moves are recorded.
             </p>
           </Reveal>
           {data.repricers.length === 0 ? (
