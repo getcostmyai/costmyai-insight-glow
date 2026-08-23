@@ -288,8 +288,11 @@ function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
 
 function Close() {
   return (
-    <section className="border-t border-border">
-      <div className="mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border">
+      <div className="absolute inset-0 mesh-brand mesh-drift opacity-70" aria-hidden />
+      <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      <div className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-28">
+
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
             One environment variable. Then the evidence.
