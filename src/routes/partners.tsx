@@ -527,12 +527,12 @@ function Ladder({ tiers, topRate }: { tiers: PartnerLadder["tiers"]; topRate: nu
                     isTop ? "text-gradient-brand" : "text-foreground"
                   }`}
                 />
-                <div className="mt-4 h-40 w-full">
+                <div className="mt-4 flex h-40 w-full flex-col justify-end">
                   <div
                     className={`w-full rounded-t-md transition-[height] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                       isTop ? "fill-gradient-brand" : "fill-gradient-brand-soft"
                     }`}
-                    style={{ height: `${height}%`, marginTop: `${100 - height}%` }}
+                    style={{ height: `${height}%` }}
                     aria-hidden
                   />
                 </div>
