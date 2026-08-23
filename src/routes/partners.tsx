@@ -370,7 +370,7 @@ function Ladder({
 
 function Promises() {
   return (
-    <section className="wash-section">
+    <section className="border-t border-border">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead
           eyebrow="The deal"
