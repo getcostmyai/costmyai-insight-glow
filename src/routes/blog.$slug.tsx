@@ -25,7 +25,9 @@ export const Route = createFileRoute("/blog/$slug")({
         { property: "og:description", content: post.description },
         { property: "og:type", content: "article" },
         { property: "og:url", content: `https://www.costmyai.com/blog/${post.slug}` },
+        { property: "og:image", content: "https://www.costmyai.com/og/costmyai-og.png" },
         { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: "https://www.costmyai.com/og/costmyai-og.png" },
       ],
       links: [{ rel: "canonical", href: `https://www.costmyai.com/blog/${post.slug}` }],
       scripts: [{
