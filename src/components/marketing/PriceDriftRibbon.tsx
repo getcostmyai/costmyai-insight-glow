@@ -63,16 +63,24 @@ function useReducedMotion() {
   return reduced;
 }
 
+export type RibbonOrientation = "horizontal" | "vertical" | "diagonal";
+
 export function PriceDriftRibbon({
   moves,
   className = "",
+  orientation = "horizontal",
 }: {
   /** Real market price moves observed this month. Drives the band's density. */
   moves: number;
   className?: string;
+  /** Same band, seen from a different angle. Path maths never changes. */
+  orientation?: RibbonOrientation;
 }) {
   const reduced = useReducedMotion();
   const hostRef = useRef<HTMLDivElement>(null);
+  // One gradient per instance: a shared DOM id would collide across the three
+  // placements on the page.
+  const gradientId = `driftStroke${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
   const lines = useMemo(() => {
     // More observed movement, more strands — bounded so it never turns to mud.
@@ -90,15 +98,23 @@ export function PriceDriftRibbon({
     });
   }, [moves]);
 
+  // Rotation happens inside the SVG, so `preserveAspectRatio="none"` still
+  // stretches the band to fill whatever box the caller positioned.
+  const vertical = orientation === "vertical";
+  const viewBox = vertical ? `0 0 ${HEIGHT} ${WIDTH}` : `0 0 ${WIDTH} ${HEIGHT}`;
+  const groupTransform = vertical
+    ? `rotate(90) translate(0 -${HEIGHT})`
+    : orientation === "diagonal"
+      ? `translate(${WIDTH / 2} ${HEIGHT / 2}) rotate(-7) scale(1.3) translate(-${WIDTH / 2} -${
+          HEIGHT / 2
+        })`
+      : undefined;
+
   return (
     <div ref={hostRef} className={`pointer-events-none select-none ${className}`} aria-hidden>
-      <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        preserveAspectRatio="none"
-        className="h-full w-full"
-      >
+      <svg viewBox={viewBox} preserveAspectRatio="none" className="h-full w-full">
         <defs>
-          <linearGradient id="driftStroke" x1="0" y1="0" x2="1" y2="0">
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="rgb(var(--brand-indigo))" stopOpacity="0" />
             <stop offset="18%" stopColor="rgb(var(--brand-indigo))" stopOpacity="1" />
             <stop offset="46%" stopColor="rgb(var(--brand-violet))" stopOpacity="1" />
@@ -108,26 +124,29 @@ export function PriceDriftRibbon({
           </linearGradient>
         </defs>
 
-        {lines.map((l, i) => (
-          <path
-            key={i}
-            d={l.d}
-            fill="none"
-            stroke="url(#driftStroke)"
-            strokeWidth={l.width}
-            strokeOpacity={l.opacity}
-            strokeLinecap="round"
-            style={
-              reduced
-                ? undefined
-                : {
-                    animation: `drift-strand ${22 + (i % 5) * 4}s ease-in-out ${l.delay}s infinite`,
-                    transformOrigin: "center",
-                  }
-            }
-          />
-        ))}
+        <g transform={groupTransform}>
+          {lines.map((l, i) => (
+            <path
+              key={i}
+              d={l.d}
+              fill="none"
+              stroke={`url(#${gradientId})`}
+              strokeWidth={l.width}
+              strokeOpacity={l.opacity}
+              strokeLinecap="round"
+              style={
+                reduced
+                  ? undefined
+                  : {
+                      animation: `drift-strand ${22 + (i % 5) * 4}s ease-in-out ${l.delay}s infinite`,
+                      transformOrigin: "center",
+                    }
+              }
+            />
+          ))}
+        </g>
       </svg>
+
     </div>
   );
 }
