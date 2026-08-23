@@ -314,7 +314,7 @@ export function Estimator() {
   };
 
   return (
-    <section ref={sectionRef} id="estimator" className="scroll-mt-24 wash-section">
+    <section ref={sectionRef} id="estimator" className="scroll-mt-24 wash-brand">
       <div className="mx-auto max-w-4xl px-5 py-20 sm:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Estimator</p>
