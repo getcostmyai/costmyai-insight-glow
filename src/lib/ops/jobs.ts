@@ -139,6 +139,15 @@ export const JOB_REGISTRY: JobSpec[] = [
     what: "Pushes a message out when any scheduled job turns failing, stale or empty, so the board is not the only place a failure appears.",
   },
   {
+    job: "rate-limit-gc",
+    label: "Rate-limit sweep",
+    cronName: "costmyai-rate-limit-gc",
+    schedule: "7 * * * *",
+    maxIntervalMinutes: 180,
+    what: "Drops expired rate-limit counters, so the shared limiter's table stays bounded rather than growing for the lifetime of the platform.",
+  },
+
+  {
 
 
     job: SHAPE_WATCH_JOB,
