@@ -521,6 +521,17 @@
   background-image: var(--gradient-brand-soft);
 }
 
+@utility fill-gradient-brand-wide {
+  background-image: var(--gradient-brand-wide);
+}
+
+@utility text-gradient-brand-wide {
+  background-image: var(--gradient-brand-wide);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* Provider marquee — one continuous lane, duplicated for a seamless loop. */
 @keyframes marquee-scroll {
   from {
