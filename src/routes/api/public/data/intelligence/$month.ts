@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/public/data/intelligence/$month")({
         const url = new URL(request.url);
         const format = url.searchParams.get("format") === "json" ? "json" : "csv";
 
-        const { MONTH_KEY_RE, readFrozenMonth } = await import("./../../../../../lib/intelligence/snapshot.server");
+        const { MONTH_KEY_RE, readFrozenMonth } = await import("@/lib/intelligence/snapshot.server");
 
         let payload;
         let month = params.month;

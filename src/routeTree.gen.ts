@@ -92,6 +92,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
+import { Route as ApiPublicDataIntelligenceMonthRouteImport } from './routes/api/public/data/intelligence/$month'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -526,6 +527,12 @@ const ApiPublicOgIntelligenceMonthRoute =
     path: '/api/public/og/intelligence/$month',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDataIntelligenceMonthRoute =
+  ApiPublicDataIntelligenceMonthRouteImport.update({
+    id: '/api/public/data/intelligence/$month',
+    path: '/api/public/data/intelligence/$month',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -609,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRoutesByTo {
@@ -690,6 +698,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRoutesById {
@@ -776,6 +785,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
 }
 export interface FileRouteTypes {
@@ -862,6 +872,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -943,6 +954,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
   id:
     | '__root__'
@@ -1028,6 +1040,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
   fileRoutesById: FileRoutesById
 }
@@ -1088,6 +1101,7 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  ApiPublicDataIntelligenceMonthRoute: typeof ApiPublicDataIntelligenceMonthRoute
   ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
 }
 
@@ -1674,6 +1688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOgIntelligenceMonthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/data/intelligence/$month': {
+      id: '/api/public/data/intelligence/$month'
+      path: '/api/public/data/intelligence/$month'
+      fullPath: '/api/public/data/intelligence/$month'
+      preLoaderRoute: typeof ApiPublicDataIntelligenceMonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1824,6 +1845,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  ApiPublicDataIntelligenceMonthRoute: ApiPublicDataIntelligenceMonthRoute,
   ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
 }
 export const routeTree = rootRouteImport
