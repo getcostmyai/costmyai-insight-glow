@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
 
 const URL = "https://www.costmyai.com/tools/llm-price-comparison";
@@ -25,7 +27,11 @@ export const Route = createFileRoute("/tools/llm-price-comparison")({
     ],
     links: [{ rel: "canonical", href: URL }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery()),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(catalogQuery()),
+      context.queryClient.ensureQueryData(marketingStatsQuery()),
+    ]),
   component: LlmPriceComparisonPage,
 });
 
@@ -41,16 +47,18 @@ const money = (v: number) =>
 
 function LlmPriceComparisonPage() {
   const { data } = useSuspenseQuery(catalogQuery());
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <Calculator data={data} />
+      <Calculator data={data} moves={stats.priceChangesTracked} />
       <Notes />
-      <Cta />
+      <Cta moves={stats.priceChangesTracked} />
     </MarketingShell>
   );
 }
 
-function Calculator({ data }: { data: CatalogPayload }) {
+function Calculator({ data, moves }: { data: CatalogPayload; moves: number }) {
+
   // Volumes are expressed in millions of tokens per month — the unit every
   // published price list uses, so nobody has to convert anything.
   const [inputM, setInputM] = useState(50);
@@ -82,9 +90,20 @@ function Calculator({ data }: { data: CatalogPayload }) {
   const dearest = rows[rows.length - 1];
 
   return (
-    <section className="relative overflow-hidden wash-hero">
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pt-36">
+    <>
+    <section className="relative overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[46rem] mesh-brand mesh-drift [mask-image:linear-gradient(180deg,#000_55%,transparent)]"
+        aria-hidden
+      />
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="diagonal"
+        className="absolute inset-x-0 top-0 h-[26rem] opacity-[0.12] [mask-image:linear-gradient(180deg,#000,transparent)]"
+      />
+      <div className="absolute inset-x-0 top-0 h-[46rem] texture-dots opacity-60" aria-hidden />
+
+      <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pt-36">
         <Reveal
           as="p"
           className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -96,8 +115,9 @@ function Calculator({ data }: { data: CatalogPayload }) {
           as="h1"
           className="mt-6 max-w-4xl text-[2.7rem] font-semibold leading-[1] tracking-[-0.045em] sm:text-[4.2rem]"
         >
-          LLM pricing comparison, <span className="text-gradient-brand">at your volume.</span>
+          LLM pricing comparison, <span className="text-gradient-brand-wide">at your volume.</span>
         </Reveal>
+
         <Reveal
           delay={150}
           as="p"
@@ -107,9 +127,14 @@ function Calculator({ data }: { data: CatalogPayload }) {
           own traffic. Set your monthly volume and every tracked model reprices against it, at the
           cheapest provider actually serving it.
         </Reveal>
+      </div>
+    </section>
 
+    <section className="relative border-b border-border">
+      <div className="relative mx-auto max-w-6xl px-5 pb-20 sm:px-8">
         {/* Controls */}
         <Reveal delay={220} className="mt-14 border-y border-border py-8">
+
           <div className="grid gap-10 sm:grid-cols-3">
             <VolumeSlider
               id="input-tokens"
@@ -256,6 +281,7 @@ function Calculator({ data }: { data: CatalogPayload }) {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -332,8 +358,9 @@ function Headline({
 
 function Notes() {
   return (
-    <section className="border-t border-border bg-card px-5 py-20 sm:px-8 sm:py-28">
+    <section className="wash-brand border-t border-border px-5 py-20 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-3xl">
+
         <Reveal as="h2" className="text-[1.8rem] font-semibold tracking-[-0.035em] sm:text-[2.4rem]">
           What this calculator does and does not assume
         </Reveal>
@@ -371,13 +398,19 @@ function Notes() {
   );
 }
 
-function Cta() {
+function Cta({ moves }: { moves: number }) {
   return (
-    <section className="border-t border-border px-5 py-24 sm:px-8 sm:py-32">
-      <Reveal className="mx-auto max-w-3xl text-center">
+    <section className="relative overflow-hidden border-t border-border px-5 py-24 sm:px-8 sm:py-32">
+      <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+      <PriceDriftRibbon
+        moves={moves}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+      />
+      <Reveal className="relative mx-auto max-w-3xl text-center">
         <h2 className="text-[2rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[3.2rem]">
-          Stop estimating. <span className="text-gradient-brand">Price your real traffic.</span>
+          Stop estimating. <span className="text-gradient-brand-wide">Price your real traffic.</span>
         </h2>
+
         <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Compare reads your actual usage instead of a slider, and shows what the same calls would
           have cost on the cheapest verified host. Free, forever.

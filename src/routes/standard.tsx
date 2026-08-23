@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import {
   BandExplainer,
   ProofMatrix,
@@ -10,7 +11,9 @@ import {
   RungStack,
 } from "@/components/marketing/StandardVisuals";
 import { intelligenceQuery } from "@/lib/intelligence.functions";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import type { BandWinner } from "@/lib/intelligence/intelligence.server";
+
 
 /**
  * The CostMyAI Standard — the pillar page. Blog articles are supporting
@@ -84,17 +87,22 @@ export const Route = createFileRoute("/standard")({
       },
 
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/standard" },
+      { property: "og:url", content: "https://www.costmyai.com/standard" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/standard" }],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/standard" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(intelligenceQuery()),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(intelligenceQuery()),
+      context.queryClient.ensureQueryData(marketingStatsQuery()),
+    ]),
   component: StandardPage,
 });
 
 function StandardPage() {
   const { data: live } = useSuspenseQuery(intelligenceQuery());
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   const winner = live.data.bandWinners[0] ?? ILLUSTRATIVE_BAND;
   const isLiveBand = Boolean(live.data.bandWinners[0]);
 
@@ -102,12 +110,22 @@ function StandardPage() {
     <MarketingShell>
       <div className="flex flex-col">
         {/* Title + version stamp -------------------------------------------- */}
-        <section className="wash-hero px-5 pb-14 pt-24 sm:px-8 sm:pb-16 sm:pt-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden border-b border-border px-5 pb-14 pt-24 sm:px-8 sm:pb-16 sm:pt-32">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+            aria-hidden
+          />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="diagonal"
+            className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+          />
+          <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+          <div className="relative mx-auto max-w-6xl">
             <Reveal className="max-w-4xl">
               <p className="eyebrow">The Standard</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-7xl">
-                The CostMyAI <span className="text-gradient-brand">Standard</span>
+                The CostMyAI <span className="text-gradient-brand-wide">Standard</span>
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                 A four step framework for getting your AI bill under control, where every saving has
@@ -121,9 +139,16 @@ function StandardPage() {
           </div>
         </section>
 
+
         {/* Hero visual: the four-level stack -------------------------------- */}
-        <section className="px-5 pb-24 sm:px-8 sm:pb-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden wash-brand px-5 py-24 sm:px-8 sm:py-32">
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="vertical"
+            className="absolute inset-y-0 right-0 hidden w-[14%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+          />
+          <div className="relative mx-auto max-w-6xl">
+
             <RungStack />
             <Reveal delay={120}>
               <p className="mt-10 max-w-3xl text-[1.0625rem] leading-[1.75] text-muted-foreground">
@@ -182,13 +207,14 @@ function StandardPage() {
         </section>
 
         {/* What each rung has to prove -------------------------------------- */}
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden wash-brand border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="relative mx-auto max-w-6xl">
             <Reveal className="max-w-3xl">
               <p className="eyebrow">Evidence</p>
               <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
-                What each rung has to <span className="text-gradient-brand">prove</span>.
+                What each rung has to <span className="text-gradient-brand-wide">prove</span>.
               </h2>
+
             </Reveal>
             <Reveal delay={60} className="mt-12">
               <ProofMatrix />
@@ -224,8 +250,9 @@ function StandardPage() {
         </section>
 
         {/* Interactive self-assessment --------------------------------------- */}
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden wash-brand border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="relative mx-auto max-w-6xl">
+
             <Reveal className="max-w-3xl">
               <p className="eyebrow">How to apply this</p>
               <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
@@ -276,14 +303,22 @@ function StandardPage() {
         </section>
 
         {/* Close --------------------------------------------------------------- */}
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+          />
+          <div className="relative mx-auto max-w-3xl text-center">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 Rung one is free.
                 <br />
-                <span className="text-gradient-brand">See the saving before you pay us anything.</span>
+                <span className="text-gradient-brand-wide">
+                  See the saving before you pay us anything.
+                </span>
               </h2>
+
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
                   Start free
