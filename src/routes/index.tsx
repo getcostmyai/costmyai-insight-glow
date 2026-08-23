@@ -166,27 +166,17 @@ const FORECAST_PRINCIPLES = [
   {
     n: "01",
     title: "What you already spent is never guessed",
-    body: "Month-to-date is a fixed, known baseline read from real usage. Only the days still ahead of you get projected, so the part of the month that already happened can never move.",
+    body: "Month-to-date is read from real usage, so the part of the month that already happened can never move.",
   },
   {
     n: "02",
-    title: "Your week has a shape",
-    body: "Weekday and weekend traffic are not the same workload. We detect the weekly rhythm in your own usage and apply it only when the pattern is genuinely there, never as a blanket assumption.",
+    title: "A spike is not a trend",
+    body: "Growth is carried forward, but damped and capped, so one loud Tuesday cannot compound into a month-end number that was never going to happen.",
   },
   {
     n: "03",
-    title: "A spike is not a trend",
-    body: "Growth is carried forward, but damped and capped, so one loud Tuesday cannot compound into a frightening month-end number that was never going to happen.",
-  },
-  {
-    n: "04",
     title: "A range when a number would be dishonest",
-    body: "When your usage is too dispersed to support a single figure, you get a range instead of false precision. A forecast that admits its own uncertainty is the one you can take to a board.",
-  },
-  {
-    n: "05",
-    title: "Retired and brand-new workloads are handled",
-    body: "A workload that went silent stops inflating the rest of the month. One that appeared days ago is flagged rather than extrapolated as if it had always been there.",
+    body: "When your usage is too dispersed to support a single figure, you get a range instead of false precision.",
   },
 ];
 
