@@ -17,6 +17,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram";
 import { Estimator } from "@/components/marketing/Estimator";
 import { ForecastDiagram } from "@/components/marketing/ForecastDiagram";
+import { GradientPanel } from "@/components/marketing/GradientPanel";
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -351,6 +352,14 @@ function HowItWorks() {
               </li>
             ))}
           </ol>
+        </Reveal>
+
+        <Reveal delay={120} className="mt-14">
+          <GradientPanel
+            src="/images/how-it-works/compare-dashboard.png"
+            alt="The CostMyAI Compare dashboard showing per-workload spend and certified cheaper alternatives"
+            caption="Compare, the first rung: every workload priced, every cheaper route named."
+          />
         </Reveal>
 
         <Reveal delay={140} className="mt-10 text-center">
