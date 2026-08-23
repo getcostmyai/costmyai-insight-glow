@@ -53,6 +53,7 @@ function CheapestApiCallsPage() {
     <MarketingShell>
       <Hero data={data} />
       <Table data={data} />
+      <ByProvider data={data} />
       <Method />
       <Cta />
     </MarketingShell>
