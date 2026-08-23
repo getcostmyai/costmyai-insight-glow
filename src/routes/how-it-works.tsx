@@ -358,15 +358,15 @@ function PlanBlock({ plan, index }: { plan: PlanTier; index: number }) {
 }
 
 /**
- * Aspect-ratio-reserved frame for the real dashboard capture. Until the file
- * exists the frame keeps its space and caption; the <img> hides itself on
- * error so no broken-image icon is ever shown.
+ * Aspect-ratio-reserved frame for the real dashboard capture. Captures vary
+ * in aspect ratio (compare is very wide, govern is portrait), so we use
+ * object-contain to keep every UI element visible rather than cropping.
  */
 function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
   const [failed, setFailed] = useState(false);
   return (
     <figure className="overflow-hidden rounded-xl border border-border/60 shadow-[0_40px_80px_-40px_rgba(23,15,60,0.4)]">
-      <div className="relative aspect-[16/10] w-full">
+      <div className="relative aspect-[16/10] w-full bg-muted">
         <div className="absolute inset-0 mesh-brand opacity-40" aria-hidden />
         {failed ? null : (
           <img
@@ -374,7 +374,7 @@ function DashboardShot({ plan, label }: { plan: PlanTier; label: string }) {
             alt={`The ${label} dashboard in CostMyAI, showing the switches and measurements available at that level`}
             loading="lazy"
             onError={() => setFailed(true)}
-            className="absolute inset-0 h-full w-full object-cover object-left-top"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         )}
       </div>
