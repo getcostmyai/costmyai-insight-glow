@@ -271,10 +271,13 @@ function StillMoving({ stats }: { stats: MarketingStats }) {
         aria-hidden
       />
       <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      {/* The ribbon sits in the lower band only. Movement is the point, but not
+          behind the argument — strands crossing the headline read as noise. */}
       <PriceDriftRibbon
         moves={stats.priceChangesTracked}
-        className="absolute inset-x-0 top-1/2 h-[60%] -translate-y-1/2 opacity-70"
+        className="absolute inset-x-0 bottom-0 h-[38%] opacity-45 [mask-image:linear-gradient(180deg,transparent,#000_45%)]"
       />
+
       <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
         <div className="rule-brand absolute inset-x-5 bottom-0 sm:inset-x-8" aria-hidden />
