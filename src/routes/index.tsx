@@ -34,21 +34,20 @@ export const Route = createFileRoute("/")({
     const homepageFaqItems = HOMEPAGE_FAQ_IDS.map((id) => findFaqItem(id)).filter(
       (i): i is NonNullable<typeof i> => Boolean(i),
     );
+    const title = "CostMyAI — Connect once. Governed decisions on every workload.";
+    const description =
+      "Run a small connector in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. Your provider keys and prompt content stay exactly where they are.";
     return {
       meta: [
-        { title: "CostMyAI — stop overpaying for AI" },
-        {
-          name: "description",
-          content: "You're likely overspending on AI. We prove it. You save. You grow.",
-        },
-        { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
-        {
-          property: "og:description",
-          content: "You're likely overspending on AI. We prove it. You save. You grow.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: "https://www.costmyai.com/" },
         { name: "twitter:card", content: "summary_large_image" },
       ],
+      links: [{ rel: "canonical", href: "https://www.costmyai.com/" }],
       scripts: [{
         type: "application/ld+json",
         children: JSON.stringify({
