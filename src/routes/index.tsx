@@ -182,7 +182,7 @@ const FORECAST_PRINCIPLES = [
 
 function Forecast() {
   return (
-    <section id="forecast" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="forecast" className="scroll-mt-24 border-y border-border wash-brand bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Spend Forecast"
