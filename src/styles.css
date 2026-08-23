@@ -456,6 +456,51 @@
   background-image: var(--wash-section);
 }
 
+/*
+ * The ambient brand field. Always rendered on its own absolutely-positioned
+ * layer behind content, never as the background of a text container — the
+ * lobes are saturated at their source and only readable because nothing sits
+ * on top of them.
+ */
+@utility mesh-brand {
+  background-image: var(--mesh-brand);
+  background-repeat: no-repeat;
+}
+
+/* Slow parallax breathing. Two lobes drift against each other, which is what
+   keeps the field alive without ever becoming a moving distraction. */
+@keyframes mesh-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  50% {
+    transform: translate3d(-2.5%, 1.5%, 0) scale(1.14);
+  }
+}
+
+@utility mesh-drift {
+  animation: mesh-drift 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* The one place a card is allowed: a frame around real product imagery. */
+@utility gradient-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-3xl);
+  background-image: var(--mesh-brand);
+  background-color: color-mix(in oklab, var(--primary-soft) 70%, var(--card));
+  box-shadow: var(--shadow-float);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-drift {
+    animation: none;
+  }
+}
+
+
 @utility texture-dots {
   background-image: var(--texture-dots);
   background-size: 26px 26px;
