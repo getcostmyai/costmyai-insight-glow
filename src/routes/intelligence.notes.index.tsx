@@ -28,10 +28,11 @@ export const Route = createFileRoute("/intelligence/notes/")({
         { property: "og:title", content: "Intelligence notes" },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: "https://www.costmyai.com/intelligence/notes" },
         { name: "twitter:card", content: "summary_large_image" },
         ...(empty ? [{ name: "robots", content: "noindex" }] : []),
       ],
-      links: [{ rel: "canonical", href: "/intelligence/notes" }],
+      links: [{ rel: "canonical", href: "https://www.costmyai.com/intelligence/notes" }],
     };
   },
   component: NotesIndex,
