@@ -141,8 +141,14 @@ function StandardPage() {
 
 
         {/* Hero visual: the four-level stack -------------------------------- */}
-        <section className="px-5 pb-24 sm:px-8 sm:pb-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden wash-brand px-5 py-24 sm:px-8 sm:py-32">
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            orientation="vertical"
+            className="absolute inset-y-0 right-0 hidden w-[14%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+          />
+          <div className="relative mx-auto max-w-6xl">
+
             <RungStack />
             <Reveal delay={120}>
               <p className="mt-10 max-w-3xl text-[1.0625rem] leading-[1.75] text-muted-foreground">
