@@ -734,11 +734,18 @@ function ClosingCta() {
       <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] fill-gradient-brand-wide px-8 py-16 text-center text-primary-foreground sm:px-16">
         <div className="absolute inset-0 mesh-brand mesh-drift opacity-70 mix-blend-screen" aria-hidden />
         <div className="absolute inset-0 texture-dots opacity-20" aria-hidden />
+        {/* The wide gradient runs out into coral, where white body copy would
+            fall below a readable contrast ratio. A centred scrim keeps the
+            colour at the edges and the words legible. */}
+        <div
+          className="absolute inset-0 bg-[radial-gradient(70%_80%_at_50%_50%,rgba(23,15,60,0.34)_0%,rgba(23,15,60,0)_100%)]"
+          aria-hidden
+        />
         <div className="relative">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Ship faster. Spend less. Never get blindsided by a price change.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed opacity-90">
+          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed opacity-95">
             Connect once and get a complete, defensible breakdown of every workload in under 60
             seconds — what holds quality cheaper, what does not, and exactly what we refuse to
             certify.
