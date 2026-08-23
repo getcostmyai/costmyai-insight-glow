@@ -1,10 +1,46 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-23T16:57:29.718Z",
+  "generatedAt": "2026-08-23T17:20:45.217Z",
   "queries": [
     {
+      "file": "src/lib/admin/customers.server.ts",
+      "line": 33,
+      "table": "subscriptions",
+      "filters": [
+        "org_id",
+        "status"
+      ],
+      "snippet": ".from(\"subscriptions\") .select(\"org_id, plan, status, current_period_end, cancel_at_period_end, environment, c"
+    },
+    {
+      "file": "src/lib/admin/customers.server.ts",
+      "line": 39,
+      "table": "usage_rollups",
+      "filters": [
+        "is_synthetic",
+        "org_id"
+      ],
+      "snippet": ".from(\"usage_rollups\") .select(\"org_id, cost_usd, bucket_start\") .eq(\"granularity\", \"day\")"
+    },
+    {
+      "file": "src/lib/admin/customers.server.ts",
+      "line": 45,
+      "table": "partners",
+      "filters": [],
+      "snippet": ".from(\"partners\").select(\"id, name, referral_code\")"
+    },
+    {
+      "file": "src/lib/admin/customers.server.ts",
+      "line": 136,
+      "table": "lead_events",
+      "filters": [
+        "is_synthetic"
+      ],
+      "snippet": ".from(\"lead_events\") .select(\"visitor_id, event_type, created_at\") .in(\"visitor_id\", visitorIds)"
+    },
+    {
       "file": "src/lib/admin/overview.server.ts",
-      "line": 81,
+      "line": 90,
       "table": "intelligence_leads",
       "filters": [
         "status"
@@ -13,7 +49,7 @@
     },
     {
       "file": "src/lib/admin/overview.server.ts",
-      "line": 90,
+      "line": 99,
       "table": "partner_applications",
       "filters": [
         "status"
@@ -22,7 +58,7 @@
     },
     {
       "file": "src/lib/admin/overview.server.ts",
-      "line": 171,
+      "line": 212,
       "table": "lead_events",
       "filters": [
         "is_synthetic"

@@ -37,7 +37,16 @@ export async function readAdminOverview(
     }
   };
 
-  const [funnelRes, breakdownRes, jobs, leadsPending, applicationsPending, payouts, referrals] =
+  const [
+    funnelRes,
+    breakdownRes,
+    jobs,
+    leadsPending,
+    applicationsPending,
+    payouts,
+    referrals,
+    customers,
+  ] =
     await Promise.all([
       funnelPromise,
       breakdownPromise,
@@ -121,6 +130,38 @@ export async function readAdminOverview(
           partnerPct: rows.length ? Math.round((partnerReferred / rows.length) * 100) : 0,
         };
       }),
+
+      // Same filter the directory itself applies, so the card and the page can
+      // never disagree about who counts as a customer.
+      guard("Customer directory", async () => {
+        const { classifyOrg } = await import("./customers");
+        const { data, error } = await supabaseAdmin
+          .from("organizations")
+          .select("created_by")
+          .eq("is_synthetic", false);
+        if (error) throw error;
+        const emails = new Map<string, string>();
+        for (let page = 1; page <= 20; page += 1) {
+          const res = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+          if (res.error) throw res.error;
+          for (const u of res.data.users) if (u.email) emails.set(u.id, u.email);
+          if (res.data.users.length < 200) break;
+        }
+        let shown = 0;
+        let internal = 0;
+        let excluded = 0;
+        for (const org of data ?? []) {
+          const verdict = classifyOrg(
+            org.created_by ? (emails.get(org.created_by as string) ?? null) : null,
+          );
+          if (verdict === "customer") shown += 1;
+          else if (verdict === "internal") {
+            shown += 1;
+            internal += 1;
+          } else excluded += 1;
+        }
+        return { shown, internal, excluded };
+      }),
     ]);
 
   if (funnelRes.error) throw funnelRes.error;
@@ -189,6 +230,7 @@ export async function readAdminOverview(
     applicationsPending,
     payouts,
     referrals,
+    customers,
     errors,
   };
 
