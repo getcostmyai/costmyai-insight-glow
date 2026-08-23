@@ -23,10 +23,10 @@ export const Route = createFileRoute("/api/")({
           "The Verification Engine runs in your environment, reads your usage with your own keys, and sends aggregate metadata to CostMyAI. No prompts, no completions, no credentials.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "/api" },
+      { property: "og:url", content: "https://www.costmyai.com/api" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/api" }],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/api" }],
   }),
   component: ApiPage,
 });
