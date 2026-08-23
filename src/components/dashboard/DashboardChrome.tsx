@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { useIsPlatformAdmin } from "@/hooks/use-platform-admin";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { supabase } from "@/integrations/supabase/client";
 import type { DashboardScope } from "@/lib/dashboard-queries";
@@ -14,6 +15,9 @@ import { APP_NAV } from "@/lib/nav";
  */
 export function DashboardMasthead({ scope }: { scope: DashboardScope }) {
   const session = useSessionUser();
+  // Server-decided: the entry does not exist unless the database says this
+  // signed-in user is a platform admin.
+  const isAdmin = useIsPlatformAdmin();
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -36,6 +40,14 @@ export function DashboardMasthead({ scope }: { scope: DashboardScope }) {
               {item.label}
             </Link>
           ))}
+          {isAdmin ? (
+            <Link
+              to="/admin"
+              className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
+            >
+              Admin
+            </Link>
+          ) : null}
         </nav>
 
         <div className="ml-auto flex items-center gap-4">
