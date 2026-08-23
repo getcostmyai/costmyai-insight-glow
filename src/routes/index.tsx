@@ -411,7 +411,8 @@ const PERSONAS = [
 
 function BuiltFor() {
   return (
-    <section className="wash-section">
+    <section className="bg-background">
+
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Built For"
