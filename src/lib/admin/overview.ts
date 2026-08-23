@@ -21,6 +21,8 @@ export interface AdminSummary {
   applicationsPending: number | null;
   payouts: { count: number; amountUsd: number; environment: string } | null;
   referrals: { total: number; direct: number; partnerReferred: number; partnerPct: number } | null;
+  /** Real workspaces after test-harness and no-contact rows are filtered out. */
+  customers: { shown: number; internal: number; excluded: number } | null;
   /** Anything that failed to load says so, rather than rendering a confident zero. */
   errors: string[];
 }

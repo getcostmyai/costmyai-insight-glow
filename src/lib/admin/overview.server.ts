@@ -37,7 +37,16 @@ export async function readAdminOverview(
     }
   };
 
-  const [funnelRes, breakdownRes, jobs, leadsPending, applicationsPending, payouts, referrals] =
+  const [
+    funnelRes,
+    breakdownRes,
+    jobs,
+    leadsPending,
+    applicationsPending,
+    payouts,
+    referrals,
+    customers,
+  ] =
     await Promise.all([
       funnelPromise,
       breakdownPromise,
