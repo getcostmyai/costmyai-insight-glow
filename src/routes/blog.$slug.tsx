@@ -24,12 +24,10 @@ export const Route = createFileRoute("/blog/$slug")({
         { property: "og:title", content: post.title },
         { property: "og:description", content: post.description },
         { property: "og:type", content: "article" },
-        { property: "og:url", content: `https://www.costmyai.com/blog/${post.slug}` },
-        { property: "og:image", content: "https://www.costmyai.com/og/costmyai-og.png" },
+        { property: "og:url", content: `/blog/${post.slug}` },
         { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:image", content: "https://www.costmyai.com/og/costmyai-og.png" },
       ],
-      links: [{ rel: "canonical", href: `https://www.costmyai.com/blog/${post.slug}` }],
+      links: [{ rel: "canonical", href: `/blog/${post.slug}` }],
       scripts: [{
         type: "application/ld+json",
         children: JSON.stringify({

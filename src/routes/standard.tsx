@@ -84,10 +84,10 @@ export const Route = createFileRoute("/standard")({
       },
 
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "https://www.costmyai.com/standard" },
+      { property: "og:url", content: "/standard" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://www.costmyai.com/standard" }],
+    links: [{ rel: "canonical", href: "/standard" }],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(intelligenceQuery()),
   component: StandardPage,

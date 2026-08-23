@@ -30,7 +30,7 @@ export const Route = createFileRoute("/intelligence/notes/")({
         { name: "twitter:card", content: "summary_large_image" },
         ...(empty ? [{ name: "robots", content: "noindex" }] : []),
       ],
-      links: [{ rel: "canonical", href: "https://www.costmyai.com/intelligence/notes" }],
+      links: [{ rel: "canonical", href: "/intelligence/notes" }],
     };
   },
   component: NotesIndex,
