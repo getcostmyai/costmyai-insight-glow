@@ -657,7 +657,7 @@ function Faq(_props: { stats: MarketingStats }) {
   const [open, setOpen] = useState(-1);
 
   return (
-    <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
+    <section id="faq" className="scroll-mt-24 border-t border-border bg-background">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
         <div className="mx-auto mt-20 max-w-3xl">
