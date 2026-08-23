@@ -2550,6 +2550,15 @@ export type Database = {
           visitors: number
         }[]
       }
+      funnel_summary_platform: {
+        Args: { _window_days?: number }
+        Returns: {
+          rate_from_previous_pct: number
+          stage: string
+          stage_order: number
+          visitors: number
+        }[]
+      }
       has_org_role: {
         Args: {
           _org_id: string
@@ -2570,6 +2579,18 @@ export type Database = {
       job_lock_release: {
         Args: { _job: string; _token: string }
         Returns: boolean
+      }
+      lead_event_breakdown: {
+        Args: { _window_days?: number }
+        Returns: {
+          event_type: string
+          events: number
+          first_at: string
+          last_at: string
+          legacy_events: number
+          sessions: number
+          visitors: number
+        }[]
       }
       org_entitled_to: {
         Args: {
