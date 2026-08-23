@@ -4,7 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { trackPartnerEvent } from "@/lib/partner-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
-import { ArrowRight, BadgeCheck, Infinity as InfinityIcon, Receipt, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, HelpCircle, Infinity as InfinityIcon, Receipt, ShieldCheck } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
