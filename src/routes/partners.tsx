@@ -4,7 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { trackPartnerEvent } from "@/lib/partner-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
-import { ArrowRight, BadgeCheck, Infinity as InfinityIcon, Receipt, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, HelpCircle, Infinity as InfinityIcon, Receipt, ShieldCheck } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
@@ -120,6 +120,40 @@ const STEPS = [
   },
 ] as const;
 
+const FAQ = [
+  {
+    q: "How is my reputation protected if the client does not save anything?",
+    a: "The free tier lets the client read their own spend before anyone pays. If there is nothing to save, the tool says so. You are not selling a promise; you are offering a number they can verify themselves.",
+  },
+  {
+    q: "When do payouts actually land?",
+    a: "We run partner payouts on the 1st of each month. Your balance must be at least $50 to trigger a transfer; anything below that rolls forward and is never lost. Every line in your ledger is written by the payment webhook on a real paid invoice.",
+  },
+  {
+    q: "How does the commission structure work across multiple clients?",
+    a: "Your rate is set by lifetime referred revenue across every workspace you have brought in, and it applies to all future invoices from that point on. The attribution window is 60 days, first click wins, and once a workspace is attached it stays attached for life.",
+  },
+  {
+    q: "What client data can I see, and what stays private?",
+    a: "You see your own dashboard: attributed workspaces, tier progress, and earned commission. You do not see client spend, usage, team members, or internal data. We also never contact your referrals to upsell them — the client relationship remains yours.",
+  },
+] as const;
+
+function partnerFaqJsonLd() {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  });
+}
+
 function PartnersPage() {
   const { data: ladder } = useSuspenseQuery(partnerLadderQuery());
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
@@ -138,6 +172,10 @@ function PartnersPage() {
 
   return (
     <MarketingShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: partnerFaqJsonLd() }}
+      />
       <Hero range={range} topRate={topRate} moves={moves} />
       <IsThisYou />
       <TheCase moves={moves} />
@@ -146,6 +184,7 @@ function PartnersPage() {
       <Promises />
       <BeyondCommission moves={moves} />
       <Steps />
+      <PartnerFaq />
       <Neutrality />
       <ClosingCta />
     </MarketingShell>
@@ -581,6 +620,39 @@ function Steps() {
             </Reveal>
           ))}
           <div className="border-t border-border" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------- faq ---------------------------------- */
+
+function PartnerFaq() {
+  return (
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="For experienced partners"
+          title="The details that decide whether this fits your practice."
+        />
+
+        <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-2">
+          {FAQ.map((f, i) => (
+            <Reveal
+              key={f.q}
+              delay={i * 90}
+              className="border-t border-border pt-8"
+            >
+              <div className="flex items-start gap-4">
+                <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold leading-snug tracking-[-0.02em]">{f.q}</h3>
+                  <p className="mt-3 text-base leading-relaxed text-muted-foreground">{f.a}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>
