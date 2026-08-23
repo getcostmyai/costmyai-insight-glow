@@ -295,13 +295,13 @@ export function IntelligenceReport({
 
 
 export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
-  const window = trackingWindow(data);
+  const windowLine = trackingWindow(data);
   return (
     <>
-      {window ? (
+      {windowLine ? (
         <Reveal delay={90}>
           <p className="mt-10 max-w-2xl border-l-2 border-primary/40 pl-4 text-sm leading-relaxed text-muted-foreground">
-            {window}
+            {windowLine}
           </p>
         </Reveal>
       ) : null}
@@ -367,7 +367,7 @@ const GLOSSARY = [
 function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const headline = numberOfTheMonth(data);
   const direction = directionLine(data);
-  const window = trackingWindow(data);
+  const windowLine = trackingWindow(data);
   if (!headline && !direction) return null;
 
   return (
@@ -396,7 +396,7 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                           value: headline.value,
                           label: headline.label,
                           detail: headline.detail,
-                          window,
+                          window: windowLine,
                           url: `https://costmyai.com/intelligence/${ctx.citableMonth}`,
                         })
                       : undefined
