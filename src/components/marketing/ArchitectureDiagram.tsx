@@ -24,16 +24,20 @@ const NODES = [
 export function ArchitectureDiagram() {
   return (
     <div className="relative">
-      {/* The wire every node sits on. */}
+      {/* The wire every node sits on. The gradient is wider than the wire and
+          slides along it, so the line reads as metadata in motion rather than
+          as a static rule. Off under reduced motion. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-[16.6%] right-[16.6%] top-9 hidden h-px lg:block"
+        className="pointer-events-none absolute left-[16.6%] right-[16.6%] top-9 hidden h-px overflow-hidden lg:block"
         style={{
-          backgroundImage: "var(--gradient-brand)",
           maskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
           WebkitMaskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
         }}
-      />
+      >
+        <div className="wire-flow h-px w-[300%]" />
+      </div>
+
 
       <div className="relative grid gap-12 lg:grid-cols-3 lg:gap-6">
         {NODES.map((n, i) => (
