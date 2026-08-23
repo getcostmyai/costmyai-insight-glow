@@ -302,14 +302,22 @@ function StandardPage() {
         </section>
 
         {/* Close --------------------------------------------------------------- */}
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+          <PriceDriftRibbon
+            moves={stats.priceChangesTracked}
+            className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+          />
+          <div className="relative mx-auto max-w-3xl text-center">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 Rung one is free.
                 <br />
-                <span className="text-gradient-brand">See the saving before you pay us anything.</span>
+                <span className="text-gradient-brand-wide">
+                  See the saving before you pay us anything.
+                </span>
               </h2>
+
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/auth" className="btn-gradient px-6 py-3 text-sm">
                   Start free
