@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, LogOut } from "lucide-react";
 
 import { DashboardSidebar, type AccountKey } from "@/components/dashboard/DashboardSidebar";
+import { useIsPlatformAdmin } from "@/hooks/use-platform-admin";
 import { supabase } from "@/integrations/supabase/client";
 import type { PlanTier } from "@/lib/engine/types";
 import { listMyWorkspaces } from "@/lib/workspace.functions";
@@ -31,6 +32,7 @@ export function AccountShell({
     staleTime: 30_000,
   });
   const org = workspaces.data?.[0];
+  const isAdmin = useIsPlatformAdmin();
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -51,6 +53,14 @@ export function AccountShell({
             <ArrowLeft className="size-4" />
             Back to dashboard
           </Link>
+          {isAdmin ? (
+            <Link
+              to="/admin"
+              className="hidden text-sm font-medium text-primary hover:text-primary/80 sm:block"
+            >
+              Admin
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={signOut}
