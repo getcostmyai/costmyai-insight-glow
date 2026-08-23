@@ -15,6 +15,10 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { trackPageView } from "../lib/analytics";
 import { CookieConsent } from "@/components/CookieConsent";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { trackPageViewed } from "@/lib/page-telemetry.functions";
+import { shouldFire } from "@/lib/telemetry/fire-once";
+
 
 
 
