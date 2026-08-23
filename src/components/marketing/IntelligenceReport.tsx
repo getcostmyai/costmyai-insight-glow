@@ -294,17 +294,9 @@ export function IntelligenceReport({
 
 
 export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
-  const windowLine = trackingWindow(data);
   return (
     <>
-      {windowLine ? (
-        <Reveal delay={90}>
-          <p className="mt-10 max-w-2xl border-l-2 border-primary/40 pl-4 text-sm leading-relaxed text-muted-foreground">
-            {windowLine}
-          </p>
-        </Reveal>
-      ) : null}
-    <Reveal delay={120} className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-8">
+    <Reveal delay={90} className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-8">
       <Figure
         size="xl"
         value={data.liveModels}
