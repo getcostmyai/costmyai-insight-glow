@@ -17,6 +17,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ModelsRouteImport } from './routes/models'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -126,6 +127,11 @@ const PartnersRoute = PartnersRouteImport.update({
 const ModelsRoute = ModelsRouteImport.update({
   id: '/models',
   path: '/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -505,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRouteWithChildren
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
@@ -582,6 +589,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
@@ -662,6 +670,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRouteWithChildren
   '/disclaimer': typeof DisclaimerRoute
   '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/models': typeof ModelsRoute
   '/partners': typeof PartnersRoute
   '/press': typeof PressRoute
@@ -743,6 +752,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/disclaimer'
     | '/faq'
+    | '/how-it-works'
     | '/models'
     | '/partners'
     | '/press'
@@ -820,6 +830,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/disclaimer'
     | '/faq'
+    | '/how-it-works'
     | '/models'
     | '/partners'
     | '/press'
@@ -899,6 +910,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/disclaimer'
     | '/faq'
+    | '/how-it-works'
     | '/models'
     | '/partners'
     | '/press'
@@ -980,6 +992,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRouteWithChildren
   DisclaimerRoute: typeof DisclaimerRoute
   FaqRoute: typeof FaqRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   ModelsRoute: typeof ModelsRoute
   PartnersRoute: typeof PartnersRoute
   PressRoute: typeof PressRoute
@@ -1083,6 +1096,13 @@ declare module '@tanstack/react-router' {
       path: '/models'
       fullPath: '/models'
       preLoaderRoute: typeof ModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -1674,6 +1694,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRouteWithChildren,
   DisclaimerRoute: DisclaimerRoute,
   FaqRoute: FaqRoute,
+  HowItWorksRoute: HowItWorksRoute,
   ModelsRoute: ModelsRoute,
   PartnersRoute: PartnersRoute,
   PressRoute: PressRoute,

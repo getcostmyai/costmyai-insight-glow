@@ -11,7 +11,14 @@
  * today that is the home-page hash anchor for "How it works".
  */
 export type NavItem = {
-  to: "/" | "/models" | "/intelligence" | "/partners" | "/blog" | "/pricing";
+  to:
+    | "/"
+    | "/how-it-works"
+    | "/models"
+    | "/intelligence"
+    | "/partners"
+    | "/blog"
+    | "/pricing";
   label: string;
   /** Hash target, for in-page anchors on the marketing home page. */
   hash?: string;
@@ -20,7 +27,7 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { to: "/", label: "How it works", hash: "how", marketingOnly: true },
+  { to: "/how-it-works", label: "How it works", marketingOnly: true },
   { to: "/models", label: "Models" },
   { to: "/intelligence", label: "Intelligence" },
   { to: "/partners", label: "Become a Partner" },

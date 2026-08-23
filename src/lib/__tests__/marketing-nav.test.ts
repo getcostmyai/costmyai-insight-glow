@@ -49,6 +49,21 @@ describe("marketing nav", () => {
   });
 
 
+  it("points 'How it works' at its own route, not a homepage anchor", () => {
+    // It used to be { to: "/", hash: "how" }; the explanation is now a real
+    // page, so the entry must be a plain route link with no hash left behind.
+    const how = MARKETING_NAV.find((i) => i.label === "How it works");
+    expect(how?.to).toBe("/how-it-works");
+    expect(how?.hash).toBeUndefined();
+    // The homepage teaser must still exist and link onward, so the anchor
+    // target is not orphaned.
+    const INDEX = readFileSync("src/routes/index.tsx", "utf8");
+    expect(INDEX).toMatch(/id="how"/);
+    expect(INDEX).toMatch(/to="\/how-it-works"/);
+    // ...and the four-step copy must live in exactly one module.
+    expect(INDEX).not.toMatch(/const STEPS = \[/);
+  });
+
   it("keeps the wordmark pointing at home", () => {
     expect(SHELL).toMatch(/<Link to="\/"[^>]*>\s*<Wordmark/);
   });

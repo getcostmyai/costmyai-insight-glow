@@ -23,6 +23,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const BASE_URL = CANONICAL_BASE_URL;
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
+          { path: "/how-it-works", changefreq: "monthly", priority: "0.9" },
           { path: "/models", changefreq: "daily", priority: "0.9" },
           { path: "/pricing", changefreq: "weekly", priority: "0.9" },
           { path: "/intelligence", changefreq: "weekly", priority: "0.8" },
