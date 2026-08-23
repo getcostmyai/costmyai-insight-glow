@@ -24,6 +24,7 @@ import { FAQ_ITEMS, HOMEPAGE_FAQ_IDS, findFaqItem } from "@/lib/faq/questions";
 import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
+import { HOW_STEPS } from "@/lib/how-it-works";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -307,64 +308,43 @@ function Architecture() {
 
 /* --------------------------- 06 · how it works --------------------------- */
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Connect",
-    body: "Point your application at the Verification Engine endpoint. One environment variable change. Requests forward to your provider unchanged. What reaches us is token counts, model names, and request counts. Never your prompt content: by default the engine does not read request bodies at all, and if you turn on local classification it reads them inside your own environment and sends us only the task label.",
-  },
-  {
-    n: "02",
-    title: "Map",
-    body: "We read your real spend, group it by workload, and benchmark every model against the live catalog — which re-syncs continuously, so a verdict is always measured against today's prices, not last quarter's. The buy-side view, not the vendor's.",
-  },
-  {
-    n: "03",
-    title: "Verdict",
-    body: "See which switches hold quality on real benchmarks, and which ones we refuse to certify. A governed decision names what it cannot prove.",
-  },
-  {
-    n: "04",
-    title: "Switch",
-    body: "Switch the workloads that hold quality. Keep the savings. Leave the rest exactly where they are. Not paying more than you need to, on the record and defensible.",
-  },
-];
-
+/**
+ * Teaser only. The full four-step explanation lives on /how-it-works and reads
+ * from src/lib/how-it-works.ts — this section must never grow a second copy.
+ */
 function HowItWorks() {
   return (
     <section id="how" className="scroll-mt-24 wash-section">
-      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
         <SectionHead
           eyebrow="How It Works"
           title="Connect once. Governed decisions on every workload."
           lead="Four steps, no manual exports — from one environment variable to a benchmark-backed verdict on every workload."
         />
 
-        <div className="mx-auto mt-20 max-w-4xl">
-          {STEPS.map((s, i) => (
-            <Reveal
-              key={s.n}
-              delay={i * 90}
-              className="group relative grid gap-4 border-t border-border py-10 sm:grid-cols-[9rem_1fr] sm:gap-10 sm:py-12"
-            >
-              <span
-                aria-hidden
-                className="num pointer-events-none select-none text-[3.5rem] leading-none text-gradient-brand opacity-30 transition-opacity duration-500 group-hover:opacity-100 sm:text-[5rem]"
-              >
-                {s.n}
-              </span>
-              <div className="sm:pt-2">
-                <h3 className="text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
-                  {s.title}
-                </h3>
-                <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
-                  {s.body}
-                </p>
-              </div>
-            </Reveal>
-          ))}
-          <div className="border-t border-border" />
-        </div>
+        <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
+          <ol className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
+            {HOW_STEPS.map((s) => (
+              <li key={s.n} className="bg-background px-5 py-7">
+                <span className="num text-sm text-gradient-brand">{s.n}</span>
+                <p className="mt-2 text-lg font-semibold tracking-[-0.02em]">{s.title}</p>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+
+        <Reveal delay={140} className="mt-10 text-center">
+          <p className="mx-auto mb-6 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            You see which switches hold quality on real benchmarks, and the ones we{" "}
+            refuse to certify. A governed decision names what it cannot prove.
+          </p>
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            See how it works in full <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Reveal>
       </div>
     </section>
   );
