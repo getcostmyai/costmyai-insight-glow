@@ -7,7 +7,6 @@ import {
   Check,
   ChevronDown,
   Layers,
-  PlayCircle,
   Rocket,
   ShieldCheck,
   User,
@@ -61,7 +60,6 @@ function HomePage() {
       <HowItWorks />
       <Architecture />
       <BuiltFor />
-      <VideoSection />
       <Pricing stats={stats} />
       <Neutrality />
       <Faq stats={stats} />
@@ -279,43 +277,6 @@ function StillMoving() {
 }
 
 
-/* ------------------------------- 04 · video ------------------------------ */
-
-function VideoSection() {
-  return (
-    <section className="border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
-        <SectionHead
-          eyebrow="See It Working"
-          title="From live usage to a governed decision in under 60 seconds."
-          lead="Real usage in, a defensible verdict out."
-        />
-        <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
-          <div className="relative grid aspect-video place-items-center overflow-hidden rounded-[1.75rem] border border-border bg-background">
-            <div className="absolute inset-0 opacity-[0.07] fill-gradient-brand" aria-hidden />
-            <div className="relative text-center">
-              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-secondary">
-                <PlayCircle className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <p className="mt-4 text-sm font-medium text-muted-foreground">
-                Product demo coming soon
-              </p>
-              <a
-                href={BOOK_DEMO_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="btn-quiet mt-6 px-5 py-2.5 text-sm"
-              >
-                Get a walkthrough live instead
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
 
 /* --------------------------- 05 · architecture --------------------------- */
 
