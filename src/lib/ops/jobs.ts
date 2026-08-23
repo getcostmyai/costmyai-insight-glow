@@ -181,6 +181,11 @@ export interface JobRunSummary {
   startedAt: string;
   rowsWritten: number | null;
   error: string | null;
+  /**
+   * The run was raised by the test harness rather than by real traffic, as
+   * resolved at write time (see `shape-watch.server`). Never colours the board.
+   */
+  testRun?: boolean;
 }
 
 export interface JobHealth extends JobSpec {
@@ -219,6 +224,7 @@ export function judgeJob(spec: JobSpec, runs: JobRunSummary[], nowMs: number): J
     const open = recent.filter(
       (r) =>
         r.outcome !== "quiet" &&
+        !r.testRun &&
         (nowMs - Date.parse(r.startedAt)) / MIN_MS <= SHAPE_WATCH_WINDOW_MINUTES,
     );
     if (open.length === 0) {
