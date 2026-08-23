@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { IntelligencePayload } from "../intelligence.server";
-import { directionLine, numberOfTheMonth, postDraft, trackingWindow } from "../highlights";
+import { directionLine, numberOfTheMonth, postDraft } from "../highlights";
 
 const base = (over: Partial<IntelligencePayload> = {}): IntelligencePayload =>
   ({
@@ -68,12 +68,6 @@ describe("directionLine", () => {
 
   it("is silent when there were no moves", () => {
     expect(directionLine(base({ increases: 0, decreases: 0 }))).toBeNull();
-  });
-});
-
-describe("trackingWindow", () => {
-  it("states the real recording window in days", () => {
-    expect(trackingWindow(base())).toContain("70-day window");
   });
 });
 

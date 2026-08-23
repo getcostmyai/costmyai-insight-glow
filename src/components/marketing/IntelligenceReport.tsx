@@ -23,7 +23,6 @@ import {
   directionLine,
   numberOfTheMonth,
   postDraft,
-  trackingWindow,
 } from "@/lib/intelligence/highlights";
 import { shareUrl } from "@/lib/intelligence/share-url";
 import { useOrigin } from "@/lib/use-origin";
@@ -295,17 +294,9 @@ export function IntelligenceReport({
 
 
 export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
-  const windowLine = trackingWindow(data);
   return (
     <>
-      {windowLine ? (
-        <Reveal delay={90}>
-          <p className="mt-10 max-w-2xl border-l-2 border-primary/40 pl-4 text-sm leading-relaxed text-muted-foreground">
-            {windowLine}
-          </p>
-        </Reveal>
-      ) : null}
-    <Reveal delay={120} className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-8">
+    <Reveal delay={90} className="mt-14 grid gap-14 sm:grid-cols-3 sm:gap-8">
       <Figure
         size="xl"
         value={data.liveModels}
@@ -367,7 +358,6 @@ const GLOSSARY = [
 function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const headline = numberOfTheMonth(data);
   const direction = directionLine(data);
-  const windowLine = trackingWindow(data);
   if (!headline && !direction) return null;
 
   return (
@@ -396,7 +386,6 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                           value: headline.value,
                           label: headline.label,
                           detail: headline.detail,
-                          window: windowLine,
                           url: `https://costmyai.com/intelligence/${ctx.citableMonth}`,
                         })
                       : undefined

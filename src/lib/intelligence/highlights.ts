@@ -99,23 +99,6 @@ export function directionLine(data: IntelligencePayload): string | null {
   return `${total} recorded price moves in ${data.monthLabel}: ${data.decreases} cuts and ${data.increases} rises, so ${verdict}. ${cutShare}% of all moves were cuts.`;
 }
 
-/** The window the figures cover, stated where the figures are, not in a footnote. */
-export function trackingWindow(
-  data: IntelligencePayload,
-  now: Date = new Date(data.generatedAt),
-): string | null {
-  if (!data.trackingSince) return null;
-  const since = new Date(data.trackingSince);
-  const days = Math.max(1, Math.round((now.getTime() - since.getTime()) / 86_400_000));
-  const label = since.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  return `Recording began ${label}, so every count here covers a ${days}-day window, not a full year.`;
-}
-
 export function citationLine(opts: {
   monthLabel: string;
   url: string;
