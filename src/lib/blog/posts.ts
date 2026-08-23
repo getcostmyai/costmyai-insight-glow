@@ -939,6 +939,109 @@ export const POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: "reduce-ai-costs-at-work",
+    title: "How to reduce AI costs at work: five moves that actually work",
+    deck: "Most AI savings come from the same five places: routing, caching, right-sizing, batching, and buying the same model from a cheaper host. Here is how to do each one responsibly.",
+    description:
+      "Practical ways to reduce AI costs at work: route routine work to smaller models, cache repeated context, right-size oversized workloads, use batch endpoints, and compare hosts for the same model.",
+    keyword: "how to reduce ai costs for work",
+    published: "2026-08-24",
+    minutes: 7,
+    blocks: [
+      {
+        t: "p",
+        v: "The search query is personal: how to reduce AI costs for work. The answer is less personal than it sounds. Most organizations save money in the same five places once they can see where the money is actually going. The moves are not exotic. What separates real savings from quiet quality loss is doing them in the right order and proving the result before it goes live.",
+      },
+      { t: "h2", v: "1. Route routine work away from frontier models" },
+      {
+        t: "p",
+        v: "The single largest lever is also the most neglected. A large share of production AI traffic does not need a frontier model. Classification, extraction, routing, simple summarization, and repetitive drafting all run well on smaller, cheaper models. The saving is not theoretical. In real deployments, routing high-volume routine tasks to a capable smaller model cuts the cost of that traffic by thirty to eighty five percent.",
+      },
+      {
+        t: "p",
+        v: "The catch is that the boundary between routine and hard is not universal. A task that is easy for one company may be hard for another because of domain language, output structure, or accuracy requirements. That is why routing has to be workload-specific, not a global rule, and why the cheaper model has to be measured against your actual task before any traffic moves.",
+      },
+      {
+        t: "cta",
+        headline: "See which models are cheapest for your actual blend",
+        label: "Open the cheapest API calls report",
+        to: "/reports/cheapest-api-calls",
+      },
+      { t: "h2", v: "2. Cache what you are paying to reprocess" },
+      {
+        t: "p",
+        v: "Caching is the fastest way to cut a bill without changing models at all. There are two kinds. Prompt caching reuses a stable prefix, such as a system prompt or a long retrieved document, across consecutive calls. Semantic caching catches queries that are worded differently but mean the same thing and returns a previous answer instead of making a fresh model call.",
+      },
+      {
+        t: "p",
+        v: "Both depend on the shape of your traffic. A support bot that answers the same few dozen questions in different phrasing benefits from semantic caching. A retrieval pipeline that sends the same long document with every query benefits from prompt caching. One documented case cut a forty seven thousand dollar monthly bill to under thirteen thousand dollars by raising cache hit rate from eighteen to sixty seven percent. The saving was real, but it was specific to a workload with high repetition.",
+      },
+      { t: "h2", v: "3. Right-size the model to the task" },
+      {
+        t: "p",
+        v: "Right-sizing means identifying workloads that are running on a more capable, more expensive model than the task requires. This is extremely common in early AI deployments because teams start with one model and never revisit the choice as the product matures. The result is simple tasks paying frontier prices.",
+      },
+      {
+        t: "p",
+        v: "The responsible version of this is not a blind downgrade. It is a measured one. You define the quality bar for that task, run the candidate model against it, and only switch if the measured output stays within an equivalence band. A downgrade that saves money on the invoice and costs more in rework was never a saving.",
+      },
+      {
+        t: "cta",
+        headline: "Browse live pricing and compare hosts for the same model",
+        label: "Open the model catalog",
+        to: "/models",
+      },
+      { t: "h2", v: "4. Move asynchronous work to batch endpoints" },
+      {
+        t: "p",
+        v: "Nearly every major provider offers a batch endpoint at a steep discount in exchange for an asynchronous response window. Workloads that do not need a sub-second answer are obvious candidates: evaluation runs, enrichment jobs, classification at scale, and overnight report generation. Many teams never turn batching on because the default API is synchronous, not because their work requires it.",
+      },
+      {
+        t: "p",
+        v: "The discount is meaningful, often twenty five to fifty percent below the live rate. The constraint is latency tolerance and idempotency. Batch jobs are not a drop-in replacement for real-time traffic, but they are a near-free saving for any workload that can wait.",
+      },
+      { t: "h2", v: "5. Buy the same model from a cheaper host" },
+      {
+        t: "p",
+        v: "This is the lowest-risk move on the list because nothing about the model changes. The same open-weights model served by different hosts, or a frontier model available both first-party and through a hyperscaler, can differ meaningfully in price while producing the same outputs. The saving is procurement, not architecture.",
+      },
+      {
+        t: "p",
+        v: "The work is comparing total cost, not headline rate. A host with a lower input price and a higher output price can be more expensive if your workload is output-heavy. A host with a higher list price but a deeper caching discount can be cheaper if your traffic repeats context. The only way to rank hosts correctly is to price your actual blend, not a generic one.",
+      },
+      {
+        t: "cta",
+        headline: "Track price moves as they happen, not after the invoice",
+        label: "View the Intelligence page",
+        to: "/intelligence",
+      },
+      { t: "h2", v: "What to do first" },
+      {
+        t: "p",
+        v: "Start with visibility. You cannot route, cache, or right-size what you cannot see. The first step is a workload-level view of actual spend: which models, which hosts, and which tasks are driving the bill. Once you have that, the order of operations is usually host comparison first, because it is the lowest risk, then routing and caching, then right-sizing where the quality evidence supports it.",
+      },
+      {
+        t: "p",
+        v: "Batching is often the quickest win of all because it requires no model change and no quality proof. If you have asynchronous workloads still on the synchronous API, that is usually free money sitting on the table.",
+      },
+      {
+        t: "cta",
+        headline: "The four-rung framework that ties this together",
+        label: "Read The CostMyAI Standard",
+        to: "/standard",
+      },
+      { t: "h2", v: "The mistake that undoes most of these savings" },
+      {
+        t: "p",
+        v: "The most common failure mode is treating a cheaper model as a proven equivalent without measuring it. Every article on this topic includes the warning, and most stop there. The practical requirement is an independent benchmark for the specific task type, a defined equivalence band that accounts for measurement uncertainty, and a system that reports when a candidate does not clear the bar rather than quietly recommending it anyway.",
+      },
+      {
+        t: "p",
+        v: "Cost reduction without quality guardrails is just a slower way to discover that you cut the wrong thing. The organizations that reduce AI costs sustainably are the ones that make the proof as routine as the switch.",
+      },
+    ],
+  },
 ];
 
 
