@@ -30,3 +30,30 @@ export function shouldFire(
 export function resetFireOnce(): void {
   lastFired.clear();
 }
+
+/**
+ * Same guard, but surviving a full document load.
+ *
+ * Module scope dies on reload, which is fine for in-page remount storms but
+ * not for page views: a reload or a back-navigation that re-fetches the
+ * document would fire a second `page_viewed` for the same page seconds apart.
+ * sessionStorage is scoped to the tab and to the sitting, which is exactly the
+ * lifetime this guard wants. Storage failures fall back to the in-memory map
+ * rather than dropping the event.
+ */
+export function shouldFirePersisted(
+  key: string,
+  now: number = Date.now(),
+  windowMs: number = FIRE_ONCE_WINDOW_MS,
+): boolean {
+  if (!shouldFire(key, now, windowMs)) return false;
+  try {
+    const storageKey = `costmyai.fire-once:${key}`;
+    const previous = Number(window.sessionStorage.getItem(storageKey));
+    if (Number.isFinite(previous) && previous > 0 && now - previous < windowMs) return false;
+    window.sessionStorage.setItem(storageKey, String(now));
+  } catch {
+    /* locked-down storage: the in-memory guard above still applies */
+  }
+  return true;
+}

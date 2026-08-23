@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-23T18:21:28.586Z",
+  "generatedAt": "2026-08-23T19:18:04.018Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -1087,7 +1087,7 @@
     },
     {
       "file": "src/lib/telemetry/lead-events.server.ts",
-      "line": 142,
+      "line": 181,
       "table": "partners",
       "filters": [
         "status"

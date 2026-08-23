@@ -37,6 +37,7 @@ export interface AdminOverview {
 }
 
 const LABELS: Record<string, string> = {
+  page_viewed: "Page viewed",
   estimator_viewed: "Estimator viewed",
   estimator_engaged: "Estimator engaged",
   estimator_line_added: "Estimator line added",

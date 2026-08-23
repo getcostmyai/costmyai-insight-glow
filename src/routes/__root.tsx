@@ -15,6 +15,10 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { trackPageView } from "../lib/analytics";
 import { CookieConsent } from "@/components/CookieConsent";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { trackPageViewed } from "@/lib/page-telemetry.functions";
+import { shouldFirePersisted } from "@/lib/telemetry/fire-once";
+
 
 
 
@@ -88,9 +92,17 @@ export const Route = createRootRouteWithContext<{
   // client the browser already knows the origin, so no server call is made.
   beforeLoad: async (): Promise<{ origin: string }> => {
     if (typeof window !== "undefined") return { origin: window.location.origin };
-    const { getRequestOrigin } = await import("@/lib/origin.functions");
-    return { origin: await getRequestOrigin() };
+    // Same server pass also captures the acquisition source (referrer origin +
+    // UTM), first-touch only. This is the only request whose Referer is the
+    // external site that actually sent the visitor.
+    const [{ getRequestOrigin }, { captureFirstTouch }] = await Promise.all([
+      import("@/lib/origin.functions"),
+      import("@/lib/source.functions"),
+    ]);
+    const [origin] = await Promise.all([getRequestOrigin(), captureFirstTouch()]);
+    return { origin };
   },
+
 
   head: () => ({
     meta: [
@@ -180,9 +192,22 @@ function RootComponent() {
 
   // SPA page views. trackPageView is inert until consent has loaded gtag.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const routeId = useRouterState({
+    select: (s) => s.matches[s.matches.length - 1]?.routeId ?? "",
+  });
   useEffect(() => {
     trackPageView(pathname);
   }, [pathname]);
+
+  // First-party page views, every route, one generic mechanism. Not gated on
+  // consent: it carries nothing beyond the page plus the visitor/session ids
+  // already written unprompted by every other lead event.
+  const trackPage = useServerFn(trackPageViewed);
+  useEffect(() => {
+    if (!shouldFirePersisted(`page_viewed:${pathname}`)) return;
+    void trackPage({ data: { path: pathname, routeId } }).catch(() => {});
+  }, [pathname, routeId, trackPage]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
