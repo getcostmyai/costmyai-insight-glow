@@ -20,10 +20,12 @@ export const HOW_STEPS: readonly HowStep[] = [
   {
     n: "01",
     title: "Connect",
-    body: "Point your application at the Verification Engine endpoint. One environment variable change. Requests forward to your provider unchanged. What reaches us is token counts, model names, and request counts. Never your prompt content: by default the engine does not read request bodies at all, and if you turn on local classification it reads them inside your own environment and sends us only the task label.",
+    body: "Point your application's SDK base URL at the Verification Engine connector that runs in your own environment. Your code, your provider keys, your contracts — nothing moves to us.",
     detail: [
-      "The engine runs as middleware inside your own environment. We never hold your provider keys.",
-      "Nothing to migrate and nothing to rewrite: the request and the response pass through unchanged.",
+      "The connector runs as a small container in your environment. We never hold your provider keys.",
+      "Nothing to migrate and nothing to rewrite: the request and response pass through unchanged.",
+      "By default the engine does not read request bodies. What reaches CostMyAI is token counts, model names and request counts.",
+      "If you turn on local classification, request bodies are read inside your own environment and only the task label is sent to us.",
       "Only aggregate metadata leaves your environment, on its own path, after the response is served.",
     ],
   },
