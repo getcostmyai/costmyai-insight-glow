@@ -104,7 +104,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
       <PriceDriftRibbon
         moves={stats.priceChangesTracked}
         orientation="diagonal"
-        className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.15] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+        className="absolute inset-x-0 bottom-0 h-[52%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
       />
       <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
 
