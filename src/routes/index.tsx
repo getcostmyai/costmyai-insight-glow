@@ -258,10 +258,25 @@ function Forecast() {
  * Deliberately not a summary of the article: the whole job of this band is to
  * make the reader realise the question exists.
  */
-function StillMoving() {
+function StillMoving({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="wash-section">
-      <div className="mx-auto max-w-6xl border-y border-border px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden bg-background">
+      {/* The mid-page anchor. Full mesh on its own layer, with the drift ribbon
+          across the middle of the band — colour and movement in the one place
+          the page argues that nothing holds still. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-16 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        className="absolute inset-x-0 top-1/2 h-[60%] -translate-y-1/2 opacity-70"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
+        <div className="rule-brand absolute inset-x-5 bottom-0 sm:inset-x-8" aria-hidden />
+
         <Reveal className="mx-auto max-w-4xl text-center">
           <p className="eyebrow">Why this is a system, not an audit</p>
           <h2 className="mt-5 text-4xl font-semibold leading-[1.04] tracking-[-0.04em] sm:text-6xl">
