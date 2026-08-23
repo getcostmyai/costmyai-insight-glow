@@ -5,31 +5,41 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Search } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
+import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { trackModelsEvent } from "@/lib/models-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
 
 export const Route = createFileRoute("/models")({
   head: () => ({
     meta: [
-      { title: "Model catalog — live prices and benchmark scores | CostMyAI" },
+      { title: "Model catalog — same model, different price | CostMyAI" },
       {
         name: "description",
         content:
-          "Browse every model CostMyAI tracks: live per-provider prices, cheapest host, benchmark scores by task class. The buy-side view, read from the same catalog the engine prices against.",
+          "Every model we track, with each verified host rate side by side and the independent benchmark scores a quality claim has to clear. The same catalog the engine prices against.",
       },
-      { property: "og:title", content: "Model catalog — live prices and benchmark scores" },
+      { property: "og:title", content: "Model catalog — same model, different price" },
       {
         property: "og:description",
         content:
-          "Every tracked model with its live per-provider pricing and independent benchmark scores.",
+          "Live per-host pricing and independent benchmark scores for every tracked model. Read the gap between hosts before you pay for it.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.costmyai.com/models" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/models" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery()),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(catalogQuery()),
+      context.queryClient.ensureQueryData(marketingStatsQuery()),
+    ]);
+  },
   component: ModelsPage,
 });
 
@@ -57,9 +67,9 @@ function hostSpread(row: CatalogRow): number | null {
   return ((max - row.cheapestInput) / row.cheapestInput) * 100;
 }
 
-
 function ModelsPage() {
   const { data } = useSuspenseQuery(catalogQuery());
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   const track = useServerFn(trackModelsEvent);
 
   // Module-scope guard, not a ref: hydration and the Suspense boundary both
@@ -71,7 +81,8 @@ function ModelsPage() {
 
   return (
     <MarketingShell>
-      <Hero data={data} />
+      <Hero data={data} moves={stats.priceChangesTracked} />
+      <HowToRead moves={stats.priceChangesTracked} />
       <Catalog data={data} />
       <ClosingCta />
     </MarketingShell>
@@ -80,7 +91,7 @@ function ModelsPage() {
 
 /* ---------------------------------- hero ---------------------------------- */
 
-function Hero({ data }: { data: CatalogPayload }) {
+function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
   const stats = useMemo(() => {
     const spreads = data.rows.map(hostSpread).filter((v): v is number => v !== null);
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
@@ -93,12 +104,20 @@ function Hero({ data }: { data: CatalogPayload }) {
     };
   }, [data]);
 
-
-
   return (
-    <section className="relative overflow-hidden wash-hero">
-      <div className="absolute inset-0 texture-dots opacity-60" aria-hidden />
-      <div className="relative mx-auto max-w-5xl px-5 pb-16 pt-24 text-center sm:px-8 sm:pt-36">
+    <section className="relative overflow-hidden border-b border-border">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="diagonal"
+        className="absolute inset-x-0 bottom-0 h-[34%] opacity-[0.10] [mask-image:linear-gradient(180deg,transparent,#000_80%)]"
+      />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-5xl px-5 pb-20 pt-24 text-center sm:px-8 sm:pb-24 sm:pt-36">
         <Reveal
           as="p"
           className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -111,7 +130,7 @@ function Hero({ data }: { data: CatalogPayload }) {
           as="h1"
           className="mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[4.6rem]"
         >
-          Same model. <span className="text-gradient-brand">Different price.</span>
+          Same model. <span className="text-gradient-brand-wide">Different price.</span>
         </Reveal>
 
         <Reveal
@@ -119,13 +138,13 @@ function Hero({ data }: { data: CatalogPayload }) {
           as="p"
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
         >
-          The catalog the engine prices against — every verified host rate and the independent
-          benchmark scores a quality claim has to clear.
+          The catalog the engine prices against — every verified host rate, side by side, and the
+          independent benchmark scores a quality claim has to clear.
         </Reveal>
 
         {data.live ? (
           <Reveal delay={200} className="mt-8 flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur">
               <span className="h-1.5 w-1.5 rounded-full bg-saving animate-pulse-dot" />
               <span className="font-semibold text-foreground">Live</span> catalog
             </span>
@@ -136,7 +155,6 @@ function Hero({ data }: { data: CatalogPayload }) {
           <HeroStat delay={0} value={stats.models} label="Models priced" />
           <HeroStat delay={80} value={stats.contested} label="Models with 2+ hosts" />
           <HeroStat delay={160} value={stats.providers} label="Serving providers" />
-
           <HeroStat
             delay={240}
             value={Math.round(stats.topSpread)}
@@ -145,32 +163,6 @@ function Hero({ data }: { data: CatalogPayload }) {
             accent
           />
         </div>
-
-        <Reveal
-          delay={320}
-          as="p"
-          className="mx-auto mt-10 max-w-2xl text-xs leading-relaxed text-muted-foreground"
-        >
-          A <span className="text-foreground">serving provider</span> sells access to a model. When
-          the same model is sold by several providers at different rates, that gap is the arbitrage
-          — and it is the number we act on. See the{" "}
-          <Link
-            to="/reports/cheapest-api-calls"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            cheapest API call report
-          </Link>{" "}
-          for the ranked view, or the{" "}
-          <Link
-            to="/tools/llm-price-comparison"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            pricing comparison calculator
-          </Link>{" "}
-          to price it against your own volumes.
-        </Reveal>
-
-
       </div>
     </section>
   );
@@ -195,13 +187,102 @@ function HeroStat({
         value={value}
         format={format ?? ((v) => Math.round(v).toLocaleString())}
         className={`num block text-[2.4rem] font-semibold leading-none tracking-[-0.045em] sm:text-[3.1rem] ${
-          accent ? "text-gradient-brand" : "text-foreground"
+          accent ? "text-gradient-brand-wide" : "text-foreground"
         }`}
       />
       <span className="mt-3 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </span>
     </Reveal>
+  );
+}
+
+/* ------------------------------- how to read ------------------------------- */
+
+const READ_ITEMS = [
+  {
+    title: "A serving provider sells the model",
+    body: "Anthropic, Bedrock, Vertex, Fireworks and the rest each set their own rate for the very same weights. Aggregator listings are marked and never counted as one end of a gap, because that is a switch nobody can actually make.",
+  },
+  {
+    title: "The host spread is the arbitrage",
+    body: "When one model is sold by several providers at different rates, the gap between the cheapest and the dearest is money already on the table. It is the number the engine acts on, and the only one we headline.",
+  },
+  {
+    title: "The quality index is the bar",
+    body: "Independent benchmark scores — Intelligence Index, IFBench, GPQA, SciCode, latency and throughput. A cheaper host only wins if the model still clears the bar the workload needs.",
+  },
+];
+
+function HowToRead({ moves }: { moves: number }) {
+  return (
+    <section className="relative overflow-hidden border-b border-border wash-brand">
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="horizontal"
+        className="absolute inset-x-0 top-0 h-[26%] opacity-[0.12] [mask-image:linear-gradient(0deg,transparent,#000)]"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-3xl text-center">
+          <Reveal
+            as="p"
+            className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+          >
+            How to read this
+          </Reveal>
+          <Reveal
+            delay={80}
+            as="h2"
+            className="mt-5 text-[2.1rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[3.2rem]"
+          >
+            Three numbers, one decision.
+          </Reveal>
+        </div>
+
+        <div className="mx-auto mt-14 max-w-4xl">
+          {READ_ITEMS.map((item, i) => (
+            <Reveal
+              key={item.title}
+              delay={i * 90}
+              className="grid gap-3 border-t border-border py-9 sm:grid-cols-[1fr_1.6fr] sm:gap-10 sm:py-11"
+            >
+              <div className="flex items-baseline gap-3">
+                <span className="num text-[11px] tracking-[0.18em] text-primary">{`0${i + 1}`}</span>
+                <h3 className="text-xl font-semibold tracking-[-0.03em] sm:text-2xl">
+                  {item.title}
+                </h3>
+              </div>
+              <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+                {item.body}
+              </p>
+            </Reveal>
+          ))}
+          <div className="border-t border-border" />
+        </div>
+
+        <Reveal
+          delay={120}
+          as="p"
+          className="mx-auto mt-12 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground"
+        >
+          See the{" "}
+          <Link
+            to="/reports/cheapest-api-calls"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            cheapest API call report
+          </Link>{" "}
+          for the ranked view, or the{" "}
+          <Link
+            to="/tools/llm-price-comparison"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            pricing comparison calculator
+          </Link>{" "}
+          to price it against your own volumes.
+        </Reveal>
+      </div>
+    </section>
   );
 }
 
@@ -261,10 +342,10 @@ function Catalog({ data }: { data: CatalogPayload }) {
   }, [data.rows, q, vendor, sort]);
 
   return (
-    <section className="border-t border-border bg-card">
+    <section id="catalog" className="scroll-mt-24">
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
         {/* controls — borderless rail */}
-        <div className="sticky top-16 z-20 -mx-5 bg-card/85 px-5 py-4 backdrop-blur-xl sm:-mx-8 sm:px-8">
+        <div className="sticky top-16 z-20 -mx-5 bg-background/85 px-5 py-4 backdrop-blur-xl sm:-mx-8 sm:px-8">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -334,7 +415,6 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
     ? serving.reduce((best, h) => (h.input < best.input ? h : best))
     : null;
 
-
   return (
     <Reveal delay={Math.min(index, 8) * 45} className="border-t border-border">
       <button
@@ -344,7 +424,9 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
         className="group grid w-full grid-cols-[1fr_auto] items-center gap-6 py-7 text-left transition-colors hover:bg-secondary/40 sm:grid-cols-[1.6fr_0.8fr_1fr_auto] sm:gap-8"
       >
         <div className="min-w-0">
-          <p className="text-lg font-semibold tracking-[-0.02em] sm:text-xl">{row.display_name}</p>
+          <p className="text-lg font-semibold tracking-[-0.02em] transition-colors group-hover:text-primary sm:text-xl">
+            {row.display_name}
+          </p>
           <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{row.model_key}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Tag>{row.vendor}</Tag>
@@ -404,7 +486,7 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
       </button>
 
       <div
-        className={`grid transition-all duration-500 ease-out ${
+        className={`grid transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
         }`}
       >
@@ -525,10 +607,14 @@ function FilterChip({
 
 function ClosingCta() {
   return (
-    <section className="px-5 py-28 sm:px-8 sm:py-36">
-      <Reveal className="mx-auto max-w-3xl text-center">
-        <h2 className="text-[2.1rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[3.4rem]">
-          Now price it <span className="text-gradient-brand">against your own traffic.</span>
+    <section className="relative overflow-hidden border-t border-border px-5 py-24 sm:px-8 sm:py-32">
+      <div
+        className="pointer-events-none absolute inset-0 mesh-brand mesh-drift opacity-70"
+        aria-hidden
+      />
+      <Reveal className="relative mx-auto max-w-3xl text-center">
+        <h2 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[3.6rem]">
+          Now price it <span className="text-gradient-brand-wide">against your own traffic.</span>
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Compare reads this same catalog and tells you what your current models would cost on the
@@ -539,9 +625,14 @@ function ClosingCta() {
             Start Compare, free
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link to="/pricing" className="btn-quiet px-6 py-3 text-[15px]">
-            See the levels
-          </Link>
+          <a
+            href={BOOK_DEMO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="btn-quiet px-6 py-3 text-[15px]"
+          >
+            Book a Demo
+          </a>
         </div>
       </Reveal>
     </section>
