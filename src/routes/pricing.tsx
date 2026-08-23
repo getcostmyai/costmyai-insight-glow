@@ -6,6 +6,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { PLAN_META } from "@/lib/engine/types";
+import { PLAN_FEATURES } from "@/lib/plan-features";
 import type { PlanTier } from "@/lib/engine/types";
 
 export const Route = createFileRoute("/pricing")({
@@ -177,7 +178,7 @@ function Plans({ yearly }: { yearly: boolean }) {
                 )}
 
                 <ul className="mt-7 space-y-3 border-t border-border pt-6">
-                  {INCLUDES[plan].map((line) => (
+                  {PLAN_FEATURES[plan].map((line: string) => (
                     <li key={line} className="flex items-start gap-2.5">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-saving" />
                       <span className="text-sm leading-relaxed text-muted-foreground">{line}</span>
