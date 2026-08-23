@@ -83,6 +83,11 @@ function IntelligencePage() {
                   measured benchmark instruments the switching engine runs on. Nothing here is
                   estimated.
                 </p>
+                <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground/90">
+                  What this is: a public monthly record of what AI model prices actually did, which
+                  providers moved them, and which model is still the cheapest one good enough for a
+                  given job. Free to read, free to cite.
+                </p>
                 {/* The claim above is a freshness claim, so it carries its own clock. */}
                 <p className="mt-4 text-xs text-muted-foreground/80" suppressHydrationWarning>
                   Computed {new Date(live.data.generatedAt).toISOString().slice(0, 16).replace("T", " ")} UTC

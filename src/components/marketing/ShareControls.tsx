@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Image as ImageIcon, Link2, Linkedin } from "lucide-react";
+import { Check, ClipboardCheck, Image as ImageIcon, Link2, Linkedin, Quote } from "lucide-react";
 
 import {
   Tooltip,
@@ -48,6 +48,7 @@ export function ShareControls({
   title,
   url,
   imageUrl,
+  postText,
   className = "",
   copyLabel = "Copy link",
 }: {
@@ -56,10 +57,17 @@ export function ShareControls({
   url: string;
   /** Optional OG image link — figures have one, Notes do not. */
   imageUrl?: string;
+  /**
+   * Optional ready-to-paste post. Offered where we can state the figure, the
+   * window it covers and its source in the same breath, so a reposter cannot
+   * accidentally strip the caveat off the number.
+   */
+  postText?: string;
   className?: string;
   copyLabel?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [postCopied, setPostCopied] = useState(false);
 
   const track = (platform: SharePlatform) => {
     void trackIntelligenceShare({ data: { cardId, platform } }).catch(() => {});
@@ -137,6 +145,35 @@ export function ShareControls({
             <p>{copied ? "Link copied" : copyLabel}</p>
           </TooltipContent>
         </Tooltip>
+
+        {postText ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={postCopied ? "Post copied" : `Copy a ready post: ${title}`}
+                data-share-platform="copy_post"
+                className={shareLinkClass}
+                onClick={() => {
+                  track("copy_post");
+                  void navigator.clipboard?.writeText(postText).then(() => {
+                    setPostCopied(true);
+                    setTimeout(() => setPostCopied(false), 2000);
+                  });
+                }}
+              >
+                {postCopied ? (
+                  <ClipboardCheck className="h-3.5 w-3.5 text-saving" />
+                ) : (
+                  <Quote className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p>{postCopied ? "Post copied" : "Copy a ready post with the source line"}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
 
         {imageUrl ? (
           <Tooltip>
