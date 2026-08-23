@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META, PLAN_ORDER } from "@/lib/engine/types";
 import type { PlanTier } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
