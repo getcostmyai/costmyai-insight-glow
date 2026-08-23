@@ -10,6 +10,7 @@ import {
   Lightbulb,
   Loader2,
   Split,
+  Users,
 } from "lucide-react";
 
 import { getAdminOverview } from "@/lib/admin/overview.functions";
@@ -283,8 +284,24 @@ function AdminHome() {
                     : "Could not be read"
                 }
               />
+              <Card
+                to="/admin/customers"
+                icon={<Users className="h-4 w-4" />}
+                title="Customer directory"
+                value={
+                  data.summary.customers
+                    ? `${data.summary.customers.shown} workspace${data.summary.customers.shown === 1 ? "" : "s"}`
+                    : null
+                }
+                detail={
+                  data.summary.customers
+                    ? `${data.summary.customers.internal} internal · ${data.summary.customers.excluded} test or contactless rows excluded`
+                    : "Could not be read"
+                }
+              />
             </div>
           </section>
+
 
           <section className="mt-12 rounded-2xl border border-dashed border-border p-6">
             <h2 className="text-sm font-semibold">Not yet tracked</h2>
@@ -338,7 +355,13 @@ function Card({
   detail,
   alarm = false,
 }: {
-  to: "/admin/jobs" | "/admin/leads" | "/admin/partner-applications" | "/admin/payouts" | "/admin/referrals";
+  to:
+    | "/admin/jobs"
+    | "/admin/leads"
+    | "/admin/partner-applications"
+    | "/admin/payouts"
+    | "/admin/referrals"
+    | "/admin/customers";
   icon: React.ReactNode;
   title: string;
   value: string | null;
