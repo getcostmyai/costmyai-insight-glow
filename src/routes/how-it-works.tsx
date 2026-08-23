@@ -152,10 +152,17 @@ function Steps() {
 
 /* ----------------------------- architecture ------------------------------ */
 
-function Architecture() {
+function Architecture({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="border-t border-border">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border">
+      {/* The statement placement: full-strength band across the bottom quarter. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-40 [mask-image:linear-gradient(180deg,transparent,#000_55%)]"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
+        <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
+
         <Reveal className="mx-auto max-w-3xl text-center">
           <p className="eyebrow">The request path</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-[2.5rem]">
