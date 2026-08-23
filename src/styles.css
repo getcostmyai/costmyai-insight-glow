@@ -354,8 +354,11 @@
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-muted-foreground);
+  /* Brand-tinted, not brand-loud: enough hue to belong to the hero's
+     vocabulary, muted enough to stay a label. */
+  color: color-mix(in oklab, var(--color-primary) 62%, var(--color-muted-foreground));
 }
+
 
 @keyframes rise {
   from {
