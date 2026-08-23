@@ -60,7 +60,7 @@ export async function sendPartnerWelcome(
       // One welcome per partner account, whatever path created it: a retried
       // approval or a re-run admin action will not send a second copy.
       idempotencyKey: `partner-welcome-${partner.id}`,
-      replyTo: "partners@costmyai.com",
+      replyTo: "mail@costmyai.com",
     });
 
     if (!result.sent) {

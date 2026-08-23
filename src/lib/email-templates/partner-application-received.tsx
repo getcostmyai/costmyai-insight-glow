@@ -42,7 +42,7 @@ const Email = ({
   company = '',
   turnaround = '3 business days',
   partnerUrl = 'https://costmyai.com/partners',
-  supportEmail = 'partners@costmyai.com',
+  supportEmail = 'mail@costmyai.com',
 }: PartnerApplicationReceivedProps) => (
   <Html lang="en" dir="ltr">
     <Head />

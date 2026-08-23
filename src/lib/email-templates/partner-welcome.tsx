@@ -48,7 +48,7 @@ const Email = ({
   referralLink = '',
   loginUrl = 'https://costmyai-insight-glow.lovable.app/partner/login',
   fromApplication = false,
-  supportEmail = 'partners@costmyai.com',
+  supportEmail = 'mail@costmyai.com',
 }: PartnerWelcomeProps) => (
   <Html lang="en" dir="ltr">
     <Head />
