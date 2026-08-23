@@ -209,7 +209,7 @@ function Hero({
       <PriceDriftRibbon
         moves={moves}
         orientation="diagonal"
-        className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+        className="absolute inset-x-0 bottom-0 h-[22%] opacity-[0.10] [mask-image:linear-gradient(180deg,transparent_0%,transparent_55%,#000_100%)]"
       />
       <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
       <div className="relative mx-auto max-w-4xl px-5 pb-24 pt-24 text-center sm:px-8 sm:pb-32 sm:pt-36">
