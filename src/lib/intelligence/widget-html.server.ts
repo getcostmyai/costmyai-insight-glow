@@ -101,15 +101,20 @@ export function renderWidgetDocument(payload: WidgetPayload, opts: WidgetDocOpti
     justify-content:space-between;gap:14px;padding:20px 22px;overflow:hidden;
     border:1px solid ${PALETTE.hairline};border-radius:18px;
     background:
-      radial-gradient(120% 140% at 100% 0%, rgba(121,69,236,.10) 0%, rgba(121,69,236,0) 55%),
+      ${MESH},
       ${PALETTE.bg};
+  }
+  /* Hairline rail in brand, the marketing pages' one accent stroke. */
+  .card::before{
+    content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:${GRADIENT_WIDE};opacity:.9;
   }
   .asof{font-size:11px;color:${PALETTE.muted};white-space:nowrap}
   .asof[data-stale="1"]{color:${PALETTE.up};font-weight:600}
   .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${PALETTE.muted};font-weight:600}
   .stat{display:flex;flex-direction:column;gap:6px}
   .value{
-    font-size:44px;line-height:1;font-weight:700;letter-spacing:-.03em;
+    font-size:46px;line-height:1;font-weight:700;letter-spacing:-.035em;
     font-variant-numeric:tabular-nums;font-family:${SANS};
   }
   .label{font-size:14px;font-weight:600;letter-spacing:-.01em}
@@ -117,11 +122,16 @@ export function renderWidgetDocument(payload: WidgetPayload, opts: WidgetDocOpti
   .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;
     border-top:1px solid ${PALETTE.hairline};padding-top:12px}
   .via{font-size:12px;color:${PALETTE.muted};text-decoration:none;font-weight:600;white-space:nowrap}
-  .via b{color:${PALETTE.ink};font-weight:700}
-  .via i{color:${PALETTE.brand};font-style:normal}
+  .via b{color:${PALETTE.ink};font-weight:700;letter-spacing:-.01em}
+  /* "My" carries the wide brand gradient, exactly as the site wordmark does. */
+  .via i{
+    font-style:normal;background-image:${GRADIENT_WIDE};
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
   .dots{display:flex;gap:6px}
   .dot{width:6px;height:6px;border-radius:50%;background:${PALETTE.hairline};transition:background .3s}
-  .dot[data-on="1"]{background:${PALETTE.brand}}
+  .dot[data-on="1"]{background:${PALETTE.violet}}
+
   .fade{opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
   .fade[data-in="1"]{opacity:1;transform:none}
   @media (prefers-reduced-motion: reduce){.fade{transition:none}}
