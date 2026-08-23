@@ -41,16 +41,18 @@ export const Route = createFileRoute("/how-it-works")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/how-it-works" }],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: HowItWorksPage,
 });
 
 function HowItWorksPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <Hero />
+      <Hero stats={stats} />
       <Steps />
-      <Architecture />
-      <Plans />
+      <Architecture stats={stats} />
+      <Plans stats={stats} />
       <Close />
     </MarketingShell>
   );
@@ -58,17 +60,30 @@ function HowItWorksPage() {
 
 /* --------------------------------- hero ---------------------------------- */
 
-function Hero() {
+function Hero({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="border-b border-border">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden border-b border-border">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      {/* First sighting of the band: a shallow diagonal, almost gone. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="diagonal"
+        className="absolute inset-x-0 bottom-0 h-[55%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+      />
+      <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
         <Reveal className="max-w-3xl">
           <p className="eyebrow">How It Works</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-[3.5rem] sm:leading-[1.03]">
-            Connect once. Governed decisions on every workload.
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.045em] sm:text-[3.75rem] sm:leading-[1.02]">
+            Connect once.{" "}
+            <span className="text-gradient-brand-wide">Governed decisions</span> on every workload.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Four steps, no manual exports — from one environment variable to a benchmark-backed
+            Four steps, no manual exports. From one environment variable to a benchmark-backed
             verdict on every workload, and a switch you can defend afterwards.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
