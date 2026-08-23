@@ -93,7 +93,7 @@ export function buildWidgetStats(
     label: `Price moves in ${current.monthLabel}`,
     detail:
       delta != null
-        ? `${current.increases} up, ${current.decreases} down — ${signedPct(delta)} against last month's ${prevTotal}.`
+        ? `${current.increases} up, ${current.decreases} down · ${signedPct(delta)} against last month's ${prevTotal}.`
         : `${current.increases} up, ${current.decreases} down, recorded in the append-only price ledger.`,
     tone: "brand",
   });

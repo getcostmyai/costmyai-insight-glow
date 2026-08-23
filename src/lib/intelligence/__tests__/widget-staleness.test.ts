@@ -97,6 +97,9 @@ describe("widget staleness", () => {
 
     const gone = renderWidgetUnavailable({ origin: "https://costmyai.com", nonce: "n" });
     expect(gone).toContain("Figures temporarily unavailable");
-    expect(gone).not.toContain("36");
+    // No payload figures leak into the blank state. Checked on the body only,
+    // since the stylesheet legitimately carries hex colours containing digits.
+    expect(gone.slice(gone.indexOf("<body"))).not.toContain("36");
+
   });
 });
