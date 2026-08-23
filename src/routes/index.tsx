@@ -80,7 +80,7 @@ function HomePage() {
       <Estimator />
 
       <BuiltFor />
-      <Forecast />
+      <Forecast stats={stats} />
       <Architecture />
       <Pricing stats={stats} />
       <Neutrality />
@@ -99,7 +99,15 @@ function Hero({ stats }: { stats: MarketingStats }) {
       {/* The ambient field: saturated at its source, gone long before it
           reaches the headline. Its own layer, so the drift never moves text. */}
       <div className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift" aria-hidden />
+      {/* First sighting of the band, on a shallow diagonal and almost gone:
+          texture here, argument later. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="diagonal"
+        className="absolute inset-x-0 bottom-0 h-[52%] opacity-[0.12] [mask-image:linear-gradient(180deg,transparent,#000_70%)]"
+      />
       <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+
       <div className="relative mx-auto max-w-4xl px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-16 sm:pt-24">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
           Stop overpaying <span className="text-gradient-brand-wide">for AI.</span>
@@ -182,10 +190,21 @@ const FORECAST_PRINCIPLES = [
   },
 ];
 
-function Forecast() {
+function Forecast({ stats }: { stats: MarketingStats }) {
   return (
-    <section id="forecast" className="scroll-mt-24 border-y border-border wash-brand bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
+    <section
+      id="forecast"
+      className="relative scroll-mt-24 overflow-hidden border-y border-border wash-brand bg-card"
+    >
+      {/* The same band, stood on end in the right gutter: movement beside the
+          argument rather than another stripe across it. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[18%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
+
         <SectionHead
           eyebrow="Spend Forecast"
           title="Your month-end AI bill, before the invoice arrives."
