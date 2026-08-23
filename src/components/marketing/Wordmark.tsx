@@ -6,7 +6,7 @@
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`font-semibold tracking-tight ${className}`}>
-      Cost<span className="text-primary">My</span>AI
+      Cost<span className="text-gradient-brand-wide">My</span>AI
     </span>
   );
 }
