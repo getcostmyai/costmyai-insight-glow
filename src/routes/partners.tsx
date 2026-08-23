@@ -142,10 +142,17 @@ const BEYOND = [
   },
 ] as const;
 
-function BeyondCommission() {
+function BeyondCommission({ moves }: { moves: number }) {
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32">
-      <div className="mx-auto max-w-6xl">
+    <section className="relative overflow-hidden border-t border-border wash-brand">
+      {/* The echo: same band, quarter-turned, pinned to the gutter. */}
+      <PriceDriftRibbon
+        moves={moves}
+        orientation="vertical"
+        className="absolute inset-y-0 right-0 hidden w-[16%] opacity-[0.18] [mask-image:linear-gradient(270deg,#000,transparent)] lg:block"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+
         <SectionHead
           eyebrow="Beyond the commission"
           title="What a partner account actually gets you."
