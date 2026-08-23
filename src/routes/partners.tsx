@@ -457,8 +457,11 @@ function Steps() {
 
 function ClosingCta() {
   return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32">
-      <Reveal className="mx-auto max-w-3xl text-center">
+    <section className="relative overflow-hidden border-t border-border">
+      <div className="absolute inset-0 mesh-brand mesh-drift opacity-70" aria-hidden />
+      <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      <Reveal className="relative mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 sm:py-32">
+
         <h2 className="text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[3.6rem]">
           Start earning on the <span className="text-gradient-brand">next</span> recommendation you
           make.
