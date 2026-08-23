@@ -18,6 +18,8 @@ import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram"
 import { Estimator } from "@/components/marketing/Estimator";
 import { ForecastDiagram } from "@/components/marketing/ForecastDiagram";
 import { GradientPanel } from "@/components/marketing/GradientPanel";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
