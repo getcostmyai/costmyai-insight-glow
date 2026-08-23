@@ -606,6 +606,39 @@ function Steps() {
   );
 }
 
+/* ----------------------------------- faq ---------------------------------- */
+
+function PartnerFaq() {
+  return (
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          eyebrow="For experienced partners"
+          title="The details that decide whether this fits your practice."
+        />
+
+        <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-2">
+          {FAQ.map((f, i) => (
+            <Reveal
+              key={f.q}
+              delay={i * 90}
+              className="border-t border-border pt-8"
+            >
+              <div className="flex items-start gap-4">
+                <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold leading-snug tracking-[-0.02em]">{f.q}</h3>
+                  <p className="mt-3 text-base leading-relaxed text-muted-foreground">{f.a}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ------------------------------- neutrality ------------------------------- */
 
 function Neutrality() {
