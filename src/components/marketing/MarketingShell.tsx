@@ -167,7 +167,6 @@ export function MarketingFooter() {
               <FooterLink to="/standard">The CostMyAI Standard</FooterLink>
               <FooterLink to="/faq">FAQ</FooterLink>
               <FooterLink to="/legal/methodology">Methodology</FooterLink>
-              <FooterLink to="/models">Data Sources</FooterLink>
               <FooterLink to="/partners">Become a Partner</FooterLink>
               <FooterExternal href={BOOK_DEMO_URL}>Book a Demo</FooterExternal>
             </FooterColumn>
