@@ -264,16 +264,20 @@ export function renderWidgetUnavailable(opts: WidgetDocOptions): string {
   html,body{height:100%}
   body{font-family:${SANS};background:${PALETTE.bg};color:${PALETTE.ink};-webkit-font-smoothing:antialiased}
   .card{position:relative;height:100%;min-height:168px;display:flex;flex-direction:column;
-    justify-content:space-between;gap:14px;padding:20px 22px;
+    justify-content:space-between;gap:14px;padding:20px 22px;overflow:hidden;
     border:1px solid ${PALETTE.hairline};border-radius:18px;background:${PALETTE.bg}}
+  .card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:${GRADIENT_WIDE};opacity:.55}
   .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${PALETTE.muted};font-weight:600}
   .label{font-size:16px;font-weight:600;letter-spacing:-.01em}
   .detail{font-size:12.5px;line-height:1.45;color:${PALETTE.body};margin-top:6px}
   .foot{display:flex;align-items:center;justify-content:flex-end;
     border-top:1px solid ${PALETTE.hairline};padding-top:12px}
   .via{font-size:12px;color:${PALETTE.muted};text-decoration:none;font-weight:600}
-  .via b{color:${PALETTE.ink};font-weight:700}
-  .via i{color:${PALETTE.brand};font-style:normal}
+  .via b{color:${PALETTE.ink};font-weight:700;letter-spacing:-.01em}
+  .via i{font-style:normal;background-image:${GRADIENT_WIDE};
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+
 </style>
 </head>
 <body>
