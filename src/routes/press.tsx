@@ -9,22 +9,25 @@ import { marketingStatsQuery } from "@/lib/marketing.functions";
 export const Route = createFileRoute("/press")({
   head: () => ({
     meta: [
-      { title: "Press kit — CostMyAI" },
+      { title: "Press and media — CostMyAI" },
       {
         name: "description",
         content:
-          "CostMyAI is a neutral Financial Governance platform for AI spend. Boilerplate, origin, citation guidance and media contact for journalists and analysts.",
+          "Boilerplate, naming rules, origin, citation guidance and media contact for CostMyAI, the Financial Governance platform for AI spend. Assets and interviews on request, same working day.",
       },
-      { property: "og:title", content: "Press kit — CostMyAI" },
+      { property: "og:title", content: "Press and media — CostMyAI" },
       {
         property: "og:description",
         content:
-          "The only platform in this category that publishes its own refusal rate. Boilerplate, origin and citation guidance.",
+          "Paste-ready boilerplate, how to name us, and why we publish our own refusal rate. Assets and interviews on request.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.costmyai.com/press" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/press" }],
   }),
+
   loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: PressPage,
 });
