@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://costmyai-insight-glow.lovable.app/sitemap.xml
+Sitemap: https://www.costmyai.com/sitemap.xml

@@ -8,7 +8,7 @@ import { notesNewestFirst } from "@/lib/intelligence/notes";
 // not the origin the request happens to be served from (preview, localhost,
 // etc.). This keeps entries stable and avoids scanner warnings about preview
 // domains leaking into the sitemap.
-const CANONICAL_BASE_URL = "https://costmyai-insight-glow.lovable.app";
+const CANONICAL_BASE_URL = "https://www.costmyai.com";
 
 interface SitemapEntry {
   path: string;
