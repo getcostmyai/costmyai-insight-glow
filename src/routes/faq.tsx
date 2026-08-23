@@ -101,7 +101,7 @@ function FaqPage() {
               />
             ) : null}
 
-            <div className="mx-auto max-w-6xl">
+            <div className="relative mx-auto max-w-6xl">
               <Reveal className="max-w-3xl">
                 <p className="eyebrow">{String(ci + 1).padStart(2, "0")}</p>
                 <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
