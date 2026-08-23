@@ -542,9 +542,8 @@
   background-repeat: no-repeat;
 }
 
-/* Slow parallax breathing. Two lobes drift against each other, which is what
-   keeps the field alive without ever becoming a moving distraction. */
 /* Architecture wire: a wide brand gradient sliding under a narrow mask. */
+
 @keyframes wire-flow {
   from {
     transform: translate3d(0, 0, 0);
