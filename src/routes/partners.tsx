@@ -172,6 +172,10 @@ function PartnersPage() {
 
   return (
     <MarketingShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: partnerFaqJsonLd() }}
+      />
       <Hero range={range} topRate={topRate} moves={moves} />
       <IsThisYou />
       <TheCase moves={moves} />
