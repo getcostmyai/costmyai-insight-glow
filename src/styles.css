@@ -273,7 +273,27 @@
       rgba(var(--brand-violet), 0.3) 0%,
       rgba(var(--brand-violet), 0) 76%
     );
+
+  /* Tier 1 on a near-black ground: the same lobes, roughly halved, or the
+     tint turns into a haze over the type. */
+  --wash-brand:
+    radial-gradient(
+      ellipse 90% 70% at 14% 0%,
+      rgba(var(--brand-indigo), 0.16) 0%,
+      rgba(var(--brand-indigo), 0) 78%
+    ),
+    radial-gradient(
+      ellipse 80% 66% at 88% 4%,
+      rgba(var(--brand-magenta), 0.1) 0%,
+      rgba(var(--brand-magenta), 0) 74%
+    ),
+    radial-gradient(
+      ellipse 120% 60% at 50% 100%,
+      rgba(var(--brand-coral), 0.07) 0%,
+      rgba(var(--brand-coral), 0) 80%
+    );
 }
+
 
 @layer base {
   * {
