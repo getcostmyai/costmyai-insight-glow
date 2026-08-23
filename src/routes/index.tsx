@@ -38,14 +38,22 @@ export const Route = createFileRoute("/")({
           name: "description",
           content: "You're likely overspending on AI. We prove it. You save. You grow.",
         },
-        { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
+        {
+          property: "og:title",
+          content: "See what your AI stack should actually cost",
+        },
         {
           property: "og:description",
-          content: "You're likely overspending on AI. We prove it. You save. You grow.",
+          content:
+            "Live prices for every major model and host, a same-model price gap you can act on, and a route that keeps the spend honest month after month.",
         },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: "https://www.costmyai.com/" },
+        { property: "og:image", content: "https://www.costmyai.com/og/costmyai-og.png" },
         { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: "https://www.costmyai.com/og/costmyai-og.png" },
       ],
+      links: [{ rel: "canonical", href: "https://www.costmyai.com/" }],
       scripts: [{
         type: "application/ld+json",
         children: JSON.stringify({
