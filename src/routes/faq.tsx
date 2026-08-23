@@ -52,21 +52,21 @@ function FaqPage() {
             <Reveal className="max-w-4xl">
               <p className="eyebrow">FAQ</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
-                The questions people
+                Straight answers
                 <br />
-                actually <span className="text-gradient-brand-wide">search for</span>.
+                about <span className="text-gradient-brand-wide">what AI costs</span>.
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                Not invented questions with convenient answers. These are the ones teams running AI
-                at real scale ask about cost, about switching safely, and about who gets to hold
-                their credentials. Answers first, no hedging.
+                Real questions from teams running AI at real scale: why the bill keeps climbing,
+                how to move to a cheaper model without losing quality, who ends up holding your
+                credentials, and what it takes to start. Answer first, no hedging, no asterisks.
               </p>
             </Reveal>
 
             <Reveal delay={120}>
               <nav
                 aria-label="FAQ sections"
-                className="mt-16 grid gap-x-10 gap-y-4 border-t border-border/60 pt-10 sm:grid-cols-2 lg:grid-cols-4"
+                className="mt-16 grid gap-x-10 gap-y-4 border-t border-border/60 pt-10 sm:grid-cols-2 lg:grid-cols-3"
               >
                 {FAQ_CLUSTERS.map((c, i) => (
                   <a

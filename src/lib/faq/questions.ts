@@ -68,8 +68,9 @@ export const FAQ_CLUSTERS: FaqCluster[] = [
   },
   {
     id: "keys-and-trust",
-    title: "API keys, credentials, and trust",
-    lead: "Your provider keys stay in your environment. That is architecture, not policy.",
+    title: "API keys, your data, and billing",
+    lead: "Your provider keys stay in your environment. That is architecture, not policy. Plus the one billing question everybody asks.",
+
     items: [
       {
         id: "safe-to-share-api-keys",
@@ -120,7 +121,35 @@ export const FAQ_CLUSTERS: FaqCluster[] = [
       },
     ],
   },
+  {
+    id: "getting-started",
+    title: "Getting started with CostMyAI",
+    lead: "What it costs, what it takes to connect, and what happens if we cannot cover something you run.",
+    items: [
+      {
+        id: "what-does-costmyai-cost",
+        q: "What does CostMyAI cost?",
+        a: "Compare, the rung that shows you live model prices and what your own workloads would cost on each of them, is free and is what every new workspace starts on. The rungs above it, Certify, Rightsize and Govern, are paid and are opening in stages, so their pricing is confirmed with you directly before anything is ever charged. Nothing upgrades itself, and no card is required to start.",
+      },
+      {
+        id: "how-long-does-setup-take",
+        q: "How long does it take to connect my own usage?",
+        a: "Comparing prices needs no connection at all: you can do that on your first visit. Seeing your own spend means running the Verification Engine inside your environment, which is a container plus your existing provider keys, and it is usually a same day job for whoever already owns that environment. The first useful numbers appear as soon as it has read one billing period.",
+      },
+      {
+        id: "do-i-have-to-change-my-code",
+        q: "Do I have to change my application code?",
+        a: "Not to see anything. Measurement, comparison and certification are all read only, so nothing about how your application calls its models has to change. Code only enters the picture when you decide to actually execute a switch, and even then the change is where a request is routed, not how your application is written.",
+      },
+      {
+        id: "provider-not-supported",
+        q: "What if you do not cover a provider or model I use?",
+        a: "Say so and we will tell you honestly whether it is a short addition or not on the roadmap, rather than quietly leaving it out of your numbers. Anything we cannot read is shown as an explicit gap in your coverage rather than silently counted as zero, because a spend figure with an invisible hole in it is worse than no figure.",
+      },
+    ],
+  },
 ];
+
 
 export const FAQ_ITEMS: FaqItem[] = FAQ_CLUSTERS.flatMap((c) => c.items);
 
