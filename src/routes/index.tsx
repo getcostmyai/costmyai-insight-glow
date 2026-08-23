@@ -295,7 +295,7 @@ function StillMoving() {
 
 function Architecture() {
   return (
-    <section id="architecture" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="architecture" className="scroll-mt-24 border-y border-border bg-background">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Architecture"
