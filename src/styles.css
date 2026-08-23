@@ -567,8 +567,9 @@
   will-change: transform;
 }
 
-
+/* Price-drift ribbon strands: each one breathes on its own phase, so the band
    as a whole never appears to move in lockstep. */
+
 @keyframes drift-strand {
   0%,
   100% {
