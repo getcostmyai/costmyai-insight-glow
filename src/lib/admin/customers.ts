@@ -14,7 +14,7 @@ import type { PlanTier } from "@/lib/engine/types";
 export const TEST_EMAIL_DOMAINS = [
   "costmyai-test.com",
   "costmyai-test.dev",
-  //TEMPVERIFY "costmyai.dev",
+  "costmyai.dev",
 ] as const;
 
 /** The founder account. Shown, but never presented as an anonymous customer. */
