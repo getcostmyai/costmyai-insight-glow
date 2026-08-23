@@ -250,8 +250,9 @@ function StandardPage() {
         </section>
 
         {/* Interactive self-assessment --------------------------------------- */}
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden wash-brand border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="relative mx-auto max-w-6xl">
+
             <Reveal className="max-w-3xl">
               <p className="eyebrow">How to apply this</p>
               <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
