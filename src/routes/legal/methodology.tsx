@@ -64,12 +64,17 @@ function MethodologyPage() {
   return (
     <MarketingShell>
       <div className="flex flex-col">
-        <section className="wash-hero px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            className="pointer-events-none absolute inset-x-0 -top-24 h-[130%] mesh-brand mesh-drift"
+            aria-hidden
+          />
+          <div className="absolute inset-0 texture-dots opacity-50" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-24 sm:px-8 sm:pb-20 sm:pt-32">
             <Reveal className="max-w-4xl">
               <p className="eyebrow">Methodology</p>
               <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-[-0.045em] sm:text-7xl">
-                How a switch gets <span className="text-gradient-brand">proven</span>.
+                How a switch gets <span className="text-gradient-brand-wide">proven</span>.
               </h1>
               <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
                 A recommendation you cannot audit is a guess with a dollar sign in front of it. This
@@ -79,7 +84,7 @@ function MethodologyPage() {
           </div>
         </section>
 
-        <section className="px-5 pb-28 sm:px-8 sm:pb-36">
+        <section className="wash-brand px-5 pb-28 pt-24 sm:px-8 sm:pb-36">
           <div className="mx-auto max-w-6xl">
             <ul className="divide-y divide-border/60 border-t border-border/60">
               {SECTIONS.map((s, i) => (
@@ -105,13 +110,14 @@ function MethodologyPage() {
           </div>
         </section>
 
-        <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
+          <div className="pointer-events-none absolute inset-0 mesh-brand mesh-drift" aria-hidden />
+          <div className="relative mx-auto max-w-3xl text-center">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
                 Every rule above runs on a live catalog.
                 <br />
-                <span className="text-gradient-brand">See it applied to real prices.</span>
+                <span className="text-gradient-brand-wide">See it applied to real prices.</span>
               </h2>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link to="/models" className="btn-gradient px-6 py-3 text-sm">
