@@ -307,13 +307,21 @@ function Stat({ children }: { children: React.ReactNode }) {
 function Ladder({
   tiers,
   topRate,
+  moves,
 }: {
   tiers: PartnerLadder["tiers"];
   topRate: number;
+  moves: number;
 }) {
   return (
-    <section className="border-y border-border bg-card">
-      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden border-y border-border wash-brand">
+      {/* The statement placement: a whisper at the bottom edge, never behind body copy. */}
+      <PriceDriftRibbon
+        moves={moves}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-25 [mask-image:linear-gradient(180deg,transparent_0%,transparent_70%,#000_100%)]"
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
+
         <SectionHead
           eyebrow="Commission ladder"
           title="The more you refer, the higher every future invoice pays."
