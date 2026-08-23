@@ -185,6 +185,29 @@
     rgba(123, 97, 255, 0.13) 0%,
     rgba(255, 255, 255, 0) 85%
   );
+  /*
+   * Tier 1. Louder than --wash-section and, crucially, multi-hue: two lobes
+   * from opposite ends of the widened family so a tinted band reads as brand
+   * colour rather than as grey. Both fall to zero above the vertical middle,
+   * which is where body copy starts.
+   */
+  --wash-brand:
+    radial-gradient(
+      ellipse 90% 70% at 14% 0%,
+      rgba(var(--brand-indigo), 0.2) 0%,
+      rgba(var(--brand-indigo), 0) 78%
+    ),
+    radial-gradient(
+      ellipse 80% 66% at 88% 4%,
+      rgba(var(--brand-magenta), 0.14) 0%,
+      rgba(var(--brand-magenta), 0) 74%
+    ),
+    radial-gradient(
+      ellipse 120% 60% at 50% 100%,
+      rgba(var(--brand-coral), 0.1) 0%,
+      rgba(var(--brand-coral), 0) 80%
+    );
+
   --texture-dots: radial-gradient(
     circle,
     color-mix(in oklab, var(--muted-foreground) 9%, transparent) 1px,
@@ -250,7 +273,27 @@
       rgba(var(--brand-violet), 0.3) 0%,
       rgba(var(--brand-violet), 0) 76%
     );
+
+  /* Tier 1 on a near-black ground: the same lobes, roughly halved, or the
+     tint turns into a haze over the type. */
+  --wash-brand:
+    radial-gradient(
+      ellipse 90% 70% at 14% 0%,
+      rgba(var(--brand-indigo), 0.16) 0%,
+      rgba(var(--brand-indigo), 0) 78%
+    ),
+    radial-gradient(
+      ellipse 80% 66% at 88% 4%,
+      rgba(var(--brand-magenta), 0.1) 0%,
+      rgba(var(--brand-magenta), 0) 74%
+    ),
+    radial-gradient(
+      ellipse 120% 60% at 50% 100%,
+      rgba(var(--brand-coral), 0.07) 0%,
+      rgba(var(--brand-coral), 0) 80%
+    );
 }
+
 
 @layer base {
   * {
@@ -311,8 +354,11 @@
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-muted-foreground);
+  /* Brand-tinted, not brand-loud: enough hue to belong to the hero's
+     vocabulary, muted enough to stay a label. */
+  color: color-mix(in oklab, var(--color-primary) 62%, var(--color-muted-foreground));
 }
+
 
 @keyframes rise {
   from {
@@ -457,6 +503,35 @@
 }
 
 /*
+ * Tier 1 — the tinted band. Applied edge to edge on a section, never on a text
+ * container: the lobes stay in the corners and the middle of the band, where
+ * the copy lives, is effectively untinted.
+ */
+@utility wash-brand {
+  background-image: var(--wash-brand);
+  background-repeat: no-repeat;
+}
+
+/*
+ * Section boundary rule. A plain 1px border between two tinted bands reads as
+ * a seam; this one carries brand colour at the centre and fades to nothing at
+ * both ends, so the transition looks intended.
+ */
+@utility rule-brand {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--brand-violet), 0.35) 35%,
+    rgba(var(--brand-magenta), 0.45) 50%,
+    rgba(var(--brand-violet), 0.35) 65%,
+    transparent 100%
+  );
+}
+
+
+/*
  * The ambient brand field. Always rendered on its own absolutely-positioned
  * layer behind content, never as the background of a text container — the
  * lobes are saturated at their source and only readable because nothing sits
@@ -467,8 +542,43 @@
   background-repeat: no-repeat;
 }
 
-/* Slow parallax breathing. Two lobes drift against each other, which is what
-   keeps the field alive without ever becoming a moving distraction. */
+/* Architecture wire: a wide brand gradient sliding under a narrow mask. */
+
+@keyframes wire-flow {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-66.6%, 0, 0);
+  }
+}
+
+@utility wire-flow {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(var(--brand-indigo)) 0%,
+    rgb(var(--brand-violet)) 8%,
+    rgb(var(--brand-magenta)) 16%,
+    rgb(var(--brand-coral)) 24%,
+    rgb(var(--brand-indigo)) 33.333%
+  );
+  animation: wire-flow 14s linear infinite;
+  will-change: transform;
+}
+
+/* Price-drift ribbon strands: each one breathes on its own phase, so the band
+   as a whole never appears to move in lockstep. */
+
+@keyframes drift-strand {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+  }
+  50% {
+    transform: translate3d(-1.5%, 2%, 0) scaleY(1.09);
+  }
+}
+
 @keyframes mesh-drift {
   0%,
   100% {
@@ -495,10 +605,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mesh-drift {
+  .mesh-drift,
+  .wire-flow {
     animation: none;
   }
 }
+
 
 
 @utility texture-dots {

@@ -15,7 +15,7 @@ export function ProviderMarquee({ stats }: { stats: MarketingStats }) {
   const lane = [...stats.providers, ...stats.providers];
 
   return (
-    <section className="border-y border-border bg-card">
+    <section className="border-y border-border wash-brand bg-card">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-6 sm:px-8">
         <h2 className="text-center text-base font-semibold tracking-[-0.02em] sm:text-lg">
           Works with your AI ecosystem.

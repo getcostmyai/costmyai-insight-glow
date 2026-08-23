@@ -18,6 +18,8 @@ import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram"
 import { Estimator } from "@/components/marketing/Estimator";
 import { ForecastDiagram } from "@/components/marketing/ForecastDiagram";
 import { GradientPanel } from "@/components/marketing/GradientPanel";
+import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
+
 import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -74,7 +76,7 @@ function HomePage() {
       <ProviderMarquee stats={stats} />
 
       <HowItWorks />
-      <StillMoving />
+      <StillMoving stats={stats} />
       <Estimator />
 
       <BuiltFor />
@@ -182,7 +184,7 @@ const FORECAST_PRINCIPLES = [
 
 function Forecast() {
   return (
-    <section id="forecast" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="forecast" className="scroll-mt-24 border-y border-border wash-brand bg-card">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Spend Forecast"
@@ -258,10 +260,28 @@ function Forecast() {
  * Deliberately not a summary of the article: the whole job of this band is to
  * make the reader realise the question exists.
  */
-function StillMoving() {
+function StillMoving({ stats }: { stats: MarketingStats }) {
   return (
-    <section className="wash-section">
-      <div className="mx-auto max-w-6xl border-y border-border px-5 py-24 sm:px-8 sm:py-32">
+    <section className="relative overflow-hidden bg-background">
+      {/* The mid-page anchor. Full mesh on its own layer, with the drift ribbon
+          across the middle of the band — colour and movement in the one place
+          the page argues that nothing holds still. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-16 h-[130%] mesh-brand mesh-drift"
+        aria-hidden
+      />
+      <div className="absolute inset-0 texture-dots opacity-40" aria-hidden />
+      {/* The ribbon sits in the lower band only. Movement is the point, but not
+          behind the argument — strands crossing the headline read as noise. */}
+      <PriceDriftRibbon
+        moves={stats.priceChangesTracked}
+        className="absolute inset-x-0 bottom-0 h-[26%] opacity-40 [mask-image:linear-gradient(180deg,transparent,#000_55%)]"
+      />
+
+      <div className="relative mx-auto max-w-6xl px-5 pb-44 pt-24 sm:px-8 sm:pb-52 sm:pt-32">
+        <div className="rule-brand absolute inset-x-5 top-0 sm:inset-x-8" aria-hidden />
+        <div className="rule-brand absolute inset-x-5 bottom-0 sm:inset-x-8" aria-hidden />
+
         <Reveal className="mx-auto max-w-4xl text-center">
           <p className="eyebrow">Why this is a system, not an audit</p>
           <h2 className="mt-5 text-4xl font-semibold leading-[1.04] tracking-[-0.04em] sm:text-6xl">
@@ -283,7 +303,16 @@ function StillMoving() {
             Read the full argument, and what we can and cannot prove
             <ArrowRight className="h-4 w-4" />
           </Link>
+          {stats.live ? (
+            <p className="mt-8 text-sm text-muted-foreground">
+              <span className="num font-semibold text-foreground">
+                {stats.priceChangesTracked.toLocaleString("en-GB")}
+              </span>{" "}
+              market price moves observed this month.
+            </p>
+          ) : null}
         </Reveal>
+
       </div>
     </section>
   );
@@ -295,7 +324,7 @@ function StillMoving() {
 
 function Architecture() {
   return (
-    <section id="architecture" className="scroll-mt-24 border-y border-border bg-card">
+    <section id="architecture" className="scroll-mt-24 border-y border-border bg-background">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Architecture"
@@ -325,7 +354,7 @@ function Architecture() {
  */
 function HowItWorks() {
   return (
-    <section id="how" className="scroll-mt-24 wash-section">
+    <section id="how" className="scroll-mt-24 wash-brand">
       <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
         <SectionHead
           eyebrow="How It Works"
@@ -411,7 +440,8 @@ const PERSONAS = [
 
 function BuiltFor() {
   return (
-    <section className="wash-section">
+    <section className="bg-background">
+
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Built For"
@@ -460,7 +490,7 @@ function Pricing({ stats }: { stats: MarketingStats }) {
   const [yearly, setYearly] = useState(true);
 
   return (
-    <section id="pricing" className="scroll-mt-24 wash-section">
+    <section id="pricing" className="scroll-mt-24 wash-brand">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead
           eyebrow="Pricing"
@@ -656,7 +686,7 @@ function Faq(_props: { stats: MarketingStats }) {
   const [open, setOpen] = useState(-1);
 
   return (
-    <section id="faq" className="scroll-mt-24 border-t border-border bg-card">
+    <section id="faq" className="scroll-mt-24 border-t border-border bg-background">
       <div className="mx-auto max-w-6xl px-5 py-28 sm:px-8 sm:py-36">
         <SectionHead eyebrow="FAQ" title="Common questions, accurate answers." />
         <div className="mx-auto mt-20 max-w-3xl">

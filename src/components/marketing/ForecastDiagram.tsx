@@ -187,10 +187,14 @@ export function ForecastDiagram() {
                 <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.30" />
                 <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
               </linearGradient>
+              {/* The projected region carries the brand family: what is
+                  estimated is coloured, what is measured is not. */}
               <linearGradient id="projectedGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary-glow)" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="rgb(var(--brand-magenta))" stopOpacity="0.34" />
+                <stop offset="55%" stopColor="rgb(var(--brand-coral))" stopOpacity="0.16" />
+                <stop offset="100%" stopColor="rgb(var(--brand-amber))" stopOpacity="0.03" />
               </linearGradient>
+
               <pattern
                 id="projectedHatch"
                 width="10"
