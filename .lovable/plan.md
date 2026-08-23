@@ -54,6 +54,32 @@ A single sentence where the share controls first appear: live figures move, shar
 **8. Method earlier, proof at the end**
 Move the Method section above Notes so provenance is reached before the archive, and place a closing CTA after Method, where the argument has been made.
 
+## Reader B is the distribution channel
+
+Reader B does not just read, they republish. Every post is free reach with our name attached, so the page should be built to be lifted from. Beyond citation and download above, these shareable objects do not exist yet.
+
+**9. A number of the month**
+One designated headline figure per month, chosen by rule rather than by taste (largest single move, or largest provider spread). It gets its own permalink, its own image, and a one-line explanation. This is the thing a poster looks for and cannot currently find, because the page opens with three equal figures and no verdict.
+
+**10. Direction of the market, in one line**
+Increases versus decreases as a single stated reading: prices in this month fell or rose on balance, by this much. The donut shows the split, but nobody can quote a donut. This is the most repostable sentence on the page and it is currently left for the reader to derive.
+
+**11. A trend line across months**
+Once several months are frozen, a chart of the blended index across the archive. A single-month snapshot is a fact, a trend is a story, and a trend is what gets shared and re-shared. Ships when the archive holds enough closed months, gated so it never renders a two-point line.
+
+**12. Image export sized for the feed**
+Share cards already produce an OG image. Add a download of the same card as a PNG in feed proportions, so a poster can attach it as an image post rather than a link preview. Link posts are throttled on LinkedIn; image posts are not, and a poster who has to screenshot the page will crop our attribution off.
+
+**13. A pre-written post draft**
+Next to each share control, a copy-the-post button producing three lines: the figure, the window it covers, and the source with link. Not marketing copy, just the fact stated correctly. It removes the last friction between reading and posting, and it guarantees the number is quoted with its caveat.
+
+**14. Bring them back next month**
+The page has an embed but no reason to return. A monthly notification, one message when the month freezes, carrying the number of the month and the permalink. A recurring poster is worth more than a hundred one-time readers.
+
+**15. Say the reuse rule out loud, early**
+The permission sentence from item 4 should also appear where the first share control appears, not only near the bottom. A poster decides whether they may repost long before they reach the archive.
+
+
 ## Technical notes
 
 - Copy and layout changes live in `src/components/marketing/IntelligenceReport.tsx`, plus the hero blocks in `src/routes/intelligence.index.tsx` and `src/routes/intelligence.$month.tsx`. One renderer serves both routes, so all shared sections change in one place.
@@ -61,4 +87,8 @@ Move the Method section above Notes so provenance is reached before the archive,
 - CSV/JSON export follows the existing public widget route pattern under `src/routes/api/public/`, reading the same payload the page renders so the download can never disagree with the page.
 - Citation and download both target `ctx.citableMonth`, matching the existing share behaviour.
 - Visual language stays as it is now: mesh hero, wash-brand tiers, ribbon in three orientations, no cards, no serif numbers, no em-dashes.
+- Number of the month, direction line and post drafts derive from the payload already rendered, chosen by a deterministic rule so the live page and the frozen month agree.
+- PNG export and the monthly notification reuse the existing share-image renderer and the existing email sending setup respectively.
+- The cross-month trend chart reads the frozen archive payloads and stays hidden until enough closed months exist.
 - No engine, pricing or data-collection logic changes.
+
