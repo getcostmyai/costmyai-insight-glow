@@ -23,7 +23,6 @@ import {
   directionLine,
   numberOfTheMonth,
   postDraft,
-  trackingWindow,
 } from "@/lib/intelligence/highlights";
 import { shareUrl } from "@/lib/intelligence/share-url";
 import { useOrigin } from "@/lib/use-origin";
