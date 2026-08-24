@@ -109,6 +109,38 @@ interface BasisRow {
   cache_write_tokens: number | null;
 }
 
+/**
+ * Dispatch 236. The workload's cache mix BEFORE the switch ran, per switch and
+ * per raw reported pair.
+ *
+ * The counterfactual asks "what would this traffic have cost if we had not
+ * moved it", and the honest answer prices it with the cache behaviour the
+ * ORIGINAL pair actually had — not with the mix the destination happens to
+ * report after the move. A move from a warm-cache host to a cold one otherwise
+ * prices the "before" world at the destination's cold mix and understates the
+ * loss (and the reverse overstates the win).
+ *
+ * Pairs come back raw on purpose: alias resolution lives in TypeScript
+ * (`buildModelResolver` / `buildHostResolver`) and is not callable from SQL, so
+ * matching happens here with the same resolver the rest of this file uses
+ * rather than with a second normalizer written in SQL.
+ */
+interface PriorBasisRow {
+  switch_id: string;
+  model_key: string;
+  host: string;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number | null;
+  cache_write_tokens: number | null;
+}
+
+interface PriorMix {
+  inputTokens: number;
+  readTokens: number;
+  writeTokens: number;
+}
+
 
 /**
  * Read every rerouted, successful event in a workspace and total the observed
@@ -120,15 +152,28 @@ export async function computeSwitchSavings(
   orgId: string,
   only?: string[],
 ): Promise<SwitchSavings[]> {
-  const { data, error } = await (db as unknown as {
-    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: BasisRow[] | null; error: { message: string } | null }>;
-  }).rpc("switch_savings_basis", {
+  const rpc = (db as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  }).rpc;
+  const args = {
     _org_id: orgId,
     _switch_ids: only && only.length > 0 ? only : null,
-  });
+  };
+  const { data, error } = (await rpc.call(db, "switch_savings_basis", args)) as {
+    data: BasisRow[] | null;
+    error: { message: string } | null;
+  };
   if (error) throw new Error(`switch savings basis unreadable: ${error.message}`);
   const groups = data ?? [];
   if (groups.length === 0) return [];
+
+  const prior = (await rpc.call(db, "switch_savings_prior_basis", args)) as {
+    data: PriorBasisRow[] | null;
+    error: { message: string } | null;
+  };
+  if (prior.error) throw new Error(`switch savings prior basis unreadable: ${prior.error.message}`);
+  const priorRows = prior.data ?? [];
+
 
 
   /**
