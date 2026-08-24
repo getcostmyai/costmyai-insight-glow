@@ -220,10 +220,12 @@ describe("pre-switch cache mix prices the counterfactual", () => {
       input_tokens: INPUT,
       cache_read_tokens: PRIOR_READ,
     });
-    // Nothing before the fresh switch on its own original pair.
-    expect((data as Array<Record<string, unknown>>).some((r) => r["switch_id"] === freshSwitchId)).toBe(
-      false,
+    // The function returns every pre-switch pair (resolution happens in
+    // TypeScript), so the fresh switch sees rows too — just none on ITS pair.
+    const freshOwnPair = (data as Array<Record<string, unknown>>).filter(
+      (r) => r["switch_id"] === freshSwitchId && r["model_key"] === toPrice.model_key,
     );
+    expect(freshOwnPair).toHaveLength(0);
   });
 
   it("prices the counterfactual warm and the actual cold", async () => {
