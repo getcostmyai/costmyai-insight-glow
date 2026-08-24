@@ -10,13 +10,13 @@ Only claims that already hold on costmyai.com are used: 300+ models, 45+ provide
 
 Current: "THE AI Spend Governance Platform: right-sized models, provable savings, automatic switching."
 
-Paste this (108 characters):
+Paste this (106 characters):
 
 ```
 Most teams overpay for AI. We show you exactly how much, prove the cheaper option is safe, then switch it.
 ```
 
-Alternate, if you want the category name in the tagline (142 characters):
+Alternate, if you want the category name in the tagline (131 characters):
 
 ```
 Financial Governance for AI spend. See what you overpay across 300+ models, get proof a cheaper switch is safe, then let it happen.
@@ -26,7 +26,7 @@ Financial Governance for AI spend. See what you overpay across 300+ models, get 
 
 ## 2. Overview / About (LinkedIn limit: 2,000 characters)
 
-Paste this (1,612 characters):
+Paste this (1,596 characters):
 
 ```
 Most teams have no idea what their AI is actually costing them, or how much of that bill is avoidable.
@@ -58,7 +58,7 @@ See it at costmyai.com
 
 ### Services description (LinkedIn limit: 2,000 characters)
 
-Do not repeat the About text here. Paste this (694 characters):
+Do not repeat the About text here. Paste this (654 characters):
 
 ```
 We work with teams who know their AI bill is growing and want to know which part of it is waste.
