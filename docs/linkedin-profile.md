@@ -56,22 +56,12 @@ See it at costmyai.com
 
 ## 3. Services
 
-### Services description (LinkedIn limit: 2,000 characters)
+### Services description (LinkedIn limit: 500 characters)
 
-Do not repeat the About text here. Paste this (654 characters):
+Do not repeat the About text here. Paste this (262 characters):
 
 ```
-We work with teams who know their AI bill is growing and want to know which part of it is waste.
-
-Cost visibility. One view of what you spend across every model and provider you use, with live market pricing next to it.
-
-Savings verification. Independent proof that a cheaper model holds quality for your workload, before you move anything.
-
-Model rightsizing. Finding the workloads running on a model larger and more expensive than the job requires.
-
-Automated switching. Once approved, traffic moves to the cheaper option on its own and is re-verified at the moment of every switch.
-
-Start free at costmyai.com. Compare costs nothing and needs no card.
+CostMyAI shows finance and ops teams what they overpay for AI. Compare live pricing across 300+ models and 45+ providers, certify a cheaper option is safe, then switch traffic automatically once approved. Start free at costmyai.com.
 ```
 
 ### Services provided (tags)
