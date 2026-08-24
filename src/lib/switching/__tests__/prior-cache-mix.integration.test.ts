@@ -109,15 +109,15 @@ beforeAll(async () => {
   fromPrice = await priceOf("openai/gpt-5-mini", "openai");
   toPrice = await priceOf("openai/gpt-5-nano", "azure");
 
-  const mkSwitch = async () => {
+  const mkSwitch = async (from: { model: string; host: string }, to: { model: string; host: string }) => {
     const { data, error } = await admin
       .from("switches")
       .insert({
         org_id: orgId,
-        from_model: fromPrice.model_key,
-        from_host: fromPrice.host,
-        to_model: toPrice.model_key,
-        to_host: toPrice.host,
+        from_model: from.model,
+        from_host: from.host,
+        to_model: to.model,
+        to_host: to.host,
         basis: "host_arbitrage",
         autonomous: false,
         activated_at: ACTIVATED_AT,
@@ -127,8 +127,16 @@ beforeAll(async () => {
     if (error) throw error;
     return data.id as string;
   };
-  switchId = await mkSwitch();
-  freshSwitchId = await mkSwitch();
+  switchId = await mkSwitch(
+    { model: fromPrice.model_key, host: fromPrice.host },
+    { model: toPrice.model_key, host: toPrice.host },
+  );
+  // A different workload, so the "one active switch per workload" rule holds and
+  // this switch genuinely has no pre-switch history of its own.
+  freshSwitchId = await mkSwitch(
+    { model: toPrice.model_key, host: "openai" },
+    { model: fromPrice.model_key, host: fromPrice.host },
+  );
 
   const rows = [
     // Pre-switch history on the ORIGINAL pair, spelled the way a real gateway
@@ -179,7 +187,7 @@ beforeAll(async () => {
       status: "ok",
       rerouted: true,
       route_reason: freshSwitchId,
-      original_model_key: "openai/gpt-5-nano",
+      original_model_key: toPrice.model_key,
       original_host: "openai",
       idempotency_key: `d236-fresh-${stamp}`,
     },
