@@ -395,7 +395,7 @@ function HowItWorks() {
           <GradientPanel
             src="/images/how-it-works/compare-dashboard.png"
             alt="The CostMyAI Compare dashboard showing per-workload spend and certified cheaper alternatives"
-            caption="Compare, the first rung: every workload priced, every cheaper route named."
+            caption="Compare, the first level: every workload priced, every cheaper route named."
           />
         </Reveal>
 
