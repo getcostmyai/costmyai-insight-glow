@@ -143,12 +143,20 @@ Rules for whatever you use:
 
 ## 7. First pinned post (optional, but the page looks dead without one)
 
+Paste this (about 740 characters):
+
 ```
-Most teams cannot answer a simple question: how much of our AI bill is avoidable?
+After months of building, we're quietly opening CostMyAI.
 
-We built CostMyAI to answer it. Live pricing across the models and providers you use, with quality checked against a live benchmark. A cheaper option is only called a saving once a benchmark proves quality holds. And when it does, the switch can happen on its own.
+Most teams I talk to have one thing in common: they have no idea how much of their AI bill is avoidable. They see the invoice, they pay it, and they move on.
 
-No provider owns us, and none can pay for placement. We sell nothing but the truth of the number.
+I get it — I did the same thing. Then I actually looked under the hood.
 
-Compare is free: costmyai.com
+The same prompt, the same quality, can cost several times less on a different model or provider. But "cheaper" means nothing if quality drops. So we built something that proves the saving before it lets you switch.
+
+CostMyAI shows you what you overpay, certifies that the cheaper option is genuinely as good, and can move your traffic automatically once you approve it. No provider owns us. No pay-for-placement. Just the actual number.
+
+We're in soft launch now. Compare is free, and I'd genuinely love your feedback.
+
+costmyai.com
 ```
