@@ -19,7 +19,7 @@ Most teams overpay for AI. We show you exactly how much, prove the cheaper optio
 Alternate, if you want the category name in the tagline (131 characters):
 
 ```
-Financial Governance for AI spend. See what you overpay across 300+ models, get proof a cheaper switch is safe, then let it happen.
+Financial Governance for AI spend. See what you overpay, get proof a cheaper switch is safe, then let it happen.
 ```
 
 ---
