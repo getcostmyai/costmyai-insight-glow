@@ -16,7 +16,7 @@ Paste this (106 characters):
 Most teams overpay for AI. We show you exactly how much, prove the cheaper option is safe, then switch it.
 ```
 
-Alternate, if you want the category name in the tagline (131 characters):
+Alternate, if you want the category name in the tagline (112 characters):
 
 ```
 Financial Governance for AI spend. See what you overpay, get proof a cheaper switch is safe, then let it happen.
@@ -26,7 +26,7 @@ Financial Governance for AI spend. See what you overpay, get proof a cheaper swi
 
 ## 2. Overview / About (LinkedIn limit: 2,000 characters)
 
-Paste this (1,596 characters):
+Paste this (1,631 characters):
 
 ```
 Most teams have no idea what their AI is actually costing them, or how much of that bill is avoidable.
@@ -58,7 +58,7 @@ See it at costmyai.com
 
 ### Services description (LinkedIn limit: 500 characters)
 
-Do not repeat the About text here. Paste this (284 characters):
+Do not repeat the About text here. Paste this (250 characters):
 
 ```
 CostMyAI shows finance and ops teams what they overpay for AI. Compare live market pricing across the models and providers you already use, certify a cheaper option is safe, then switch traffic automatically once approved. Start free at costmyai.com.
