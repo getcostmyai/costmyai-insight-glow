@@ -79,7 +79,14 @@ export interface SwitchSavings {
   fromHost: string;
   toModel: string;
   toHost: string;
+  /**
+   * Dispatch 236. True when no pre-switch history existed for the original
+   * pair and the counterfactual had to be priced with the post-switch mix.
+   * Marked, never silent: the two are different claims about the same number.
+   */
+  usedFallbackMix: boolean;
 }
+
 
 /**
  * Dispatch 163. One aggregated row per (switch, served pair, original pair),
@@ -109,6 +116,38 @@ interface BasisRow {
   cache_write_tokens: number | null;
 }
 
+/**
+ * Dispatch 236. The workload's cache mix BEFORE the switch ran, per switch and
+ * per raw reported pair.
+ *
+ * The counterfactual asks "what would this traffic have cost if we had not
+ * moved it", and the honest answer prices it with the cache behaviour the
+ * ORIGINAL pair actually had — not with the mix the destination happens to
+ * report after the move. A move from a warm-cache host to a cold one otherwise
+ * prices the "before" world at the destination's cold mix and understates the
+ * loss (and the reverse overstates the win).
+ *
+ * Pairs come back raw on purpose: alias resolution lives in TypeScript
+ * (`buildModelResolver` / `buildHostResolver`) and is not callable from SQL, so
+ * matching happens here with the same resolver the rest of this file uses
+ * rather than with a second normalizer written in SQL.
+ */
+interface PriorBasisRow {
+  switch_id: string;
+  model_key: string;
+  host: string;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number | null;
+  cache_write_tokens: number | null;
+}
+
+interface PriorMix {
+  inputTokens: number;
+  readTokens: number;
+  writeTokens: number;
+}
+
 
 /**
  * Read every rerouted, successful event in a workspace and total the observed
@@ -120,15 +159,28 @@ export async function computeSwitchSavings(
   orgId: string,
   only?: string[],
 ): Promise<SwitchSavings[]> {
-  const { data, error } = await (db as unknown as {
-    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: BasisRow[] | null; error: { message: string } | null }>;
-  }).rpc("switch_savings_basis", {
+  const rpc = (db as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  }).rpc;
+  const args = {
     _org_id: orgId,
     _switch_ids: only && only.length > 0 ? only : null,
-  });
+  };
+  const { data, error } = (await rpc.call(db, "switch_savings_basis", args)) as {
+    data: BasisRow[] | null;
+    error: { message: string } | null;
+  };
   if (error) throw new Error(`switch savings basis unreadable: ${error.message}`);
   const groups = data ?? [];
   if (groups.length === 0) return [];
+
+  const prior = (await rpc.call(db, "switch_savings_prior_basis", args)) as {
+    data: PriorBasisRow[] | null;
+    error: { message: string } | null;
+  };
+  if (prior.error) throw new Error(`switch savings prior basis unreadable: ${prior.error.message}`);
+  const priorRows = prior.data ?? [];
+
 
 
   /**
@@ -192,6 +244,26 @@ export async function computeSwitchSavings(
     return priceIndex.get(`${model}|${host}`);
   };
 
+  /**
+   * Pre-switch history, folded onto RESOLVED pairs with the resolver above.
+   * `openai/gpt-5.5|openai` and `gpt-5.5|api.openai.com` are the same workload
+   * and must land in the same bucket, which is exactly what a raw SQL match
+   * would have missed.
+   */
+  const priorBySwitch = new Map<string, Map<string, PriorMix>>();
+  for (const p of priorRows) {
+    const model = resolveModel(p.model_key).key;
+    const host = resolveHost(p.host, model).key;
+    const byPair = priorBySwitch.get(p.switch_id) ?? new Map<string, PriorMix>();
+    const key = `${model}|${host}`;
+    const agg = byPair.get(key) ?? { inputTokens: 0, readTokens: 0, writeTokens: 0 };
+    agg.inputTokens += Number(p.input_tokens ?? 0);
+    agg.readTokens += Number(p.cache_read_tokens ?? 0);
+    agg.writeTokens += Number(p.cache_write_tokens ?? 0);
+    byPair.set(key, agg);
+    priorBySwitch.set(p.switch_id, byPair);
+  }
+
   const acc = new Map<string, SwitchSavings>();
   for (const g of groups) {
     const switchId = g.switch_id;
@@ -210,6 +282,7 @@ export async function computeSwitchSavings(
         fromHost: g.original_host ?? "",
         toModel: g.model_key,
         toHost: g.host,
+        usedFallbackMix: false,
       } satisfies SwitchSavings);
 
     // No origin, no counterfactual. `?? ""` here used to resolve to an unpriced
@@ -232,17 +305,42 @@ export async function computeSwitchSavings(
 
 
     row.events += count;
-    // One mix, two rate cards. This is the line that makes a move onto a host
-    // with worse cache economics show up as the smaller saving it really is.
-    const mix = {
+    const inputTokens = Number(g.input_tokens);
+    const outputTokens = Number(g.output_tokens);
+    /** The mix the destination really reported. This prices the actual side. */
+    const observedMix = {
       readTokens: Number(g.cache_read_tokens ?? 0),
       writeTokens: Number(g.cache_write_tokens ?? 0),
     };
-    row.counterfactualUsd += costOf(before, Number(g.input_tokens), Number(g.output_tokens), mix);
-    row.actualUsd += costOf(after, Number(g.input_tokens), Number(g.output_tokens), mix);
+
+    /**
+     * Dispatch 236. The counterfactual is priced with the mix the ORIGINAL pair
+     * had before the switch, scaled onto this batch's input tokens. Without it
+     * a move onto a host that reports no cache reads makes the "before" world
+     * look cold too, and the loss disappears.
+     */
+    const originModel = resolveModel(g.original_model_key).key;
+    const originHost = resolveHost(g.original_host, originModel).key;
+    const priorMix = priorBySwitch.get(switchId)?.get(`${originModel}|${originHost}`);
+    let counterfactualMix = observedMix;
+    if (priorMix && priorMix.inputTokens > 0) {
+      const scale = inputTokens / priorMix.inputTokens;
+      counterfactualMix = {
+        readTokens: priorMix.readTokens * scale,
+        writeTokens: priorMix.writeTokens * scale,
+      };
+    } else {
+      // New workload, nothing to compare against. Fall back to the observed mix
+      // and say so on the row rather than swapping the claim in silence.
+      row.usedFallbackMix = true;
+    }
+
+    row.counterfactualUsd += costOf(before, inputTokens, outputTokens, counterfactualMix);
+    row.actualUsd += costOf(after, inputTokens, outputTokens, observedMix);
     acc.set(switchId, row);
 
   }
+
 
 
   return [...acc.values()].map((r) => ({
