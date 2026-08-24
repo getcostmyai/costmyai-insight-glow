@@ -35,7 +35,7 @@ CostMyAI answers both. We show you what you overpay across the models and hostin
 
 What you get:
 
-Compare. Live pricing and quality for 300+ models across 45+ providers, refreshed every 6 hours. You see what the same work costs everywhere else, not just what you paid.
+Compare. Live pricing and quality across the models and hosting providers you already use, with market data refreshed continuously. You see what the same work costs everywhere else, not just what you paid.
 
 Certify. Before we call anything a saving, we check the cheaper model against a benchmark that still tells models apart today. If it does not hold up, we say so. A number without proof is not a saving.
 
