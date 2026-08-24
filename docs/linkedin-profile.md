@@ -143,20 +143,50 @@ Rules for whatever you use:
 
 ## 7. First pinned post (optional, but the page looks dead without one)
 
-Paste this (about 740 characters):
+### Option A — link inside the post (easier to click, good for a soft-launch CTA)
+
+Paste this (about 700 characters):
 
 ```
 After months of building, we're quietly opening CostMyAI.
 
-Most teams I talk to have one thing in common: they have no idea how much of their AI bill is avoidable. They see the invoice, they pay it, and they move on.
+Here's the uncomfortable truth most teams ignore: a huge chunk of their AI bill is avoidable.
 
-I get it — I did the same thing. Then I actually looked under the hood.
+Same prompt. Same quality. Often several times cheaper on a different model or provider.
 
-The same prompt, the same quality, can cost several times less on a different model or provider. But "cheaper" means nothing if quality drops. So we built something that proves the saving before it lets you switch.
+I know because I ignored it too — until I looked under the hood.
 
-CostMyAI shows you what you overpay, certifies that the cheaper option is genuinely as good, and can move your traffic automatically once you approve it. No provider owns us. No pay-for-placement. Just the actual number.
+CostMyAI cuts through the noise. It shows you exactly what you overpay, proves the cheaper option is genuinely as good, and switches your traffic automatically once you approve it.
 
-We're in soft launch now. Compare is free, and I'd genuinely love your feedback.
+No provider owns us. No pay-for-placement. No guesswork.
+
+Soft launch is live. Compare is free. I'd genuinely love your feedback.
 
 costmyai.com
+
+#AI #FinOps #CostOptimization #Startup #AICosts
 ```
+
+### Option B — link in the first comment (cleaner post, may get slightly better organic reach)
+
+Use the same text as Option A, but replace the last two lines with:
+
+```
+Soft launch is live. Compare is free. I'd genuinely love your feedback.
+
+Drop me a comment or check the link below.
+
+#AI #FinOps #CostOptimization #Startup #AICosts
+```
+
+Then immediately add a first comment:
+
+```
+Compare for free here: costmyai.com
+```
+
+### Why I suggest Option A for a pinned launch post
+
+LinkedIn's algorithm may deprioritise external links slightly, but for a **pinned company launch post** the priority is clarity and click-through. A pinned post stays at the top of your page for months; visitors should see the destination instantly, not hunt a comment. Option B is better for regular organic posts where reach matters more than conversion.
+
+Hashtag note: five hashtags is the sweet spot. #AI and #FinOps are high-volume discovery tags; #AICosts and #CostOptimization are smaller but more targeted.
