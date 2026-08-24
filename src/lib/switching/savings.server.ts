@@ -244,6 +244,26 @@ export async function computeSwitchSavings(
     return priceIndex.get(`${model}|${host}`);
   };
 
+  /**
+   * Pre-switch history, folded onto RESOLVED pairs with the resolver above.
+   * `openai/gpt-5.5|openai` and `gpt-5.5|api.openai.com` are the same workload
+   * and must land in the same bucket, which is exactly what a raw SQL match
+   * would have missed.
+   */
+  const priorBySwitch = new Map<string, Map<string, PriorMix>>();
+  for (const p of priorRows) {
+    const model = resolveModel(p.model_key).key;
+    const host = resolveHost(p.host, model).key;
+    const byPair = priorBySwitch.get(p.switch_id) ?? new Map<string, PriorMix>();
+    const key = `${model}|${host}`;
+    const agg = byPair.get(key) ?? { inputTokens: 0, readTokens: 0, writeTokens: 0 };
+    agg.inputTokens += Number(p.input_tokens ?? 0);
+    agg.readTokens += Number(p.cache_read_tokens ?? 0);
+    agg.writeTokens += Number(p.cache_write_tokens ?? 0);
+    byPair.set(key, agg);
+    priorBySwitch.set(p.switch_id, byPair);
+  }
+
   const acc = new Map<string, SwitchSavings>();
   for (const g of groups) {
     const switchId = g.switch_id;
@@ -262,6 +282,7 @@ export async function computeSwitchSavings(
         fromHost: g.original_host ?? "",
         toModel: g.model_key,
         toHost: g.host,
+        usedFallbackMix: false,
       } satisfies SwitchSavings);
 
     // No origin, no counterfactual. `?? ""` here used to resolve to an unpriced
@@ -284,17 +305,42 @@ export async function computeSwitchSavings(
 
 
     row.events += count;
-    // One mix, two rate cards. This is the line that makes a move onto a host
-    // with worse cache economics show up as the smaller saving it really is.
-    const mix = {
+    const inputTokens = Number(g.input_tokens);
+    const outputTokens = Number(g.output_tokens);
+    /** The mix the destination really reported. This prices the actual side. */
+    const observedMix = {
       readTokens: Number(g.cache_read_tokens ?? 0),
       writeTokens: Number(g.cache_write_tokens ?? 0),
     };
-    row.counterfactualUsd += costOf(before, Number(g.input_tokens), Number(g.output_tokens), mix);
-    row.actualUsd += costOf(after, Number(g.input_tokens), Number(g.output_tokens), mix);
+
+    /**
+     * Dispatch 236. The counterfactual is priced with the mix the ORIGINAL pair
+     * had before the switch, scaled onto this batch's input tokens. Without it
+     * a move onto a host that reports no cache reads makes the "before" world
+     * look cold too, and the loss disappears.
+     */
+    const originModel = resolveModel(g.original_model_key).key;
+    const originHost = resolveHost(g.original_host, originModel).key;
+    const priorMix = priorBySwitch.get(switchId)?.get(`${originModel}|${originHost}`);
+    let counterfactualMix = observedMix;
+    if (priorMix && priorMix.inputTokens > 0) {
+      const scale = inputTokens / priorMix.inputTokens;
+      counterfactualMix = {
+        readTokens: priorMix.readTokens * scale,
+        writeTokens: priorMix.writeTokens * scale,
+      };
+    } else {
+      // New workload, nothing to compare against. Fall back to the observed mix
+      // and say so on the row rather than swapping the claim in silence.
+      row.usedFallbackMix = true;
+    }
+
+    row.counterfactualUsd += costOf(before, inputTokens, outputTokens, counterfactualMix);
+    row.actualUsd += costOf(after, inputTokens, outputTokens, observedMix);
     acc.set(switchId, row);
 
   }
+
 
 
   return [...acc.values()].map((r) => ({
