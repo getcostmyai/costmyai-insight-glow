@@ -2738,6 +2738,21 @@ export type Database = {
           switch_id: string
         }[]
       }
+      switch_savings_prior_basis: {
+        Args: { _org_id: string; _switch_ids?: string[] }
+        Returns: {
+          cache_read_tokens: number
+          cache_write_tokens: number
+          events: number
+          host: string
+          input_tokens: number
+          model_key: string
+          output_tokens: number
+          switch_id: string
+          window_end: string
+          window_start: string
+        }[]
+      }
       system_apply_switch: { Args: { _rec_id: string }; Returns: string }
       system_upsert_recommendation: {
         Args: {
