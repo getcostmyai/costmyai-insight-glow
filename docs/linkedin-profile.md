@@ -1,8 +1,8 @@
 # CostMyAI LinkedIn company profile — copy to paste
 
 Every block below is final text. Paste each into the matching LinkedIn field.
-Only claims that already hold on costmyai.com are used: 300+ models, 45+ providers,
-6-hour price sync, Compare is free, savings checked against a live benchmark.
+Only claims that already hold on costmyai.com are used: live model pricing,
+provider-neutral comparison, a free Compare tier, and savings checked against a live benchmark.
 
 ---
 
@@ -16,17 +16,17 @@ Paste this (106 characters):
 Most teams overpay for AI. We show you exactly how much, prove the cheaper option is safe, then switch it.
 ```
 
-Alternate, if you want the category name in the tagline (131 characters):
+Alternate, if you want the category name in the tagline (112 characters):
 
 ```
-Financial Governance for AI spend. See what you overpay across 300+ models, get proof a cheaper switch is safe, then let it happen.
+Financial Governance for AI spend. See what you overpay, get proof a cheaper switch is safe, then let it happen.
 ```
 
 ---
 
 ## 2. Overview / About (LinkedIn limit: 2,000 characters)
 
-Paste this (1,596 characters):
+Paste this (1,631 characters):
 
 ```
 Most teams have no idea what their AI is actually costing them, or how much of that bill is avoidable.
@@ -35,7 +35,7 @@ CostMyAI answers both. We show you what you overpay across the models and hostin
 
 What you get:
 
-Compare. Live pricing and quality for 300+ models across 45+ providers, refreshed every 6 hours. You see what the same work costs everywhere else, not just what you paid.
+Compare. Live pricing and quality across the models and hosting providers you already use, with market data refreshed continuously. You see what the same work costs everywhere else, not just what you paid.
 
 Certify. Before we call anything a saving, we check the cheaper model against a benchmark that still tells models apart today. If it does not hold up, we say so. A number without proof is not a saving.
 
@@ -58,10 +58,10 @@ See it at costmyai.com
 
 ### Services description (LinkedIn limit: 500 characters)
 
-Do not repeat the About text here. Paste this (262 characters):
+Do not repeat the About text here. Paste this (250 characters):
 
 ```
-CostMyAI shows finance and ops teams what they overpay for AI. Compare live pricing across 300+ models and 45+ providers, certify a cheaper option is safe, then switch traffic automatically once approved. Start free at costmyai.com.
+CostMyAI shows finance and ops teams what they overpay for AI. Compare live market pricing across the models and providers you already use, certify a cheaper option is safe, then switch traffic automatically once approved. Start free at costmyai.com.
 ```
 
 ### Services provided (tags)
@@ -146,7 +146,7 @@ Rules for whatever you use:
 ```
 Most teams cannot answer a simple question: how much of our AI bill is avoidable?
 
-We built CostMyAI to answer it. Live pricing for 300+ models across 45+ providers, refreshed every 6 hours. A cheaper option is only called a saving once a benchmark proves quality holds. And when it does, the switch can happen on its own.
+We built CostMyAI to answer it. Live pricing across the models and providers you use, with quality checked against a live benchmark. A cheaper option is only called a saving once a benchmark proves quality holds. And when it does, the switch can happen on its own.
 
 No provider owns us, and none can pay for placement. We sell nothing but the truth of the number.
 
