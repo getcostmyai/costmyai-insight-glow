@@ -146,7 +146,7 @@ Rules for whatever you use:
 ```
 Most teams cannot answer a simple question: how much of our AI bill is avoidable?
 
-We built CostMyAI to answer it. Live pricing for 300+ models across 45+ providers, refreshed every 6 hours. A cheaper option is only called a saving once a benchmark proves quality holds. And when it does, the switch can happen on its own.
+We built CostMyAI to answer it. Live pricing across the models and providers you use, with quality checked against a live benchmark. A cheaper option is only called a saving once a benchmark proves quality holds. And when it does, the switch can happen on its own.
 
 No provider owns us, and none can pay for placement. We sell nothing but the truth of the number.
 
