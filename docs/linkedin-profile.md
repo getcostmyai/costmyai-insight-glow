@@ -58,10 +58,10 @@ See it at costmyai.com
 
 ### Services description (LinkedIn limit: 500 characters)
 
-Do not repeat the About text here. Paste this (262 characters):
+Do not repeat the About text here. Paste this (284 characters):
 
 ```
-CostMyAI shows finance and ops teams what they overpay for AI. Compare live pricing across 300+ models and 45+ providers, certify a cheaper option is safe, then switch traffic automatically once approved. Start free at costmyai.com.
+CostMyAI shows finance and ops teams what they overpay for AI. Compare live market pricing across the models and providers you already use, certify a cheaper option is safe, then switch traffic automatically once approved. Start free at costmyai.com.
 ```
 
 ### Services provided (tags)
