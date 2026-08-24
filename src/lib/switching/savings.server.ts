@@ -79,7 +79,14 @@ export interface SwitchSavings {
   fromHost: string;
   toModel: string;
   toHost: string;
+  /**
+   * Dispatch 236. True when no pre-switch history existed for the original
+   * pair and the counterfactual had to be priced with the post-switch mix.
+   * Marked, never silent: the two are different claims about the same number.
+   */
+  usedFallbackMix: boolean;
 }
+
 
 /**
  * Dispatch 163. One aggregated row per (switch, served pair, original pair),
