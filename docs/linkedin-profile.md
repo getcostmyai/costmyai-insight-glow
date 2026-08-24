@@ -1,8 +1,8 @@
 # CostMyAI LinkedIn company profile — copy to paste
 
 Every block below is final text. Paste each into the matching LinkedIn field.
-Only claims that already hold on costmyai.com are used: 300+ models, 45+ providers,
-6-hour price sync, Compare is free, savings checked against a live benchmark.
+Only claims that already hold on costmyai.com are used: live model pricing,
+provider-neutral comparison, a free Compare tier, and savings checked against a live benchmark.
 
 ---
 
