@@ -115,17 +115,74 @@ adds nothing a buyer needs.
 ## First three grid posts
 
 The bio only converts if the grid backs it up. Three posts, in this order, so the
-profile never looks empty:
-
-1. **The receipt.** The launch image already produced: the real Certify screen with
-   the avoidable-spend figure and the certified ring. Caption leads with the
-   number, not the company.
-2. **The comparison.** One workload, two models, same output quality, different
-   price. Ends on the question: which one is your traffic on right now?
-3. **The neutrality post.** Plain text on brand background: "No provider owns us.
-   No provider can pay for placement, ranking or routing preference." One line of
-   caption explaining why that is the whole point.
+profile never looks empty.
 
 Caption rules for all three: first line has to work as the only line anyone reads,
-no claim the site does not already make, and no more than five hashtags
-(#AI #FinOps #AICosts #CostOptimization #Startup).
+no claim the site does not already make, no em-dashes, and no more than five
+hashtags.
+
+---
+
+### Post 1 — The receipt
+
+**Image:** the Certify dashboard screenshot already produced, cropped tight on the
+avoidable-spend figure and the certified ring.
+
+**Caption to paste:**
+
+```
+$11,490.23 avoidable. Certified.
+
+This is what we found in one live AI bill in under an hour. Not a guess. A checked benchmark, a cheaper model that holds up, and a number finance can actually use.
+
+Most teams never see this because nobody checks. We do.
+
+Compare is free. Link in bio.
+
+#AI #FinOps #AICosts #CostOptimization #Startup
+```
+
+**Note:** replace `$11,490.23` with the exact figure shown in your screenshot so
+the caption and image match.
+
+---
+
+### Post 2 — The comparison
+
+**Image:** a split or overlaid card showing one workload, two models, same output
+quality, different price.
+
+**Caption to paste:**
+
+```
+Same prompt. Same quality. Different price.
+
+One workload, two models, identical output. The only difference is what your provider charged you for it.
+
+We see this every day. The bigger name is not always the better fit. Sometimes it is just the more expensive one.
+
+Which one is your traffic on right now?
+
+#AI #FinOps #AICosts #CostOptimization #Startup
+```
+
+---
+
+### Post 3 — The neutrality post
+
+**Image:** plain text on the brand background: "No provider owns us. No provider
+can pay for placement, ranking or routing preference."
+
+**Caption to paste:**
+
+```
+No provider owns us. No provider can pay for placement, ranking or routing preference.
+
+That is the whole point. If a recommendation can be bought, it is not a recommendation. It is an ad.
+
+We have nothing to sell you except the truth of the number.
+
+Start free. Link in bio.
+
+#AI #FinOps #AICosts #CostOptimization #Startup
+```
