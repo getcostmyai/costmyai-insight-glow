@@ -34,7 +34,7 @@ Founder, CostMyAI | I got tired of not knowing what our AI actually cost. So I b
 Starts and ends with CostMyAI. Everything in between is the road that got me here,
 in my own words, with nothing invented.
 
-Paste this (2,404 characters):
+Paste this (2,455 characters, limit 2,600):
 
 ```
 I build CostMyAI because I could not stand not knowing. AI bills were getting bigger everywhere I looked, and nobody could tell me which part was actually necessary.
