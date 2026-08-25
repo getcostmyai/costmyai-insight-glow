@@ -31,33 +31,37 @@ Founder, CostMyAI | I got tired of not knowing what our AI actually cost. So I b
 
 ## 2. About (LinkedIn limit: 2,600 characters)
 
-Paste this (1,366 characters):
+Starts and ends with CostMyAI. Everything in between is the road that got me here,
+in my own words, with nothing invented.
+
+Paste this (2,455 characters, limit 2,600):
 
 ```
-I kept seeing the same thing: AI bills were getting bigger, but nobody could tell me which part was actually necessary.
+I build CostMyAI because I could not stand not knowing. AI bills were getting bigger everywhere I looked, and nobody could tell me which part was actually necessary.
 
-That annoyed me more than it should have. So I started pulling the thing apart.
+That question is not new for me. It is the same question I have been asking for twenty years, in wildly different rooms.
 
-The pattern is always the same. Teams run their most expensive model on work that does not need it. Classification. Formatting. Routine summaries. Not because anyone chose that. It was just the first model they wired up, and nothing forced them to look again.
+I started as a violinist. Concertmaster at Karlsruhe at 22, then Mannheim. The job sounds glamorous from outside. From inside it is mostly this: eighty people have to agree, in real time, without talking. You learn very fast that clarity beats authority.
 
-The money is sitting right there. The only thing stopping people from taking it is fear. What if the cheap model is quietly worse and a customer finds out first?
+Then I founded a baroque orchestra, La Folia, and ran it for fourteen years. Seven-figure budgets. Up to 70 people on the road. Tours across Europe, Asia and the Americas. Exclusive recording artist for Sony Classical and Deutsche Harmonia Mundi. ECHO Klassik, OPUS Klassik, Preis der Deutschen Schallplattenkritik. I negotiated every contract myself: licensing, royalties, streaming, rights. Nobody in music teaches you that. You learn it because otherwise you get eaten.
 
-I built CostMyAI to remove that fear. We price your workloads against live market rates across 300+ models and 45+ hosting providers. Then we test the cheaper candidate against a benchmark that can still tell models apart. Only then do we move traffic. If I cannot prove a saving, I do not claim it. That rule is hard to build around. It is also the only reason this matters.
+I taught ensemble direction in Weimar and Hamburg for six years, which is where I found out I actually like explaining hard things simply.
 
-I care about three things.
+Then I moved into enterprise. Hays Austria, strategic accounts: MSP, RPO, CMO, VMS. Contract volumes from EUR 2.5M to 11.5M, full P&L, delivery teams of up to 25, negotiating with managing directors and procurement heads. Nineteen years of business development, six of them selling SaaS. Same job as the orchestra, different instrument: get everyone pointed at one number they all believe.
 
-Proof, not projections. Every certified saving traces back to a real billing row and a real benchmark result.
+Somewhere in there I also became a certified organic master beekeeper in the Carinthian mountains, at 1,000 to 2,000 metres. That one is not a metaphor. I just like it.
 
-Neutrality. No provider pays us for placement, ranking or routing. We have nothing to sell except the honest number.
+What runs through all of it is a dislike of numbers nobody can defend. A saving you cannot prove is not a saving. A performance claim you cannot measure is marketing.
 
-Boring to adopt. One base URL changes. We never hold your provider keys.
+So CostMyAI works the way I would want it to work if I were the buyer. We price your workloads against live rates across 307+ models and 50+ providers. We test the cheaper candidate against a benchmark that can still tell models apart. Only then do we move traffic. If the benchmark is saturated, we refuse to certify rather than hand you a number that means nothing. No provider pays us for placement. We never hold your keys.
 
-If you do not know what share of your AI bill is avoidable, I will show you. Compare is free and takes minutes.
+If you do not know what share of your AI bill is avoidable, I will show you. Compare is free.
 
 costmyai.com
 
-I am in Vienna. Always up for a call with finance leads, platform teams, and advisors stuck defending an AI budget they did not set.
+Vienna. Always up for a call.
 ```
+
 
 ---
 
