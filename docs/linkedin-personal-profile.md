@@ -34,7 +34,7 @@ Founder, CostMyAI | I got tired of not knowing what our AI actually cost. So I b
 Paste this (1,397 characters):
 
 ```
-A while ago someone asked me what our AI actually cost. I gave them a number. Then they asked how much of it we did not have to pay. I had no idea. Nobody around me did either.
+A while ago someone asked me what their AI actually cost. I gave them a number. Then they asked how much of it they did not have to pay. I had no idea. Neither did anyone I asked.
 
 That bugged me enough to build something.
 
