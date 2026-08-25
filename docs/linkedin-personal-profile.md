@@ -1,8 +1,9 @@
 # Robin P. Mueller LinkedIn profile — copy to paste
 
-Personal profile, same voice as costmyai.com. No invented numbers, no testimonials,
-no em-dashes. Every claim below already holds on the live site: live pricing across
-300+ models and 45+ providers, benchmark-checked savings, Compare free.
+Written the way you talk: first person, short sentences, one idea at a time, a bit
+blunt. No invented numbers, no testimonials, no em-dashes. Everything here already
+holds on the live site: live pricing across 300+ models and 45+ providers,
+benchmark-checked savings, Compare free.
 
 ---
 
@@ -10,54 +11,53 @@ no em-dashes. Every claim below already holds on the live site: live pricing acr
 
 Current: "Founder of CostMyAI. Financial Governance for AI spend. Not to pay more than you need to."
 
-Paste this (139 characters):
+Paste this (131 characters):
 
 ```
-Founder, CostMyAI | Most teams overpay for AI. I show you how much, prove the cheaper model is safe, then switch it. Compare is free.
+Founder, CostMyAI | I tell you how much of your AI bill is avoidable, prove the cheaper model is safe, then switch it. Compare is free.
 ```
 
-Alternates:
+Alternates, same voice:
 
 ```
-Founder, CostMyAI | Financial Governance for AI spend. Live pricing across 300+ models, savings proven against a benchmark before you switch.
+Founder, CostMyAI | You are probably paying frontier prices for work a smaller model does just as well. I prove it before you touch anything.
 ```
 
 ```
-Founder, CostMyAI | I find the part of your AI bill that is avoidable, and prove it before you touch anything.
+Founder, CostMyAI | I got tired of guessing what our AI actually cost. So I built the thing that answers it.
 ```
 
 ---
 
 ## 2. About (LinkedIn limit: 2,600 characters)
 
-Your current About is strong writing but it opens on an abstraction and never says
-what a reader should do next. This version keeps the constraint as the punchline and
-adds a first line a CFO gets in one read, plus an ending with a next step.
+Reads like you telling someone at a table, not a company describing itself. Opens on
+your own moment of not knowing, ends with something to do.
 
-Paste this (1,489 characters):
+Paste this (1,447 characters):
 
 ```
-Ask a company what their AI costs and you get a number. Ask how much of it is avoidable and the room goes quiet.
+A while ago someone asked me what our AI actually cost us. I gave them a number. Then they asked how much of it we did not have to pay. I had no idea.
 
-That gap is what I work on.
+Nobody around me did either. That bothered me enough to build something about it.
 
-Most teams point expensive frontier models at trivial work and never see the leak, because nobody reconciles the invoice against the actual workload. The saving is sitting there in plain sight. What is missing is proof that the cheaper option is not secretly worse.
+Here is what I keep finding. Teams run their most expensive model on work that does not need it. Classification. Formatting. Routine summaries. Not because anyone chose that, but because it was the model they wired up first and nothing forced them to revisit it. The money is sitting right there. What stops people from taking it is a fair worry: what if the cheap model is quietly worse and I only find out from a customer.
 
-I founded CostMyAI to close that gap. It prices your workloads against live market rates across 300+ models and 45+ hosting providers, checks the cheaper candidate against a benchmark that still tells models apart today, and switches traffic only once the switch is proven. If we cannot prove it, we do not claim it. That constraint is the product.
+So that is the part I spend my time on. CostMyAI prices your workloads against live market rates across 300+ models and 45+ hosting providers. Then it tests the cheaper candidate against a benchmark that can still tell models apart, and only moves traffic once the result holds. If I cannot prove a saving, I do not get to claim it. That rule is annoying to build around and it is the whole point.
 
-What I care about:
+Three things I am stubborn about:
 
-Proof over estimates. Every certified saving traces to a reconciled billing row and a benchmark result, not a projection.
+Proof, not projections. Every certified saving traces back to a real billing row and a real benchmark result.
 
-Neutrality. No provider owns us and no provider can pay for placement, ranking or routing preference. There is nothing to sell except the truth of the number.
+Neutrality. No provider pays us for placement, ranking or routing. There is nothing to sell here except the honest number.
 
-Boring integration. Connecting is a change to one base URL, not a rewrite. We never hold your provider keys.
+Boring to adopt. One base URL changes. We never hold your provider keys.
 
-If you run AI in production and cannot say what share of the bill is avoidable, I would like to show you. Compare is free and takes minutes.
+If you cannot say what share of your AI bill is avoidable, let me show you. Compare is free and takes minutes.
 
 costmyai.com
 
-Based in Vienna. Happy to talk with finance leads, platform teams, and advisors who keep getting handed AI budgets nobody can defend.
+I am in Vienna. Always up for a call with finance leads, platform teams, and advisors stuck defending an AI budget they did not set.
 ```
 
 ---
@@ -68,20 +68,20 @@ Title: `Founder`
 Company: `CostMyAI`
 Location: `Vienna, Austria` (Hybrid)
 
-Description (paste this, 612 characters):
+Description (paste this, 634 characters):
 
 ```
-CostMyAI is the neutral Financial Governance platform for AI spend.
+I run CostMyAI. It is a neutral Financial Governance platform for AI spend.
 
-Four levels of control:
+It works in four levels, and you can stop at any of them.
 
-Compare. Live pricing and quality across the models and providers you already use, refreshed continuously.
+Compare. What the models and providers you already use actually cost right now, and how good they are. Refreshed continuously.
 
-Certify. A cheaper model is only recommended when its measured quality sits inside a real equivalence band around what you run today.
+Certify. I only call a cheaper model a saving when its measured quality sits inside a real equivalence band around what you run today.
 
-Rightsize. Find the workloads running on a model far bigger than they need, and name the smaller one that does the same job.
+Rightsize. Finds the workloads sitting on a model far bigger than the job, and names the smaller one that handles it.
 
-Govern. Approve once, then switches happen on their own, re-checked against live benchmarks at the moment they run.
+Govern. You approve once. After that switches happen on their own, re-checked against live benchmarks at the moment they run.
 
 Compare is free at costmyai.com.
 ```
@@ -132,16 +132,16 @@ Add three Featured links so the profile has somewhere to send a visitor:
 
 ## 7. Optional: a short pinned featured post
 
-If you want the profile to look alive, pin this (about 520 characters):
+If you want the profile to look alive, pin this (about 500 characters):
 
 ```
-Here is the question almost nobody can answer: how much of your AI bill is avoidable?
+Someone asked me what our AI cost. I had a number. Then they asked how much of it was avoidable, and I went quiet.
 
-Not "are we overspending" in the abstract. The specific version. Which model, on which task, and proof that the cheaper option is not quietly worse.
+That is the question I could not answer, and neither could anyone I asked.
 
-I built CostMyAI because I could not answer it either. It prices your workloads against live market rates, proves the cheaper switch is safe, then makes the switch once you approve.
+So I built CostMyAI. It prices your workloads against live market rates, tests whether the cheaper model actually holds up, and switches only once that is proven. If I cannot prove it, I do not claim it.
 
-No provider owns us. No pay for placement. Compare is free.
+No provider pays us for placement. Compare is free.
 
 costmyai.com
 
