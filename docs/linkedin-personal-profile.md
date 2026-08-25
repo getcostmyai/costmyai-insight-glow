@@ -31,12 +31,12 @@ Founder, CostMyAI | I got tired of not knowing what our AI actually cost. So I b
 
 ## 2. About (LinkedIn limit: 2,600 characters)
 
-Paste this (1,397 characters):
+Paste this (1,366 characters):
 
 ```
-A while ago someone asked me what their AI actually cost. I gave them a number. Then they asked how much of it they did not have to pay. I had no idea. Neither did anyone I asked.
+I kept seeing the same thing: AI bills were getting bigger, but nobody could tell me which part was actually necessary.
 
-That bugged me enough to build something.
+That annoyed me more than it should have. So I started pulling the thing apart.
 
 The pattern is always the same. Teams run their most expensive model on work that does not need it. Classification. Formatting. Routine summaries. Not because anyone chose that. It was just the first model they wired up, and nothing forced them to look again.
 
@@ -131,14 +131,16 @@ Add three Featured links so the profile has somewhere to send a visitor:
 
 ## 7. Optional: a short pinned featured post
 
-If you want the profile to look alive, pin this (about 470 characters):
+If you want the profile to look alive, pin this (about 451 characters):
 
 ```
-Someone asked me what our AI cost. I had a number. Then they asked how much of it was avoidable. I went quiet.
+AI bills are getting bigger. Fine.
 
-That was the question I could not answer. Neither could anyone I asked.
+What bothered me was something else: nobody could tell me which part was actually necessary.
 
-So I built CostMyAI. Live market rates. Real benchmark proof. Switch only once it holds. If I cannot prove it, I do not claim it.
+So I started pulling the thing apart.
+
+That became CostMyAI. Live market rates. Real benchmark proof. Switch only once it holds. If I cannot prove it, I do not claim it.
 
 No provider pays us for placement. Compare is free.
 
