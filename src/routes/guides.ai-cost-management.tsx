@@ -279,7 +279,15 @@ function formatInteger(value: number) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Stat({
+  label,
+  value,
+  accent,
+}: {
+  label: React.ReactNode;
+  value: string;
+  accent?: boolean;
+}) {
   return (
     <div>
       <p
