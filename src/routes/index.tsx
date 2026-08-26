@@ -73,7 +73,6 @@ function HomePage() {
     <MarketingShell>
       <Hero stats={stats} />
       <ProviderMarquee stats={stats} />
-      <Spine />
 
       <HowItWorks />
       <StillMoving stats={stats} />
@@ -179,40 +178,6 @@ function Hero({ stats }: { stats: MarketingStats }) {
           </div>
         ) : null}
 
-      </div>
-    </section>
-  );
-}
-
-/* ---------------------------- 01b · the spine ---------------------------- */
-
-/**
- * The one-glance mental model: five beats, one line each, on a hairline rail.
- * Every section below this strip is support for one of these beats.
- */
-const SPINE_BEATS = [
-  { n: "01", title: "Measure", line: "Every workload priced from your real usage." },
-  { n: "02", title: "Compare", line: "The same model cheaper elsewhere, named." },
-  { n: "03", title: "Certify", line: "Quality and price proven on independent benchmarks." },
-  { n: "04", title: "Switch", line: "Certified routes applied, reversibly." },
-  { n: "05", title: "Govern", line: "Every decision re-checked as prices move." },
-] as const;
-
-function Spine() {
-  return (
-    <section aria-label="How the levels fit together" className="border-b border-border bg-background">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
-        <Reveal className="grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
-          {SPINE_BEATS.map((b) => (
-            <div key={b.n}>
-              <p className="num text-sm text-gradient-brand">{b.n}</p>
-              <p className="mt-1.5 text-base font-semibold tracking-[-0.02em] sm:text-lg">
-                {b.title}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{b.line}</p>
-            </div>
-          ))}
-        </Reveal>
       </div>
     </section>
   );
