@@ -93,7 +93,15 @@ function AboutPage() {
                   value={<CountUp value={stats.providerCount} />}
                 />
                 <Figure
-                  label="Price moves caught this month"
+                  label={
+                    <Link
+                      to="/legal/methodology"
+                      hash="price-move"
+                      className="underline-offset-4 hover:underline hover:text-foreground"
+                    >
+                      Price moves caught this month
+                    </Link>
+                  }
                   value={<CountUp value={stats.priceChangesTracked} />}
                 />
               </dl>
