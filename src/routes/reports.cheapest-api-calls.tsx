@@ -118,7 +118,7 @@ function Hero({ data }: { data: CatalogPayload }) {
           <Stat
             value={Math.round(stats.topSpread)}
             format={(v) => `${Math.round(v)}%`}
-            label="Widest same-model gap"
+            label="Widest same-model gap (input price)"
             delay={240}
             accent
           />
