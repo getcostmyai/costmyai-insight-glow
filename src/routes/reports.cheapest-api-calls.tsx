@@ -40,11 +40,17 @@ function cheapestBlended(row: CatalogRow): number | null {
   return best.input + best.output;
 }
 
+/**
+ * Share of the dearest verified host's INPUT price that a switch to the cheapest
+ * one removes. Rebased on the dearest host, so it is bounded 0-100%. Input only —
+ * never blended with output.
+ */
 function spreadPct(row: CatalogRow): number | null {
   const hosts = serving(row);
   if (hosts.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
   const max = Math.max(...hosts.map((h) => h.input));
-  return ((max - row.cheapestInput) / row.cheapestInput) * 100;
+  if (max <= 0) return null;
+  return ((max - row.cheapestInput) / max) * 100;
 }
 
 function CheapestApiCallsPage() {
