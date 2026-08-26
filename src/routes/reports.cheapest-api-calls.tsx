@@ -32,13 +32,6 @@ export const Route = createFileRoute("/reports/cheapest-api-calls")({
 /** Providers actually serving the model — the aggregate listing is not one. */
 const serving = (row: CatalogRow) => row.hosts.filter((h) => !h.aggregate);
 
-/** Blended cost of one million in + one million out, at the cheapest verified host. */
-function cheapestBlended(row: CatalogRow): number | null {
-  const hosts = serving(row);
-  if (!hosts.length) return null;
-  const best = hosts.reduce((a, h) => (a.input + a.output <= h.input + h.output ? a : h));
-  return best.input + best.output;
-}
 
 /**
  * Share of the dearest verified host's INPUT price that a switch to the cheapest
@@ -178,9 +171,8 @@ function Table({ data }: { data: CatalogPayload }) {
           delay={60}
           className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground"
         >
-          Prices in USD per million tokens, cheapest first. The blended column is one million input
-          plus one million output at the same host, which is the number most teams actually feel on
-          an invoice.
+          Prices in USD per million tokens, cheapest first. Each row shows the cheapest verified
+          host for input price and what the same host charges for output tokens.
         </Reveal>
 
         <div className="mt-10">
