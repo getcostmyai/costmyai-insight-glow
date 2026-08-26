@@ -419,6 +419,19 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                     <dt className="text-sm font-semibold tracking-tight">{g.term}</dt>
                     <dd className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                       {g.body}
+                      {g.anchor ? (
+                        <>
+                          {" "}
+                          <Link
+                            to="/legal/methodology"
+                            hash={g.anchor}
+                            className="underline underline-offset-4 hover:text-foreground"
+                          >
+                            Full definition
+                          </Link>
+                          .
+                        </>
+                      ) : null}
                     </dd>
                   </div>
                 ))}
