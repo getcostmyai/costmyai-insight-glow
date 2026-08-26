@@ -32,13 +32,6 @@ export const Route = createFileRoute("/reports/cheapest-api-calls")({
 /** Providers actually serving the model — the aggregate listing is not one. */
 const serving = (row: CatalogRow) => row.hosts.filter((h) => !h.aggregate);
 
-/** Blended cost of one million in + one million out, at the cheapest verified host. */
-function cheapestBlended(row: CatalogRow): number | null {
-  const hosts = serving(row);
-  if (!hosts.length) return null;
-  const best = hosts.reduce((a, h) => (a.input + a.output <= h.input + h.output ? a : h));
-  return best.input + best.output;
-}
 
 /**
  * Share of the dearest verified host's INPUT price that a switch to the cheapest
@@ -178,9 +171,8 @@ function Table({ data }: { data: CatalogPayload }) {
           delay={60}
           className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground"
         >
-          Prices in USD per million tokens, cheapest first. The blended column is one million input
-          plus one million output at the same host, which is the number most teams actually feel on
-          an invoice.
+          Prices in USD per million tokens, cheapest first. Each row shows the cheapest verified
+          host for input price and what the same host charges for output tokens.
         </Reveal>
 
         <div className="mt-10">
@@ -189,13 +181,12 @@ function Table({ data }: { data: CatalogPayload }) {
             <span>Cheapest host (input price)</span>
             <span className="text-right">$ / 1M in</span>
             <span className="text-right">$ / 1M out</span>
-            <span className="text-right">Blended · gap</span>
+            <span className="text-right">Gap</span>
           </div>
 
           {rows.map((r, i) => {
             const hosts = serving(r);
             const best = hosts.reduce((a, h) => (a.input <= h.input ? a : h));
-            const blended = cheapestBlended(r);
             const gap = spreadPct(r);
             return (
               <Reveal
@@ -219,12 +210,13 @@ function Table({ data }: { data: CatalogPayload }) {
                 </p>
                 <p className="num text-right text-sm sm:self-center">${best.output.toFixed(2)}</p>
                 <p className="num text-right text-sm sm:self-center">
-                  {blended === null ? "—" : `$${blended.toFixed(2)}`}
                   {gap !== null && gap >= 1 ? (
-                    <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
+                    <span className="num rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
                       −{Math.round(gap)}% cheaper on input price
                     </span>
-                  ) : null}
+                  ) : (
+                    "—"
+                  )}
                 </p>
               </Reveal>
             );
