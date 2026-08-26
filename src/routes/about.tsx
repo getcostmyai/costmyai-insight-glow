@@ -93,7 +93,15 @@ function AboutPage() {
                   value={<CountUp value={stats.providerCount} />}
                 />
                 <Figure
-                  label="Price moves caught this month"
+                  label={
+                    <Link
+                      to="/legal/methodology"
+                      hash="price-move"
+                      className="underline-offset-4 hover:underline hover:text-foreground"
+                    >
+                      Price moves caught this month
+                    </Link>
+                  }
                   value={<CountUp value={stats.priceChangesTracked} />}
                 />
               </dl>
@@ -213,7 +221,7 @@ function AboutPage() {
   );
 }
 
-function Figure({ label, value }: { label: string; value: React.ReactNode }) {
+function Figure({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
   return (
     <div>
       <dd className="text-5xl font-semibold tracking-[-0.045em] sm:text-6xl">{value}</dd>

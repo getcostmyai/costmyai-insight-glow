@@ -336,7 +336,7 @@ export function HeroFigures({ data, ctx }: { data: IntelligencePayload; ctx: Rep
  * flatter the data.
  * ------------------------------------------------------------------------- */
 
-const GLOSSARY = [
+const GLOSSARY: { term: string; body: string; anchor?: string }[] = [
   {
     term: "MTok",
     body: "One million tokens. Every price on this page is US dollars per million tokens, so models with different token accounting stay comparable.",
@@ -344,6 +344,7 @@ const GLOSSARY = [
   {
     term: "Price move",
     body: "One observed change to a live listed price, recorded in the append-only ledger with its direction. A model appearing for the first time is a new listing, never a move.",
+    anchor: "price-move",
   },
   {
     term: "Provider spread",
@@ -418,6 +419,19 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                     <dt className="text-sm font-semibold tracking-tight">{g.term}</dt>
                     <dd className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                       {g.body}
+                      {g.anchor ? (
+                        <>
+                          {" "}
+                          <Link
+                            to="/legal/methodology"
+                            hash={g.anchor}
+                            className="underline underline-offset-4 hover:text-foreground"
+                          >
+                            Full definition
+                          </Link>
+                          .
+                        </>
+                      ) : null}
                     </dd>
                   </div>
                 ))}
