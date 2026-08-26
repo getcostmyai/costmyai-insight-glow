@@ -186,7 +186,7 @@ function Table({ data }: { data: CatalogPayload }) {
         <div className="mt-10">
           <div className="hidden grid-cols-[2fr_1.1fr_0.9fr_0.9fr_1fr] gap-6 border-b border-border pb-3 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:grid">
             <span>Model</span>
-            <span>Cheapest host</span>
+            <span>Cheapest host (input price)</span>
             <span className="text-right">$ / 1M in</span>
             <span className="text-right">$ / 1M out</span>
             <span className="text-right">Blended · gap</span>
