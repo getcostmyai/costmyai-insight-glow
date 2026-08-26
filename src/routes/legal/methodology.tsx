@@ -128,6 +128,42 @@ function MethodologyPage() {
                   </Reveal>
                 </li>
               ))}
+              <li id="price-move" className="scroll-mt-28">
+                <Reveal>
+                  <div className="grid gap-5 py-12 sm:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] sm:gap-14">
+                    <div className="flex items-baseline gap-5">
+                      <span className="select-none text-4xl font-semibold tabular-nums tracking-[-0.04em] text-muted-foreground/25">
+                        {String(SECTIONS.length + 1).padStart(2, "0")}
+                      </span>
+                      <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+                        What counts as a price move
+                      </h2>
+                    </div>
+                    <div className="space-y-4 self-center text-[1.0625rem] leading-[1.75] text-muted-foreground">
+                      <p>
+                        A price move is one observed change to a live listed price for a model on a
+                        specific host, recorded with its direction (increase or decrease).
+                      </p>
+                      <p>
+                        A model or host appearing for the first time is not a move. A delisting is
+                        not a move. A model or host reappearing after being delisted is also not a
+                        move. All three are excluded from the count.
+                      </p>
+                      <p>
+                        Moves are counted between two of our own pricing syncs, so the number
+                        reflects what we actually caught, not what a provider announced. A price
+                        that changes and reverts between two syncs is invisible to us.
+                      </p>
+                      <p>
+                        The counter covers the current calendar month in UTC and resets on the 1st.
+                        The underlying ledger is append-only and permanent — rows cannot be deleted,
+                        edited, pruned, or archived — so the window is a read choice, not data loss.
+                      </p>
+                      <p>Coverage started on {trackingSince}.</p>
+                    </div>
+                  </div>
+                </Reveal>
+              </li>
             </ul>
           </div>
         </section>
