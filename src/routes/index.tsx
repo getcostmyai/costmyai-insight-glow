@@ -200,12 +200,9 @@ const SPINE_BEATS = [
 
 function Spine() {
   return (
-    <section aria-label="How the five levels fit together" className="border-b border-border bg-background">
+    <section aria-label="How the levels fit together" className="border-b border-border bg-background">
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          The five levels
-        </p>
-        <Reveal className="mt-6 grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
+        <Reveal className="grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
           {SPINE_BEATS.map((b) => (
             <div key={b.n}>
               <p className="num text-sm text-gradient-brand">{b.n}</p>
