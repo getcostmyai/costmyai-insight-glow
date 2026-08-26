@@ -478,7 +478,7 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
 
         <div className="text-right sm:text-left">
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            Cheapest host
+            Cheapest host (input price)
           </p>
           {row.cheapestInput === null ? (
             <p className="mt-1 text-sm text-muted-foreground">No verified price</p>
