@@ -1,34 +1,53 @@
-# Make the price-move counter auditable
+# Clarity pass: make the verification promise unmissable
 
-"2,107 market price moves this month" is the most-repeated number on the site and the only headline figure with no public definition. The rule already exists precisely in the code; it is simply never shown. Publishing it turns a marketing counter into evidence, which is the whole brand promise.
+The review's real complaint is that a first-time visitor has to assemble the product themselves. Everything below is ordering, copy and one navigation change. No new sections, no redesign, no pricing change.
 
-## The definition to publish
+## 1. Hero says what makes us different, not what every cost tool says
 
-Taken verbatim from how the number is actually computed, not written fresh:
+Today: "Stop overpaying for AI." / "You're likely overspending on AI. We prove it. You save. You grow."
 
-- A price move is one observed change to a live listed price for a model on a specific host, recorded with its direction (increase or decrease).
-- A model or host appearing for the first time is a new listing, not a move. A delisting is not a move either. Both are excluded from the count.
-- Moves are counted between two of our own pricing syncs, so the number reflects what we actually caught, not what a provider announced.
-- The counter covers the current calendar month in UTC and resets on the 1st. The underlying ledger is append-only and never pruned, so the window is a read choice, not data loss.
-- Coverage started on the date of our first recorded observation, which is already published as "tracking since".
+"Stop overpaying" places us inside the crowded AI-cost-tool category. The differentiator ("We prove it") is the third sentence in a subline. Proposed:
 
-## What gets built
+- H1 keeps the same shape and gradient treatment but leads with the distinction, e.g. "Other tools recommend. We prove it." with the gradient on the second half.
+- Subline carries the money promise that used to be the H1: "You're likely overspending on AI. Every saving is proven against an independent benchmark, or refused."
+- Primary CTA unchanged (estimator), micro-line unchanged.
 
-1. **Canonical definition on the methodology page.** A new "What counts as a price move" section on `/legal/methodology` with a stable `#price-move` anchor, carrying the five points above plus the honest limits: we only see what our syncs catch, so a price that changes and reverts between two syncs is invisible to us, and a provider we do not track cannot contribute a move.
+Exact wording to be confirmed before shipping; the structural point is that the proof claim moves into the largest type on the page.
 
-2. **Link the number where it is a headline stat.** On the homepage stat row and closing line, `/about`, and `/guides/ai-cost-management`, the label becomes a quiet link to `/legal/methodology#price-move`. Styling follows the existing hairline/underline treatment, no new components, no cards.
+## 2. The Standard becomes reachable, not footer-only
 
-3. **Point the existing glossary at the canonical text.** The Intelligence report already has a short "Price move" glossary entry. It stays where it is and gains a link to the anchor, so there is one source of truth rather than two wordings that can drift apart.
+`/standard` is currently linked from one place: the footer. It is the strongest conceptual asset on the site and no visitor path reaches it.
 
-4. **Leave the decorative uses alone.** The drift ribbon passes the same number as visual density on many routes. Those are not claims and get no link, so the change stays small.
+- Add "The Standard" to the main marketing nav in `MarketingShell`.
+- Add one line under the How It Works four-step block linking to it: "The four levels are a standard, not a feature list. Read The CostMyAI Standard."
 
-## Explicitly not in scope
+## 3. One spine, stated once, near the top
 
-No homepage repositioning, no funnel instrumentation, no Time to First Defensible Finding work, no pricing changes, no catalogue SEO pages. Those stay open for a separate decision.
+Insert a compact five-beat strip immediately after the provider marquee, above How It Works: Measure -> Compare -> Certify -> Switch -> Govern, one short line each. Hairline rail treatment, no cards. This is the mental model the review says is missing; everything below it then reads as support rather than as competing stories.
+
+How It Works keeps its four steps and screenshot; the strip is the one-glance version above it.
+
+## 4. Trim the competing stories in the middle
+
+Order today: Hero, Marquee, HowItWorks, StillMoving, Estimator, BuiltFor, Forecast, TrustBeat, Architecture, Pricing, Neutrality, FAQ, Closing.
+
+Two moves only:
+
+- Forecast is the longest block for the third-most-interesting capability. Keep the head, the three-cell strip and the diagram; cut the principle bodies to one sentence each and send depth to the forecasting post it already links.
+- StillMoving and Forecast both argue "prices keep moving". Keep the argument in StillMoving; Forecast drops its restatement.
+
+## 5. Name the free-tier ceiling where a free user meets it
+
+The review's conversion point. On the Compare level, where a cheaper host is found but no certified claim exists, state the reason plainly rather than showing an empty state: cheaper host found, potential difference $X, quality certification unavailable because benchmark evidence does not support this switch yet, with the upgrade link. Copy and placement only, inside the existing locked-level component; no gating logic changes.
+
+## Not in this plan
+
+Pricing changes, model-catalogue SEO pages, funnel instrumentation and Time to First Defensible Finding. Those are product and measurement work, not clarity, and each deserves its own pass.
 
 ## Technical notes
 
-- Source of truth for the wording is the comment block and query in `src/lib/marketing.server.ts` (`change_kind` filtered to `increase`/`decrease`, `observed_at` bounded by UTC month start).
-- The methodology page is `src/routes/legal/methodology.tsx`, rendered through the shared `LegalPage` component; the new section follows the existing section shape there.
-- Glossary entry lives in `src/components/marketing/IntelligenceReport.tsx`.
-- Final step per standing rule: refresh the methodology route's `head()` (title, description, og:title, og:description) so it reflects the added section.
+- `src/routes/index.tsx`: hero copy, new spine strip component, Forecast principle trim, section order.
+- `src/components/marketing/MarketingShell.tsx`: nav entry for `/standard`.
+- `src/components/dashboard/LevelState.tsx` / `CompareLevel.tsx`: locked-certification copy.
+- Anchors (`#how`, `#estimator`, `#forecast`) keep their ids so nav and footer links keep working.
+- Final step: refresh `head()` on `/` (title, description, og:title, og:description) to match the new hero promise.
