@@ -81,6 +81,8 @@ const SECTIONS = [
 ];
 
 function MethodologyPage() {
+  const { data: stats } = useSuspenseQuery(marketingStatsQuery());
+  const trackingSince = formatTrackingSince(stats.trackingSince);
   return (
     <MarketingShell>
       <div className="flex flex-col">
