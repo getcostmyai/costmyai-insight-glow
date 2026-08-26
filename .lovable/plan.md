@@ -46,13 +46,16 @@ Shortest and most direct. Good if the hero needs to stay visually light.
 
 Use **benchmarks** plural. The verification engine draws from multiple independent benchmark sources, so the subline should reflect that.
 
-### Recommendation
+### Final choice
 
-Use **B**. It keeps the punchy start you liked, replaces the weak "proof" with explicit "quality and price", and still explains the full mechanism in one sentence. It is plain enough for a founder and credible enough for an enterprise reviewer.
+**H1 D + subline B.**
 
-If you want to lean harder into the product's Certify language, use **C** instead.
+> H1: "You're overpaying for AI. We'll prove it in minutes."  
+> Sub: "No estimates, no guesses. We measure your real usage, find the cheaper route for each workload, and prove it with independent benchmarks for both quality and price."  
+> CTA: "Prove it on my numbers"  
+> Micro-line: "Metadata only. Never your prompt content."
 
-The micro-line "Metadata only. Never your prompt content." and the three live counters stay as they are.
+This keeps the punchy start from C, replaces the weak standalone "proof" with explicit quality + price proof, and uses "benchmarks" plural. The three live counters stay as they are.
 
 
 ## 2. The Standard becomes reachable, not footer-only
