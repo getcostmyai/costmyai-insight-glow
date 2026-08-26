@@ -24,7 +24,7 @@ import { FAQ_CLUSTERS, faqJsonLdFor } from "@/lib/faq/questions";
 
 const TITLE = "How It Works — CostMyAI";
 const DESCRIPTION =
-  "Run a small connector in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. No provider keys, no migration, no prompt content leaving your stack.";
+  "Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. No provider keys, no migration, no prompt content leaving your stack.";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
@@ -95,7 +95,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
             <span className="text-gradient-brand-wide">Governed decisions</span> on every workload.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Run a small connector in your environment, point your SDK base URL at it, and keep
+            Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and keep
             your provider keys exactly where they are today. CostMyAI sees only metadata.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -424,14 +424,14 @@ function Objections() {
           <Reveal>
             <details className="group border-b border-border pb-8">
               <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold text-foreground">
-                Does the connector add latency or break streaming?
+                Does the Verification Engine add latency or break streaming?
                 <span className="mt-1 inline-block h-2 w-2 rotate-45 border-b-2 border-r-2 border-primary transition-transform group-open:-rotate-45" />
               </summary>
               <p className="mt-4 max-w-3xl leading-relaxed text-muted-foreground">
-                The connector forwards requests and streams responses without buffering them. It
+                The Verification Engine forwards requests and streams responses without buffering them. It
                 counts tokens from the response headers or tail, so the added latency is typically
                 sub-millisecond for non-streaming calls and zero for streaming bodies because they
-                pass through unchanged. If the connector stops, your application falls back to the
+                pass through unchanged. If the Verification Engine stops, your application falls back to the
                 original provider base URL instantly — there is no dependency on CostMyAI being up
                 for your traffic to keep flowing.
               </p>
@@ -446,7 +446,7 @@ function Objections() {
               </summary>
               <p className="mt-4 max-w-3xl leading-relaxed text-muted-foreground">
                 On Rightsize and below, switches are manual — you review and activate them yourself.
-                On Govern, the connector re-checks the decision at the moment of action using a
+                On Govern, the Verification Engine re-checks the decision at the moment of action using a
                 cached policy. If the policy cannot be refreshed and the decision is no longer
                 within the configured equivalence band, the switch is refused rather than executed.
                 The default is always to do nothing rather than guess.

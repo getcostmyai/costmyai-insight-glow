@@ -172,7 +172,7 @@ function parityChecks(input: FrictionInput): ParityCheck[] {
     label: "Tool calling & prompt caching",
     status: "unobservable",
     detail:
-      "The connector meters token counters, never request or response bodies, so whether this workload uses function calling or prompt caching is not something we have measured. Check it yourself before switching.",
+      "The Verification Engine meters token counters, never request or response bodies, so whether this workload uses function calling or prompt caching is not something we have measured. Check it yourself before switching.",
   });
 
   return checks;

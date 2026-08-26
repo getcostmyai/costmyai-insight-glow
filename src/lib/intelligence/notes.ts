@@ -135,7 +135,7 @@ const REASONING_OVERHEAD: Note = {
     { t: "h2", v: "The captured envelope" },
     {
       t: "p",
-      v: "This is the response that exposed it, reproduced as it arrived through our connector. Read the four numbers together: seven in, one answer token out, sixty-seven thought tokens, and a total the first three do not obviously explain until you add the thoughts to the output.",
+      v: "This is the response that exposed it, reproduced as it arrived through our Verification Engine. Read the four numbers together: seven in, one answer token out, sixty-seven thought tokens, and a total the first three do not obviously explain until you add the thoughts to the output.",
     },
     {
       t: "exhibit",
@@ -152,7 +152,7 @@ const REASONING_OVERHEAD: Note = {
           "}",
         ],
         caption:
-          "Captured through the CostMyAI connector on a live generativelanguage.googleapis.com call, and pinned as a regression test the same day. The response body itself is not retained; only the usage block above.",
+          "Captured through the CostMyAI Verification Engine on a live generativelanguage.googleapis.com call, and pinned as a regression test the same day. The response body itself is not retained; only the usage block above.",
         sourcePath: "src/lib/ingest/__tests__/dispatch-109.test.ts",
       },
     },
@@ -359,7 +359,7 @@ const EQUIVALENCE_VERDICTS: Note = {
     { t: "h2", v: "Why the refusals are the point" },
     {
       t: "p",
-      v: "A tracker that never refuses is not being generous, it is not testing anything. Ours refuses on unlabelled traffic, because the connector reads the endpoint and the model name and never the prompt, so there is nothing to identify the work. It refuses on task types no independent evaluation currently measures, rather than borrowing an unrelated instrument. And it refuses to let a saturated instrument decide, which is the case above.",
+      v: "A tracker that never refuses is not being generous, it is not testing anything. Ours refuses on unlabelled traffic, because the Verification Engine reads the endpoint and the model name and never the prompt, so there is nothing to identify the work. It refuses on task types no independent evaluation currently measures, rather than borrowing an unrelated instrument. And it refuses to let a saturated instrument decide, which is the case above.",
     },
     {
       t: "p",
@@ -454,7 +454,7 @@ const PRIMARY_SOURCE_VERIFICATION: Note = {
     },
     {
       t: "p",
-      v: "A connector that reads live vendor data does not have that failure mode, and not because it is more careful. It has no upstream to inherit from. The rate it applies is the rate the vendor is publishing at the moment of the call, and when the vendor changes it, the next read changes with it. A compiled table cannot do that at any level of diligence, because being current is not a property of the diligence, it is a property of the pipeline.",
+      v: "A Verification Engine that reads live vendor data does not have that failure mode, and not because it is more careful. It has no upstream to inherit from. The rate it applies is the rate the vendor is publishing at the moment of the call, and when the vendor changes it, the next read changes with it. A compiled table cannot do that at any level of diligence, because being current is not a property of the diligence, it is a property of the pipeline.",
     },
     {
       t: "p",
@@ -621,7 +621,7 @@ const NON_TOKEN_COST_LAYERS: Note = {
     { t: "h2", v: "What we do and do not measure" },
     {
       t: "p",
-      v: "Our own connector reads token usage. It sees the meter it is pointed at, which is the token meter, and it does not see a support plan or a forgotten deployment sitting in a subscription we have no access to. So the honest scope of every saving we report is the token line, and that is what the methodology page says. We would rather state the boundary than let a per-token comparison quietly imply it covers the bill.",
+      v: "Our own Verification Engine reads token usage. It sees the meter it is pointed at, which is the token meter, and it does not see a support plan or a forgotten deployment sitting in a subscription we have no access to. So the honest scope of every saving we report is the token line, and that is what the methodology page says. We would rather state the boundary than let a per-token comparison quietly imply it covers the bill.",
     },
     {
       t: "p",
@@ -711,7 +711,7 @@ const WHY_ONGOING: Note = {
           "}",
         ],
         caption:
-          "Captured through the CostMyAI connector on a live generativelanguage.googleapis.com call, 7 August 2026, and pinned as a regression test the same day. Reproduced from the earlier note that first documented it; the mechanism, not the incident, is the point here.",
+          "Captured through the CostMyAI Verification Engine on a live generativelanguage.googleapis.com call, 7 August 2026, and pinned as a regression test the same day. Reproduced from the earlier note that first documented it; the mechanism, not the incident, is the point here.",
         sourcePath: "src/lib/ingest/__tests__/dispatch-109.test.ts",
       },
     },

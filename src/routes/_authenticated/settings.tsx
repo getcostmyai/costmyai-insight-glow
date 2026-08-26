@@ -273,12 +273,12 @@ function Quickstart({ token }: { token: string | null }) {
     <section className="mt-8 rounded-2xl border border-border bg-card p-6">
       <h2 className="text-sm font-semibold">Quickstart</h2>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        The connector runs <span className="font-semibold text-foreground">in your environment</span>
+        The Verification Engine runs <span className="font-semibold text-foreground">in your environment</span>
         , one container per provider.{" "}
         <span className="font-semibold text-foreground">
           Your application keeps sending its own provider key exactly as it does today.
         </span>{" "}
-        The connector copies your <span className="font-mono">Authorization</span> header (and{" "}
+        The Verification Engine copies your <span className="font-mono">Authorization</span> header (and{" "}
         <span className="font-mono">x-api-key</span>, and every other header) to the provider byte
         for byte and never reads, stores or logs it. We hold no provider credential of yours, so
         there is nothing for you to paste here and nothing of yours for us to leak. The only thing
@@ -301,7 +301,7 @@ function Quickstart({ token }: { token: string | null }) {
         ))}
       </div>
 
-      <Step n={1} title="Run the connector">
+      <Step n={1} title="Run the Verification Engine">
         <pre className="mt-2 overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed">
           {dockerRunSnippet(shown, preset.upstream, {
             name: `costmyai-${preset.id}`,
@@ -363,7 +363,7 @@ function Quickstart({ token }: { token: string | null }) {
       <div className="mt-6 rounded-xl border border-border p-4">
         <p className="text-xs font-semibold">If we don't recognise your provider's responses</p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          The connector reads envelopes, not models — six shapes cover the tracked providers
+          The Verification Engine reads envelopes, not models — six shapes cover the tracked providers
           (OpenAI-compatible, Anthropic, Google, Cohere, Bedrock Converse, Tencent Hunyuan), so every
           model a covered provider ships is covered the day it ships. Anything else is still
           forwarded untouched — your inference never depends on us recognising it — and the event is
@@ -385,7 +385,7 @@ function Quickstart({ token }: { token: string | null }) {
             <span className="font-mono">lastError</span>. Rotate above and redeploy — the queued
             metadata drains once the new token is accepted, nothing is lost.
           </Trouble>
-          <Trouble symptom="Your calls fail with a 502 from the connector">
+          <Trouble symptom="Your calls fail with a 502 from the Verification Engine">
             The container can't reach the provider. Check egress from wherever it runs:{" "}
             <span className="font-mono">docker exec costmyai-{preset.id} wget -qO- {preset.upstream}</span>
             . A 504 instead means the provider didn't send headers within the timeout — never a
