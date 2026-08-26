@@ -112,16 +112,18 @@ export const Route = createRootRouteWithContext<{
         name: "google-site-verification",
         content: "SsPW1eath9RWirTEzXICp-jdtdQs7fLYiMLkIAvn6mU",
       },
-      { title: "CostMyAI — stop overpaying for AI" },
+      { title: "CostMyAI — You're overpaying for AI. We prove it in minutes." },
       {
         name: "description",
-        content: "You're likely overspending on AI. We prove it. You save. You grow.",
+        content:
+          "No estimates, no guesses. We measure your real usage, find the cheaper route for each workload, and prove it with independent benchmarks for quality and price.",
       },
       { name: "author", content: "CostMyAI" },
-      { property: "og:title", content: "CostMyAI — stop overpaying for AI" },
+      { property: "og:title", content: "CostMyAI — You're overpaying for AI. We prove it in minutes." },
       {
         property: "og:description",
-        content: "You're likely overspending on AI. We prove it. You save. You grow.",
+        content:
+          "No estimates, no guesses. We measure your real usage, find the cheaper route for each workload, and prove it with independent benchmarks for quality and price.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
