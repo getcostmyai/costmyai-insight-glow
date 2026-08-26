@@ -50,9 +50,59 @@ Speed plus proof. Works well with the estimator as the next click, and the CTA i
 
 The sharpest positioning against the category, at the cost of leading with a negative.
 
+### F. Keep the current H1, fix the rest
+
+- H1: "Stop overpaying for AI." (unchanged)
+- Sub: "We audit every workload you run, prove which ones can move to a cheaper model or host without losing quality, and switch them automatically when the proof holds."
+- CTA: "Get my AI savings report"
+
+Lowest-risk rewrite. The H1 already works; the new subline explains the mechanism in one plain sentence and the CTA promises a concrete deliverable.
+
+### G. Hidden discounts
+
+- H1: "Your AI bill has **hidden discounts.**"
+- Sub: "The same prompt often costs half as much somewhere else. We find those discounts, prove the output still matches, and move your traffic when it does."
+- CTA: "Find my hidden discounts"
+
+Desire-creating and concrete. "Hidden discounts" reframes optimization as found money, not a consulting project.
+
+### H. The safe switch
+
+- H1: "Switch to cheaper AI. **With proof.**"
+- Sub: "CostMyAI compares your real usage against the live market, runs cheaper candidates through independent benchmarks, and only flips the switch when the evidence holds."
+- CTA: "Prove it on my usage"
+
+Pairs a strong action headline with the safety promise. Close to B but more direct and less abstract.
+
+### I. Speed plus proof
+
+- H1: "A cheaper AI stack **in minutes, not quarters.**"
+- Sub: "Point us at your usage. We show exactly where you are overpaying, prove the cheaper option holds quality, and route your next requests to it."
+- CTA: "Show me where I'm overpaying"
+
+Speed is the hook; proof is the objection-killer. Good if you want to lead with time-to-value.
+
+### J. No more guessing
+
+- H1: "No more guessing **about AI costs.**"
+- Sub: "We price every workload against the live market, certify the ones that match your quality bar, and switch them automatically. If we cannot prove it, we say so."
+- CTA: "Stop guessing"
+
+Plain, founder-friendly, and frames the current state as uncertain rather than wasteful.
+
+### K. Same output, smaller bill
+
+- H1: "Pay less for the **same AI output.**"
+- Sub: "CostMyAI finds the cheapest way to run each workload, proves it with an independent benchmark, and makes the switch when the quality holds."
+- CTA: "Find my cheapest route"
+
+The most direct outcome promise. No category words, no negatives, no speed claims.
+
 ### Recommendation
 
-B for the headline, with D's CTA. "Every AI saving, proven before you switch." is plain enough for a founder, credible enough for an enterprise reviewer, contains no jargon, and makes "proven" the word people repeat back. Pairing it with "Prove it on my numbers" turns the estimator from a generic tool into the demonstration of the headline.
+If you want to keep the current H1, use **F**. It keeps "Stop overpaying for AI." and replaces the vague "We prove it. You save. You grow." with a single sentence that says what you actually do.
+
+If you want a new H1, use **H**: "Switch to cheaper AI. With proof." It is plain, action-oriented, and makes the safety promise visible in the headline itself. Pair it with the CTA from F or H: "Prove it on my usage" or "Get my AI savings report".
 
 Whichever you choose, the micro-line stays "Metadata only. Never your prompt content." and the three live counters stay as they are.
 
