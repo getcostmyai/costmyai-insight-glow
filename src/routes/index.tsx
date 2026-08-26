@@ -80,6 +80,7 @@ function HomePage() {
 
       <BuiltFor />
       <Forecast stats={stats} />
+      <TrustBeat />
       <Architecture />
       <Pricing stats={stats} />
       <Neutrality />
@@ -355,7 +356,32 @@ function StillMoving({ stats }: { stats: MarketingStats }) {
 
 
 
-/* --------------------------- 05 · architecture --------------------------- */
+/* --------------------------- 05 · trust beat ----------------------------- */
+
+function TrustBeat() {
+  return (
+    <section className="scroll-mt-24 wash-section bg-background">
+      <div className="mx-auto max-w-4xl px-5 py-20 text-center sm:px-8 sm:py-24">
+        <Reveal>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Security, by architecture
+          </p>
+          <h2 className="mt-4 text-2xl font-semibold leading-snug tracking-[-0.03em] sm:text-3xl">
+            Why would you give an AI optimization company access to your AI traffic?
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-relaxed text-foreground">
+            <span className="font-semibold text-foreground">You don't.</span> No prompts leave your
+            environment. No completions leave your environment. No provider keys leave your
+            environment. Nothing to migrate. CostMyAI sees the economics of your usage — never its
+            content.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* --------------------------- 06 · architecture --------------------------- */
 
 function Architecture() {
   return (
