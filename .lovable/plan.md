@@ -4,107 +4,51 @@ The review's real complaint is that a first-time visitor has to assemble the pro
 
 ## 1. Hero wording
 
-Today: "Stop overpaying for AI." / "You're likely overspending on AI. We prove it. You save. You grow."
+Chosen H1 from option D: **"You're overpaying for AI. We'll prove it in minutes."**
 
-Two constraints shape the rewrite. It must read the same to a solo founder and to an enterprise buyer, so no category jargon ("governance", "spend management") in the largest type — the search data backs this: "ai cost governance" gets 50 searches a month against 140 for "ai cost management", and neither is language a founder uses out loud. And it must carry the one thing no competitor can say: we prove the saving instead of estimating it, and we say no when we can't.
+The H1 already does two jobs: it names the problem (overpaying) and promises the differentiator (proof, fast). The subline below it should explain *how* in one plain sentence, so a visitor does not have to read the rest of the page to understand the product.
 
-The lever is the verb. "Prove" is ownable, plain, and works at every company size. What follows are five whole-hero options, each written as a unit (headline, subline, CTA) so you can judge how it reads live, not as a slogan in isolation.
+### Subline options for H1 D
 
-### A. Proof as the headline
+All options keep the CTA "Prove it on my numbers" and the micro-line "Metadata only. Never your prompt content."
 
-- H1: "Cut your AI bill. **Without guessing.**" (gradient on the second sentence)
-- Sub: "We find the cheaper way to run each workload and prove it holds the same quality before you switch. If we can't prove it, we tell you."
-- CTA: "See what you could save"
+#### A. Market + benchmark + only-when-proof-holds
 
-Reads as a benefit first, differentiator second. Safest option, lowest risk of confusing anyone.
+> We price your real workloads against the live market, run cheaper candidates through an independent benchmark, and only recommend the switch when the proof holds.
 
-### B. The receipt
+The clearest explanation of the mechanism. It tells the visitor exactly what happens and why they can trust it.
 
-- H1: "Every AI saving, **proven before you switch.**"
-- Sub: "You're likely overpaying for AI. We show you exactly where, run the cheaper option against an independent benchmark, and only recommend the switch when the evidence holds."
-- CTA: "Find my savings"
+#### B. Where, what, and the proof
 
-Puts the proof promise into the H1 without any category word. Strongest fit with the rest of the site's voice.
+> See exactly where your AI spend is leaking, which cheaper option matches your quality, and the proof that makes the switch safe.
 
-### C. Same answer, less money
+More desire-creating. "Leaking" turns the problem into found money, while the second half restores the safety promise.
 
-- H1: "Same answers. **Half the bill.**"
-- Sub: "The same model is often cheaper somewhere else, and a smaller model is often just as good. We prove which is true for your workloads, then switch it safely."
-- CTA: "See if you are overpaying"
+#### C. No estimates, no guesses
 
-The most desire-creating and the most concrete. "Half the bill" is a claim we would need to hedge or substantiate — usable if we soften to "a smaller bill" or tie it to a real figure from the catalog.
+> No estimates, no guesses. We measure your actual usage, find the cheaper route for each workload, and prove the saving before you switch.
 
-### D. The objection, answered
+Punchy and direct. The negation works because the H1 already made a positive promise; this line explains the discipline behind it.
 
-- H1: "You're overpaying for AI. **We'll prove it in minutes.**"
-- Sub: "Point us at your usage and we show the cheaper route for each workload, with the benchmark evidence behind it. No prompts leave your environment."
-- CTA: "Prove it on my numbers"
+#### D. Same model, smaller model, both proven
 
-Speed plus proof. Works well with the estimator as the next click, and the CTA is the most inviting of the five.
+> The same model is often cheaper somewhere else, and a smaller model is often just as good. We prove which is true for your workloads, then switch what passes.
 
-### E. Nobody guesses with your money
+Ties directly to the four levels (Compare / Certify / Rightsize / Govern) without using the words. Good if you want the subline to preview the product structure.
 
-- H1: "Stop paying for AI savings **nobody can prove.**"
-- Sub: "Most tools estimate what you'd save. We measure it, benchmark it, and refuse the ones that don't hold up. Then we make the switch."
-- CTA: "See the proof on your spend"
+#### E. The trust-first version
 
-The sharpest positioning against the category, at the cost of leading with a negative.
+> Point us at your usage. We show the cheaper route for every workload and the independent benchmark behind it. No prompts leave your environment.
 
-### F. Keep the current H1, fix the rest
-
-- H1: "Stop overpaying for AI." (unchanged)
-- Sub: "We audit every workload you run, prove which ones can move to a cheaper model or host without losing quality, and switch them automatically when the proof holds."
-- CTA: "Get my AI savings report"
-
-Lowest-risk rewrite. The H1 already works; the new subline explains the mechanism in one plain sentence and the CTA promises a concrete deliverable.
-
-### G. Hidden discounts
-
-- H1: "Your AI bill has **hidden discounts.**"
-- Sub: "The same prompt often costs half as much somewhere else. We find those discounts, prove the output still matches, and move your traffic when it does."
-- CTA: "Find my hidden discounts"
-
-Desire-creating and concrete. "Hidden discounts" reframes optimization as found money, not a consulting project.
-
-### H. The safe switch
-
-- H1: "Switch to cheaper AI. **With proof.**"
-- Sub: "CostMyAI compares your real usage against the live market, runs cheaper candidates through independent benchmarks, and only flips the switch when the evidence holds."
-- CTA: "Prove it on my usage"
-
-Pairs a strong action headline with the safety promise. Close to B but more direct and less abstract.
-
-### I. Speed plus proof
-
-- H1: "A cheaper AI stack **in minutes, not quarters.**"
-- Sub: "Point us at your usage. We show exactly where you are overpaying, prove the cheaper option holds quality, and route your next requests to it."
-- CTA: "Show me where I'm overpaying"
-
-Speed is the hook; proof is the objection-killer. Good if you want to lead with time-to-value.
-
-### J. No more guessing
-
-- H1: "No more guessing **about AI costs.**"
-- Sub: "We price every workload against the live market, certify the ones that match your quality bar, and switch them automatically. If we cannot prove it, we say so."
-- CTA: "Stop guessing"
-
-Plain, founder-friendly, and frames the current state as uncertain rather than wasteful.
-
-### K. Same output, smaller bill
-
-- H1: "Pay less for the **same AI output.**"
-- Sub: "CostMyAI finds the cheapest way to run each workload, proves it with an independent benchmark, and makes the switch when the quality holds."
-- CTA: "Find my cheapest route"
-
-The most direct outcome promise. No category words, no negatives, no speed claims.
+Keeps the original D subline's trust beat but tightens the promise and moves the privacy claim into the same sentence.
 
 ### Recommendation
 
-If you want to keep the current H1, use **F**. It keeps "Stop overpaying for AI." and replaces the vague "We prove it. You save. You grow." with a single sentence that says what you actually do.
+Use **A**. It is the only option that explains the full loop (price, benchmark, recommend only when proof holds) in one sentence, with no category jargon and no negative framing. It makes the H1 credible instead of just catchy.
 
-If you want a new H1, use **H**: "Switch to cheaper AI. With proof." It is plain, action-oriented, and makes the safety promise visible in the headline itself. Pair it with the CTA from F or H: "Prove it on my usage" or "Get my AI savings report".
+If you want more punch, use **B**. It sacrifices a little mechanism detail for desire, but still closes with the safety word "proof".
 
-Whichever you choose, the micro-line stays "Metadata only. Never your prompt content." and the three live counters stay as they are.
+The micro-line "Metadata only. Never your prompt content." and the three live counters stay as they are.
 
 
 ## 2. The Standard becomes reachable, not footer-only
