@@ -48,7 +48,7 @@ type SortKey = "price" | "quality" | "spread" | "name";
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "price", label: "Cheapest first" },
   { key: "quality", label: "Highest quality" },
-  { key: "spread", label: "Biggest host spread" },
+  { key: "spread", label: "Biggest host spread (input price)" },
   { key: "name", label: "A–Z" },
 ];
 
