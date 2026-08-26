@@ -6,13 +6,33 @@ The review's real complaint is that a first-time visitor has to assemble the pro
 
 Today: "Stop overpaying for AI." / "You're likely overspending on AI. We prove it. You save. You grow."
 
-"Stop overpaying" places us inside the crowded AI-cost-tool category. The differentiator ("We prove it") is the third sentence in a subline. Proposed:
+"Stop overpaying" places us inside the crowded AI-cost-tool category. The differentiator ("We prove it") is the third sentence in a subline. The proof claim needs to move into the largest type, but the wording must still feel like a human promise, not a category statement.
 
-- H1 keeps the same shape and gradient treatment but leads with the distinction, e.g. "Other tools recommend. We prove it." with the gradient on the second half.
-- Subline carries the money promise that used to be the H1: "You're likely overspending on AI. Every saving is proven against an independent benchmark, or refused."
-- Primary CTA unchanged (estimator), micro-line unchanged.
+### Direction A — the blunt contrast
 
-Exact wording to be confirmed before shipping; the structural point is that the proof claim moves into the largest type on the page.
+- H1: "AI cost tools guess. We prove." with "We prove." in the brand gradient.
+- Subline: "You're probably overpaying for AI. We show you exactly where, with independent benchmark evidence — or we refuse the claim."
+
+### Direction B — the money-first promise
+
+- H1: "Stop paying for AI savings that aren't real." with "aren't real" in the brand gradient.
+- Subline: "Most tools estimate. CostMyAI proves every cheaper route against an independent benchmark, then makes the switch when it holds up."
+
+### Direction C — the category reframe (recommended)
+
+- H1: "AI Spend Governance, not AI cost opinions." with "Governance" in the brand gradient.
+- Subline: "You're likely overspending on AI. We prove where, with independent benchmarks — and we refuse to certify anything that doesn't hold up."
+
+### Direction D — the shortest, most provocative
+
+- H1: "Your AI bill is lying to you." with "lying to you" in the brand gradient.
+- Subline: "We prove what you're actually worth paying for — and we say no when the evidence isn't there."
+
+### Recommendation
+
+Use Direction C. It re-frames the category in two words (Spend Governance), keeps the money promise, and introduces "refuse" as a feature rather than a limitation. That single word is already a brand asset on the site and makes the promise concrete.
+
+In all directions the primary CTA stays "See if you are overpaying" and the micro-line stays "Metadata only. Never your prompt content."
 
 ## 2. The Standard becomes reachable, not footer-only
 
