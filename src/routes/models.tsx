@@ -162,7 +162,7 @@ function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
           </Reveal>
         ) : null}
 
-        <div className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
+        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-5">
           <HeroStat delay={0} value={stats.models} label="Models priced" />
           <HeroStat delay={80} value={stats.contested} label="Models with 2+ hosts" />
           <HeroStat delay={160} value={stats.providers} label="Serving providers" />
@@ -170,9 +170,17 @@ function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
             delay={240}
             value={Math.round(stats.topSpread)}
             format={(v) => `${Math.round(v)}%`}
-            label="Widest host spread"
+            label="Widest host spread (input price)"
             accent
           />
+          <HeroStat
+            delay={320}
+            value={Math.round(stats.topOutputSpread)}
+            format={(v) => `${Math.round(v)}%`}
+            label="Widest host spread (output price)"
+            accent
+          />
+
         </div>
       </div>
     </section>
