@@ -42,7 +42,10 @@ function DisclaimerPage() {
           Nothing on this site or within the product constitutes financial, legal, or investment
           advice. Switching recommendations are based on measured price and quality data at the time
           they were generated and are not a guarantee of future performance, availability, or
-          pricing from any third party provider.
+          pricing from any third party provider. A benchmark score, however clean the margin,
+          measures performance on the benchmark's own task set — it does not measure performance on
+          your specific data, prompts, or edge cases. Clearing the quality bar is evidence a switch
+          is worth testing, not a guarantee it will behave identically on your own workload.
         </p>
       </LegalSection>
 
