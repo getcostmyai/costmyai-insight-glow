@@ -252,7 +252,19 @@ function Numbers({
         <div className="mt-12 grid gap-10 border-y border-border py-10 sm:grid-cols-3">
           <Stat label="Models priced" value={formatInteger(models)} />
           <Stat label="Providers with verified live prices" value={formatInteger(providers)} />
-          <Stat label="Price moves caught this month" value={formatInteger(moves)} accent />
+          <Stat
+            label={
+              <Link
+                to="/legal/methodology"
+                hash="price-move"
+                className="underline-offset-4 hover:underline hover:text-foreground"
+              >
+                Price moves caught this month
+              </Link>
+            }
+            value={formatInteger(moves)}
+            accent
+          />
         </div>
         <p className="mt-8 max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Every rate is a published list price we hold a verified record for. Sourcing rules are in
