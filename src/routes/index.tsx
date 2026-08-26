@@ -336,7 +336,14 @@ function StillMoving({ stats }: { stats: MarketingStats }) {
               <span className="num font-semibold text-foreground">
                 {stats.priceChangesTracked.toLocaleString("en-GB")}
               </span>{" "}
-              market price moves observed this month.
+              <Link
+                to="/legal/methodology"
+                hash="price-move"
+                className="underline-offset-4 hover:underline hover:text-foreground"
+              >
+                market price moves observed this month
+              </Link>
+              .
             </p>
           ) : null}
         </Reveal>
