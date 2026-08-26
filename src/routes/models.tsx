@@ -106,12 +106,15 @@ function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
   const stats = useMemo(() => {
     const spreads = data.rows.map(hostSpread).filter((v): v is number => v !== null);
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
+    const outputSpreads = data.rows.map(outputHostSpread).filter((v): v is number => v !== null);
+    const topOutputSpread = outputSpreads.length ? Math.max(...outputSpreads) : 0;
     return {
       models: data.rows.length,
       // Models sold by more than one verified host — every one of these is a live price race.
       contested: data.rows.filter((r) => servingHosts(r).length > 1).length,
       providers: data.providers.length,
       topSpread,
+      topOutputSpread,
     };
   }, [data]);
 
