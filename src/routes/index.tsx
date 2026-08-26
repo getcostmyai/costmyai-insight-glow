@@ -27,7 +27,7 @@ import { FAQ_ITEMS, HOMEPAGE_FAQ_IDS, findFaqItem } from "@/lib/faq/questions";
 import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
-import { HOW_STEPS } from "@/lib/how-it-works";
+import "@/lib/how-it-works";
 
 export const Route = createFileRoute("/")({
   head: () => {
