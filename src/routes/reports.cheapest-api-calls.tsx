@@ -40,11 +40,17 @@ function cheapestBlended(row: CatalogRow): number | null {
   return best.input + best.output;
 }
 
+/**
+ * Share of the dearest verified host's INPUT price that a switch to the cheapest
+ * one removes. Rebased on the dearest host, so it is bounded 0-100%. Input only —
+ * never blended with output.
+ */
 function spreadPct(row: CatalogRow): number | null {
   const hosts = serving(row);
   if (hosts.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
   const max = Math.max(...hosts.map((h) => h.input));
-  return ((max - row.cheapestInput) / row.cheapestInput) * 100;
+  if (max <= 0) return null;
+  return ((max - row.cheapestInput) / max) * 100;
 }
 
 function CheapestApiCallsPage() {
@@ -112,7 +118,7 @@ function Hero({ data }: { data: CatalogPayload }) {
           <Stat
             value={Math.round(stats.topSpread)}
             format={(v) => `${Math.round(v)}%`}
-            label="Widest same-model gap"
+            label="Widest same-model gap (input price)"
             delay={240}
             accent
           />
@@ -180,7 +186,7 @@ function Table({ data }: { data: CatalogPayload }) {
         <div className="mt-10">
           <div className="hidden grid-cols-[2fr_1.1fr_0.9fr_0.9fr_1fr] gap-6 border-b border-border pb-3 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:grid">
             <span>Model</span>
-            <span>Cheapest host</span>
+            <span>Cheapest host (input price)</span>
             <span className="text-right">$ / 1M in</span>
             <span className="text-right">$ / 1M out</span>
             <span className="text-right">Blended · gap</span>
@@ -216,7 +222,7 @@ function Table({ data }: { data: CatalogPayload }) {
                   {blended === null ? "—" : `$${blended.toFixed(2)}`}
                   {gap !== null && gap >= 1 ? (
                     <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
-                      −{Math.round(gap)}%
+                      −{Math.round(gap)}% cheaper on input price
                     </span>
                   ) : null}
                 </p>

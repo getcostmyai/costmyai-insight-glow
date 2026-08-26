@@ -48,7 +48,7 @@ type SortKey = "price" | "quality" | "spread" | "name";
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "price", label: "Cheapest first" },
   { key: "quality", label: "Highest quality" },
-  { key: "spread", label: "Biggest host spread" },
+  { key: "spread", label: "Biggest host spread (input price)" },
   { key: "name", label: "A–Z" },
 ];
 
@@ -56,15 +56,26 @@ const SORTS: { key: SortKey; label: string }[] = [
 const servingHosts = (row: CatalogRow) => row.hosts.filter((h) => !h.aggregate);
 
 /**
- * Percent gap between the dearest and cheapest verified provider for one model.
- * Provider-to-provider only: quoting the aggregate listing as one end of the
- * gap would price a switch nobody can make (Dispatch 117).
+ * Percent of the dearest verified provider's INPUT price that a switch to the
+ * cheapest one removes. Rebased on the dearest host, so it is bounded 0-100% by
+ * construction. Provider-to-provider only: quoting the aggregate listing as one
+ * end of the gap would price a switch nobody can make (Dispatch 117).
  */
 function hostSpread(row: CatalogRow): number | null {
   const serving = servingHosts(row);
   if (serving.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
   const max = Math.max(...serving.map((h) => h.input));
-  return ((max - row.cheapestInput) / row.cheapestInput) * 100;
+  if (max <= 0) return null;
+  return ((max - row.cheapestInput) / max) * 100;
+}
+
+/** Same measurement on OUTPUT price. Single dimension, never blended with input. */
+function outputHostSpread(row: CatalogRow): number | null {
+  const serving = servingHosts(row);
+  if (serving.length < 2 || row.cheapestOutput === null || row.cheapestOutput <= 0) return null;
+  const max = Math.max(...serving.map((h) => h.output));
+  if (max <= 0) return null;
+  return ((max - row.cheapestOutput) / max) * 100;
 }
 
 function ModelsPage() {
@@ -95,12 +106,15 @@ function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
   const stats = useMemo(() => {
     const spreads = data.rows.map(hostSpread).filter((v): v is number => v !== null);
     const topSpread = spreads.length ? Math.max(...spreads) : 0;
+    const outputSpreads = data.rows.map(outputHostSpread).filter((v): v is number => v !== null);
+    const topOutputSpread = outputSpreads.length ? Math.max(...outputSpreads) : 0;
     return {
       models: data.rows.length,
       // Models sold by more than one verified host — every one of these is a live price race.
       contested: data.rows.filter((r) => servingHosts(r).length > 1).length,
       providers: data.providers.length,
       topSpread,
+      topOutputSpread,
     };
   }, [data]);
 
@@ -151,7 +165,7 @@ function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
           </Reveal>
         ) : null}
 
-        <div className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
+        <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-5">
           <HeroStat delay={0} value={stats.models} label="Models priced" />
           <HeroStat delay={80} value={stats.contested} label="Models with 2+ hosts" />
           <HeroStat delay={160} value={stats.providers} label="Serving providers" />
@@ -159,9 +173,17 @@ function Hero({ data, moves }: { data: CatalogPayload; moves: number }) {
             delay={240}
             value={Math.round(stats.topSpread)}
             format={(v) => `${Math.round(v)}%`}
-            label="Widest host spread"
+            label="Widest host spread (input price)"
             accent
           />
+          <HeroStat
+            delay={320}
+            value={Math.round(stats.topOutputSpread)}
+            format={(v) => `${Math.round(v)}%`}
+            label="Widest host spread (output price)"
+            accent
+          />
+
         </div>
       </div>
     </section>
@@ -206,7 +228,7 @@ const READ_ITEMS = [
   },
   {
     title: "The host spread is the arbitrage",
-    body: "When one model is sold by several providers at different rates, the gap between the cheapest and the dearest is money already on the table. It is the number the engine acts on, and the only one we headline.",
+    body: "When one model is sold by several providers at different rates, the share of the dearest host's price that the cheapest one removes is money already on the table. We report it separately for input price and output price, never blended into one number, because a workload heavy on output does not save what an input-heavy one saves.",
   },
   {
     title: "The quality index is the bar",
@@ -456,7 +478,7 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
 
         <div className="text-right sm:text-left">
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            Cheapest host
+            Cheapest host (input price)
           </p>
           {row.cheapestInput === null ? (
             <p className="mt-1 text-sm text-muted-foreground">No verified price</p>
@@ -470,7 +492,7 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
                 {cheapest?.host_label}
                 {spread !== null && spread >= 1 ? (
                   <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 font-semibold text-saving">
-                    −{Math.round(spread)}% vs dearest
+                    −{Math.round(spread)}% cheaper on input price
                   </span>
                 ) : null}
               </p>
