@@ -181,13 +181,12 @@ function Table({ data }: { data: CatalogPayload }) {
             <span>Cheapest host (input price)</span>
             <span className="text-right">$ / 1M in</span>
             <span className="text-right">$ / 1M out</span>
-            <span className="text-right">Blended · gap</span>
+            <span className="text-right">Gap</span>
           </div>
 
           {rows.map((r, i) => {
             const hosts = serving(r);
             const best = hosts.reduce((a, h) => (a.input <= h.input ? a : h));
-            const blended = cheapestBlended(r);
             const gap = spreadPct(r);
             return (
               <Reveal
@@ -211,12 +210,13 @@ function Table({ data }: { data: CatalogPayload }) {
                 </p>
                 <p className="num text-right text-sm sm:self-center">${best.output.toFixed(2)}</p>
                 <p className="num text-right text-sm sm:self-center">
-                  {blended === null ? "—" : `$${blended.toFixed(2)}`}
                   {gap !== null && gap >= 1 ? (
-                    <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
+                    <span className="num rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
                       −{Math.round(gap)}% cheaper on input price
                     </span>
-                  ) : null}
+                  ) : (
+                    "—"
+                  )}
                 </p>
               </Reveal>
             );
