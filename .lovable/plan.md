@@ -50,15 +50,22 @@ it at lines 183 and 193. It is the same bug. Flagged below as an explicit decisi
 6. **Cheapest host badge** stays ranked on input (`models.tsx:414-416` unchanged).
 7. No blended, weighted, or ratio-based metric is introduced anywhere.
 
+## Also in scope: the cheapest-api-calls report
+
+`src/routes/reports.cheapest-api-calls.tsx:43-48` (`spreadPct`) gets the same rebase:
+divide by `max`, guard `max <= 0`, no cap. Its rendered output is relabelled — the
+column header at line 183 and the badge at line 217-221 state "cheaper on input price"
+explicitly, and the headline stat "Widest same-model gap" becomes
+"Widest same-model gap (input price)".
+
+**No output-spread stat is added there.** Confirmed: that page shows a single
+`$ / 1M out` column (line 185/214), which is the output price of the one host that is
+cheapest on input — it does not compare output prices across hosts, so there is no
+per-host output dimension on the page to spread over. The models page keeps that job.
+
 ## After the build
 
 I will read the live served page and paste the literal rendered text for
-Llama 3.1 8B Instruct, DeepSeek V4 Flash 0731, and whichever model produces the
-current headline spread — showing both input and output spread values from real
-output, not a description.
+Llama 3.1 8B Instruct, DeepSeek V4 Flash 0731, whichever model produces the current
+headline spread, and one row from the cheapest-api-calls report.
 
-## One decision for you
-
-`reports.cheapest-api-calls.tsx` has the same unbounded formula and will keep showing
-inflated percentages unless it is fixed too. Default in this plan: **fix it as well**
-(same rebase, label "cheaper on input price"). Say so if you want it left untouched.
