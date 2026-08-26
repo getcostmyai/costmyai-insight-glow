@@ -228,6 +228,7 @@ export function HeroUpsell({
   period,
   what,
   unlocked,
+  refusals,
 }: {
   to: string;
   requiredPlan: PlanTier;
@@ -236,6 +237,12 @@ export function HeroUpsell({
   period: string;
   what: string;
   unlocked: boolean;
+  /**
+   * Routes the benchmark evidence did not support. Shown on the locked state
+   * so the free-tier ceiling is named plainly: the refusal is part of the
+   * value, not an empty state.
+   */
+  refusals?: number;
 }) {
   const meta = PLAN_META[requiredPlan];
   if (count === 0 && saving === 0) return null;

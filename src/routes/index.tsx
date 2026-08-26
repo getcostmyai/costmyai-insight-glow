@@ -472,6 +472,16 @@ function HowItWorks() {
           </ol>
         </Reveal>
 
+        <Reveal delay={100} className="mx-auto mt-8 max-w-4xl text-center">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            The four levels are a standard, not a feature list.{" "}
+            <Link to="/standard" className="font-medium text-primary hover:underline">
+              Read The CostMyAI Standard
+            </Link>
+            .
+          </p>
+        </Reveal>
+
         <Reveal delay={120} className="mt-14">
           <GradientPanel
             src="/images/how-it-works/compare-dashboard.png"
