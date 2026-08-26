@@ -38,6 +38,7 @@ import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
+import { Route as GuidesAiCostManagementRouteImport } from './routes/guides.ai-cost-management'
 import { Route as EmbedIntelligenceWidgetRouteImport } from './routes/embed/intelligence-widget'
 import { Route as DemoRightsizeRouteImport } from './routes/demo.rightsize'
 import { Route as DemoOverviewRouteImport } from './routes/demo.overview'
@@ -236,6 +237,11 @@ const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
 const IntelligenceMonthRoute = IntelligenceMonthRouteImport.update({
   id: '/intelligence/$month',
   path: '/intelligence/$month',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesAiCostManagementRoute = GuidesAiCostManagementRouteImport.update({
+  id: '/guides/ai-cost-management',
+  path: '/guides/ai-cost-management',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmbedIntelligenceWidgetRoute = EmbedIntelligenceWidgetRouteImport.update({
@@ -565,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
+  '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner/login': typeof PartnerLoginRoute
@@ -647,6 +654,7 @@ export interface FileRoutesByTo {
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
+  '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner/login': typeof PartnerLoginRoute
@@ -734,6 +742,7 @@ export interface FileRoutesById {
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
+  '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
   '/partner_/login': typeof PartnerLoginRoute
@@ -821,6 +830,7 @@ export interface FileRouteTypes {
     | '/demo/overview'
     | '/demo/rightsize'
     | '/embed/intelligence-widget'
+    | '/guides/ai-cost-management'
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/partner/login'
@@ -903,6 +913,7 @@ export interface FileRouteTypes {
     | '/demo/overview'
     | '/demo/rightsize'
     | '/embed/intelligence-widget'
+    | '/guides/ai-cost-management'
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/partner/login'
@@ -989,6 +1000,7 @@ export interface FileRouteTypes {
     | '/demo/overview'
     | '/demo/rightsize'
     | '/embed/intelligence-widget'
+    | '/guides/ai-cost-management'
     | '/intelligence/$month'
     | '/legal/methodology'
     | '/partner_/login'
@@ -1065,6 +1077,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
+  GuidesAiCostManagementRoute: typeof GuidesAiCostManagementRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
   PartnerLoginRoute: typeof PartnerLoginRoute
@@ -1308,6 +1321,13 @@ declare module '@tanstack/react-router' {
       path: '/intelligence/$month'
       fullPath: '/intelligence/$month'
       preLoaderRoute: typeof IntelligenceMonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/ai-cost-management': {
+      id: '/guides/ai-cost-management'
+      path: '/guides/ai-cost-management'
+      fullPath: '/guides/ai-cost-management'
+      preLoaderRoute: typeof GuidesAiCostManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/embed/intelligence-widget': {
@@ -1809,6 +1829,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
+  GuidesAiCostManagementRoute: GuidesAiCostManagementRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
   PartnerLoginRoute: PartnerLoginRoute,
