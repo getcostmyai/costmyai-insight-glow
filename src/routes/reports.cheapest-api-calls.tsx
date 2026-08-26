@@ -222,7 +222,7 @@ function Table({ data }: { data: CatalogPayload }) {
                   {blended === null ? "—" : `$${blended.toFixed(2)}`}
                   {gap !== null && gap >= 1 ? (
                     <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 text-xs font-semibold text-saving">
-                      −{Math.round(gap)}%
+                      −{Math.round(gap)}% cheaper on input price
                     </span>
                   ) : null}
                 </p>
