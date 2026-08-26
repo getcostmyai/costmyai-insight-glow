@@ -56,15 +56,26 @@ const SORTS: { key: SortKey; label: string }[] = [
 const servingHosts = (row: CatalogRow) => row.hosts.filter((h) => !h.aggregate);
 
 /**
- * Percent gap between the dearest and cheapest verified provider for one model.
- * Provider-to-provider only: quoting the aggregate listing as one end of the
- * gap would price a switch nobody can make (Dispatch 117).
+ * Percent of the dearest verified provider's INPUT price that a switch to the
+ * cheapest one removes. Rebased on the dearest host, so it is bounded 0-100% by
+ * construction. Provider-to-provider only: quoting the aggregate listing as one
+ * end of the gap would price a switch nobody can make (Dispatch 117).
  */
 function hostSpread(row: CatalogRow): number | null {
   const serving = servingHosts(row);
   if (serving.length < 2 || row.cheapestInput === null || row.cheapestInput <= 0) return null;
   const max = Math.max(...serving.map((h) => h.input));
-  return ((max - row.cheapestInput) / row.cheapestInput) * 100;
+  if (max <= 0) return null;
+  return ((max - row.cheapestInput) / max) * 100;
+}
+
+/** Same measurement on OUTPUT price. Single dimension, never blended with input. */
+function outputHostSpread(row: CatalogRow): number | null {
+  const serving = servingHosts(row);
+  if (serving.length < 2 || row.cheapestOutput === null || row.cheapestOutput <= 0) return null;
+  const max = Math.max(...serving.map((h) => h.output));
+  if (max <= 0) return null;
+  return ((max - row.cheapestOutput) / max) * 100;
 }
 
 function ModelsPage() {
