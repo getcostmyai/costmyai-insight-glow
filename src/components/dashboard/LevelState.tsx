@@ -228,6 +228,7 @@ export function HeroUpsell({
   period,
   what,
   unlocked,
+  refusals,
 }: {
   to: string;
   requiredPlan: PlanTier;
@@ -236,6 +237,12 @@ export function HeroUpsell({
   period: string;
   what: string;
   unlocked: boolean;
+  /**
+   * Routes the benchmark evidence did not support. Shown on the locked state
+   * so the free-tier ceiling is named plainly: the refusal is part of the
+   * value, not an empty state.
+   */
+  refusals?: number;
 }) {
   const meta = PLAN_META[requiredPlan];
   if (count === 0 && saving === 0) return null;
@@ -263,6 +270,9 @@ export function HeroUpsell({
           {unlocked
             ? "Open the level to see the evidence."
             : `${meta.label} shows each one in full.`}
+          {!unlocked && (refusals ?? 0) > 0
+            ? ` ${refusals} cheaper route${refusals === 1 ? "" : "s"} stay${refusals === 1 ? "s" : ""} uncertified because the benchmark evidence does not support the switch yet, and the refusal is shown next to the ones that pass.`
+            : ""}
         </p>
       </div>
       <span className="relative inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">

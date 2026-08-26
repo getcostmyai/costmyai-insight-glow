@@ -177,6 +177,7 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
         period={activeRange.long}
         what="workload"
         unlocked={certify.unlocked}
+        refusals={data.stats.qualityRefusedMeasured ?? data.stats.qualityRefused}
       />
 
       <UsageSection ctl={ctl} />

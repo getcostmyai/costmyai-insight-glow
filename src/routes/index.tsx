@@ -34,9 +34,9 @@ export const Route = createFileRoute("/")({
     const homepageFaqItems = HOMEPAGE_FAQ_IDS.map((id) => findFaqItem(id)).filter(
       (i): i is NonNullable<typeof i> => Boolean(i),
     );
-    const title = "CostMyAI — stop overpaying for AI.";
+    const title = "CostMyAI — You're overpaying for AI. We prove it in minutes.";
     const description =
-      "You're likely overspending on AI. We prove it. You save. You grow.";
+      "No estimates, no guesses. We measure your real usage, find the cheaper route for each workload, and prove it with independent benchmarks for quality and price.";
     return {
       meta: [
         { title },
@@ -73,6 +73,7 @@ function HomePage() {
     <MarketingShell>
       <Hero stats={stats} />
       <ProviderMarquee stats={stats} />
+      <Spine />
 
       <HowItWorks />
       <StillMoving stats={stats} />
@@ -110,7 +111,8 @@ function Hero({ stats }: { stats: MarketingStats }) {
 
       <div className="relative mx-auto max-w-4xl px-5 pb-14 pt-16 text-center sm:px-8 sm:pb-16 sm:pt-24">
         <Reveal as="h1" className="text-[3.1rem] font-semibold leading-[0.98] tracking-[-0.045em] sm:text-[5rem]">
-          Stop overpaying <span className="text-gradient-brand-wide">for AI.</span>
+          You're overpaying for AI.{" "}
+          <span className="text-gradient-brand-wide">We'll prove it in minutes.</span>
         </Reveal>
 
         <Reveal
@@ -118,14 +120,16 @@ function Hero({ stats }: { stats: MarketingStats }) {
           as="p"
           className="mx-auto mt-5 max-w-2xl text-lg leading-snug sm:text-xl sm:leading-relaxed"
         >
-          <span className="text-foreground">You're likely overspending on AI.</span>
-          <br />
-          <span className="text-muted-foreground">We prove it. You save. You grow.</span>
+          <span className="text-foreground">No estimates, no guesses.</span>{" "}
+          <span className="text-muted-foreground">
+            We measure your real usage, find the cheaper route for each workload, and prove it
+            with independent benchmarks for both quality and price.
+          </span>
         </Reveal>
 
         <Reveal delay={200} className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <a href="#estimator" className="btn-gradient px-6 py-3 text-[15px]">
-            See if you are overpaying
+            Prove it on my numbers
             <ArrowRight className="h-4 w-4" />
           </a>
           <a
@@ -180,23 +184,57 @@ function Hero({ stats }: { stats: MarketingStats }) {
   );
 }
 
+/* ---------------------------- 01b · the spine ---------------------------- */
+
+/**
+ * The one-glance mental model: five beats, one line each, on a hairline rail.
+ * Every section below this strip is support for one of these beats.
+ */
+const SPINE_BEATS = [
+  { n: "01", title: "Measure", line: "Every workload priced from your real usage." },
+  { n: "02", title: "Compare", line: "The same model cheaper elsewhere, named." },
+  { n: "03", title: "Certify", line: "Quality and price proven on independent benchmarks." },
+  { n: "04", title: "Switch", line: "Certified routes applied, reversibly." },
+  { n: "05", title: "Govern", line: "Every decision re-checked as prices move." },
+] as const;
+
+function Spine() {
+  return (
+    <section aria-label="How the five levels fit together" className="border-b border-border bg-background">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
+        <Reveal className="grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
+          {SPINE_BEATS.map((b) => (
+            <div key={b.n}>
+              <p className="num text-sm text-gradient-brand">{b.n}</p>
+              <p className="mt-1.5 text-base font-semibold tracking-[-0.02em] sm:text-lg">
+                {b.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{b.line}</p>
+            </div>
+          ))}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ----------------------------- 02 · forecast ----------------------------- */
 
 const FORECAST_PRINCIPLES = [
   {
     n: "01",
     title: "What you already spent is never guessed",
-    body: "Month-to-date is read from real usage, so the part of the month that already happened can never move.",
+    body: "Month-to-date comes from real usage, so the part of the month that already happened never moves.",
   },
   {
     n: "02",
     title: "A spike is not a trend",
-    body: "Growth is carried forward, but damped and capped, so one loud Tuesday cannot compound into a month-end number that was never going to happen.",
+    body: "Growth is carried forward damped and capped, so one loud week cannot become the month.",
   },
   {
     n: "03",
     title: "A range when a number would be dishonest",
-    body: "When your usage is too dispersed to support a single figure, you get a range instead of false precision.",
+    body: "When usage is too dispersed for a single figure, you get a range instead.",
   },
 ];
 
@@ -432,6 +470,16 @@ function HowItWorks() {
               </li>
             ))}
           </ol>
+        </Reveal>
+
+        <Reveal delay={100} className="mx-auto mt-8 max-w-4xl text-center">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            The four levels are a standard, not a feature list.{" "}
+            <Link to="/standard" className="font-medium text-primary hover:underline">
+              Read The CostMyAI Standard
+            </Link>
+            .
+          </p>
         </Reveal>
 
         <Reveal delay={120} className="mt-14">
