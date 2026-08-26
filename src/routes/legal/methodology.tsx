@@ -1,29 +1,49 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
+import { marketingStatsQuery } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/legal/methodology")({
   head: () => ({
     meta: [
-      { title: "Methodology — how CostMyAI proves a switch" },
+      { title: "Methodology — what counts as a price move, and how a switch is proven" },
       {
         name: "description",
         content:
-          "The cost function, the quality bar, the measurement margin, the tie-break rule and the refusal states behind every CostMyAI recommendation.",
+          "The exact definition of a market price move, plus the cost function, the quality bar, the measurement margin, the tie-break rule and the refusal states behind every CostMyAI recommendation.",
       },
-      { property: "og:title", content: "Methodology — how CostMyAI proves a switch" },
+      {
+        property: "og:title",
+        content: "Methodology — what counts as a price move, and how a switch is proven",
+      },
       {
         property: "og:description",
         content:
-          "One cost function, third-party benchmarks, a measured equivalence margin, and a deterministic tie-break. Written down so it can be checked.",
+          "One published definition of a price move, one cost function, third-party benchmarks, a measured equivalence margin, and a deterministic tie-break. Written down so it can be checked.",
       },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://www.costmyai.com/legal/methodology" },
     ],
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/legal/methodology" }],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: MethodologyPage,
 });
+
+function formatTrackingSince(iso: string | null): string {
+  if (!iso) return "our first recorded observation";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "our first recorded observation";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
 
 const SECTIONS = [
   {
