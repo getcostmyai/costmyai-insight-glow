@@ -369,7 +369,7 @@ function TrustBeat() {
           <h2 className="mt-4 text-2xl font-semibold leading-snug tracking-[-0.03em] sm:text-3xl">
             Why would you give an AI optimization company access to your AI traffic?
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-relaxed text-foreground">
             <span className="font-semibold text-foreground">You don't.</span> No prompts leave your
             environment. No completions leave your environment. No provider keys leave your
             environment. Nothing to migrate. CostMyAI sees the economics of your usage — never its
