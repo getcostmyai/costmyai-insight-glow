@@ -27,7 +27,7 @@ import { FAQ_ITEMS, HOMEPAGE_FAQ_IDS, findFaqItem } from "@/lib/faq/questions";
 import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
-import { HOW_STEPS } from "@/lib/how-it-works";
+
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -202,7 +202,10 @@ function Spine() {
   return (
     <section aria-label="How the five levels fit together" className="border-b border-border bg-background">
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
-        <Reveal className="grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          The five levels
+        </p>
+        <Reveal className="mt-6 grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
           {SPINE_BEATS.map((b) => (
             <div key={b.n}>
               <p className="num text-sm text-gradient-brand">{b.n}</p>
@@ -448,8 +451,10 @@ function Architecture() {
 /* --------------------------- 06 · how it works --------------------------- */
 
 /**
- * Teaser only. The full four-step explanation lives on /how-it-works and reads
- * from src/lib/how-it-works.ts — this section must never grow a second copy.
+ * Teaser only. The full four-step mechanic (Connect / Map / Verdict / Switch)
+ * lives on /how-it-works and reads from src/lib/how-it-works.ts — this section
+ * must never grow a second copy. On the homepage the numbered story is the
+ * five-level spine above; this section answers "what do I have to do?".
  */
 function HowItWorks() {
   return (
@@ -461,20 +466,18 @@ function HowItWorks() {
           lead="Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. Your provider keys stay where they are."
         />
 
-        <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
-          <ol className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
-            {HOW_STEPS.map((s) => (
-              <li key={s.n} className="bg-background px-5 py-7">
-                <span className="num text-sm text-gradient-brand">{s.n}</span>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.02em]">{s.title}</p>
-              </li>
-            ))}
-          </ol>
+        <Reveal delay={80} className="mx-auto mt-10 max-w-3xl text-center">
+          <p className="text-base leading-relaxed text-muted-foreground">
+            That is the whole setup. Point your application's SDK base URL at the
+            Verification Engine that runs in your own environment — your code, your
+            provider keys, your contracts, nothing moves to us — and governed
+            decisions on every workload start flowing.
+          </p>
         </Reveal>
 
         <Reveal delay={100} className="mx-auto mt-8 max-w-4xl text-center">
           <p className="text-sm leading-relaxed text-muted-foreground">
-            The four levels are a standard, not a feature list.{" "}
+            The levels are a standard, not a feature list.{" "}
             <Link to="/standard" className="font-medium text-primary hover:underline">
               Read The CostMyAI Standard
             </Link>
