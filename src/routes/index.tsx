@@ -659,6 +659,11 @@ function Neutrality() {
               Financial Governance requires independence. We have no provider affiliations, no
               sponsored placements, and no incentive to recommend any specific model.
             </p>
+            <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed opacity-80">
+              CostMyAI has no economic reason to prefer OpenAI, Anthropic, Google, Azure, AWS,
+              Together, Fireworks, or any other provider — we are paid by you, not by where the
+              workload lands.
+            </p>
           </div>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
