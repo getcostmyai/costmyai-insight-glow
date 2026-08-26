@@ -492,7 +492,7 @@ function ModelRow({ row, index }: { row: CatalogRow; index: number }) {
                 {cheapest?.host_label}
                 {spread !== null && spread >= 1 ? (
                   <span className="num ml-2 rounded-full bg-saving-soft px-2 py-0.5 font-semibold text-saving">
-                    −{Math.round(spread)}% vs dearest
+                    −{Math.round(spread)}% cheaper on input price
                   </span>
                 ) : null}
               </p>
