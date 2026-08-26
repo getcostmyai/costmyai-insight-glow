@@ -30,6 +30,7 @@ export const Route = createFileRoute("/guides/ai-cost-management")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: URL }],
+    scripts: [{ type: "application/ld+json", children: faqJsonLd() }],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
   component: AiCostManagementGuide,
@@ -70,8 +71,6 @@ function AiCostManagementGuide() {
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd() }} />
-
       <div className="flex flex-col">
         <Hero moves={stats.priceChangesTracked} />
         <Drivers />
@@ -251,9 +250,9 @@ function Numbers({
           What we track so you do not have to
         </Reveal>
         <div className="mt-12 grid gap-10 border-y border-border py-10 sm:grid-cols-3">
-          <Stat label="Models priced" value={models.toLocaleString()} />
-          <Stat label="Providers with verified live prices" value={providers.toLocaleString()} />
-          <Stat label="Price moves caught this month" value={moves.toLocaleString()} accent />
+          <Stat label="Models priced" value={formatInteger(models)} />
+          <Stat label="Providers with verified live prices" value={formatInteger(providers)} />
+          <Stat label="Price moves caught this month" value={formatInteger(moves)} accent />
         </div>
         <p className="mt-8 max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Every rate is a published list price we hold a verified record for. Sourcing rules are in
@@ -274,6 +273,10 @@ function Numbers({
       </div>
     </section>
   );
+}
+
+function formatInteger(value: number) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
