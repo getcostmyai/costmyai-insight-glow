@@ -228,7 +228,7 @@ const READ_ITEMS = [
   },
   {
     title: "The host spread is the arbitrage",
-    body: "When one model is sold by several providers at different rates, the gap between the cheapest and the dearest is money already on the table. It is the number the engine acts on, and the only one we headline.",
+    body: "When one model is sold by several providers at different rates, the share of the dearest host's price that the cheapest one removes is money already on the table. We report it separately for input price and output price, never blended into one number, because a workload heavy on output does not save what an input-heavy one saves.",
   },
   {
     title: "The quality index is the bar",
