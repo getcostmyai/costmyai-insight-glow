@@ -56,7 +56,7 @@ function PrivacyPage() {
           aggregate, provider neutral records of model usage, spend, and switching activity, pushed
           from your own environment via the Verification Engine. Model outputs are never sent to
           us, and prompt content is only ever involved in the one case described immediately below.
-          Which connector image you run decides that, and the quickstart now hands new customers
+          Which Verification Engine image you run decides that, and the quickstart now hands new customers
           the <code>v3</code> image by default, so this is the posture you get unless you choose
           another tag. On the <code>v1</code> image, the task label is derived from the request
           path and model name alone and no request body is read. On the <code>v2</code> image,
@@ -69,7 +69,7 @@ function PrivacyPage() {
           <strong className="text-foreground">
             The one exception, on the v3 image — and v3 is what a new install runs:
           </strong>{" "}
-          the <code>v3</code> connector image adds remote classification, on by default in that tag
+          the <code>v3</code> Verification Engine image adds remote classification, on by default in that tag
           only. When the in-container rules cannot place a request, the extracted request text is
           sent to us and labelled by a model. That call runs after your response has already been
           returned, so it never delays your traffic. The text is used for that single labelling

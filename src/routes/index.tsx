@@ -377,7 +377,7 @@ function HowItWorks() {
         <SectionHead
           eyebrow="How It Works"
           title="Connect once. Governed decisions on every workload."
-          lead="Run a small connector in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. Your provider keys stay where they are."
+          lead="Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. Your provider keys stay where they are."
         />
 
         <Reveal delay={80} className="mx-auto mt-14 max-w-4xl">
