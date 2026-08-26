@@ -32,7 +32,7 @@ export const Route = createFileRoute("/guides/ai-cost-management")({
     links: [{ rel: "canonical", href: URL }],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
-  component: AiCostManagementGuide;
+  component: AiCostManagementGuide,
 });
 
 const FAQS = [
