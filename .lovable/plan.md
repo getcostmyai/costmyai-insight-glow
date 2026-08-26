@@ -10,43 +10,47 @@ The H1 already does two jobs: it names the problem (overpaying) and promises the
 
 ### Subline options for H1 D
 
-All options keep the CTA "Prove it on my numbers" and the micro-line "Metadata only. Never your prompt content."
+All options keep the CTA "Prove it on my numbers" and the micro-line "Metadata only. Never your prompt content." They all start with the punchy negation from option C and replace the weak standalone word "proof" with explicit **quality + price proof**.
 
-#### A. Market + benchmark + only-when-proof-holds
+#### A. Full loop, both proofs stated
 
-> We price your real workloads against the live market, run cheaper candidates through an independent benchmark, and only recommend the switch when the proof holds.
+> No estimates, no guesses. We measure your actual usage, price every workload against the live market, and run cheaper options through independent benchmarks. Only when the quality proof and the price proof both hold do we recommend the switch.
 
-The clearest explanation of the mechanism. It tells the visitor exactly what happens and why they can trust it.
+Most complete. Two short sentences, no jargon, and the visitor sees exactly what is being proven.
 
-#### B. Where, what, and the proof
+#### B. One-sentence punch
 
-> See exactly where your AI spend is leaking, which cheaper option matches your quality, and the proof that makes the switch safe.
+> No estimates, no guesses. We measure your real usage, find the cheaper route for each workload, and prove it with independent benchmarks for both quality and price.
 
-More desire-creating. "Leaking" turns the problem into found money, while the second half restores the safety promise.
+The best balance of punch and clarity. It explains the loop in a single breath.
 
-#### C. No estimates, no guesses
+#### C. Certify tie-in
 
-> No estimates, no guesses. We measure your actual usage, find the cheaper route for each workload, and prove the saving before you switch.
+> No estimates, no guesses. We price your workloads against the live market, run cheaper candidates through independent benchmarks, and certify the switch only when quality and price both pass.
 
-Punchy and direct. The negation works because the H1 already made a positive promise; this line explains the discipline behind it.
+Ties the subline to the Certify level without naming it. "Certify" is stronger than "proof" on its own.
 
-#### D. Same model, smaller model, both proven
+#### D. Bars, not proofs
 
-> The same model is often cheaper somewhere else, and a smaller model is often just as good. We prove which is true for your workloads, then switch what passes.
+> No estimates, no guesses. We compare every workload to the live market, prove the saving with independent benchmarks, and only switch what clears both the quality bar and the price bar.
 
-Ties directly to the four levels (Compare / Certify / Rightsize / Govern) without using the words. Good if you want the subline to preview the product structure.
+Avoids repeating "proof" and makes the two gates feel like a filter.
 
-#### E. The trust-first version
+#### E. Shortest
 
-> Point us at your usage. We show the cheaper route for every workload and the independent benchmark behind it. No prompts leave your environment.
+> No estimates, no guesses. We find the cheaper route for every workload and prove it holds quality at a lower price before the switch.
 
-Keeps the original D subline's trust beat but tightens the promise and moves the privacy claim into the same sentence.
+Shortest and most direct. Good if the hero needs to stay visually light.
+
+### Note on "benchmark" vs "benchmarks"
+
+Use **benchmarks** plural. The verification engine draws from multiple independent benchmark sources, so the subline should reflect that.
 
 ### Recommendation
 
-Use **A**. It is the only option that explains the full loop (price, benchmark, recommend only when proof holds) in one sentence, with no category jargon and no negative framing. It makes the H1 credible instead of just catchy.
+Use **B**. It keeps the punchy start you liked, replaces the weak "proof" with explicit "quality and price", and still explains the full mechanism in one sentence. It is plain enough for a founder and credible enough for an enterprise reviewer.
 
-If you want more punch, use **B**. It sacrifices a little mechanism detail for desire, but still closes with the safety word "proof".
+If you want to lean harder into the product's Certify language, use **C** instead.
 
 The micro-line "Metadata only. Never your prompt content." and the three live counters stay as they are.
 
