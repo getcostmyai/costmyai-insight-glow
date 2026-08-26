@@ -184,23 +184,57 @@ function Hero({ stats }: { stats: MarketingStats }) {
   );
 }
 
+/* ---------------------------- 01b · the spine ---------------------------- */
+
+/**
+ * The one-glance mental model: five beats, one line each, on a hairline rail.
+ * Every section below this strip is support for one of these beats.
+ */
+const SPINE_BEATS = [
+  { n: "01", title: "Measure", line: "Every workload priced from your real usage." },
+  { n: "02", title: "Compare", line: "The same model cheaper elsewhere, named." },
+  { n: "03", title: "Certify", line: "Quality and price proven on independent benchmarks." },
+  { n: "04", title: "Switch", line: "Certified routes applied, reversibly." },
+  { n: "05", title: "Govern", line: "Every decision re-checked as prices move." },
+] as const;
+
+function Spine() {
+  return (
+    <section aria-label="How the five levels fit together" className="border-b border-border bg-background">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
+        <Reveal className="grid gap-6 border-t border-border pt-8 sm:grid-cols-5 sm:gap-5">
+          {SPINE_BEATS.map((b) => (
+            <div key={b.n}>
+              <p className="num text-sm text-gradient-brand">{b.n}</p>
+              <p className="mt-1.5 text-base font-semibold tracking-[-0.02em] sm:text-lg">
+                {b.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{b.line}</p>
+            </div>
+          ))}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ----------------------------- 02 · forecast ----------------------------- */
 
 const FORECAST_PRINCIPLES = [
   {
     n: "01",
     title: "What you already spent is never guessed",
-    body: "Month-to-date is read from real usage, so the part of the month that already happened can never move.",
+    body: "Month-to-date comes from real usage, so the part of the month that already happened never moves.",
   },
   {
     n: "02",
     title: "A spike is not a trend",
-    body: "Growth is carried forward, but damped and capped, so one loud Tuesday cannot compound into a month-end number that was never going to happen.",
+    body: "Growth is carried forward damped and capped, so one loud week cannot become the month.",
   },
   {
     n: "03",
     title: "A range when a number would be dishonest",
-    body: "When your usage is too dispersed to support a single figure, you get a range instead of false precision.",
+    body: "When usage is too dispersed for a single figure, you get a range instead.",
   },
 ];
 

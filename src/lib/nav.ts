@@ -16,6 +16,7 @@ export type NavItem = {
     | "/how-it-works"
     | "/models"
     | "/intelligence"
+    | "/standard"
     | "/partners"
     | "/blog"
     | "/pricing";
@@ -30,6 +31,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: "/how-it-works", label: "How it works", marketingOnly: true },
   { to: "/models", label: "Models" },
   { to: "/intelligence", label: "Intelligence" },
+  { to: "/standard", label: "The Standard", marketingOnly: true },
   { to: "/partners", label: "Become a Partner" },
   { to: "/blog", label: "Blog" },
   { to: "/pricing", label: "Pricing" },
