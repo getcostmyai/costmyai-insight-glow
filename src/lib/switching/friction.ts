@@ -103,6 +103,51 @@ function apiDistance(fromHost: string, toHost: string): FrictionBadge["apiDistan
   return "different-shape";
 }
 
+function confidenceChecks(input: FrictionInput): ParityCheck[] {
+  const checks: ParityCheck[] = [];
+  const sides: Array<{ label: string; host: string; confidence: ShapeConfidence | null }> = [
+    {
+      label: "Incumbent envelope confidence",
+      host: input.fromHost,
+      confidence: input.fromConfidence ?? null,
+    },
+    {
+      label: "Candidate envelope confidence",
+      host: input.toHost,
+      confidence: input.toConfidence ?? null,
+    },
+  ];
+
+  const dedupedSides =
+    sides[0].host === sides[1].host && sides[0].confidence === sides[1].confidence
+      ? [{ ...sides[0], label: "Envelope confidence" }]
+      : sides;
+
+  for (const side of dedupedSides) {
+    if (side.confidence === "assumed") {
+      checks.push({
+        label: side.label,
+        status: "unknown",
+        detail: `The response envelope shape for ${side.host} has not been confirmed by a real metered call — it is assumed, not verified. Whether this switch is structurally as simple as it looks has not been confirmed.`,
+      });
+    } else if (side.confidence === "documented" || side.confidence === "verified") {
+      checks.push({
+        label: side.label,
+        status: "ok",
+        detail:
+          side.confidence === "verified"
+            ? `The response envelope shape for ${side.host} has been confirmed by a real metered call.`
+            : `The response envelope shape for ${side.host} is documented by the vendor but not yet confirmed by a live metered call.`,
+      });
+    }
+    // confidence === null: host has no shape entry at all; apiDistance()
+    // already returns "unknown" for this pair and forces tier "high" on its
+    // own, so a second warning here would be redundant — emit nothing.
+  }
+
+  return checks;
+}
+
 function parityChecks(input: FrictionInput): ParityCheck[] {
   const checks: ParityCheck[] = [];
   const { from, to, signals, sameModel } = input;
@@ -170,7 +215,10 @@ function parityChecks(input: FrictionInput): ParityCheck[] {
     });
   }
 
-  // 4. Things the meter genuinely cannot see. Said plainly, once.
+  // 4. Whether each side's envelope shape was ever actually confirmed.
+  checks.push(...confidenceChecks(input));
+
+  // 5. Things the meter genuinely cannot see. Said plainly, once.
   checks.push({
     label: "Tool calling & prompt caching",
     status: "unobservable",
