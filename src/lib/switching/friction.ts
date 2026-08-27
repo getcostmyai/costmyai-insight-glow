@@ -25,7 +25,7 @@
  *     rather than silently passed or silently failed.
  */
 
-import { shapeForHost, type KnownShape } from "@/lib/ingest/provider-shapes";
+import { shapeForHost, type KnownShape, type ShapeConfidence } from "@/lib/ingest/provider-shapes";
 
 export type FrictionTier = "low" | "moderate" | "high";
 
@@ -79,6 +79,9 @@ export interface FrictionInput {
   signals: WorkloadSignals | null;
   from: ModelCapabilities | null;
   to: ModelCapabilities | null;
+  /** Mapper confidence for each side's response-envelope shape. */
+  fromConfidence?: ShapeConfidence | null;
+  toConfidence?: ShapeConfidence | null;
 }
 
 const TIER_LABEL: Record<FrictionTier, string> = {
