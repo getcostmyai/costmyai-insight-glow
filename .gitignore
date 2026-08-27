@@ -16,6 +16,13 @@ dist-ssr
 .nitro
 *.local
 
+# Environment files — values are supplied by Lovable Cloud's own env/secrets
+# system at build/runtime, not read from these files. Kept locally for
+# reference only; never re-add to git tracking.
+.env
+.env.development
+.env.production
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
