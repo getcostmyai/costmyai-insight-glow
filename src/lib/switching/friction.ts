@@ -25,7 +25,7 @@
  *     rather than silently passed or silently failed.
  */
 
-import { shapeForHost, type KnownShape } from "@/lib/ingest/provider-shapes";
+import { shapeForHost, type KnownShape, type ShapeConfidence } from "@/lib/ingest/provider-shapes";
 
 export type FrictionTier = "low" | "moderate" | "high";
 
@@ -79,6 +79,9 @@ export interface FrictionInput {
   signals: WorkloadSignals | null;
   from: ModelCapabilities | null;
   to: ModelCapabilities | null;
+  /** Mapper confidence for each side's response-envelope shape. */
+  fromConfidence?: ShapeConfidence | null;
+  toConfidence?: ShapeConfidence | null;
 }
 
 const TIER_LABEL: Record<FrictionTier, string> = {
@@ -98,6 +101,51 @@ function apiDistance(fromHost: string, toHost: string): FrictionBadge["apiDistan
   // the incumbent's own shape is the one that endpoint speaks (OpenAI).
   if (b.openAiCompatibleAlso && (a.shape as KnownShape) === "openai") return "compatible-endpoint";
   return "different-shape";
+}
+
+function confidenceChecks(input: FrictionInput): ParityCheck[] {
+  const checks: ParityCheck[] = [];
+  const sides: Array<{ label: string; host: string; confidence: ShapeConfidence | null }> = [
+    {
+      label: "Incumbent envelope confidence",
+      host: input.fromHost,
+      confidence: input.fromConfidence ?? null,
+    },
+    {
+      label: "Candidate envelope confidence",
+      host: input.toHost,
+      confidence: input.toConfidence ?? null,
+    },
+  ];
+
+  const dedupedSides =
+    sides[0].host === sides[1].host && sides[0].confidence === sides[1].confidence
+      ? [{ ...sides[0], label: "Envelope confidence" }]
+      : sides;
+
+  for (const side of dedupedSides) {
+    if (side.confidence === "assumed") {
+      checks.push({
+        label: side.label,
+        status: "unknown",
+        detail: `The response envelope shape for ${side.host} has not been confirmed by a real metered call — it is assumed, not verified. Whether this switch is structurally as simple as it looks has not been confirmed.`,
+      });
+    } else if (side.confidence === "documented" || side.confidence === "verified") {
+      checks.push({
+        label: side.label,
+        status: "ok",
+        detail:
+          side.confidence === "verified"
+            ? `The response envelope shape for ${side.host} has been confirmed by a real metered call.`
+            : `The response envelope shape for ${side.host} is documented by the vendor but not yet confirmed by a live metered call.`,
+      });
+    }
+    // confidence === null: host has no shape entry at all; apiDistance()
+    // already returns "unknown" for this pair and forces tier "high" on its
+    // own, so a second warning here would be redundant — emit nothing.
+  }
+
+  return checks;
 }
 
 function parityChecks(input: FrictionInput): ParityCheck[] {
@@ -167,7 +215,10 @@ function parityChecks(input: FrictionInput): ParityCheck[] {
     });
   }
 
-  // 4. Things the meter genuinely cannot see. Said plainly, once.
+  // 4. Whether each side's envelope shape was ever actually confirmed.
+  checks.push(...confidenceChecks(input));
+
+  // 5. Things the meter genuinely cannot see. Said plainly, once.
   checks.push({
     label: "Tool calling & prompt caching",
     status: "unobservable",

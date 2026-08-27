@@ -43,6 +43,14 @@ export function FrictionTierBadge({ friction }: { friction?: Badge }) {
         {friction.label}
       </span>
 
+      {friction.parity.some((c) => c.status === "unknown" && /envelope confidence/i.test(c.label)) && (
+        <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          <CircleHelp className="size-3" />
+          Assumed
+        </span>
+      )}
+
+
       <span className="pointer-events-none absolute top-full left-0 z-20 mt-2 hidden w-80 rounded-xl border border-border bg-background p-3 text-left shadow-[var(--shadow-float)] group-hover/friction:block">
         <span className="block text-xs leading-relaxed text-foreground">{friction.summary}</span>
         <span className="mt-2 block space-y-1">

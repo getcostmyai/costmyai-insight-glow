@@ -774,6 +774,8 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
         signals: workloadPeaks.get(`${o.fromModel}|${o.fromHost}|${o.taskHint}`) ?? null,
         from: capabilityByModel.get(o.fromModel) ?? null,
         to: capabilityByModel.get(o.toModel) ?? null,
+        fromConfidence: shapeForHost(o.fromHost)?.confidence ?? null,
+        toConfidence: shapeForHost(o.toHost)?.confidence ?? null,
       }),
     }));
   const hostArbitrageRows = withFriction(hostArbitrage, true);
