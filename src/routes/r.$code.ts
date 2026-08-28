@@ -1,11 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import {
-  isPlausibleCode,
-  isSecureRequest,
-  readReferralCookie,
-  serializeReferralCookie,
-} from "@/lib/partners/referral-cookie";
+import { handleReferralRedirect } from "@/lib/partners/referral-redirect";
 
 /**
  * /r/CODE — the link a partner actually shares.
@@ -15,39 +10,15 @@ import {
  * are indistinguishable from the outside, so the endpoint cannot be used to
  * enumerate partners. Attribution itself happens later, at workspace creation,
  * through the same attach_referral path a manually typed code uses.
+ *
+ * src/routes/de.r.$code.ts is the German-locale counterpart; both call the same
+ * shared handler in @/lib/partners/referral-redirect so they cannot drift apart.
  */
 export const Route = createFileRoute("/r/$code")({
   server: {
     handlers: {
       GET: async ({ request, params }) => {
-        const home = new URL("/", request.url).toString();
-        const headers = new Headers({ Location: home, "Cache-Control": "no-store" });
-
-        const code = (params.code ?? "").trim();
-
-        // First touch wins: an existing cookie is never overwritten.
-        const existing = readReferralCookie(request.headers.get("cookie"));
-
-        if (!existing && isPlausibleCode(code)) {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          // Same matching rule as attach_referral: trimmed, case-insensitive,
-          // active partners only.
-          const { data: partner } = await supabaseAdmin
-            .from("partners")
-            .select("referral_code")
-            .ilike("referral_code", code)
-            .eq("status", "active")
-            .maybeSingle();
-
-          if (partner?.referral_code) {
-            headers.append(
-              "Set-Cookie",
-              serializeReferralCookie(partner.referral_code, isSecureRequest(request.url)),
-            );
-          }
-        }
-
-        return new Response(null, { status: 302, headers });
+        return handleReferralRedirect(request, params.code);
       },
     },
   },
