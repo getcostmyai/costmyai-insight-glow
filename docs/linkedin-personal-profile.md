@@ -2,7 +2,7 @@
 
 Stripped of the phrases that read as AI slop. Short sentences. Spoken, not composed.
 No invented numbers, no testimonials, no em-dashes. Everything here already holds on
-the live site: live pricing across 300+ models and 45+ providers, benchmark-checked
+the live site: live pricing across 408+ models and 72+ providers, benchmark-checked
 savings, Compare free.
 
 ---
@@ -53,7 +53,7 @@ Somewhere in there I also became a certified organic master beekeeper in the Car
 
 What runs through all of it is a dislike of numbers nobody can defend. A saving you cannot prove is not a saving. A performance claim you cannot measure is marketing.
 
-So CostMyAI works the way I would want it to work if I were the buyer. We price your workloads against live rates across 307+ models and 50+ providers. We test the cheaper candidate against a benchmark that can still tell models apart. Only then do we move traffic. If the benchmark is saturated, we refuse to certify rather than hand you a number that means nothing. No provider pays us for placement. We never hold your keys.
+So CostMyAI works the way I would want it to work if I were the buyer. We price your workloads against live rates across 408+ models and 72+ providers. We test the cheaper candidate against a benchmark that can still tell models apart. Only then do we move traffic. If the benchmark is saturated, we refuse to certify rather than hand you a number that means nothing. No provider pays us for placement. We never hold your keys.
 
 If you do not know what share of your AI bill is avoidable, I will show you. Compare is free.
 
