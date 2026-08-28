@@ -22,8 +22,28 @@ import { shouldFirePersisted } from "@/lib/telemetry/fire-once";
 
 
 
+// Matches /r/CODE with any (or no) prefix — e.g. /r/abc, /de/r/abc,
+// /fr/r/abc — anything that looks like a partner referral link but matched
+// no route. This is a pure logging signal: it never redirects, never sets a
+// cookie, just makes an otherwise-silent 404 visible.
+const UNRESOLVED_REFERRAL_LINK_PATTERN = /\/r\/[^/]+\/?$/i;
+
 function NotFoundComponent() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    if (UNRESOLVED_REFERRAL_LINK_PATTERN.test(pathname)) {
+      console.error(
+        `Unresolved referral link: 404 on "${pathname}". This path is shaped like a partner ` +
+          `referral link (/r/CODE or /<prefix>/r/CODE) but matched no route, so no referral ` +
+          `cookie was set. If this is a new locale prefix, add a dedicated route for it ` +
+          `(see src/routes/de.r.$code.ts for the pattern).`,
+      );
+    }
+  }, [pathname]);
+
   return (
+
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
