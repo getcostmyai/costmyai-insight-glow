@@ -57,6 +57,7 @@ import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
 import { Route as IntelligenceNotesSlugRouteImport } from './routes/intelligence.notes.$slug'
+import { Route as DeRCodeRouteImport } from './routes/de.r.$code'
 import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
 import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
@@ -335,6 +336,11 @@ const IntelligenceNotesSlugRoute = IntelligenceNotesSlugRouteImport.update({
   path: '/intelligence/notes/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeRCodeRoute = DeRCodeRouteImport.update({
+  id: '/de/r/$code',
+  path: '/de/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBuildInfoRoute = ApiPublicBuildInfoRouteImport.update({
   id: '/api/public/build-info',
   path: '/api/public/build-info',
@@ -595,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/de/r/$code': typeof DeRCodeRoute
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -678,6 +685,7 @@ export interface FileRoutesByTo {
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/de/r/$code': typeof DeRCodeRoute
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -766,6 +774,7 @@ export interface FileRoutesById {
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
+  '/de/r/$code': typeof DeRCodeRoute
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -854,6 +863,7 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/api/public/build-info'
+    | '/de/r/$code'
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/admin/'
@@ -937,6 +947,7 @@ export interface FileRouteTypes {
     | '/workspace/govern'
     | '/workspace/rightsize'
     | '/api/public/build-info'
+    | '/de/r/$code'
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/admin'
@@ -1024,6 +1035,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
     | '/api/public/build-info'
+    | '/de/r/$code'
     | '/intelligence/notes/$slug'
     | '/partner_/verify/$code'
     | '/_authenticated/admin/'
@@ -1088,6 +1100,7 @@ export interface RootRouteChildren {
   ApiIndexRoute: typeof ApiIndexRoute
   IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
+  DeRCodeRoute: typeof DeRCodeRoute
   IntelligenceNotesSlugRoute: typeof IntelligenceNotesSlugRoute
   PartnerVerifyCodeRoute: typeof PartnerVerifyCodeRoute
   IntelligenceNotesIndexRoute: typeof IntelligenceNotesIndexRoute
@@ -1454,6 +1467,13 @@ declare module '@tanstack/react-router' {
       path: '/intelligence/notes/$slug'
       fullPath: '/intelligence/notes/$slug'
       preLoaderRoute: typeof IntelligenceNotesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/de/r/$code': {
+      id: '/de/r/$code'
+      path: '/de/r/$code'
+      fullPath: '/de/r/$code'
+      preLoaderRoute: typeof DeRCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/build-info': {
@@ -1840,6 +1860,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIndexRoute: ApiIndexRoute,
   IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
+  DeRCodeRoute: DeRCodeRoute,
   IntelligenceNotesSlugRoute: IntelligenceNotesSlugRoute,
   PartnerVerifyCodeRoute: PartnerVerifyCodeRoute,
   IntelligenceNotesIndexRoute: IntelligenceNotesIndexRoute,
