@@ -14,6 +14,7 @@ import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNo
 import { FrictionTierBadge } from "@/components/dashboard/FrictionTierBadge";
 import { SupersededNote } from "@/components/dashboard/SupersededNote";
 import type { WorkloadOption } from "@/lib/dashboard/group";
+import { isHeadlineEligible, CERTIFICATION_MARGIN_CAP } from "@/lib/engine/equivalence";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
