@@ -17,7 +17,7 @@ import type {
   Recommendation,
   UsageAggregate,
 } from "./engine/types";
-import { CERTIFICATION_MARGIN_CAP } from "./engine/equivalence";
+import { isHeadlineEligible } from "./engine/equivalence";
 import { relativeAgo } from "./freshness";
 import {
   BENCHMARK_FEED,
@@ -1098,8 +1098,7 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    */
   const wl = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
     `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
-  const headlineEligible = (r: Recommendation) =>
-    r.qualityDelta !== null && r.qualityDelta >= CERTIFICATION_MARGIN_CAP;
+  const headlineEligible = isHeadlineEligible;
   const savingsTotals = aggregateSavings([
     ...result.hostArbitrage.map((r) => ({
       key: wl(r),

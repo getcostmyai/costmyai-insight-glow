@@ -1,3 +1,4 @@
+import { isHeadlineEligible } from "../engine/equivalence";
 import type { DashboardSnapshot } from "../dashboard.functions";
 
 /**
@@ -25,7 +26,8 @@ export function levelSaving(data: DashboardSnapshot, kind: MechanismKind): numbe
   const level = data.levels[kind];
   if (!level.unlocked) return level.lockedSaving;
   if (kind === "host_arbitrage") return data.hostArbitrage.reduce((s, r) => s + r.saving, 0);
-  if (kind === "quality_match") return data.qualityMatched.reduce((s, r) => s + r.saving, 0);
+  if (kind === "quality_match")
+    return data.qualityMatched.filter(isHeadlineEligible).reduce((s, r) => s + r.saving, 0);
   return data.oversized.reduce((s, o) => s + o.wasted, 0);
 }
 
