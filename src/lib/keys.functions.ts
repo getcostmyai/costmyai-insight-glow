@@ -88,6 +88,23 @@ export const createIngestToken = createServerFn({ method: "POST" })
     return { ...minted, lastUsedAt: null, revokedAt: null };
   });
 
+export const mintGatewayKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orgId: string; name?: string }) => {
+    if (!UUID.test(data?.orgId ?? "")) throw new Error("Unknown workspace");
+    const name = (data?.name ?? "").trim().slice(0, 60);
+    return { orgId: data.orgId, name };
+  })
+  .handler(async ({ data, context }): Promise<MintedTokenRow> => {
+    const { data: isAdmin, error: adminCheckError } = await context.supabase.rpc("is_platform_admin");
+    if (adminCheckError || !isAdmin) {
+      throw new Error("Forbidden: platform admin required");
+    }
+    const { mintApiKey } = await import("@/lib/ingest/keys.server");
+    const minted = await mintApiKey(data.orgId, data.name || "Gateway key", context.userId, "cgw_");
+    return { ...minted, lastUsedAt: null, revokedAt: null };
+  });
+
 export const rotateIngestToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { orgId: string; keyId: string }) => {

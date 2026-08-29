@@ -31,13 +31,24 @@ export interface MintedKey {
   createdAt: string;
 }
 
-export function generateToken(): string {
-  return `${TOKEN_PREFIX}${randomBytes(24).toString("hex")}`;
+const ALLOWED_PREFIXES = ["cma_live_", "cgw_"] as const;
+
+export function generateToken(prefix: string = TOKEN_PREFIX): string {
+  return `${prefix}${randomBytes(24).toString("hex")}`;
 }
 
-export async function mintApiKey(orgId: string, name: string, createdBy?: string): Promise<MintedKey> {
+export async function mintApiKey(
+  orgId: string,
+  name: string,
+  createdBy?: string,
+  prefix: string = TOKEN_PREFIX,
+): Promise<MintedKey> {
+  if (!ALLOWED_PREFIXES.includes(prefix as any)) {
+    throw new Error(`invalid key prefix: ${prefix}`);
+  }
+
   const db = adminClient();
-  const token = generateToken();
+  const token = generateToken(prefix);
   const { data, error } = await db
     .from("api_keys")
     .insert({

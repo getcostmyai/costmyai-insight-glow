@@ -7,6 +7,7 @@ import {
   Banknote,
   ClipboardList,
   Gauge,
+  KeyRound,
   Lightbulb,
   Loader2,
   Split,
@@ -299,6 +300,13 @@ function AdminHome() {
                     : "Could not be read"
                 }
               />
+              <Card
+                to="/admin/gateway-keys"
+                icon={<KeyRound className="h-4 w-4" />}
+                title="Gateway keys"
+                value="Mint cgw_ key"
+                detail="Create tenant gateway-container ingest tokens"
+              />
             </div>
           </section>
 
@@ -361,7 +369,8 @@ function Card({
     | "/admin/partner-applications"
     | "/admin/payouts"
     | "/admin/referrals"
-    | "/admin/customers";
+    | "/admin/customers"
+    | "/admin/gateway-keys";
   icon: React.ReactNode;
   title: string;
   value: string | null;
