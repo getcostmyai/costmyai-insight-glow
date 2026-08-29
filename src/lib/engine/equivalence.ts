@@ -39,6 +39,18 @@ export const UNMEASURED_MARGIN = 0.5;
  */
 export const CERTIFICATION_MARGIN_CAP = 5;
 
+/**
+ * Dispatch — the single definition of "headline eligible" for a
+ * quality-matched row. A row inside the "equivalent" band (-5 to +5) is a
+ * real, valid, certified match — legitimately shown and legitimately
+ * activatable — it is excluded only from money a page calls a headline.
+ * Previously reimplemented inline in two places (dashboard.server.ts's
+ * aggregate totals and, missing, figures.ts's levelSaving); both now
+ * import this one definition so they cannot drift apart again.
+ */
+export const isHeadlineEligible = (r: { qualityDelta: number | null }): boolean =>
+  r.qualityDelta !== null && r.qualityDelta >= CERTIFICATION_MARGIN_CAP;
+
 
 /**
  * Legacy discrimination guard, kept for the published Intelligence saturation
