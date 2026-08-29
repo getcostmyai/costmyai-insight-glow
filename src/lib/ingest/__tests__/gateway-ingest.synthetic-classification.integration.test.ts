@@ -14,7 +14,7 @@
  * and the teardown by customer_id = <org id> is correct.
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import { ledgerDb } from "@/lib/ledger/ledger-client.server";
@@ -23,17 +23,35 @@ import { guardIntegrationDatabase } from "../../__tests__/support/isolation";
 
 const URL = process.env["SUPABASE_URL"]!;
 const SERVICE = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
-const PUB = process.env["SUPABASE_ANON_KEY"]!;
+const PUBLISHABLE = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
 // Repo convention for route-level integration tests: hit the local dev server,
 // overridable via CONNECTOR_TEST_APP_URL. Never production.
 const APP = process.env["CONNECTOR_TEST_APP_URL"] ?? "http://localhost:8080";
 
-const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+/** Repo convention: sb_* keys are opaque, so send them as `apikey`, not Bearer. */
+function keyFetch(key: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(
+      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined
+    );
+    if (init?.headers) new Headers(init.headers).forEach((v, k) => headers.set(k, v));
+    if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
+      headers.delete("Authorization");
+    }
+    headers.set("apikey", key);
+    return fetch(input, { ...init, headers });
+  };
+}
+
+const admin = createClient(URL, SERVICE, {
+  global: { fetch: keyFetch(SERVICE) },
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 guardIntegrationDatabase(admin);
 
 const stamp = `qa-regression-ingest-synth-gate-${Date.now()}`;
 
-type Actor = { id: string; client: ReturnType<typeof createClient>; email: string };
+type Actor = { id: string; client: SupabaseClient; email: string };
 
 /** drizzle neon-http returns a FullQueryResults object, not a bare array. */
 function resultRows(result: unknown): unknown[] {
@@ -50,10 +68,15 @@ async function makeActor(who: string): Promise<Actor> {
     email_confirm: true,
   });
   if (error || !user?.user) throw error ?? new Error("makeActor: no user returned");
-  const client = createClient(URL, PUB, { auth: { persistSession: false } });
-  await client.auth.signInWithPassword({ email, password: "REGRESSION_TEST_PW!23" });
+  const client = createClient(URL, PUBLISHABLE, {
+    global: { fetch: keyFetch(PUBLISHABLE) },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const signedIn = await client.auth.signInWithPassword({ email, password: "REGRESSION_TEST_PW!23" });
+  if (signedIn.error) throw signedIn.error;
   return { id: user.user.id, client, email };
 }
+
 
 let realActor: Actor;
 let syntheticActor: Actor;
