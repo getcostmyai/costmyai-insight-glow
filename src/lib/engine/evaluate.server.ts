@@ -112,11 +112,15 @@ export async function runEvaluation(
   const orgQuery = supabaseAdmin.from("organizations").select("id, plan, is_synthetic, autonomous_enabled");
 
   const [orgs, prices, benchmarks, margins, models, benchmarkSync] = await Promise.all([
-    // The synthetic workspace is evaluated too. It is the only standing body of
-    // realistic traffic we have, and skipping it meant the scheduled writer had
-    // nothing to write against. Its output is stamped is_synthetic at the
-    // database boundary, and the human switch paths stay read-only for it.
-    opts.orgIds ? orgQuery.in("id", opts.orgIds) : orgQuery,
+    // The unfiltered sweep (the scheduled writer) skips synthetic workspaces
+    // entirely: they are test fixtures and internal demos, and regenerating
+    // recommendation rows for them contaminates production figures. The flag
+    // is read fresh from the organizations table on every run — no cached org
+    // list — so flipping is_synthetic takes effect on the very next cycle.
+    // The explicit-orgIds path is NOT filtered: the synthetic harnesses pass
+    // their own disposable workspace by id on purpose, and an explicit id is
+    // a deliberate instruction, not a sweep.
+    opts.orgIds ? orgQuery.in("id", opts.orgIds) : orgQuery.eq("is_synthetic", false),
 
     fetchAllRows((from, to) =>
       supabaseAdmin
