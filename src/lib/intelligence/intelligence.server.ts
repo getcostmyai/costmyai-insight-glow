@@ -1,6 +1,6 @@
 import { createPublicServerClient } from "@/lib/supabase-public.server";
 import { fetchAllRows } from "@/lib/paginate.server";
-import { SEPARATION_FACTOR } from "@/lib/engine/equivalence";
+import { CERTIFICATION_MARGIN_CAP, SEPARATION_FACTOR } from "@/lib/engine/equivalence";
 import { separationOfScores } from "@/lib/benchmarks/task-ladder";
 import { blendedPctChange } from "@/lib/pricing/openrouter";
 
@@ -381,7 +381,13 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     });
 
     const topScore = Math.max(...scores);
-    const bar = topScore - margin;
+    // The published bar must be the same number that gates real switches:
+    // ScoreLookup.margin() caps the measured margin at CERTIFICATION_MARGIN_CAP
+    // for live certification decisions, so the bar computed here uses the
+    // capped value too. The saturation ratio above keeps the raw margin — it
+    // is drift/saturation detection and needs true measurement noise.
+    const certificationMargin = Math.min(margin, CERTIFICATION_MARGIN_CAP);
+    const bar = topScore - certificationMargin;
     const clearing = scored
       .filter((s) => s.score >= bar)
       .map((s) => ({ ...s, price: cheapestPrice.get(s.modelKey) }))
@@ -392,7 +398,7 @@ export async function readIntelligence(monthStartOverride?: Date): Promise<Intel
     bandWinners.push({
       taskClass: m.task_class,
       suite: m.suite,
-      margin,
+      margin: certificationMargin,
       bar,
       topScore,
       modelKey: win.modelKey,

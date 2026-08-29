@@ -164,8 +164,12 @@ const TARGET_MONTHLY_USD: Record<string, number> = {
   [`${ELSEWHERE.modelKey}|${ELSEWHERE.taskHint}`]: 900,
 };
 
-/** Priced above gpt-5.1's cheapest host, and clears the LCR bar. */
-const PRICIER_EQUAL = "anthropic/claude-opus-4.5";
+/*
+ * Priced above gpt-5.1's cheapest host, and clears the CAPPED LCR bar
+ * (76.667 - 5 = 71.667). Was claude-opus-4.5 (67.333), which cleared the raw
+ * ±9.698 band but not the capped one — opus-4.8 (73.000) clears it at $5/25.
+ */
+const PRICIER_EQUAL = "anthropic/claude-opus-4.8";
 /** Cheap, and scores far below the bar. */
 const CHEAP_BELOW_BAR = "openai/gpt-oss-120b";
 

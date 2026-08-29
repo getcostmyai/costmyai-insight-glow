@@ -166,7 +166,8 @@ describe("fail-closed flips to certified once real margins exist", () => {
     const { recommendations } = findQualityMatches(usage, prices, benchmarks, realMargin);
     expect(recommendations).toHaveLength(1);
     expect(recommendations[0].toModel).toBe("cheap");
-    expect(recommendations[0].marginUsed).toBe(5.378);
+    // marginUsed reports the capped certification margin (raw 5.378 -> 5).
+    expect(recommendations[0].marginUsed).toBe(5);
     expect(recommendations[0].qualityDelta).toBe(-2.8);
   });
 

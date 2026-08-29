@@ -89,7 +89,12 @@ describe("cell 1 — Valid + Discriminating => CERTIFY (REAL)", () => {
 
     const { recommendations } = run(workload("openai/gpt-5.1", "generation"));
     expect(recommendations).toHaveLength(1);
-    expect(recommendations[0].marginUsed).toBe(INSTRUMENTS.lcr.margin);
+    // CERTIFICATION_MARGIN_CAP (5) tightens the lcr cushion from the raw 9.698:
+    // the bar is now 76.667 - 5 = 71.667, which claude-opus-4.5 (67.333) no
+    // longer clears. The engine still certifies — deepseek-v4-flash (74.333)
+    // clears the capped bar and is the cheapest clearing candidate — but the
+    // reported marginUsed is the capped value, not the raw measured margin.
+    expect(recommendations[0].marginUsed).toBe(Math.min(INSTRUMENTS.lcr.margin, 5));
     expect(recommendations[0].monthlySavingUsd).toBeGreaterThan(0);
     // Negative delta inside the measured band still certifies, and says so.
     expect(recommendations[0].note).toContain("measurement precision");
@@ -102,7 +107,8 @@ describe("cell 1 — Valid + Discriminating => CERTIFY (REAL)", () => {
     const { recommendations } = run(workload("qwen/qwen3-coder-next", "code"));
     const alibaba = recommendations.find((r) => r.fromHost === "alibaba");
     expect(alibaba).toBeDefined();
-    expect(alibaba!.marginUsed).toBe(INSTRUMENTS.terminalbench_v2_1.margin);
+    // marginUsed reports the capped certification margin (raw 10.368 -> 5).
+    expect(alibaba!.marginUsed).toBe(Math.min(INSTRUMENTS.terminalbench_v2_1.margin, 5));
     expect(alibaba!.qualityDelta).toBeGreaterThan(0);
   });
 
@@ -211,9 +217,17 @@ describe("no_baseline_score — both wordings and the sentinel (REAL)", () => {
 
 describe("post-measurement refusals (REAL rows, restricted candidate set)", () => {
   it("no_cheaper_candidate: quality-equal options exist but none price below the baseline", () => {
+    /*
+     * Substituted pair (was gpt-5.1 vs claude-opus-4.5 on generation): the
+     * CERTIFICATION_MARGIN_CAP tightened the lcr bar to 76.667 - 5 = 71.667,
+     * which opus (67.333) no longer clears — that pair now refuses as
+     * no_candidate_clears_bar instead. Here gpt-5.1 (52.434) clears the
+     * capped Terminal-Bench bar (38.202 - 5 = 33.202) but costs ~6x the
+     * qwen3-coder-next baseline, so the refusal reason is preserved.
+     */
     const { refusals } = run(
-      workload("openai/gpt-5.1", "generation"),
-      only(["openai/gpt-5.1", "anthropic/claude-opus-4.5"]),
+      workload("qwen/qwen3-coder-next", "code"),
+      only(["qwen/qwen3-coder-next", "openai/gpt-5.1"]),
     );
     expect(refusals[0].reason).toBe("no_cheaper_candidate");
   });

@@ -29,6 +29,16 @@ import {
  */
 export const UNMEASURED_MARGIN = 0.5;
 
+/**
+ * Restores the original MIN_CLEAN_DELTA protection level (5 points) as a hard
+ * ceiling on the certification cushion, regardless of how wide the measured
+ * 95% Wald margin runs on a low-sample instrument. Applied only where a
+ * measured margin backs a live certification decision — never to the raw
+ * stored value, which other consumers (drift/saturation detection) need
+ * uncapped to stay honest about true measurement noise.
+ */
+export const CERTIFICATION_MARGIN_CAP = 5;
+
 
 /**
  * Legacy discrimination guard, kept for the published Intelligence saturation
@@ -97,7 +107,8 @@ export function buildScoreLookup(
       return exact ? { score: exact.score, suite: exact.suite } : null;
     },
     margin(suite, instrument) {
-      return marginBySuiteTask.get(`${suite}::${instrument}`) ?? UNMEASURED_MARGIN;
+      const measured = marginBySuiteTask.get(`${suite}::${instrument}`) ?? UNMEASURED_MARGIN;
+      return Math.min(measured, CERTIFICATION_MARGIN_CAP);
     },
     spread,
     separation,
