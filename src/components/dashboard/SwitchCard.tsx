@@ -14,6 +14,7 @@ import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNo
 import { FrictionTierBadge } from "@/components/dashboard/FrictionTierBadge";
 import { SupersededNote } from "@/components/dashboard/SupersededNote";
 import type { WorkloadOption } from "@/lib/dashboard/group";
+import { isHeadlineEligible, CERTIFICATION_MARGIN_CAP } from "@/lib/engine/equivalence";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
@@ -92,6 +93,9 @@ export function SwitchCard({
   const armed = !discovery && isSameTarget(activeSwitch, row.toModel, row.toHost);
   const superseded = !discovery && !!activeSwitch && !armed;
 
+  const isStrongMatch =
+    row.kind === "quality" && isHeadlineEligible({ qualityDelta: row.qualityDelta ?? null });
+
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
       <div className="flex w-full min-w-0 items-center gap-4">
@@ -124,6 +128,23 @@ export function SwitchCard({
                 <ShieldCheck className="size-3" /> Certified
               </span>
             )}
+            {row.kind === "quality" ? (
+              isStrongMatch ? (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full border border-saving/30 bg-saving-soft/60 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-saving uppercase"
+                  title={`Quality delta ${row.qualityDelta?.toFixed(1) ?? "—"} — clear of the ±${CERTIFICATION_MARGIN_CAP} measurement margin`}
+                >
+                  Strong match
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase"
+                  title={`Quality delta ${row.qualityDelta?.toFixed(1) ?? "—"} — inside the ±${CERTIFICATION_MARGIN_CAP} measurement margin, so this and the current model are statistically equivalent, not distinguishable by this benchmark`}
+                >
+                  Even match
+                </span>
+              )
+            ) : null}
             {/*
               Dispatch 193. Display only: this badge is rendered next to the
               verdict, never consulted by the ranking that produced it.
