@@ -300,6 +300,13 @@ function AdminHome() {
                     : "Could not be read"
                 }
               />
+              <Card
+                to="/admin/gateway-keys"
+                icon={<KeyRound className="h-4 w-4" />}
+                title="Gateway keys"
+                value="Mint cgw_ key"
+                detail="Create tenant gateway-container ingest tokens"
+              />
             </div>
           </section>
 
