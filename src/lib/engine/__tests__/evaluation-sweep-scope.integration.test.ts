@@ -124,9 +124,9 @@ beforeAll(async () => {
   unfilteredOrgUrls = run.urls.filter((u) => u.includes("/rest/v1/organizations"));
   sweptIds = [...sweptOrgIds];
 
-  orgIdsAfter = await orgIds();
+  orgIdsAfter = await orgIds(false);
   console.log(
-    `[scope] organizations before=${orgIdsBefore.length} after=${orgIdsAfter.length} swept=${sweptIds.length}`,
+    `[scope] organizations before=${orgIdsBefore.length} after=${orgIdsAfter.length} swept=${sweptIds.length} synthetic=${syntheticIds.length}`,
   );
 
 
