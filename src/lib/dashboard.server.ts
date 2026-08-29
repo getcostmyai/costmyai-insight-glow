@@ -17,6 +17,7 @@ import type {
   Recommendation,
   UsageAggregate,
 } from "./engine/types";
+import { CERTIFICATION_MARGIN_CAP } from "./engine/equivalence";
 import { relativeAgo } from "./freshness";
 import {
   BENCHMARK_FEED,
@@ -1097,21 +1098,26 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    */
   const wl = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
     `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
+  const headlineEligible = (r: Recommendation) =>
+    r.qualityDelta !== null && r.qualityDelta >= CERTIFICATION_MARGIN_CAP;
   const savingsTotals = aggregateSavings([
     ...result.hostArbitrage.map((r) => ({
       key: wl(r),
       saving: r.savingUsd,
       unlocked: arbitrageLevel.unlocked,
+      qualityDelta: r.qualityDelta,
     })),
-    ...result.qualityMatched.map((r) => ({
+    ...result.qualityMatched.filter(headlineEligible).map((r) => ({
       key: wl(r),
       saving: r.savingUsd,
       unlocked: qualityLevel.unlocked,
+      qualityDelta: r.qualityDelta,
     })),
     ...result.oversized.map((r) => ({
       key: wl(r),
       saving: r.savingUsd,
       unlocked: oversizedLevel.unlocked,
+      qualityDelta: r.qualityDelta,
     })),
   ]);
 
@@ -1129,11 +1135,13 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       key: wl(r),
       saving: r.savingUsd,
       unlocked: arbitrageLevel.unlocked,
+      qualityDelta: r.qualityDelta,
     })),
-    ...result.qualityMatched.map((r) => ({
+    ...result.qualityMatched.filter(headlineEligible).map((r) => ({
       key: wl(r),
       saving: r.savingUsd,
       unlocked: qualityLevel.unlocked,
+      qualityDelta: r.qualityDelta,
     })),
   ]);
 

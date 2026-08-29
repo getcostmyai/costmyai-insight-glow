@@ -10,9 +10,9 @@ import { aggregateSavings, capturedInWindow } from "../savings";
 describe("aggregateSavings — one workload, one saving", () => {
   it("keeps only the best switch for a workload that appears in two lists", () => {
     const t = aggregateSavings([
-      { key: "gpt-5.5|azure|generation", saving: 120, unlocked: true }, // arbitrage
-      { key: "gpt-5.5|azure|generation", saving: 300, unlocked: true }, // quality match
-      { key: "qwen3-32b|groq|classification", saving: 40, unlocked: true },
+      { key: "gpt-5.5|azure|generation", saving: 120, unlocked: true, qualityDelta: null }, // arbitrage
+      { key: "gpt-5.5|azure|generation", saving: 300, unlocked: true, qualityDelta: 8 }, // quality match
+      { key: "qwen3-32b|groq|classification", saving: 40, unlocked: true, qualityDelta: 6 },
     ]);
     expect(t.available).toBe(340);
     expect(t.gross).toBe(460);
@@ -23,17 +23,17 @@ describe("aggregateSavings — one workload, one saving", () => {
 
   it("counts a locked finding only for what it adds over what you can already do", () => {
     const t = aggregateSavings([
-      { key: "w1", saving: 100, unlocked: true },
-      { key: "w1", saving: 250, unlocked: false },
-      { key: "w2", saving: 80, unlocked: false },
-      { key: "w3", saving: 60, unlocked: false }, // smaller than nothing unlocked → full
+      { key: "w1", saving: 100, unlocked: true, qualityDelta: null },
+      { key: "w1", saving: 250, unlocked: false, qualityDelta: 12 },
+      { key: "w2", saving: 80, unlocked: false, qualityDelta: 7 },
+      { key: "w3", saving: 60, unlocked: false, qualityDelta: 3 }, // smaller than nothing unlocked → full
     ]);
     expect(t.available).toBe(100);
     expect(t.locked).toBe(150 + 80 + 60);
   });
 
   it("ignores non-positive candidates", () => {
-    expect(aggregateSavings([{ key: "w", saving: 0, unlocked: true }]).available).toBe(0);
+    expect(aggregateSavings([{ key: "w", saving: 0, unlocked: true, qualityDelta: null }]).available).toBe(0);
   });
 });
 
