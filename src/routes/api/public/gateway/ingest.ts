@@ -17,6 +17,10 @@ import { z } from "zod";
  * (deferred), and any billing/raw-capture/adapter ingest (separate route).
  */
 
+function jsonError(error: string, status: number) {
+  return Response.json({ ok: false, error }, { status });
+}
+
 const ingestSchema = z
   .object({
     model: z.string().max(128),
