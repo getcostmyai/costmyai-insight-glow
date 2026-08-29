@@ -95,8 +95,11 @@ let unfilteredOrgUrls: string[] = [];
 let emptyArrayError: unknown = null;
 let emptyArrayUrls: string[] = [];
 
-async function orgIds(): Promise<string[]> {
-  const { data, error } = await admin.from("organizations").select("id");
+async function orgIds(synthetic: boolean): Promise<string[]> {
+  const { data, error } = await admin
+    .from("organizations")
+    .select("id")
+    .eq("is_synthetic", synthetic);
   if (error) throw error;
   return (data ?? []).map((row) => row.id as string);
 }
