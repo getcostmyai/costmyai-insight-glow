@@ -40,6 +40,7 @@ export async function writeAccountObjective(
       host: null,
       task_hint: null,
       created_by: userId,
+      is_synthetic: false,
       ...fields,
     });
     // A concurrent writer won the race and has already applied its own values.
