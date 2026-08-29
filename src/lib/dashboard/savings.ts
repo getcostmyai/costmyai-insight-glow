@@ -20,6 +20,15 @@ export interface SavingCandidate {
   saving: number;
   /** False when the finding is real but behind a higher plan. */
   unlocked: boolean;
+  /**
+   * The measured quality-equivalence claim behind this candidate, or null
+   * where the mechanism makes no such claim (host arbitrage is same-model,
+   * zero quality risk by construction; rightsize is governed by its own
+   * required-tier gate). Carried for traceability only — headline
+   * eligibility for quality_match candidates is enforced by the caller
+   * BEFORE construction (dashboard.server.ts), never re-checked here.
+   */
+  qualityDelta: number | null;
 }
 
 export interface SavingsTotals {
