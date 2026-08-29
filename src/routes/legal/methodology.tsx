@@ -52,11 +52,11 @@ const SECTIONS = [
   },
   {
     title: "The quality bar",
-    body: "A cheaper model is only offered when its third-party benchmark score clears your current model's score minus that evaluation's own measured margin, for that task class. The margin is synced alongside the scores it applies to — never a hardcoded tolerance, and never a number we choose.",
+    body: "A cheaper model is only offered when its third-party benchmark score clears your current model's score minus that evaluation's own measured margin, for that task class. The margin is synced alongside the scores it applies to — never a hardcoded tolerance, and never a number we choose. A separate discrimination check (below) then ensures the difference is large enough to be reliable.",
   },
   {
     title: "The discrimination guard",
-    body: "If every model's score on a task class sits inside the measurement margin, the benchmark cannot tell them apart and must not be used to justify anything. We require the observed spread to exceed twice the margin before a quality claim is possible at all.",
+    body: "Beyond the margin sits a separate gate: discrimination. If every model's score on a task class falls within a fixed 10-point range on the benchmark's 0–100 scale, the benchmark cannot tell them apart reliably enough to justify any quality claim.",
   },
   {
     title: "The tie-break",
