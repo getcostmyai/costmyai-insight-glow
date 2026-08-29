@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         try {
           body = ingestSchema.parse(await request.json());
         } catch {
-          return new Response("Invalid request body", { status: 400 });
+          return jsonError("invalid_request_body", 400);
         }
 
         // --- Resolve the synthetic flag from MAIN's organizations table ---
