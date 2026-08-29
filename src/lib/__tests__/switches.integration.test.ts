@@ -453,6 +453,7 @@ describe("entitlement gate at the database layer — a manager who is not paying
       source: "manual",
       state: "active",
       basis: "same model, cheaper host",
+      is_synthetic: true,
     });
     expect(error).not.toBeNull();
   }, 30_000);
@@ -468,6 +469,7 @@ describe("entitlement gate at the database layer — a manager who is not paying
       source: "autonomous",
       state: "active",
       basis: "same model, cheaper host",
+      is_synthetic: true,
     });
     expect(error).not.toBeNull();
   }, 30_000);
