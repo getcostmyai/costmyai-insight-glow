@@ -96,6 +96,7 @@ beforeAll(async () => {
       input_tokens: 1200,
       output_tokens: 300,
       cost_usd: 0.01,
+      is_synthetic: true,
     },
     {
       org_id: orgId,
@@ -108,6 +109,7 @@ beforeAll(async () => {
       input_tokens: 2400,
       output_tokens: 600,
       cost_usd: 0.04,
+      is_synthetic: true,
     },
   ]);
   if (rollup.error) throw rollup.error;
@@ -123,6 +125,7 @@ beforeAll(async () => {
         to_host: "openai",
         basis: "rightsize",
         autonomous: false,
+        is_synthetic: true,
       },
       {
         org_id: orgId,
@@ -132,6 +135,7 @@ beforeAll(async () => {
         to_host: "together",
         basis: "arbitrage",
         autonomous: false,
+        is_synthetic: true,
       },
     ])
     .select("id, to_host");
@@ -197,6 +201,7 @@ describe("switch plan endpoint", () => {
       input_tokens: 300,
       output_tokens: 90,
       cost_usd: 0.001,
+      is_synthetic: true,
     });
     if (seeded.error) throw seeded.error;
 

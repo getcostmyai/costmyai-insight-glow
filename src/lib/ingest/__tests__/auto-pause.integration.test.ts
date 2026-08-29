@@ -99,6 +99,7 @@ async function makeSwitch(org: string): Promise<string> {
       to_host: "openai",
       basis: "rightsize",
       autonomous: false,
+      is_synthetic: true,
     })
     .select("id")
     .single();

@@ -110,6 +110,7 @@ export async function recordSwitchFallbacks(
   // Dispatch 91: the write is verified, not assumed.
   const { data: inserted, error } = await db
     .from("switch_fallbacks")
+    // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- is_synthetic is already correctly set per-row above (line 88), sourced from the parent switch.
     .insert(fresh)
     .select("id, switch_id");
   if (error) throw new Error(`recording fallbacks failed: ${error.message}`);

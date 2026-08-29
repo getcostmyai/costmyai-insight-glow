@@ -48,7 +48,7 @@ const partnerIds: string[] = [];
 beforeAll(async () => {
   const { data, error } = await admin
     .from("organizations")
-    .insert({ name: `Integrity Co ${stamp}`, slug: `integrity-${stamp}`, plan: "govern" })
+    .insert({ name: `Integrity Co ${stamp}`, slug: `integrity-${stamp}`, plan: "govern", is_synthetic: true })
     .select("id")
     .single();
   if (error) throw error;
@@ -98,12 +98,13 @@ describe("one active switch per workload", () => {
       to_host: "api.anthropic.com",
       basis: "integrity test",
       badge: "SAME MODEL",
+      is_synthetic: true,
     };
 
-    const first = await admin.from("switches").insert({ ...base, status: "active" }).select("id").single();
+    const first = await admin.from("switches").insert({ ...base, status: "active", is_synthetic: true }).select("id").single();
     expect(first.error).toBeNull();
 
-    const duplicate = await admin.from("switches").insert({ ...base, status: "active" }).select("id").single();
+    const duplicate = await admin.from("switches").insert({ ...base, status: "active", is_synthetic: true }).select("id").single();
     expect(duplicate.error).not.toBeNull();
     expect(`${duplicate.error?.message} ${duplicate.error?.details ?? ""}`).toMatch(
       /switches_one_active_per_workload|duplicate key/i,
@@ -112,7 +113,7 @@ describe("one active switch per workload", () => {
     // A rolled-back row on the same workload is still allowed — the index is partial.
     const rolledBack = await admin
       .from("switches")
-      .insert({ ...base, status: "rolled_back" })
+      .insert({ ...base, status: "rolled_back", is_synthetic: true })
       .select("id")
       .single();
     expect(rolledBack.error).toBeNull();

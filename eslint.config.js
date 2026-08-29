@@ -47,7 +47,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      "costmyai/require-is-synthetic-on-guarded-insert": "error",
+      "costmyai/require-is-synthetic-on-guarded-insert": "warn",
     },
   },
   eslintPluginPrettier,

@@ -177,8 +177,10 @@ beforeAll(async () => {
       output_p50: 1200,
       output_p95: 3000,
       peak_total_tokens: 12_000,
+      is_synthetic: true,
     };
   });
+  // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- is_synthetic is set on every row in the map above; the linter cannot see through .slice()/array variables into the chunk.
   const { error: seedError } = await admin.from("usage_rollups").insert(rows);
   if (seedError) throw new Error(`seed failed: ${seedError.message}`);
 }, 120_000);
