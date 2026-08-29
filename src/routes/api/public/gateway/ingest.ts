@@ -61,7 +61,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
           .eq("key_hash", keyHash)
           .maybeSingle();
         if (keyError || !keyRow || keyRow.revoked_at !== null) {
-          return new Response("Unauthorized", { status: 401 });
+          return jsonError("unauthorized", 401);
         }
         const orgId = keyRow.org_id;
 
