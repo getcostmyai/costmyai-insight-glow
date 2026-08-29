@@ -137,10 +137,15 @@ afterAll(async () => {
   const scopedIds = [realOrgId, syntheticOrgId].filter(Boolean);
   if (scopedIds.length) {
     const db = ledgerDb();
-    await db.execute(sql`DELETE FROM gateway_events WHERE customer_id = ANY(${sql.raw(pgUuidArray(scopedIds))})`);
+    // LEDGER stores customer_id as text on some tables and uuid on others —
+    // compare as text so one teardown works against both.
     await db.execute(
-      sql`DELETE FROM synthetic_tenant_registry WHERE customer_id = ANY(${sql.raw(pgUuidArray(scopedIds))})`
+      sql`DELETE FROM gateway_events WHERE customer_id::text = ANY(${sql.raw(pgTextArray(scopedIds))})`
     );
+    await db.execute(
+      sql`DELETE FROM synthetic_tenant_registry WHERE customer_id::text = ANY(${sql.raw(pgTextArray(scopedIds))})`
+    );
+
   }
   await admin.from("api_keys").delete().in("org_id", scopedIds);
   await admin.from("organizations").delete().in("id", scopedIds);
