@@ -5,7 +5,8 @@ import { getDashboardSnapshot, getMyDashboardSnapshot } from "./dashboard.functi
 
 export type RangeKey = "24h" | "7d" | "30d";
 
-/** "demo" reads the public synthetic workspace; "mine" reads the caller's own. */
+/** "demo" reads the demo workspace (owner or an active partner only — not
+ *  public, see requireDemoAccess); "mine" reads the caller's own. */
 export type DashboardScope = "demo" | "mine";
 
 export const ranges: { key: RangeKey; label: string; long: string; days: 1 | 7 | 30 }[] = [
