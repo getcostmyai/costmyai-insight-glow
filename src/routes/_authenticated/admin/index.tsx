@@ -369,7 +369,8 @@ function Card({
     | "/admin/partner-applications"
     | "/admin/payouts"
     | "/admin/referrals"
-    | "/admin/customers";
+    | "/admin/customers"
+    | "/admin/gateway-keys";
   icon: React.ReactNode;
   title: string;
   value: string | null;
