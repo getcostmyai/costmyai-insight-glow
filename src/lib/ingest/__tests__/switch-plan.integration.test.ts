@@ -123,6 +123,7 @@ beforeAll(async () => {
         from_host: "openai",
         to_model: "openai/gpt-4.1-mini",
         to_host: "openai",
+        basis: "rightsize",
         autonomous: false,
         is_synthetic: true,
       },
@@ -132,8 +133,8 @@ beforeAll(async () => {
         from_host: "openai",
         to_model: "openai/gpt-4o",
         to_host: "together",
-        basis: "arbitrage",
         autonomous: false,
+        is_synthetic: true,
       },
     ])
     .select("id, to_host");
