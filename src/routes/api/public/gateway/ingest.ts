@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         // --- Auth: Bearer cgw_<token>, SHA-256 matched against api_keys ---
         const header = request.headers.get("authorization") ?? "";
         const match = /^Bearer (cgw_[A-Za-z0-9_-]+)$/.exec(header);
-        if (!match) return new Response("Unauthorized", { status: 401 });
+        if (!match) return jsonError("unauthorized", 401);
 
         const keyHash = createHash("sha256").update(match[1]).digest("hex");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
