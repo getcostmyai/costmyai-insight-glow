@@ -91,7 +91,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         // An api_keys row pointing at a missing org is a data-integrity
         // problem, not a valid request — refuse rather than write a
         // null-flagged event.
-        if (orgError || !org) return new Response("Unknown organization", { status: 400 });
+        if (orgError || !org) return jsonError("unknown_organization", 400);
 
         // --- Write the event to LEDGER (never MAIN) ---
         const { ledgerDb, gatewayEvents, syntheticTenantRegistry } = await import(
