@@ -47,13 +47,13 @@ export const syntheticTenantRegistry = pgTable("synthetic_tenant_registry", {
   registeredAt: timestamp("registered_at", { withTimezone: true }),
 });
 
-let ledger: NeonDatabase | null = null;
+let ledger: NeonHttpDatabase | null = null;
 
 /**
  * Lazy singleton — the connection string is read per-process, never at module
  * scope, because env is injected at request time on the edge runtime.
  */
-export function ledgerDb(): NeonDatabase {
+export function ledgerDb(): NeonHttpDatabase {
   if (!ledger) {
     const url = process.env.LEDGER_DATABASE_URL;
     if (!url) throw new Error("LEDGER_DATABASE_URL is not configured");
