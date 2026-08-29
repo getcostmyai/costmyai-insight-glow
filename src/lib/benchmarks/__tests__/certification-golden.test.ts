@@ -89,7 +89,12 @@ describe("cell 1 — Valid + Discriminating => CERTIFY (REAL)", () => {
 
     const { recommendations } = run(workload("openai/gpt-5.1", "generation"));
     expect(recommendations).toHaveLength(1);
-    expect(recommendations[0].marginUsed).toBe(INSTRUMENTS.lcr.margin);
+    // CERTIFICATION_MARGIN_CAP (5) tightens the lcr cushion from the raw 9.698:
+    // the bar is now 76.667 - 5 = 71.667, which claude-opus-4.5 (67.333) no
+    // longer clears. The engine still certifies — deepseek-v4-flash (74.333)
+    // clears the capped bar and is the cheapest clearing candidate — but the
+    // reported marginUsed is the capped value, not the raw measured margin.
+    expect(recommendations[0].marginUsed).toBe(Math.min(INSTRUMENTS.lcr.margin, 5));
     expect(recommendations[0].monthlySavingUsd).toBeGreaterThan(0);
     // Negative delta inside the measured band still certifies, and says so.
     expect(recommendations[0].note).toContain("measurement precision");
@@ -102,7 +107,8 @@ describe("cell 1 — Valid + Discriminating => CERTIFY (REAL)", () => {
     const { recommendations } = run(workload("qwen/qwen3-coder-next", "code"));
     const alibaba = recommendations.find((r) => r.fromHost === "alibaba");
     expect(alibaba).toBeDefined();
-    expect(alibaba!.marginUsed).toBe(INSTRUMENTS.terminalbench_v2_1.margin);
+    // marginUsed reports the capped certification margin (raw 10.368 -> 5).
+    expect(alibaba!.marginUsed).toBe(Math.min(INSTRUMENTS.terminalbench_v2_1.margin, 5));
     expect(alibaba!.qualityDelta).toBeGreaterThan(0);
   });
 
