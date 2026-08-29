@@ -468,6 +468,7 @@ export async function recomputeSwitchSavings(
         org_id: orgId,
         switch_id: s.switchId,
         event: "savings_refused",
+        is_synthetic: row.is_synthetic,
         detail:
           refusedReason === "origin_unknown"
             ? `Container reported ${s.missingOriginalEvents} rerouted event(s) with no original model/host. ` +
