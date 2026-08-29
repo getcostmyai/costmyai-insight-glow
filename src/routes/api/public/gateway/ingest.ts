@@ -134,13 +134,15 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
 
         // Non-fatal registry upsert — matches the exclusion pattern used
         // elsewhere in the LEDGER schema. A failure here never fails ingest.
-        try {
-          await db
-            .insert(syntheticTenantRegistry)
-            .values({ customerId: orgId, registeredAt: new Date() })
-            .onConflictDoNothing();
-        } catch (err) {
-          console.warn("gateway ingest: synthetic_tenant_registry upsert failed", err);
+        if (org.is_synthetic) {
+          try {
+            await db
+              .insert(syntheticTenantRegistry)
+              .values({ customerId: orgId, registeredAt: new Date() })
+              .onConflictDoNothing();
+          } catch (err) {
+            console.warn("gateway ingest: synthetic_tenant_registry upsert failed", err);
+          }
         }
 
         return Response.json({ ok: true });
