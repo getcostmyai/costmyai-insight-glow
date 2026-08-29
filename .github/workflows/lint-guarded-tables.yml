@@ -15,4 +15,4 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx eslint . --ext .ts,.tsx,.js,.jsx
+      - run: npx eslint . --config eslint.ci.config.js
