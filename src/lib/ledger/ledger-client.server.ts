@@ -1,4 +1,4 @@
-import { drizzle, type NeonDatabase } from "drizzle-orm/neon-http";
+import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { pgTable, uuid, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 
