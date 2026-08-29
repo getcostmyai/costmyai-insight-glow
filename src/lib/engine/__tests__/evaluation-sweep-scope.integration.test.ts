@@ -169,6 +169,20 @@ describe("runEvaluation with no options, exactly as the cron calls it", () => {
     expect(url).toContain("select=id,plan,is_synthetic,autonomous_enabled");
   });
 
+  it("carries the is_synthetic=false filter on the wire, not in memory", () => {
+    const url = decodeURIComponent(unfilteredOrgUrls[0]!);
+    // The exclusion must be part of the query itself so it reads the live flag
+    // on every run — an in-memory filter over a cached org list would not.
+    expect(url).toContain("is_synthetic=eq.false");
+  });
+
+  it("sweeps no synthetic workspace, however long it has existed", () => {
+    const swept = new Set(sweptIds);
+    const leaked = syntheticIds.filter((id) => swept.has(id));
+    console.log(`[unfiltered] synthetic=${syntheticIds.length} leaked=${leaked.length}`);
+    expect(leaked).toEqual([]);
+  });
+
   it("evaluates every organization that existed for the whole run", () => {
     const after = new Set(orgIdsAfter);
     const stable = orgIdsBefore.filter((id) => after.has(id));
