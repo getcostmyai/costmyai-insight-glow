@@ -97,35 +97,40 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         const { ledgerDb, gatewayEvents, syntheticTenantRegistry } = await import(
           "@/lib/ledger/ledger-client.server"
         );
-        const db = ledgerDb();
-
-        await db.insert(gatewayEvents).values({
-          id: randomUUID(),
-          customerId: orgId,
-          model: body.model,
-          host: body.host,
-          endpointType: body.endpointType,
-          inputTokens: body.inputTokens,
-          inputBytes: body.inputBytes,
-          outputTokens: body.outputTokens,
-          outputBytes: body.outputBytes,
-          latencyMs: body.latencyMs,
-          httpStatus: body.httpStatus,
-          taskHasTools: body.taskShape.hasTools,
-          taskStreaming: body.taskShape.streaming,
-          taskMaxTokens: body.taskShape.maxTokens,
-          // Stored as text to match the numeric column's string encoding.
-          taskTemperature: body.taskShape.temperature === null ? null : String(body.taskShape.temperature),
-          eventTs: new Date(body.ts * 1000),
-          ingestedAt: new Date(),
-          isSynthetic: org.is_synthetic,
-          // TODO: no confirmed current-schema source for is_test parity with
-          // the old system's test_customer_registry — defaults false pending
-          // that resolution.
-          isTest: false,
-          // Stored as-is; routing_rules validation is explicitly out of scope.
-          routingRuleId: body.routingRuleId ?? null,
-        });
+        let db: ReturnType<typeof ledgerDb>;
+        try {
+          db = ledgerDb();
+          await db.insert(gatewayEvents).values({
+            id: randomUUID(),
+            customerId: orgId,
+            model: body.model,
+            host: body.host,
+            endpointType: body.endpointType,
+            inputTokens: body.inputTokens,
+            inputBytes: body.inputBytes,
+            outputTokens: body.outputTokens,
+            outputBytes: body.outputBytes,
+            latencyMs: body.latencyMs,
+            httpStatus: body.httpStatus,
+            taskHasTools: body.taskShape.hasTools,
+            taskStreaming: body.taskShape.streaming,
+            taskMaxTokens: body.taskShape.maxTokens,
+            // Stored as text to match the numeric column's string encoding.
+            taskTemperature: body.taskShape.temperature === null ? null : String(body.taskShape.temperature),
+            eventTs: new Date(body.ts * 1000),
+            ingestedAt: new Date(),
+            isSynthetic: org.is_synthetic,
+            // TODO: no confirmed current-schema source for is_test parity with
+            // the old system's test_customer_registry — defaults false pending
+            // that resolution.
+            isTest: false,
+            // Stored as-is; routing_rules validation is explicitly out of scope.
+            routingRuleId: body.routingRuleId ?? null,
+          });
+        } catch (err) {
+          console.error("[gateway/ingest] ledger write failed:", err);
+          return jsonError("ledger_write_failed", 500);
+        }
 
         // Non-fatal registry upsert — matches the exclusion pattern used
         // elsewhere in the LEDGER schema. A failure here never fails ingest.
