@@ -19,6 +19,7 @@ export interface AdminSummary {
   jobs: { total: number; healthy: number; stale: number; failing: number } | null;
   leadsPending: number | null;
   applicationsPending: number | null;
+  applicationsExcluded: number | null;
   payouts: { count: number; amountUsd: number; environment: string } | null;
   referrals: { total: number; direct: number; partnerReferred: number; partnerPct: number } | null;
   /** Real workspaces after test-harness and no-contact rows are filtered out. */

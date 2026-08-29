@@ -42,7 +42,7 @@ export async function readAdminOverview(
     breakdownRes,
     jobs,
     leadsPending,
-    applicationsPending,
+    applications,
     payouts,
     referrals,
     customers,
@@ -76,12 +76,15 @@ export async function readAdminOverview(
       }),
 
       guard("Partner applications", async () => {
-        const { count, error } = await supabaseAdmin
+        const { classifyApplication } = await import("./partner-applications");
+        const { data, error } = await supabaseAdmin
           .from("partner_applications")
-          .select("id", { count: "exact", head: true })
+          .select("email, company")
           .eq("status", "pending");
         if (error) throw error;
-        return count ?? 0;
+        const rows = data ?? [];
+        const excluded = rows.filter((r) => classifyApplication(r) !== "real").length;
+        return { pending: rows.length - excluded, excluded };
       }),
 
       guard("Payout queue", async () => {
@@ -208,7 +211,8 @@ export async function readAdminOverview(
   const summary: AdminSummary = {
     jobs,
     leadsPending,
-    applicationsPending,
+    applicationsPending: applications?.pending ?? null,
+    applicationsExcluded: applications?.excluded ?? null,
     payouts,
     referrals,
     customers,
