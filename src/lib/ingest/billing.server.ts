@@ -132,6 +132,7 @@ export async function ingestBillingCaptures(
           currency: capture.currency,
           idempotency_key: idempotencyKey,
           captured_at: new Date().toISOString(),
+          is_synthetic: false,
         },
         { onConflict: "org_id,provider,period_start,period_end" },
       )
