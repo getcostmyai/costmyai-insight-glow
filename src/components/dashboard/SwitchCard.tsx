@@ -93,6 +93,9 @@ export function SwitchCard({
   const armed = !discovery && isSameTarget(activeSwitch, row.toModel, row.toHost);
   const superseded = !discovery && !!activeSwitch && !armed;
 
+  const isStrongMatch =
+    row.kind === "quality" && isHeadlineEligible({ qualityDelta: row.qualityDelta ?? null });
+
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">
       <div className="flex w-full min-w-0 items-center gap-4">
