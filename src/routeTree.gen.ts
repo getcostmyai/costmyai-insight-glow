@@ -91,6 +91,7 @@ import { Route as ApiPublicSyncFreezeRouteImport } from './routes/api/public/syn
 import { Route as ApiPublicSyncBenchmarksRouteImport } from './routes/api/public/sync/benchmarks'
 import { Route as ApiPublicSyncBackupExportRouteImport } from './routes/api/public/sync/backup-export'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicGatewayIngestRouteImport } from './routes/api/public/gateway/ingest'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
@@ -522,6 +523,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicGatewayIngestRoute = ApiPublicGatewayIngestRouteImport.update({
+  id: '/api/public/gateway/ingest',
+  path: '/api/public/gateway/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicEmbedIntelligenceWidgetRoute =
   ApiPublicEmbedIntelligenceWidgetRouteImport.update({
     id: '/api/public/embed/intelligence-widget',
@@ -609,6 +615,7 @@ export interface FileRoutesByFullPath {
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
+  '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
@@ -693,6 +700,7 @@ export interface FileRoutesByTo {
   '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
+  '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
@@ -782,6 +790,7 @@ export interface FileRoutesById {
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
+  '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/sync/backup-export': typeof ApiPublicSyncBackupExportRoute
   '/api/public/sync/benchmarks': typeof ApiPublicSyncBenchmarksRoute
@@ -871,6 +880,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
+    | '/api/public/gateway/ingest'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
@@ -955,6 +965,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
+    | '/api/public/gateway/ingest'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
@@ -1043,6 +1054,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
+    | '/api/public/gateway/ingest'
     | '/api/public/payments/webhook'
     | '/api/public/sync/backup-export'
     | '/api/public/sync/benchmarks'
@@ -1106,6 +1118,7 @@ export interface RootRouteChildren {
   IntelligenceNotesIndexRoute: typeof IntelligenceNotesIndexRoute
   ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
+  ApiPublicGatewayIngestRoute: typeof ApiPublicGatewayIngestRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSyncBackupExportRoute: typeof ApiPublicSyncBackupExportRoute
   ApiPublicSyncBenchmarksRoute: typeof ApiPublicSyncBenchmarksRoute
@@ -1707,6 +1720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/gateway/ingest': {
+      id: '/api/public/gateway/ingest'
+      path: '/api/public/gateway/ingest'
+      fullPath: '/api/public/gateway/ingest'
+      preLoaderRoute: typeof ApiPublicGatewayIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/embed/intelligence-widget': {
       id: '/api/public/embed/intelligence-widget'
       path: '/api/public/embed/intelligence-widget'
@@ -1866,6 +1886,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntelligenceNotesIndexRoute: IntelligenceNotesIndexRoute,
   ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
+  ApiPublicGatewayIngestRoute: ApiPublicGatewayIngestRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSyncBackupExportRoute: ApiPublicSyncBackupExportRoute,
   ApiPublicSyncBenchmarksRoute: ApiPublicSyncBenchmarksRoute,
