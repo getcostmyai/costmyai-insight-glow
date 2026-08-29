@@ -121,6 +121,7 @@ beforeAll(async () => {
         basis: "host_arbitrage",
         autonomous: false,
         activated_at: ACTIVATED_AT,
+        is_synthetic: true,
       })
       .select("id")
       .single();
