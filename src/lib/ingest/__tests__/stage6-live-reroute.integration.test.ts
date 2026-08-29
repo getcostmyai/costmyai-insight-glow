@@ -116,6 +116,7 @@ beforeAll(async () => {
     input_tokens: 100,
     output_tokens: 100,
     cost_usd: 0,
+    is_synthetic: true,
   });
   if (rollupError) throw rollupError;
 
@@ -130,6 +131,7 @@ beforeAll(async () => {
       basis: "same host, cheaper model",
       autonomous: false,
       status: "active",
+      is_synthetic: true,
     })
     .select("id")
     .single();

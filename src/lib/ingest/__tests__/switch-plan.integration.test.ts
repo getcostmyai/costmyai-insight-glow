@@ -201,6 +201,7 @@ describe("switch plan endpoint", () => {
       input_tokens: 300,
       output_tokens: 90,
       cost_usd: 0.001,
+      is_synthetic: true,
     });
     if (seeded.error) throw seeded.error;
 

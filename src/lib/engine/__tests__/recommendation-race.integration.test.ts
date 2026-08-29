@@ -72,7 +72,7 @@ describe("recommendations natural-key race", () => {
   beforeAll(async () => {
     const { data, error } = await admin
       .from("organizations")
-      .insert({ name: `Race probe ${stamp}`, slug: SLUG, plan: "govern" })
+      .insert({ name: `Race probe ${stamp}`, slug: SLUG, plan: "govern", is_synthetic: true })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
