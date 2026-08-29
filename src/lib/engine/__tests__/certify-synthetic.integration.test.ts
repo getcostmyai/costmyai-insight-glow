@@ -420,8 +420,10 @@ beforeAll(async () => {
     output_p50: r.outputP50,
     output_p95: r.outputP95,
     peak_total_tokens: r.peakTotalTokens,
+    is_synthetic: true,
   }));
   for (let i = 0; i < rows.length; i += 500) {
+    // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- is_synthetic is set on every row in the map above; the linter cannot see through .slice()/array variables into the chunk.
     const { error } = await admin.from("usage_rollups").insert(rows.slice(i, i + 500));
     if (error) throw error;
   }
