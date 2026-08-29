@@ -48,7 +48,7 @@ const partnerIds: string[] = [];
 beforeAll(async () => {
   const { data, error } = await admin
     .from("organizations")
-    .insert({ name: `Integrity Co ${stamp}`, slug: `integrity-${stamp}`, plan: "govern" })
+    .insert({ name: `Integrity Co ${stamp}`, slug: `integrity-${stamp}`, plan: "govern", is_synthetic: true })
     .select("id")
     .single();
   if (error) throw error;
@@ -98,6 +98,7 @@ describe("one active switch per workload", () => {
       to_host: "api.anthropic.com",
       basis: "integrity test",
       badge: "SAME MODEL",
+      is_synthetic: true,
     };
 
     const first = await admin.from("switches").insert({ ...base, status: "active" }).select("id").single();

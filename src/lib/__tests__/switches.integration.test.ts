@@ -112,8 +112,7 @@ async function makeRecommendation(orgId: string, fromModel: string, taskHint = "
       monthly_saving_usd: 120,
       saving_pct: 18,
       basis: "same model, cheaper host",
-    })
-    .select("id")
+      is_synthetic: true,
     .single();
   if (error) throw error;
   return data.id as string;
