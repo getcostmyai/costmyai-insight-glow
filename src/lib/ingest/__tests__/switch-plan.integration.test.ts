@@ -133,6 +133,7 @@ beforeAll(async () => {
         from_host: "openai",
         to_model: "openai/gpt-4o",
         to_host: "together",
+        basis: "arbitrage",
         autonomous: false,
         is_synthetic: true,
       },
