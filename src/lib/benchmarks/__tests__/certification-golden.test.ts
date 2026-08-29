@@ -217,9 +217,17 @@ describe("no_baseline_score — both wordings and the sentinel (REAL)", () => {
 
 describe("post-measurement refusals (REAL rows, restricted candidate set)", () => {
   it("no_cheaper_candidate: quality-equal options exist but none price below the baseline", () => {
+    /*
+     * Substituted pair (was gpt-5.1 vs claude-opus-4.5 on generation): the
+     * CERTIFICATION_MARGIN_CAP tightened the lcr bar to 76.667 - 5 = 71.667,
+     * which opus (67.333) no longer clears — that pair now refuses as
+     * no_candidate_clears_bar instead. Here gpt-5.1 (52.434) clears the
+     * capped Terminal-Bench bar (38.202 - 5 = 33.202) but costs ~6x the
+     * qwen3-coder-next baseline, so the refusal reason is preserved.
+     */
     const { refusals } = run(
-      workload("openai/gpt-5.1", "generation"),
-      only(["openai/gpt-5.1", "anthropic/claude-opus-4.5"]),
+      workload("qwen/qwen3-coder-next", "code"),
+      only(["qwen/qwen3-coder-next", "openai/gpt-5.1"]),
     );
     expect(refusals[0].reason).toBe("no_cheaper_candidate");
   });
