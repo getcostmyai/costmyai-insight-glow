@@ -398,7 +398,7 @@ export async function recomputeSwitchSavings(
   /** The switch rows themselves — the gate is decided from these, not from the report. */
   const { data: switchRows, error: switchErr } = await db
     .from("switches")
-    .select("id, from_host, to_host, autonomous, status")
+    .select("id, from_host, to_host, autonomous, status, is_synthetic")
     .eq("org_id", orgId)
     .in(
       "id",
@@ -468,6 +468,7 @@ export async function recomputeSwitchSavings(
         org_id: orgId,
         switch_id: s.switchId,
         event: "savings_refused",
+        is_synthetic: row.is_synthetic,
         detail:
           refusedReason === "origin_unknown"
             ? `Container reported ${s.missingOriginalEvents} rerouted event(s) with no original model/host. ` +
