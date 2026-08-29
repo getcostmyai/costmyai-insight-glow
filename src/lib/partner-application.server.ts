@@ -11,6 +11,7 @@ import {
   type ApplicationStatus,
   type StartingSoonBucket,
 } from "./partner-application";
+import { classifyApplication, type ApplicationVerdict } from "./admin/partner-applications";
 import { notifyReviewers } from "./partner-application-notify.server";
 import { siteOrigin } from "./partner-welcome.server";
 
@@ -34,6 +35,7 @@ export interface StoredApplication {
   reviewerEmailError: string | null;
   applicantEmailAt: string | null;
   applicantEmailError: string | null;
+  verdict: ApplicationVerdict;
 }
 
 /**
@@ -231,6 +233,7 @@ export async function listApplications(supabase: AdminClient): Promise<StoredApp
     reviewerEmailError: r.reviewer_email_error,
     applicantEmailAt: r.applicant_email_at,
     applicantEmailError: r.applicant_email_error,
+    verdict: classifyApplication({ email: r.email, company: r.company }),
   }));
 }
 

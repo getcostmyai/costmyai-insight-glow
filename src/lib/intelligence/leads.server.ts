@@ -57,16 +57,22 @@ export async function runLeadDetectors(nowMs = Date.now()): Promise<LeadsRunResu
         .from("host_prices")
         .select("model_key, host, host_label, price_source, input_usd_per_mtok, output_usd_per_mtok")
         .eq("is_active", true)
+        .eq("is_fixture", false)
         .range(f, t),
     ),
     fetchAllRows((f, t) =>
       supabaseAdmin
         .from("benchmarks")
         .select("model_key, suite, task_class, score, measured_at, source_run_id")
+        .eq("is_fixture", false)
         .range(f, t),
     ),
     fetchAllRows((f, t) =>
-      supabaseAdmin.from("benchmark_margins").select("suite, task_class, margin").range(f, t),
+      supabaseAdmin
+        .from("benchmark_margins")
+        .select("suite, task_class, margin")
+        .eq("is_fixture", false)
+        .range(f, t),
     ),
   ]);
 

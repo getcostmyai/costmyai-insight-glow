@@ -74,9 +74,16 @@ function ReviewQueue() {
       <p className="mt-2 text-sm text-muted-foreground">
         Every application a person needs to read.{" "}
         <span className="num tabular-nums">
-          {rows.filter((r) => r.status === "pending").length}
+          {rows.filter((r) => r.status === "pending" && r.verdict === "real").length}
         </span>{" "}
         pending of <span className="num tabular-nums">{rows.length}</span>.
+        {rows.some((r) => r.verdict !== "real") ? (
+          <span className="text-xs">
+            {" "}
+            ({rows.filter((r) => r.verdict !== "real").length} test or verification rows excluded from
+            the pending count)
+          </span>
+        ) : null}
       </p>
 
       <CreatePartnerCard />
@@ -294,6 +301,11 @@ function ApplicationRow({ row, onChanged }: { row: Row; onChanged: () => void })
             </span>
           )}
           <StatusBadge status={row.status} />
+          {row.verdict !== "real" && (
+            <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {row.verdict === "test_harness" ? "Test harness" : "Verification drill"}
+            </span>
+          )}
         </div>
       </div>
 

@@ -251,7 +251,11 @@ function AdminHome() {
                     ? null
                     : `${data.summary.applicationsPending} pending`
                 }
-                detail="Applications waiting on a review decision"
+                detail={
+                  data.summary.applicationsExcluded === null
+                    ? "Applications waiting on a review decision"
+                    : `Applications waiting on a review decision · ${data.summary.applicationsExcluded} test or verification rows excluded`
+                }
                 alarm={(data.summary.applicationsPending ?? 0) > 0}
               />
               <Card
