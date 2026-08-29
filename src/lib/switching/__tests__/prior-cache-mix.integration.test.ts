@@ -192,6 +192,7 @@ beforeAll(async () => {
       idempotency_key: `d236-fresh-${stamp}`,
     },
   ];
+  // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- deliberately omitted: this test's whole point is that enforce_synthetic_flag() derives is_synthetic from the org (asserted below), not the writer.
   const written = await admin.from("usage_events").insert(rows).select("is_synthetic");
   if (written.error) throw written.error;
   expect(written.data!.every((r) => r.is_synthetic)).toBe(true);
