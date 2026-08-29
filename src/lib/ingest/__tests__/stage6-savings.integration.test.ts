@@ -170,6 +170,7 @@ async function activeSwitch(org: string): Promise<string> {
       autonomous: false,
       status: "active",
       activated_at: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+      is_synthetic: true,
     })
     .select("id, saved_usd")
     .single();

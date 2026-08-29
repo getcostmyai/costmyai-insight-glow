@@ -96,6 +96,7 @@ beforeAll(async () => {
       input_tokens: 1200,
       output_tokens: 300,
       cost_usd: 0.01,
+      is_synthetic: true,
     },
     {
       org_id: orgId,
@@ -108,6 +109,7 @@ beforeAll(async () => {
       input_tokens: 2400,
       output_tokens: 600,
       cost_usd: 0.04,
+      is_synthetic: true,
     },
   ]);
   if (rollup.error) throw rollup.error;
@@ -121,8 +123,8 @@ beforeAll(async () => {
         from_host: "openai",
         to_model: "openai/gpt-4.1-mini",
         to_host: "openai",
-        basis: "rightsize",
         autonomous: false,
+        is_synthetic: true,
       },
       {
         org_id: orgId,
