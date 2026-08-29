@@ -154,10 +154,11 @@ afterAll(async () => {
 });
 
 /** Test-only literal builder; ids come from Supabase and are validated uuids. */
-function pgUuidArray(ids: string[]): string {
-  const safe = ids.filter((id) => /^[0-9a-f-]{36}$/i.test(id)).map((id) => `'${id}'::uuid`);
+function pgTextArray(ids: string[]): string {
+  const safe = ids.filter((id) => /^[0-9a-f-]{36}$/i.test(id)).map((id) => `'${id}'::text`);
   return `ARRAY[${safe.join(",")}]`;
 }
+
 
 async function sendIngestEvent(token: string) {
   return fetch(`${APP}/api/public/gateway/ingest`, {
