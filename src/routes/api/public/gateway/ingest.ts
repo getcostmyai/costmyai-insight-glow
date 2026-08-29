@@ -17,6 +17,10 @@ import { z } from "zod";
  * (deferred), and any billing/raw-capture/adapter ingest (separate route).
  */
 
+function jsonError(error: string, status: number) {
+  return Response.json({ ok: false, error }, { status });
+}
+
 const ingestSchema = z
   .object({
     model: z.string().max(128),
@@ -46,7 +50,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         // --- Auth: Bearer cgw_<token>, SHA-256 matched against api_keys ---
         const header = request.headers.get("authorization") ?? "";
         const match = /^Bearer (cgw_[A-Za-z0-9_-]+)$/.exec(header);
-        if (!match) return new Response("Unauthorized", { status: 401 });
+        if (!match) return jsonError("unauthorized", 401);
 
         const keyHash = createHash("sha256").update(match[1]).digest("hex");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -57,7 +61,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
           .eq("key_hash", keyHash)
           .maybeSingle();
         if (keyError || !keyRow || keyRow.revoked_at !== null) {
-          return new Response("Unauthorized", { status: 401 });
+          return jsonError("unauthorized", 401);
         }
         const orgId = keyRow.org_id;
 
@@ -75,7 +79,7 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         try {
           body = ingestSchema.parse(await request.json());
         } catch {
-          return new Response("Invalid request body", { status: 400 });
+          return jsonError("invalid_request_body", 400);
         }
 
         // --- Resolve the synthetic flag from MAIN's organizations table ---
@@ -87,41 +91,46 @@ export const Route = createFileRoute("/api/public/gateway/ingest")({
         // An api_keys row pointing at a missing org is a data-integrity
         // problem, not a valid request — refuse rather than write a
         // null-flagged event.
-        if (orgError || !org) return new Response("Unknown organization", { status: 400 });
+        if (orgError || !org) return jsonError("unknown_organization", 400);
 
         // --- Write the event to LEDGER (never MAIN) ---
         const { ledgerDb, gatewayEvents, syntheticTenantRegistry } = await import(
           "@/lib/ledger/ledger-client.server"
         );
-        const db = ledgerDb();
-
-        await db.insert(gatewayEvents).values({
-          id: randomUUID(),
-          customerId: orgId,
-          model: body.model,
-          host: body.host,
-          endpointType: body.endpointType,
-          inputTokens: body.inputTokens,
-          inputBytes: body.inputBytes,
-          outputTokens: body.outputTokens,
-          outputBytes: body.outputBytes,
-          latencyMs: body.latencyMs,
-          httpStatus: body.httpStatus,
-          taskHasTools: body.taskShape.hasTools,
-          taskStreaming: body.taskShape.streaming,
-          taskMaxTokens: body.taskShape.maxTokens,
-          // Stored as text to match the numeric column's string encoding.
-          taskTemperature: body.taskShape.temperature === null ? null : String(body.taskShape.temperature),
-          eventTs: new Date(body.ts * 1000),
-          ingestedAt: new Date(),
-          isSynthetic: org.is_synthetic,
-          // TODO: no confirmed current-schema source for is_test parity with
-          // the old system's test_customer_registry — defaults false pending
-          // that resolution.
-          isTest: false,
-          // Stored as-is; routing_rules validation is explicitly out of scope.
-          routingRuleId: body.routingRuleId ?? null,
-        });
+        let db: ReturnType<typeof ledgerDb>;
+        try {
+          db = ledgerDb();
+          await db.insert(gatewayEvents).values({
+            id: randomUUID(),
+            customerId: orgId,
+            model: body.model,
+            host: body.host,
+            endpointType: body.endpointType,
+            inputTokens: body.inputTokens,
+            inputBytes: body.inputBytes,
+            outputTokens: body.outputTokens,
+            outputBytes: body.outputBytes,
+            latencyMs: body.latencyMs,
+            httpStatus: body.httpStatus,
+            taskHasTools: body.taskShape.hasTools,
+            taskStreaming: body.taskShape.streaming,
+            taskMaxTokens: body.taskShape.maxTokens,
+            // Stored as text to match the numeric column's string encoding.
+            taskTemperature: body.taskShape.temperature === null ? null : String(body.taskShape.temperature),
+            eventTs: new Date(body.ts * 1000),
+            ingestedAt: new Date(),
+            isSynthetic: org.is_synthetic,
+            // TODO: no confirmed current-schema source for is_test parity with
+            // the old system's test_customer_registry — defaults false pending
+            // that resolution.
+            isTest: false,
+            // Stored as-is; routing_rules validation is explicitly out of scope.
+            routingRuleId: body.routingRuleId ?? null,
+          });
+        } catch (err) {
+          console.error("[gateway/ingest] ledger write failed:", err);
+          return jsonError("ledger_write_failed", 500);
+        }
 
         // Non-fatal registry upsert — matches the exclusion pattern used
         // elsewhere in the LEDGER schema. A failure here never fails ingest.
