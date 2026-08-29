@@ -7,6 +7,7 @@ import {
   Banknote,
   ClipboardList,
   Gauge,
+  KeyRound,
   Lightbulb,
   Loader2,
   Split,
