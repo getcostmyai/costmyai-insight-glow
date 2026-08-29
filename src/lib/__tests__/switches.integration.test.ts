@@ -421,6 +421,7 @@ describe("objectives — Certify entitlement, written through RLS", () => {
       host: "openai",
       task_hint: "generation",
       objective: "cost",
+      is_synthetic: true,
     });
     expect(error).not.toBeNull();
   }, 30_000);
@@ -437,6 +438,7 @@ describe("entitlement gate at the database layer — a manager who is not paying
     const { error } = await owner.client.from("objectives").insert({
       org_id: freeOrg,
       objective: "cost",
+      is_synthetic: true,
     });
     expect(error).not.toBeNull();
   }, 30_000);
