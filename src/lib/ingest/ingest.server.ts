@@ -167,7 +167,14 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
   if (error) throw new Error(`ingest failed: ${error.message}`);
 
   const accepted = inserted?.length ?? 0;
-  const bucketsRebuilt = accepted > 0 ? await rebuildRollups(orgId, rows.map((r) => new Date(r.occurred_at)), isSynthetic) : 0;
+  const bucketsRebuilt =
+    accepted > 0
+      ? await rebuildRollups(
+          orgId,
+          rows.map((r) => new Date(r.occurred_at)),
+          isSynthetic,
+        )
+      : 0;
 
   // Dispatch 104. An envelope the connector could not read is metered as zero
   // and looks, from the dashboard, exactly like traffic that did not happen.
