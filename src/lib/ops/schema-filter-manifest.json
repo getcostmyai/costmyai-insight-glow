@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-30T01:39:32.254Z",
+  "generatedAt": "2026-08-30T02:16:31.143Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -597,7 +597,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 258,
+      "line": 289,
       "table": "usage_events",
       "filters": [
         "org_id",
@@ -607,7 +607,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 272,
+      "line": 303,
       "table": "host_prices",
       "filters": [
         "is_fixture"
@@ -616,7 +616,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 290,
+      "line": 321,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -1064,7 +1064,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 400,
+      "line": 422,
       "table": "switches",
       "filters": [
         "is_synthetic",
@@ -1075,7 +1075,7 @@
     },
     {
       "file": "src/lib/switching/savings.server.ts",
-      "line": 442,
+      "line": 464,
       "table": "switches",
       "filters": [
         "org_id"
