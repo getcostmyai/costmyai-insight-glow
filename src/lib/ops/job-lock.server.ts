@@ -63,3 +63,64 @@ export async function withJobLock<T>(
     await lock.release().catch(() => undefined);
   }
 }
+
+/**
+ * Same lease, different waiting policy.
+ *
+ * `acquireJobLock`/`withJobLock` treat "someone else holds it" as a no-op —
+ * correct for a cron tick, where a skipped overlap costs nothing because the
+ * next tick repeats the whole sweep anyway. It is the wrong policy for a
+ * request-triggered read-compute-write (Dispatch 267): `rebuildRollups` and
+ * `recomputeSwitchSavings` are each called with a real batch of newly-ingested
+ * traffic behind them, and that traffic does not get re-offered later. Skipping
+ * the second caller instead of waiting for the first would mean its rollup /
+ * saved_usd write never happens until some unrelated future call for the same
+ * org rebuilds from scratch — which can be arbitrarily far away for a
+ * low-traffic workspace, wrong as a general answer even though the eventual
+ * self-heal makes it easy to miss.
+ *
+ * So this variant blocks: poll the lease until it is free or `maxWaitMs`
+ * elapses, then run `fn` holding it. Two callers for the same key are
+ * serialised rather than one being dropped — the second caller's read always
+ * starts after the first caller's write has committed and its lease is
+ * released, so it always computes from a superset of what the first call saw.
+ * That ordering guarantee — not merely "no crash" — is what closes the lost-
+ * update race: whichever call finishes last re-derives the full state from
+ * scratch (rollups and saved_usd are both re-derived, never incremented), so
+ * the last writer can only ever be as complete as, or more complete than, the
+ * one before it. No writer can silently revert another's committed traffic.
+ */
+export async function acquireJobLockBlocking(
+  key: string,
+  opts: { ttlSeconds?: number; maxWaitMs?: number; pollMs?: number } = {},
+): Promise<JobLock> {
+  const ttlSeconds = opts.ttlSeconds ?? 60;
+  const maxWaitMs = opts.maxWaitMs ?? 30_000;
+  const pollMs = opts.pollMs ?? 100;
+  const deadline = Date.now() + maxWaitMs;
+
+  for (;;) {
+    const lock = await acquireJobLock(key, ttlSeconds);
+    if (lock) return lock;
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `timed out waiting for the ${key} lock after ${maxWaitMs}ms — another writer held it the whole time`,
+      );
+    }
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+}
+
+/** Run `fn` holding the lock, waiting for a concurrent holder to finish rather than skipping. */
+export async function withJobLockBlocking<T>(
+  key: string,
+  fn: () => Promise<T>,
+  opts: { ttlSeconds?: number; maxWaitMs?: number; pollMs?: number } = {},
+): Promise<T> {
+  const lock = await acquireJobLockBlocking(key, opts);
+  try {
+    return await fn();
+  } finally {
+    await lock.release().catch(() => undefined);
+  }
+}
