@@ -350,8 +350,9 @@ async function evaluateOrg(
       computed_at: new Date().toISOString(),
     }));
     const { error: refusalError } = await supabaseAdmin
-      .from("refusal_events" as never)
-      .insert(refusalRows as never);
+      .from("refusal_events")
+      // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- is_synthetic is enforced by the enforce_synthetic_flag() DB trigger; payload reaches this call as the refusalRows identifier, not an inline object/array literal, so the rule can't verify it statically.
+      .insert(refusalRows);
     if (refusalError) throw new Error(`writing refusal_events failed: ${refusalError.message}`);
     ctx.report.refusalEventsWritten += refusalRows.length;
   }

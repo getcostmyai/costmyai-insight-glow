@@ -12,6 +12,7 @@ const GUARDED_TABLES = new Set([
   'billing_captures',
   'objectives',
   'workload_profiles',
+  'refusal_events',
 ]);
 
 const INSERT_METHODS = new Set(['insert', 'upsert']);
