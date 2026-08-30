@@ -2705,6 +2705,15 @@ export type Database = {
       }
       rate_limit_gc: { Args: { _older_than_seconds?: number }; Returns: number }
       rate_limit_prune: { Args: never; Returns: number }
+      restore_commission: {
+        Args: {
+          _environment?: string
+          _fraction?: number
+          _invoice_id: string
+          _reason: string
+        }
+        Returns: Json
+      }
       schema_filter_state: { Args: { _predicates: Json }; Returns: Json }
       set_org_plan: {
         Args: {
