@@ -282,21 +282,73 @@ async function clawback(
   if (error) throw new Error(`clawback failed: ${error.message}`);
 }
 
+/**
+ * A dispute that resolved in our favor undoes the clawback the dispute itself
+ * caused — but only down to whatever fraction the charge's own real refund
+ * state still justifies. A genuine partial refund that happened independently
+ * of the dispute must not be silently un-clawed-back alongside it, so the
+ * target fraction is recomputed from the charge exactly the way
+ * `charge.refunded` computes it, not simply reset to zero.
+ */
+async function restoreClawback(
+  invoiceId: string | null,
+  charge: any,
+  reason: string,
+  env: StripeEnv,
+) {
+  if (!invoiceId) return;
+  let stillOwedFraction: number;
+  try {
+    stillOwedFraction = refundedFraction(charge);
+  } catch (error) {
+    if (error instanceof ChargeAmountUnknownError) {
+      console.error(
+        `Commission NOT restored for invoice ${invoiceId}: ${error.message}. ` +
+          `Settle this line manually and record why.`,
+      );
+      return;
+    }
+    throw error;
+  }
+  const { error } = await getSupabase().rpc("restore_commission", {
+    _invoice_id: invoiceId,
+    _reason: reason,
+    _environment: env,
+    _fraction: Math.min(1, Math.max(0, stillOwedFraction)),
+  });
+  if (error) throw new Error(`commission restore failed: ${error.message}`);
+}
+
 function invoiceIdOf(charge: any): string | null {
   const invoice = charge?.invoice;
   if (!invoice) return null;
   return typeof invoice === "string" ? invoice : (invoice.id ?? null);
 }
 
+/**
+ * Thrown when a charge's own reported amount cannot support computing a real
+ * refunded fraction. A missing/zero amount is a malformed or atypical
+ * payload, not evidence the whole charge should be clawed back — defaulting
+ * to 1 here would silently claw back 100% of a partner's commission on data
+ * we do not actually understand. An over-clawback is not a smaller incident
+ * than an under-clawback, so this refuses instead of guessing.
+ */
+export class ChargeAmountUnknownError extends Error {}
+
 /** Cumulative share of a charge that has been refunded, 0..1. */
-function refundedFraction(charge: any): number {
+export function refundedFraction(charge: any): number {
   const amount = Number(charge?.amount ?? 0);
-  if (!(amount > 0)) return 1;
+  if (!(amount > 0)) {
+    throw new ChargeAmountUnknownError(
+      `Charge ${charge?.id ?? "(no id)"} has no usable amount (${JSON.stringify(charge?.amount)}); ` +
+        `refusing to guess a refunded fraction.`,
+    );
+  }
   return Math.min(1, Number(charge?.amount_refunded ?? 0) / amount);
 }
 
 
-async function handleWebhook(req: Request, env: StripeEnv) {
+export async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
   switch (event.type) {
@@ -315,7 +367,23 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "charge.refunded": {
       const charge = event.data.object;
-      const share = refundedFraction(charge);
+      let share: number;
+      try {
+        share = refundedFraction(charge);
+      } catch (error) {
+        if (error instanceof ChargeAmountUnknownError) {
+          // Same refusal shape as the currency-unconvertible case below:
+          // writing a clawback fraction we cannot stand behind is worse than
+          // writing none, and retrying would fail identically since the
+          // charge itself is malformed, not the delivery.
+          console.error(
+            `Clawback NOT computed for charge ${charge?.id}: ${error.message}. ` +
+              `Settle this line manually and record why.`,
+          );
+          break;
+        }
+        throw error;
+      }
       await clawback(
         invoiceIdOf(charge),
         share >= 1 ? "invoice refunded" : `invoice partially refunded (${Math.round(share * 100)}%)`,
@@ -331,6 +399,23 @@ async function handleWebhook(req: Request, env: StripeEnv) {
         const { createStripeClient } = await import("@/lib/stripe.server");
         const charge = await createStripeClient(env).charges.retrieve(chargeId);
         await clawback(invoiceIdOf(charge), "payment disputed", env);
+      }
+      break;
+    }
+    case "charge.dispute.closed": {
+      // Stripe's dispute status enum: warning_needs_response, warning_under_review,
+      // warning_closed, needs_response, under_review, won, lost, prevented.
+      // Only "won" means resolved in the merchant's favor; every other
+      // terminal value ("lost" chargeback-stands, "prevented", etc.) leaves
+      // the clawback from charge.dispute.created exactly as it is.
+      const dispute = event.data.object;
+      if (dispute.status === "won") {
+        const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+        if (chargeId) {
+          const { createStripeClient } = await import("@/lib/stripe.server");
+          const charge = await createStripeClient(env).charges.retrieve(chargeId);
+          await restoreClawback(invoiceIdOf(charge), charge, "dispute resolved in merchant's favor", env);
+        }
       }
       break;
     }

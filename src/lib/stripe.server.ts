@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+
 import Stripe from "stripe";
 
 const getEnv = (key: string): string => {
@@ -128,7 +130,21 @@ export async function verifyWebhook(
   );
   const expected = Buffer.from(new Uint8Array(signed)).toString("hex");
 
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  const expectedBuffer = Buffer.from(expected, "hex");
+
+  // A plain string comparison (`.includes`/`===`) short-circuits on the first
+  // mismatched byte, which leaks how many leading bytes an attacker guessed
+  // correctly through response timing — the same side-channel Stripe's own
+  // SDK uses `crypto.timingSafeEqual` to close. `timingSafeEqual` throws on a
+  // length mismatch, so the length check runs first; it depends only on the
+  // (non-secret) header value, never on the secret's actual bytes, so it
+  // introduces no timing leak of its own.
+  const isValidSignature = v1Signatures.some((signature) => {
+    const candidate = Buffer.from(signature, "hex");
+    return candidate.length === expectedBuffer.length && timingSafeEqual(candidate, expectedBuffer);
+  });
+
+  if (!isValidSignature) throw new Error("Invalid webhook signature");
 
   return JSON.parse(body);
 }
