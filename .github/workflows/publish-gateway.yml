@@ -20,14 +20,20 @@
 #
 # Dispatch 236 adds a third line, and for the same reason v1 was frozen:
 #
-#   v3  The remotely-classifying line. Built with CLASSIFY_REMOTE_DEFAULT=true,
-#       so when the local rules abstain the extracted prompt text is sent to
-#       CostMyAI to be labelled by a model — off the request path, but it does
-#       leave the customer's network. v2's documented claim is "structural shape
-#       only, never meaning"; that claim is FALSE under remote classification,
-#       and a claim must not stop being true under a tag customers already run.
-#       So v3 is a new line, never a v2 rebuild. Opt out per-container with
-#       COSTMYAI_CLASSIFY_REMOTE=false; v3 then behaves exactly like v2.
+#   v3  The remotely-CAPABLE line. It contains the remote classification path,
+#       which v2 does not: when the local rules abstain, the extracted prompt
+#       text can be sent to CostMyAI to be labelled by a model — off the request
+#       path, but it does leave the customer's network. v2's documented claim is
+#       "structural shape only, never meaning"; that claim is FALSE under remote
+#       classification, and a claim must not stop being true under a tag
+#       customers already run. So v3 is a new line, never a v2 rebuild.
+#
+# Amendment, 30 August 2026 — remote classification is OPT-IN on v3:
+# v3 is built with CLASSIFY_REMOTE_DEFAULT=false, the same off-by-default
+# posture as v1 and v2, because the previous build made the homepage/pricing
+# claim "metadata only, never your prompt content" false for any customer
+# running the quickstart's own default command. An operator opts in explicitly
+# with COSTMYAI_CLASSIFY_REMOTE=true; left unset, v3 behaves exactly like v2.
 name: Publish gateway container
 
 on:
@@ -112,7 +118,7 @@ jobs:
           file: packages/gateway-container/Dockerfile
           build-args: |
             CLASSIFY_LOCAL_DEFAULT=true
-            CLASSIFY_REMOTE_DEFAULT=${{ inputs.line == 'v3' }}
+            CLASSIFY_REMOTE_DEFAULT=false
           push: true
           tags: |
             ghcr.io/getcostmyai/gateway:${{ inputs.version }}
@@ -125,7 +131,7 @@ jobs:
         run: |
           echo "Pushed:"
           echo "  ghcr.io/getcostmyai/gateway:${{ inputs.version }}"
-          echo "  ghcr.io/getcostmyai/gateway:${{ inputs.line }}   (line default: local classification ON; remote ${{ inputs.line == 'v3' && 'ON' || 'OFF' }})"
+          echo "  ghcr.io/getcostmyai/gateway:${{ inputs.line }}   (local classification ON by default; remote OFF — opt in per-container with COSTMYAI_CLASSIFY_REMOTE=true)"
           echo "  ghcr.io/getcostmyai/gateway:sha-${{ github.sha }}"
           echo ""
           echo "v1 was not touched and must never be republished from this tree."
