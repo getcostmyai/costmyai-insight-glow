@@ -214,9 +214,12 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                   }
                   sub={
                     <>
-                      on {govern.cooldown.nextWorkload} · {govern.cooldown.frozen} workload
-                      {govern.cooldown.frozen === 1 ? "" : "s"} waiting, every other workload is
-                      free to act · thaws <LocalTime iso={govern.cooldown.nextEndsAt!} />
+                      Govern's pacing rule for {govern.cooldown.nextWorkload}: one unattended switch
+                      per workload, then a mandatory wait before the next.{" "}
+                      {govern.cooldown.frozen} workload
+                      {govern.cooldown.frozen === 1 ? " is" : "s are"} inside that window right now.
+                      Every other workload is free to act. Next thaw:{" "}
+                      <LocalTime iso={govern.cooldown.nextEndsAt!} />.
                     </>
                   }
                   accent="oklch(0.9 0.03 285)"
@@ -225,7 +228,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 <HeroStat
                   label="Cooldown policy"
                   value={`${govern.policy.cooldownHours}h`}
-                  sub="per workload between unattended changes · no workload is waiting right now"
+                  sub="The wait Govern enforces between two unattended switches on the same workload. Long enough to confirm a switch is behaving before touching that workload again. No workload is inside that window right now."
                   accent="oklch(0.9 0.03 285)"
                 />
               )}
