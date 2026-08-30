@@ -118,15 +118,22 @@ export function DashboardSidebar({
                 key={meta.key}
                 to={paths[meta.key]}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-start gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                   active
                     ? "bg-primary-soft font-semibold text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <Icon className="size-4" />
-                {meta.label}
-                {locked ? <Lock className="ml-auto size-3.5 opacity-60" /> : null}
+                <Icon className="mt-0.5 size-4 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  {meta.label}
+                  {meta.tag ? (
+                    <span className="mt-0.5 block text-[10px] leading-tight font-normal text-muted-foreground">
+                      {meta.tag}
+                    </span>
+                  ) : null}
+                </span>
+                {locked ? <Lock className="mt-0.5 size-3.5 shrink-0 opacity-60" /> : null}
               </Link>
             );
           })}
