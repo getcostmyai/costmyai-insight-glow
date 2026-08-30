@@ -443,35 +443,19 @@ describe("entitlement gate at the database layer — a manager who is not paying
     expect(error).not.toBeNull();
   }, 30_000);
 
-  it("refuses a routing rule written directly by a free workspace", async () => {
-    const { error } = await owner.client.from("routing_rules").insert({
-      org_id: freeOrg,
-      from_model: "gpt-5.5",
-      from_host: "openai",
-      to_model: "gpt-5.5",
-      to_host: "azure",
-      source: "manual",
-      state: "active",
-      basis: "same model, cheaper host",
-      is_synthetic: true,
-    });
-    expect(error).not.toBeNull();
+  it("refuses apply_switch called by the manager of a free workspace", async () => {
+    const rec = await makeRecommendation(freeOrg, "gpt-5.5-free-gate");
+    const { error } = await owner.client.rpc("apply_switch", { _rec_id: rec, _autonomous: false });
+    expect(error?.message ?? "").toMatch(/not on the rightsize plan/i);
+    await admin.from("recommendations").delete().eq("id", rec);
   }, 30_000);
 
-  it("refuses an autonomous routing rule from a Rightsize workspace", async () => {
+  it("refuses apply_switch with autonomous=true from a Rightsize (not yet Govern) workspace", async () => {
     await grantPaidPlan(paidOrg, "rightsize");
-    const { error } = await owner.client.from("routing_rules").insert({
-      org_id: paidOrg,
-      from_model: "gpt-5.5",
-      from_host: "openai",
-      to_model: "gpt-5.5",
-      to_host: "azure",
-      source: "autonomous",
-      state: "active",
-      basis: "same model, cheaper host",
-      is_synthetic: true,
-    });
-    expect(error).not.toBeNull();
+    const rec = await makeRecommendation(paidOrg, "gpt-5.5-autonomous-gate");
+    const { error } = await owner.client.rpc("apply_switch", { _rec_id: rec, _autonomous: true });
+    expect(error?.message ?? "").toMatch(/not on the govern plan/i);
+    await admin.from("recommendations").delete().eq("id", rec);
   }, 30_000);
 
   it("refuses a manager raising their own plan through the workspace row", async () => {
