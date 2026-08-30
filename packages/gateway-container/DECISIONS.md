@@ -449,11 +449,11 @@ run — the same reason v1 was frozen when local classification arrived. So:
 | --- | --- | --- | --- |
 | v1 | absent | absent | no content is read |
 | v2 | ON by default | absent | content read in-process; only enums leave |
-| v3 | ON by default | ON by default | extracted text may leave, off the request path |
+| v3 | ON by default | present, OFF by default (opt-in via `COSTMYAI_CLASSIFY_REMOTE=true`) | extracted text may leave, off the request path — only if the operator opted in |
 
-`COSTMYAI_CLASSIFY_REMOTE=false` makes a v3 container behave exactly like v2.
-Remote cannot be on while local reading is off — a container that may send text
-upstream but may not look at it locally is a posture nobody asked for.
+Left unset, a v3 container behaves exactly like v2. Remote cannot be on while
+local reading is off — a container that may send text upstream but may not look
+at it locally is a posture nobody asked for.
 
 ### Why v3 became the quickstart default (Dispatch 237)
 
@@ -467,7 +467,21 @@ Two things make the move honest rather than a quiet posture change. Tags still
 never mutate: `v1` and `v2` stay published, frozen in posture, and anyone
 already running either keeps the exact container they agreed to. And the v3
 posture is stated at the point of copying — quickstart, README, CONNECT.md and
-the privacy page all say plainly that extracted text may leave the network when
-local rules abstain, and name both quieter tags and the env-var opt-out. There
-were no customers on `v1` to migrate; this changes what a new installer gets,
-nothing else.
+the privacy page all say plainly what leaves the network and under which
+setting, and name both quieter tags. There were no customers on `v1` to
+migrate; this changes what a new installer gets, nothing else.
+
+### Amendment, 30 August 2026 — remote classification flipped to opt-in
+
+`CLASSIFY_REMOTE_DEFAULT=true` is no longer baked into the v3 publish; the
+workflow now builds every line with `CLASSIFY_REMOTE_DEFAULT=false`. `v3`
+remains the quickstart tag, with local classification on by default same as
+`v2`, but the remote capability it alone contains now requires the operator to
+explicitly set `COSTMYAI_CLASSIFY_REMOTE=true`. Left unset, `v3` behaves
+exactly like `v2`.
+
+The reason is a binding claim-honesty veto. The homepage and pricing pages
+claim "metadata only, never your prompt content". Under the previous build
+that claim was false for any customer running the quickstart's own default
+command — the exact thing a default exists to protect against. A capability
+this sharp must be chosen, not inherited.
