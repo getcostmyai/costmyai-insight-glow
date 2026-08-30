@@ -1875,7 +1875,9 @@ export type Database = {
           id: string
           is_synthetic: boolean
           org_id: string
+          separation_score: number | null
           switch_id: string
+          verdict: string | null
         }
         Insert: {
           actor?: string | null
@@ -1885,7 +1887,9 @@ export type Database = {
           id?: string
           is_synthetic?: boolean
           org_id: string
+          separation_score?: number | null
           switch_id: string
+          verdict?: string | null
         }
         Update: {
           actor?: string | null
@@ -1895,7 +1899,9 @@ export type Database = {
           id?: string
           is_synthetic?: boolean
           org_id?: string
+          separation_score?: number | null
           switch_id?: string
+          verdict?: string | null
         }
         Relationships: [
           {

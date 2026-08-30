@@ -203,10 +203,14 @@ for (let i = 0; i < lines.length; i++) {
 if (remote.ok) {
   const LOCAL = CONTAINER_DEFAULTS.env.classifyLocalDefault;
   const REMOTE = CONTAINER_DEFAULTS.env.classifyRemoteDefault;
+  // This table must track the CURRENT posture contract, not the historical
+  // one. Remote classification is opt-in on every published line now, v3
+  // included, so v3 expects wantRemote: false. Leaving the old `true` here
+  // would flag a correctly-fixed v3 image as wrong.
   const expectations: { tag: string; wantLocal: boolean; wantRemote: boolean }[] = [
     { tag: CONTAINER_DEFAULTS.nonClassifyingTag, wantLocal: false, wantRemote: false },
     { tag: CONTAINER_DEFAULTS.classifyingTag, wantLocal: true, wantRemote: false },
-    { tag: CONTAINER_DEFAULTS.remoteClassifyingTag, wantLocal: true, wantRemote: true },
+    { tag: CONTAINER_DEFAULTS.remoteClassifyingTag, wantLocal: true, wantRemote: false },
   ];
 
   console.log(`\nBaked posture, read from each image's own config blob`);

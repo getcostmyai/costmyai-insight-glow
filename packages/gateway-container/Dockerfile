@@ -7,11 +7,13 @@
 # One source tree, three published postures, each decided by build args below:
 #   v1  no build args             — reads no request body
 #   v2  CLASSIFY_LOCAL_DEFAULT    — classifies locally, nothing leaves the container
-#   v3  + CLASSIFY_REMOTE_DEFAULT — remote fallback labelling; the CURRENT DEFAULT
-#                                   tag in CONTAINER_DEFAULTS (Dispatch 237)
+#   v3  + remote capability     — remote fallback labelling EXISTS in this line
+#                                 but is OFF by default (CLASSIFY_REMOTE_DEFAULT=false);
+#                                 an operator opts in with COSTMYAI_CLASSIFY_REMOTE=true.
+#                                 CURRENT DEFAULT tag in CONTAINER_DEFAULTS (Dispatch 237)
 #
 #   docker build -f packages/gateway-container/Dockerfile \
-#     --build-arg CLASSIFY_LOCAL_DEFAULT=true --build-arg CLASSIFY_REMOTE_DEFAULT=true \
+#     --build-arg CLASSIFY_LOCAL_DEFAULT=true --build-arg CLASSIFY_REMOTE_DEFAULT=false \
 #     -t ghcr.io/getcostmyai/gateway:v3.0.0 -t ghcr.io/getcostmyai/gateway:v3 .
 
 FROM node:22-alpine AS build
