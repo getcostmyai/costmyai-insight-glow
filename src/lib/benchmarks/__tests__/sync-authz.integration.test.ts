@@ -21,7 +21,8 @@
  * authz test would be its own kind of test pollution.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { requestHandler } from "@tanstack/react-start/server";
+import { requestHandler } from "@tanstack/start-server-core";
+import { runWithStartContext } from "@tanstack/start-storage-context";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { guardIntegrationDatabase } from "../../__tests__/support/isolation";
