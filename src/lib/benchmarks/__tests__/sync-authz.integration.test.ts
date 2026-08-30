@@ -21,7 +21,8 @@
  * authz test would be its own kind of test pollution.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { requestHandler } from "@tanstack/react-start/server";
+import { requestHandler } from "@tanstack/start-server-core";
+import { runWithStartContext } from "@tanstack/start-storage-context";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { guardIntegrationDatabase } from "../../__tests__/support/isolation";
@@ -108,46 +109,62 @@ afterAll(async () => {
 /**
  * Runs `runBenchmarkSync()` for real, inside a real framework request context
  * carrying the given bearer token — the same AsyncLocalStorage-backed context
- * `requireSupabaseAuth`'s `getRequest()` reads from on a live request. Returns
- * a plain descriptor rather than letting a thrown 403 `Response` (or a network
- * error) escape as an unhandled rejection into the framework's own response
- * serialization, whose exact shape for a thrown-not-returned `Response` isn't
- * this test's concern.
+ * `requireSupabaseAuth`'s `getRequest()` reads from on a live request.
+ *
+ * Same mechanism as partner-apply-e2e.integration.test.ts: `requestHandler`
+ * alone does NOT install that storage context under vitest, so the call is
+ * wrapped in `runWithStartContext`, and the SERVER half of the server function
+ * (`*_createServerFn_handler`, from the `?tss-serverfn-split` virtual module)
+ * is invoked directly — the client stub would attempt a network RPC. The
+ * middleware chain, `requireSupabaseAuth` and the handler body all run for
+ * real; only the browser→worker network hop is absent.
+ *
+ * Returns a plain descriptor so a thrown 403 `Response` is observable instead
+ * of escaping into the framework's own error serialization.
  */
-async function attemptSync(
-  token: string | undefined,
-): Promise<
+type SyncOutcome =
   | { outcome: "ok"; runId: string }
   | { outcome: "response"; status: number }
-  | { outcome: "error"; message: string }
-> {
-  const { runBenchmarkSync } = await import("../sync.functions");
-  const wrapped = requestHandler(async (): Promise<Response> => {
-    try {
-      const report = await runBenchmarkSync();
-      return Response.json({ outcome: "ok", runId: report.runId });
-    } catch (err) {
-      if (err instanceof Response)
-        return Response.json({ outcome: "response", status: err.status });
-      return Response.json({
-        outcome: "error",
-        message: err instanceof Error ? err.message : String(err),
-      });
-    }
-  });
+  | { outcome: "error"; message: string };
+
+async function attemptSync(token: string | undefined): Promise<SyncOutcome> {
+  const serverFns = (await import(
+    // @ts-expect-error virtual module produced by the TanStack server-fn plugin
+    /* @vite-ignore */ "@/lib/benchmarks/sync.functions?tss-serverfn-split"
+  )) as unknown as Record<
+    string,
+    (opts: {
+      data?: unknown;
+      context: Record<string, unknown>;
+    }) => Promise<{ result?: unknown; error?: unknown }>
+  >;
+  const execute = serverFns["runBenchmarkSync_createServerFn_handler"]!;
 
   const request = new Request("https://www.costmyai.com/_serverFn/runBenchmarkSync", {
     method: "POST",
     headers: token ? { authorization: `Bearer ${token}` } : {},
   });
-  // requestHandler's own return value is a real Response wrapping whatever the
-  // wrapped callback returned (JSON-serialized on the happy path here, since
-  // the callback itself never throws — it always returns a descriptor).
-  const response = await wrapped(request, {} as never);
-  return (await response.json()) as
-    | { outcome: "ok"; runId: string }
-    | { outcome: "response"; status: number }
-    | { outcome: "error"; message: string };
+
+  const describeFailure = (err: unknown): SyncOutcome =>
+    err instanceof Response
+      ? { outcome: "response", status: err.status }
+      : { outcome: "error", message: err instanceof Error ? err.message : String(err) };
+
+  const handler = requestHandler(async () =>
+    runWithStartContext({ contextAfterGlobalMiddlewares: {}, request } as never, async () => {
+      try {
+        const out = await execute({ context: {} });
+        if (out.error) return Response.json(describeFailure(out.error));
+        const report = out.result as { runId: string };
+        return Response.json({ outcome: "ok", runId: report.runId });
+      } catch (err) {
+        return Response.json(describeFailure(err));
+      }
+    }),
+  );
+
+  const response = await handler(request, {} as never);
+  return (await (response as Response).json()) as SyncOutcome;
 }
 
 afterEach(() => {
