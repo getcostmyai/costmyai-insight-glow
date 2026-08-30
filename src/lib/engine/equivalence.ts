@@ -205,6 +205,7 @@ export function findQualityMatches(
 
   const refuse = (u: UsageAggregate, reason: Refusal["reason"], detail: string) =>
     refusals.push({
+      kind: "quality_match",
       fromModel: u.model_key,
       fromHost: u.host,
       taskHint: u.task_hint,
