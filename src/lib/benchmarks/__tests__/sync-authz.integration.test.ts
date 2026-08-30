@@ -129,6 +129,7 @@ type SyncOutcome =
 
 async function attemptSync(token: string | undefined): Promise<SyncOutcome> {
   const serverFns = (await import(
+    // @ts-expect-error virtual module produced by the TanStack server-fn plugin
     /* @vite-ignore */ "@/lib/benchmarks/sync.functions?tss-serverfn-split"
   )) as unknown as Record<
     string,
