@@ -199,18 +199,20 @@ export function OverviewLevel({ ctl }: { ctl: DashboardController }) {
         }
         sub={
           <>
-            Across every check your workspace runs, {savings.certifiedCount} switch
-            {savings.certifiedCount === 1 ? " is" : "es are"} certified and ready to activate,
-            measured as a real sum over the {activeRange.long} of your own traffic, each workload
-            counted once.
-            {savings.locked > 0 && (
+            To find that number, we ran your traffic through every check your plan includes. Each
+            one a real test that only recommends a switch when it can prove nothing is lost: the
+            same model on a cheaper host, a cheaper model that scores the same on your task, or a
+            smaller model matched to work that never needed a bigger one. {savings.certifiedCount}{" "}
+            came back certified, and one click from switching over. Measured as a real dollar sum
+            over the {activeRange.long} of your own traffic, each workload counted once
+            {savings.locked > 0 ? (
               <>
-                {" "}
-                A further <span className="num text-white">
-                  {usd(savings.locked, 0)}
-                </span>{" "}
-                was found by checks your plan does not include yet.
+                , plus a further{" "}
+                <span className="num text-white">{usd(savings.locked, 0)}</span> found by checks
+                your plan doesn&apos;t include yet. The same kind of test, not yet unlocked for you.
               </>
+            ) : (
+              "."
             )}
           </>
         }
