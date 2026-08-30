@@ -354,7 +354,11 @@ let firstRun: Awaited<ReturnType<typeof import("../evaluate.server").runEvaluati
 
 const refusalFor = (w: SyntheticWorkload): Refusal | undefined =>
   engine.refusals.find(
-    (r) => r.fromModel === w.modelKey && r.fromHost === w.host && r.taskHint === w.taskHint,
+    (r) =>
+      r.kind === "quality_match" &&
+      r.fromModel === w.modelKey &&
+      r.fromHost === w.host &&
+      r.taskHint === w.taskHint,
   );
 
 beforeAll(async () => {
@@ -539,7 +543,7 @@ describe("refusal branches, on real seeded traffic", () => {
       models,
       staleEvidence: null,
     });
-    const r = out.refusals[0];
+    const r = out.refusals.filter((x) => x.kind === "quality_match")[0];
     console.log(`[no_cheaper_candidate] ${r?.reason} :: ${r?.detail}`);
     expect(out.qualityMatched).toHaveLength(0);
     expect(r?.reason).toBe("no_cheaper_candidate");
@@ -563,7 +567,7 @@ describe("refusal branches, on real seeded traffic", () => {
       models,
       staleEvidence: null,
     });
-    const r = out.refusals[0];
+    const r = out.refusals.filter((x) => x.kind === "quality_match")[0];
     console.log(`[no_candidate_clears_bar] ${r?.reason} :: ${r?.detail}`);
     expect(out.qualityMatched).toHaveLength(0);
     expect(r?.reason).toBe("no_candidate_clears_bar");
@@ -640,7 +644,9 @@ describe("the arithmetic the Certify hero prints", () => {
 
   it("sums the three buckets to the total, exactly", () => {
     const s = engine.stats;
-    const b = breakdownRefusals(engine.refusals.map((r) => r.reason));
+    const b = breakdownRefusals(
+      engine.refusals.filter((r) => r.kind === "quality_match").map((r) => r.reason),
+    );
     expect(s.qualityRefusedMeasured + s.qualityRefusedUnmeasurable + s.qualityRefusedNoCandidate).toBe(
       s.qualityRefused,
     );

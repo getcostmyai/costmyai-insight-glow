@@ -46,6 +46,15 @@ const CLASS_OF: Record<RefusalReason, RefusalClass> = {
   // Checked, and there was nothing cheaper worth moving to.
   no_cheaper_candidate: "no_candidate",
   saving_below_floor: "no_candidate",
+  // Rightsize-only reasons (Problem #6). The model's tier is not on record,
+  // so there is nothing to measure the workload's shape against.
+  no_model_tier: "unmeasurable",
+  // Not enough observed requests to trust the shape — an absent measurement.
+  insufficient_sample: "unmeasurable",
+  // A real comparison ran and concluded there is nothing to downgrade.
+  already_right_sized: "no_candidate",
+  // No model priced at the tier this workload would need to move to.
+  no_target_tier_priced: "unmeasurable",
 };
 
 export function refusalClass(reason: RefusalReason): RefusalClass {

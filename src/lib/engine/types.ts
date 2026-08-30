@@ -163,9 +163,20 @@ export type RefusalReason =
   | "no_candidate_clears_bar"
   | "no_cheaper_candidate"
   | "latency_ceiling_unmet"
-  | "saving_below_floor";
+  | "saving_below_floor"
+  /**
+   * Problem #6 (premortem). Rightsize-only reasons: whether the model's tier
+   * is even known, whether the sample is large enough to trust, whether the
+   * workload is already at the tier it needs, and whether any model is priced
+   * at the tier it would need to move to.
+   */
+  | "no_model_tier"
+  | "insufficient_sample"
+  | "already_right_sized"
+  | "no_target_tier_priced";
 
 export interface Refusal {
+  kind: RecKind;
   fromModel: string;
   fromHost: string;
   taskHint: string;
