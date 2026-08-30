@@ -402,6 +402,23 @@ export async function handleWebhook(req: Request, env: StripeEnv) {
       }
       break;
     }
+    case "charge.dispute.closed": {
+      // Stripe's dispute status enum: warning_needs_response, warning_under_review,
+      // warning_closed, needs_response, under_review, won, lost, prevented.
+      // Only "won" means resolved in the merchant's favor; every other
+      // terminal value ("lost" chargeback-stands, "prevented", etc.) leaves
+      // the clawback from charge.dispute.created exactly as it is.
+      const dispute = event.data.object;
+      if (dispute.status === "won") {
+        const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+        if (chargeId) {
+          const { createStripeClient } = await import("@/lib/stripe.server");
+          const charge = await createStripeClient(env).charges.retrieve(chargeId);
+          await restoreClawback(invoiceIdOf(charge), charge, "dispute resolved in merchant's favor", env);
+        }
+      }
+      break;
+    }
     case "checkout.session.completed":
       // Subscription state is carried by the customer.subscription.* events.
       break;
