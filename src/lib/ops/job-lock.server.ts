@@ -26,10 +26,13 @@ export interface JobLock {
 /** Take the lock, or return null when another run already holds it. */
 export async function acquireJobLock(job: string, ttlSeconds = 900): Promise<JobLock | null> {
   const db = adminClient();
-  const { data, error } = await db.rpc("job_lock_acquire" as never, {
-    _job: job,
-    _ttl_seconds: ttlSeconds,
-  } as never);
+  const { data, error } = await db.rpc(
+    "job_lock_acquire" as never,
+    {
+      _job: job,
+      _ttl_seconds: ttlSeconds,
+    } as never,
+  );
   if (error) throw new Error(`could not take the ${job} lock: ${error.message}`);
   const token = (data as string | null) ?? null;
   if (!token) return null;
