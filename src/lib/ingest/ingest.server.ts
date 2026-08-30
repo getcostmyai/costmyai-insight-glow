@@ -30,6 +30,27 @@ export function adminClient() {
   });
 }
 
+/**
+ * Single source of truth for whether a workspace's writes must be flagged
+ * synthetic. One query per call — never per row — mirroring the same lookup
+ * savings.server.ts already does before writing switch_events. Callers
+ * that already know the answer (see ingestEvents threading it into
+ * rebuildRollups) pass it through instead of paying for it twice in one
+ * request.
+ */
+async function lookupOrgIsSynthetic(
+  db: ReturnType<typeof adminClient>,
+  orgId: string,
+): Promise<boolean> {
+  const { data, error } = await db
+    .from("organizations")
+    .select("is_synthetic")
+    .eq("id", orgId)
+    .maybeSingle();
+  if (error) throw new Error(`org synthetic lookup failed: ${error.message}`);
+  return data?.is_synthetic ?? false;
+}
+
 export function hashApiKey(rawKey: string): string {
   return createHash("sha256").update(rawKey).digest("hex");
 }
@@ -80,9 +101,11 @@ export interface IngestResult {
 export async function ingestEvents(orgId: string, events: IngestEvent[]): Promise<IngestResult> {
   const db = adminClient();
   const receivedAt = new Date().toISOString();
+  const isSynthetic = await lookupOrgIsSynthetic(db, orgId);
 
   const rows = events.map((e) => ({
     org_id: orgId,
+    is_synthetic: isSynthetic,
     occurred_at: e.occurred_at ?? receivedAt,
     model_key: e.model_key,
     host: e.host,
@@ -138,12 +161,20 @@ export async function ingestEvents(orgId: string, events: IngestEvent[]): Promis
 
   const { data: inserted, error } = await db
     .from("usage_events")
+    // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- is_synthetic is set per-row above (isSynthetic, from lookupOrgIsSynthetic) but the payload reaches this call as the rows identifier, not an inline object/array literal, so the rule can't verify it statically.
     .upsert(rows, { onConflict: "org_id,idempotency_key", ignoreDuplicates: true })
     .select("id");
   if (error) throw new Error(`ingest failed: ${error.message}`);
 
   const accepted = inserted?.length ?? 0;
-  const bucketsRebuilt = accepted > 0 ? await rebuildRollups(orgId, rows.map((r) => new Date(r.occurred_at))) : 0;
+  const bucketsRebuilt =
+    accepted > 0
+      ? await rebuildRollups(
+          orgId,
+          rows.map((r) => new Date(r.occurred_at)),
+          isSynthetic,
+        )
+      : 0;
 
   // Dispatch 104. An envelope the connector could not read is metered as zero
   // and looks, from the dashboard, exactly like traffic that did not happen.
@@ -207,8 +238,13 @@ async function watchUnparsedShapes(
  * stored events. Same `rollupEvents` the seed and the tests use, so an
  * ingested hour and a seeded hour are computed by identical code.
  */
-export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise<number> {
+export async function rebuildRollups(
+  orgId: string,
+  timestamps: Date[],
+  orgIsSynthetic?: boolean,
+): Promise<number> {
   const db = adminClient();
+  const isSynthetic = orgIsSynthetic ?? (await lookupOrgIsSynthetic(db, orgId));
   const min = new Date(Math.min(...timestamps.map((t) => t.getTime())));
   const max = new Date(Math.max(...timestamps.map((t) => t.getTime())));
   const from = bucketStart(min, "day");
@@ -302,6 +338,7 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
   const payload = buckets
     .map((b) => ({
       org_id: orgId,
+      is_synthetic: isSynthetic,
       bucket_start: b.bucketStart.toISOString(),
       granularity: b.granularity,
       model_key: b.modelKey,
@@ -345,6 +382,7 @@ export async function rebuildRollups(orgId: string, timestamps: Date[]): Promise
 
     const { error: upsertError } = await db
       .from("usage_rollups")
+      // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- is_synthetic is set per-row above (isSynthetic, from lookupOrgIsSynthetic/orgIsSynthetic) but the payload reaches this call as a slice() expression, not an inline object/array literal, so the rule can't verify it statically.
       .upsert(payload.slice(i, i + 500), {
         onConflict: "org_id,bucket_start,granularity,model_key,host,task_hint",
       });

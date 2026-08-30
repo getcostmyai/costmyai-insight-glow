@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-30T00:13:23.534Z",
+  "generatedAt": "2026-08-30T01:39:32.254Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -587,7 +587,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 51,
+      "line": 72,
       "table": "api_keys",
       "filters": [
         "org_id",
@@ -597,7 +597,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 222,
+      "line": 258,
       "table": "usage_events",
       "filters": [
         "org_id",
@@ -607,7 +607,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 236,
+      "line": 272,
       "table": "host_prices",
       "filters": [
         "is_fixture"
@@ -616,7 +616,7 @@
     },
     {
       "file": "src/lib/ingest/ingest.server.ts",
-      "line": 254,
+      "line": 290,
       "table": "model_catalog",
       "filters": [
         "is_active"
