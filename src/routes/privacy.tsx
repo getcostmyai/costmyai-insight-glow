@@ -55,31 +55,32 @@ function PrivacyPage() {
           <strong className="text-foreground">Usage and billing data you choose to share:</strong>{" "}
           aggregate, provider neutral records of model usage, spend, and switching activity, pushed
           from your own environment via the Verification Engine. Model outputs are never sent to
-          us, and prompt content is only ever involved in the one case described immediately below.
-          Which Verification Engine image you run decides that, and the quickstart now hands new customers
-          the <code>v3</code> image by default, so this is the posture you get unless you choose
-          another tag. On the <code>v1</code> image, the task label is derived from the request
-          path and model name alone and no request body is read. On the <code>v2</code> image,
+          us, and prompt content is only ever involved in the one opt-in case described immediately
+          below. Which Verification Engine image you run decides which labels you get, and the
+          quickstart hands new customers the <code>v3</code> image by default. On the{" "}
+          <code>v1</code> image, the task label is derived from the request path and model name
+          alone and no request body is read. On the <code>v2</code> and <code>v3</code> images,
           local classification is on by default: request text is read inside your own container to
           derive a more accurate label, and <code>COSTMYAI_CLASSIFY_LOCAL=false</code> turns it
-          off. On both of those images, only the label, a confidence number and feature names leave
-          your environment, and no prompt text is transmitted, stored or logged by us.
+          off. On all three images, only the label, a confidence number and feature names leave
+          your environment by default, and no prompt text is transmitted, stored or logged by us.
         </p>
         <p>
           <strong className="text-foreground">
-            The one exception, on the v3 image — and v3 is what a new install runs:
+            The one exception — opt-in only, on the v3 image:
           </strong>{" "}
-          the <code>v3</code> Verification Engine image adds remote classification, on by default in that tag
-          only. When the in-container rules cannot place a request, the extracted request text is
-          sent to us and labelled by a model. That call runs after your response has already been
-          returned, so it never delays your traffic. The text is used for that single labelling
-          call and is not persisted by us; the only thing retained is the resulting label. Because
-          this is now the default rather than something you opt into, we state it here plainly: if
-          you do not want it, set <code>COSTMYAI_CLASSIFY_REMOTE=false</code> and the v3 image
-          behaves exactly like v2, or run the <code>v2</code> image, where the capability does not
-          exist at all, or the <code>v1</code> image, which reads no request body whatsoever. Both
-          remain published and supported; your own environment variable always overrides the tag's
-          default.
+          the <code>v3</code> Verification Engine image is capable of remote classification, and it
+          is off by default, exactly as on v2. Only if you explicitly set{" "}
+          <code>COSTMYAI_CLASSIFY_REMOTE=true</code> does it activate: when the in-container rules
+          cannot place a request, the extracted request text is sent to us and labelled by a model.
+          That call runs after your response has already been returned, so it never delays your
+          traffic. The text is used for that single labelling call and is not persisted by us; the
+          only thing retained is the resulting label. Left unset, the v3 image behaves exactly
+          like v2, where the capability does not exist at all; the <code>v1</code> image reads no
+          request body whatsoever. Both quieter tags remain published and supported, and your own
+          environment variable always overrides the tag's default. Where remote classification is
+          opted into, OpenAI processes the extracted text as a subprocessor — see the subprocessor
+          list below.
         </p>
 
         <p>
@@ -128,6 +129,13 @@ function PrivacyPage() {
           <li>
             <strong className="text-foreground">Google (Google Analytics):</strong> website
             analytics, per the Cookies and consent section above.
+          </li>
+          <li>
+            <strong className="text-foreground">OpenAI:</strong> only when a customer explicitly
+            opts a v3 Verification Engine container into remote classification with{" "}
+            <code>COSTMYAI_CLASSIFY_REMOTE=true</code>. In that case the extracted request text the
+            in-container rules could not place is sent to OpenAI for a single labelling call, and
+            is not retained by OpenAI or by CostMyAI beyond that call's response.
           </li>
           <li>
             <strong className="text-foreground">Stripe:</strong> payment processing and subscription

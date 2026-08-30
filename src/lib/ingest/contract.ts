@@ -167,12 +167,18 @@ export const CONTAINER_DEFAULTS = {
    */
   classifyingTag: "v2",
   /**
-   * Dispatch 236. The remotely-classifying line, and since Dispatch 237 the
-   * quickstart default: local rules first, and when they abstain, the
-   * extracted prompt text is sent to CostMyAI to be labelled by a model. That
-   * is a different privacy posture from `v2`, whose claim is "structural shape
-   * only, never meaning, and nothing leaves the container". A moving `v2` must
-   * not quietly acquire it, which is why it is a separate tag.
+   * Dispatch 236. The remotely-CAPABLE line, and since Dispatch 237 the
+   * quickstart tag: local rules first, same as `v2`, and when they abstain a
+   * container MAY send the extracted prompt text to CostMyAI to be labelled by
+   * a model. That is a different privacy posture from `v2`, whose claim is
+   * "structural shape only, never meaning, and nothing leaves the container".
+   * A moving `v2` must not quietly acquire it, which is why it is a separate
+   * tag.
+   *
+   * Amendment, 30 August 2026: remote classification is OPT-IN on every
+   * published line, including this one. `v3` remains the quickstart tag for
+   * its local classification; the remote capability defaults OFF same as `v2`
+   * unless the operator explicitly sets `COSTMYAI_CLASSIFY_REMOTE=true`.
    */
   remoteClassifyingTag: "v3",
 
@@ -213,8 +219,11 @@ export const CONTAINER_DEFAULTS = {
      */
     classifyRemote: "COSTMYAI_CLASSIFY_REMOTE",
     /**
-     * Baked in at build time, never set by a customer. `v3` is built with it;
-     * `v1` and `v2` are not, and must never be.
+     * Baked in at build time, never set by a customer. `v1` and `v2` are not
+     * built with it, and must never be. As of the opt-in flip (30 August
+     * 2026), v3's own build sets this to false too — remote classification is
+     * opt-in on every published line, reachable only through the customer's
+     * own `COSTMYAI_CLASSIFY_REMOTE=true`.
      */
     classifyRemoteDefault: "COSTMYAI_CLASSIFY_REMOTE_DEFAULT",
   },

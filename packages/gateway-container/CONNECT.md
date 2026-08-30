@@ -34,9 +34,11 @@ The three things that matter before you decide:
    | ----- | ------------------------------------------------------------------------------ |
    | `:v1` | Coarse, from the request path and model name alone. No request body is read. Chat traffic stays `unknown`, and Certify refuses it. |
    | `:v2` | Also classifies the request text **inside your own container**. Only the resulting label, a confidence number and feature names (e.g. `structure.tool_result`) are ever sent to us. On by default; `COSTMYAI_CLASSIFY_LOCAL=false` turns it off and your setting always wins. |
+   | `:v3` | Same in-container classification as `:v2`, plus one optional capability `:v2` does not have: sending the extracted text to us for labelling when the local rules abstain. **Off by default** — it runs only once you set `COSTMYAI_CLASSIFY_REMOTE=true`. |
 
-   Prompt text never leaves your environment on either tag. `:v1` containers do not
-   contain the classifier at all — setting the variable there does nothing.
+   Prompt text never leaves your environment on any tag by default. `:v1` containers do
+   not contain the classifier at all — setting the variable there does nothing. `:v3` is
+   the only tag *capable* of sending text, and only once you have opted in.
 
 
 **The only change to your application is one line: the base URL.** No SDK swap, no code
@@ -99,13 +101,13 @@ docker run -d --name costmyai-anthropic --restart unless-stopped \
   ghcr.io/getcostmyai/gateway:v3
 ```
 
-**About `:v3`, the default tag.** It derives a task label for each request — local rules
-in your container first, and when those cannot place a request, the extracted request
-text is sent to us to be labelled off your request path. That label is what makes Certify
-and Rightsize work on ordinary chat traffic. Turn the remote half off with
-`-e COSTMYAI_CLASSIFY_REMOTE=false`, or run `:v2` (local classification only, nothing
-leaves your container) or `:v1` (no request body read at all). Your env var always beats
-the tag's default.
+**About `:v3`, the default tag.** It derives a task label for each request with local
+rules in your container, which is what makes Certify and Rightsize work on ordinary chat
+traffic. Nothing leaves your container by default. The one further step `v3` can take —
+sending the extracted request text to us for labelling when the local rules cannot place a
+request — is opt-in: set `-e COSTMYAI_CLASSIFY_REMOTE=true` to enable it, off your request
+path. Or run `:v2` (local classification only, nothing leaves your container) or `:v1`
+(no request body read at all). Your env var always beats the tag's default.
 
 The exact commands with your real token pre-filled are on the Settings page. The dashboard
 generates them from the same constant the container itself reads, so they cannot drift.
