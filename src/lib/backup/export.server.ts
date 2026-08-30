@@ -133,7 +133,9 @@ export async function runBackupExport(): Promise<ExportResult> {
       for (let page = 0; sawFullPage && page < MAX_PAGES_PER_TABLE; page++) {
         const res = await supabaseAdmin.rpc("backup_export_table_page_sql", {
           _table: table,
-          _after: after,
+          // The generated arg type is non-nullable, but the function's first
+          // page is explicitly driven by SQL NULL (`$1 IS NULL OR id > $1`).
+          _after: after as unknown as string,
           _page_size: PAGE_SIZE,
         });
         if (res.error) return fail(`export failed on ${table} (page ${page}): ${res.error.message}`);
