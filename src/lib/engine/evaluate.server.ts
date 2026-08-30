@@ -12,6 +12,7 @@ import {
 
 import type { ObjectiveRow } from "./objectives";
 import { runPipeline } from "./pipeline";
+import { refusalClass } from "./refusal-class";
 import type {
   BenchmarkRow,
   MarginRow,
@@ -53,6 +54,7 @@ export interface EvaluationReport {
   recommendationsWritten: number;
   autonomousSwitches: number;
   autonomousRefusals: Record<string, number>;
+  refusalEventsWritten: number;
   errors: string[];
 }
 
@@ -89,6 +91,7 @@ export async function runEvaluation(
     recommendationsWritten: 0,
     autonomousSwitches: 0,
     autonomousRefusals: {},
+    refusalEventsWritten: 0,
     errors: [],
   };
 
@@ -228,7 +231,7 @@ export async function runEvaluation(
   }
 
   console.log(
-    `[evaluation:${trigger}] orgs=${report.orgs} written=${report.recommendationsWritten} autonomous=${report.autonomousSwitches} errors=${report.errors.length}`,
+    `[evaluation:${trigger}] orgs=${report.orgs} written=${report.recommendationsWritten} autonomous=${report.autonomousSwitches} refusals=${report.refusalEventsWritten} errors=${report.errors.length}`,
   );
   return report;
 }
@@ -333,6 +336,25 @@ async function evaluateOrg(
     objectives: (objectives.data ?? []) as ObjectiveRow[],
     staleEvidence: ctx.staleEvidence,
   });
+
+  if (result.refusals.length > 0) {
+    const refusalRows = result.refusals.map((r) => ({
+      org_id: org.id,
+      kind: r.kind,
+      from_model: r.fromModel,
+      from_host: r.fromHost,
+      task_hint: r.taskHint,
+      reason: r.reason,
+      refusal_class: refusalClass(r.reason),
+      detail: r.detail,
+      computed_at: new Date().toISOString(),
+    }));
+    const { error: refusalError } = await supabaseAdmin
+      .from("refusal_events" as never)
+      .insert(refusalRows as never);
+    if (refusalError) throw new Error(`writing refusal_events failed: ${refusalError.message}`);
+    ctx.report.refusalEventsWritten += refusalRows.length;
+  }
 
   const subState: SubscriptionState | null = subscription.data
     ? {

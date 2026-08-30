@@ -1,9 +1,9 @@
-import { findHostArbitrage } from "./arbitrage";
+import { findHostArbitrageFull } from "./arbitrage";
 import { findQualityMatches } from "./equivalence";
 import { objectiveResolver, type ObjectiveRow } from "./objectives";
 import { breakdownRefusals } from "./refusal-class";
 
-import { findOversized } from "./rightsize";
+import { findOversizedFull } from "./rightsize";
 import type {
   BenchmarkRow,
   MarginRow,
@@ -67,8 +67,11 @@ export interface EngineOutput {
 export function runPipeline(input: EngineInput): EngineOutput {
   const resolve = objectiveResolver(input.objectives ?? []);
 
-  const hostArbitrage = findHostArbitrage(input.usage, input.prices);
-  const { recommendations: qualityMatched, refusals } = findQualityMatches(
+  const { recommendations: hostArbitrage, refusals: hostArbitrageRefusals } = findHostArbitrageFull(
+    input.usage,
+    input.prices,
+  );
+  const { recommendations: qualityMatched, refusals: qualityRefusals } = findQualityMatches(
     input.usage,
     input.prices,
     input.benchmarks,
@@ -76,11 +79,17 @@ export function runPipeline(input: EngineInput): EngineOutput {
     resolve,
     input.staleEvidence ?? null,
   );
-  const oversized = findOversized(input.usage, input.models, input.prices);
+  const { recommendations: oversized, refusals: oversizedRefusals } = findOversizedFull(
+    input.usage,
+    input.models,
+    input.prices,
+  );
+
+  const refusals = [...hostArbitrageRefusals, ...qualityRefusals, ...oversizedRefusals];
 
   // Split the refusals by whether a measurement actually happened, so no
   // surface can describe an absent instrument as a failed quality test.
-  const refusalMix = breakdownRefusals(refusals.map((r) => r.reason));
+  const refusalMix = breakdownRefusals(qualityRefusals.map((r) => r.reason));
 
   return {
     hostArbitrage,

@@ -6,6 +6,7 @@ import {
   type ModelTier,
   type PriceRow,
   type Recommendation,
+  type Refusal,
   type UsageAggregate,
 } from "./types";
 
@@ -115,25 +116,61 @@ export function rightsizeNote(
  * baseline, and quantified against the cheapest model of the required tier
  * rather than assuming the whole spend disappears.
  */
-export function findOversized(
+export interface RightsizeResult {
+  recommendations: Recommendation[];
+  refusals: Refusal[];
+}
+
+export function findOversizedFull(
   usage: UsageAggregate[],
   models: ModelRow[],
   prices: PriceRow[],
-): Recommendation[] {
+): RightsizeResult {
   const tierOf = new Map(models.map((m) => [m.model_key, m.tier]));
   const byModel = indexPrices(prices);
   const out: Recommendation[] = [];
+  const refusals: Refusal[] = [];
+
+  const refuse = (u: UsageAggregate, reason: Refusal["reason"], detail: string) =>
+    refusals.push({
+      kind: "rightsize",
+      fromModel: u.model_key,
+      fromHost: u.host,
+      taskHint: u.task_hint,
+      reason,
+      detail,
+    });
 
   for (const u of usage) {
     const observed = tierOf.get(u.model_key);
-    if (!observed) continue;
+    if (!observed) {
+      refuse(u, "no_model_tier", `No tier classification on record for ${u.model_key}.`);
+      continue;
+    }
     // Not enough evidence to call this workload oversized.
-    if (u.requests < MIN_RIGHTSIZE_SAMPLE) continue;
+    if (u.requests < MIN_RIGHTSIZE_SAMPLE) {
+      refuse(
+        u,
+        "insufficient_sample",
+        `Only ${u.requests} requests observed, under the ${MIN_RIGHTSIZE_SAMPLE}-request minimum sample Rightsize requires before trusting the shape.`,
+      );
+      continue;
+    }
     const required = requiredTierFor(u);
-    if (TIER_RANK[observed] <= TIER_RANK[required]) continue;
+    if (TIER_RANK[observed] <= TIER_RANK[required]) {
+      refuse(
+        u,
+        "already_right_sized",
+        `${u.model_key} (${observed}) is already at or below the ${required} tier this workload needs.`,
+      );
+      continue;
+    }
 
     const baseline = arbitrageBaseline(u, byModel);
-    if (!baseline) continue;
+    if (!baseline) {
+      refuse(u, "no_baseline_price", `No price on record for ${u.model_key} on any host.`);
+      continue;
+    }
 
     // Cheapest price point among models that sit at the required tier.
     // Priced through costOfUsage so this level uses the one cost formula every
@@ -152,11 +189,29 @@ export function findOversized(
         if (!target || cheaperWins(candidate, target) < 0) target = candidate;
       }
     }
-    if (!target || target.cost >= baseline.cost) continue;
+    if (!target) {
+      refuse(u, "no_target_tier_priced", `No priced model found at the required ${required} tier.`);
+      continue;
+    }
+    if (target.cost >= baseline.cost) {
+      refuse(
+        u,
+        "no_cheaper_candidate",
+        `Cheapest ${required}-tier model (${target.price.model_key}@${target.price.host}) is not cheaper than the current baseline.`,
+      );
+      continue;
+    }
 
     const rawSaving = baseline.cost - target.cost;
     const saving = toMonthly(rawSaving, u.days);
-    if (saving < 1) continue;
+    if (saving < 1) {
+      refuse(
+        u,
+        "saving_below_floor",
+        `Best right-sizing option saves only $${saving.toFixed(2)}/month, under the $1 floor.`,
+      );
+      continue;
+    }
 
     const s = shapeOf(u);
     out.push({
@@ -181,5 +236,14 @@ export function findOversized(
     });
   }
 
-  return sortRecommendations(out);
+  return { recommendations: sortRecommendations(out), refusals };
+}
+
+/** Back-compat wrapper: recommendations only. */
+export function findOversized(
+  usage: UsageAggregate[],
+  models: ModelRow[],
+  prices: PriceRow[],
+): Recommendation[] {
+  return findOversizedFull(usage, models, prices).recommendations;
 }
