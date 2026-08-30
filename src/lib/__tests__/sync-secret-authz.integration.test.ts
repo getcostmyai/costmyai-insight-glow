@@ -49,10 +49,7 @@ type Handler = (ctx: { request: Request }) => Promise<Response> | Response;
 
 function postHandler(route: AnyRoute, path: string): Handler {
   const raw = route.options?.server?.handlers?.["POST"];
-  const fn =
-    typeof raw === "function"
-      ? raw
-      : (raw as { handler?: unknown } | undefined)?.handler;
+  const fn = typeof raw === "function" ? raw : (raw as { handler?: unknown } | undefined)?.handler;
   if (typeof fn !== "function") throw new Error(`${path} exposes no POST handler`);
   return fn as Handler;
 }
@@ -75,7 +72,10 @@ describe("sync cron routes refuse unauthenticated callers", () => {
   for (const { path, route } of ROUTES) {
     it(`${path} answers 401 to a wrong secret`, async () => {
       process.env["SYNC_CRON_SECRET"] = "the-real-secret-value";
-      const response = await postHandler(route, path)({
+      const response = await postHandler(
+        route,
+        path,
+      )({
         request: request(path, "not-the-real-secret-value"),
       });
       expect(response.status).toBe(401);
@@ -89,7 +89,10 @@ describe("sync cron routes refuse unauthenticated callers", () => {
 
     it(`${path} fails closed with 503 when no secret is configured`, async () => {
       delete process.env["SYNC_CRON_SECRET"];
-      const response = await postHandler(route, path)({
+      const response = await postHandler(
+        route,
+        path,
+      )({
         request: request(path, "anything-at-all"),
       });
       expect(response.status).toBe(503);
