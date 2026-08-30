@@ -7,31 +7,39 @@ export const PLAN_ORDER: PlanTier[] = ["compare", "certify", "rightsize", "gover
 
 export const PLAN_META: Record<
   PlanTier,
-  { label: string; monthly: number; yearly: number; blurb: string }
+  { label: string; monthly: number; yearly: number; blurb: string; tag: string }
 > = {
   compare: {
     label: "Compare",
     monthly: 0,
     yearly: 0,
-    blurb: "Same model, cheaper host.",
+    blurb:
+      "Same model, run through whichever provider charges less for it. Nothing about the output changes. Only who gets paid.",
+    tag: "Same model, cheaper host",
   },
   certify: {
     label: "Certify",
     monthly: 69,
     yearly: 58,
-    blurb: "Plus quality-matched cheaper models.",
+    blurb:
+      "A cheaper model, proven to score the same as what you're running today. 'Certified' means it cleared a benchmark test built to catch the difference. Not just a claim that it's just as good.",
+    tag: "Cheaper model, proven equal",
   },
   rightsize: {
     label: "Rightsize",
     monthly: 389,
     yearly: 324,
-    blurb: "Plus oversized-workload detection and manual switching.",
+    blurb:
+      "Matches the model to what the task actually requires. Some tasks are running on far more model than the work needs. Rightsize points those at a model built for that size of problem, not a smaller budget.",
+    tag: "Right-fit model for the task",
   },
   govern: {
     label: "Govern",
     monthly: 899,
     yearly: 749,
-    blurb: "Plus autonomous switching by CostMyAI.",
+    blurb:
+      "Everything Compare, Certify, and Rightsize already proved safe, applied automatically. Without you clicking anything. Every switch it runs on its own already cleared the same evidence bar Compare, Certify, and Rightsize use for you.",
+    tag: "Proven switches, applied automatically",
   },
 };
 
