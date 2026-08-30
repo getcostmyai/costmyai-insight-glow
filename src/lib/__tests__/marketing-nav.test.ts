@@ -21,6 +21,7 @@ describe("marketing nav", () => {
       "How it works",
       "Models",
       "Intelligence",
+      "The Standard",
       "Become a Partner",
       "Blog",
       "Pricing",

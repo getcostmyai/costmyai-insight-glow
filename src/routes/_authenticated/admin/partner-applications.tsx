@@ -77,10 +77,10 @@ function ReviewQueue() {
           {rows.filter((r) => r.status === "pending" && r.verdict === "real").length}
         </span>{" "}
         pending of <span className="num tabular-nums">{rows.length}</span>.
-        {rows.some((r) => r.verdict !== "real") ? (
+        {rows.some((r) => r.status === "pending" && r.verdict !== "real") ? (
           <span className="text-xs">
             {" "}
-            ({rows.filter((r) => r.verdict !== "real").length} test or verification rows excluded from
+            ({rows.filter((r) => r.status === "pending" && r.verdict !== "real").length} test or verification rows excluded from
             the pending count)
           </span>
         ) : null}
