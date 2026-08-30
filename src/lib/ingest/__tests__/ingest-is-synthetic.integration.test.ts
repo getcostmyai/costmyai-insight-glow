@@ -128,7 +128,6 @@ afterAll(async () => {
 
 describe("ingestEvents: is_synthetic follows the workspace, not the default", () => {
   it("writes real events and rollups with is_synthetic = false", async () => {
-    // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- ingestEvents derives is_synthetic from the workspace; that derivation is exactly what this test asserts.
     const result = await ingestEvents(realOrgId, [eventFor(`${stamp}-real`)]);
     expect(result.accepted).toBeGreaterThan(0);
 
@@ -148,7 +147,6 @@ describe("ingestEvents: is_synthetic follows the workspace, not the default", ()
   }, 60_000);
 
   it("writes synthetic events and rollups with is_synthetic = true", async () => {
-    // eslint-disable-next-line costmyai/require-is-synthetic-on-guarded-insert -- as above: the flag is derived inside ingestEvents from organizations.is_synthetic.
     const result = await ingestEvents(syntheticOrgId, [eventFor(`${stamp}-synthetic`)]);
     expect(result.accepted).toBeGreaterThan(0);
 
