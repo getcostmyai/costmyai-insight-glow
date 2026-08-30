@@ -367,7 +367,23 @@ export async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "charge.refunded": {
       const charge = event.data.object;
-      const share = refundedFraction(charge);
+      let share: number;
+      try {
+        share = refundedFraction(charge);
+      } catch (error) {
+        if (error instanceof ChargeAmountUnknownError) {
+          // Same refusal shape as the currency-unconvertible case below:
+          // writing a clawback fraction we cannot stand behind is worse than
+          // writing none, and retrying would fail identically since the
+          // charge itself is malformed, not the delivery.
+          console.error(
+            `Clawback NOT computed for charge ${charge?.id}: ${error.message}. ` +
+              `Settle this line manually and record why.`,
+          );
+          break;
+        }
+        throw error;
+      }
       await clawback(
         invoiceIdOf(charge),
         share >= 1 ? "invoice refunded" : `invoice partially refunded (${Math.round(share * 100)}%)`,
