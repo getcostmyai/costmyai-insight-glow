@@ -82,7 +82,7 @@ function eventFor(idempotencyKey: string) {
     occurred_at: occurredAt,
     model_key: "gpt-5.5",
     host: "api.openai.com",
-    task_hint: "chat",
+    task_hint: "generation",
     input_tokens: 1_000,
     output_tokens: 200,
     latency_ms: 120,
