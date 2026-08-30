@@ -142,7 +142,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
         </Reveal>
 
         <Reveal delay={280} as="p" className="mt-3 text-sm text-muted-foreground">
-          Metadata only. Never your prompt content.
+          Metadata only. Never your prompt content by default.
         </Reveal>
 
         {stats.live ? (
@@ -398,8 +398,13 @@ function Architecture() {
         <Reveal delay={60} className="mx-auto mt-5 max-w-3xl text-center">
           <p className="text-sm leading-relaxed text-muted-foreground">
             The Verification Engine sits in your stack as middleware. Requests pass through
-            unchanged; only token counts and model names leave your environment. Never prompt
-            content.
+            unchanged; only token counts and model names leave your environment by default. No
+            prompt content leaves your environment unless you explicitly opt in to remote
+            classification —{" "}
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              see how that opt-in works
+            </Link>
+            .
           </p>
         </Reveal>
         <Reveal delay={80} className="mt-14">

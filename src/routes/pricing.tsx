@@ -281,12 +281,17 @@ function NeverPay({ moves }: { moves: number }) {
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
           <h3 className="mt-6 text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
-            Metadata only. Never your prompt content.
+            Metadata only. Never your prompt content, by default.
           </h3>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Every level runs on the same architecture: the Verification Engine sits in your
             environment and holds your keys there. There is nowhere in our system for a provider key
-            to live.
+            to live. Prompt content only ever leaves your environment if you explicitly opt in to
+            remote classification —{" "}
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              see the opt-in details
+            </Link>
+            .
           </p>
         </Reveal>
       </div>
