@@ -149,6 +149,13 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
 
             </HeroStatRow>
 
+            <p className="mb-4 max-w-3xl text-[11px] leading-relaxed text-white/60">
+              Every autonomous switch clears four deliberately built bars before Govern lets it run
+              unattended: it has to be big enough to matter, it only gets replaced once it stops
+              paying off, a new destination has to be a clear improvement before it takes over, and
+              it waits between changes so nothing gets touched twice in a row.
+            </p>
+
             <HeroStatRow title="Govern · what runs without you">
               <HeroStat
                 label="Running unattended"
@@ -173,7 +180,19 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Minimum to act"
                 value={usd(govern.policy.minMonthlySavingUsd, 0)}
-                sub={`per switch, per month · a running switch is only given up below ${usd(govern.policy.exitMonthlySavingUsd, 0)}/mo, and a different destination has to beat the one running by ${govern.policy.retargetImprovementPct}%`}
+                sub="per switch, per month · the bar a saving has to clear before Govern will act on it without you, so autonomous changes are always worth making, not just technically available."
+                accent="oklch(0.86 0.09 265)"
+              />
+              <HeroStat
+                label="Exit threshold"
+                value={usd(govern.policy.exitMonthlySavingUsd, 0)}
+                sub="per switch, per month · below this, a running switch is given up. Govern doesn't churn a working switch for pocket change."
+                accent="oklch(0.86 0.09 265)"
+              />
+              <HeroStat
+                label="Switch-over bar"
+                value={`${govern.policy.retargetImprovementPct}%`}
+                sub="how much better a new destination has to be before Govern moves a running switch there · cheaper alone doesn't clear the bar."
                 accent="oklch(0.86 0.09 265)"
               />
               {/* Dispatch 187. The cooldown is per workload, so this tile no
@@ -195,9 +214,12 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                   }
                   sub={
                     <>
-                      on {govern.cooldown.nextWorkload} · {govern.cooldown.frozen} workload
-                      {govern.cooldown.frozen === 1 ? "" : "s"} waiting, every other workload is
-                      free to act · thaws <LocalTime iso={govern.cooldown.nextEndsAt!} />
+                      Govern's pacing rule for {govern.cooldown.nextWorkload}: one unattended switch
+                      per workload, then a mandatory wait before the next.{" "}
+                      {govern.cooldown.frozen} workload
+                      {govern.cooldown.frozen === 1 ? " is" : "s are"} inside that window right now.
+                      Every other workload is free to act. Next thaw:{" "}
+                      <LocalTime iso={govern.cooldown.nextEndsAt!} />.
                     </>
                   }
                   accent="oklch(0.9 0.03 285)"
@@ -206,7 +228,7 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                 <HeroStat
                   label="Cooldown policy"
                   value={`${govern.policy.cooldownHours}h`}
-                  sub="per workload between unattended changes · no workload is waiting right now"
+                  sub="The wait Govern enforces between two unattended switches on the same workload. Long enough to confirm a switch is behaving before touching that workload again. No workload is inside that window right now."
                   accent="oklch(0.9 0.03 285)"
                 />
               )}

@@ -19,6 +19,8 @@ export interface LevelMeta {
   /** Engine check this level renders, where there is exactly one. */
   kind: RecKind | null;
   tagline: string;
+  /** Compact nav badge. Absent on the overview, which is not a purchasable rung. */
+  tag?: string;
 }
 
 export const LEVELS: LevelMeta[] = [
@@ -34,28 +36,36 @@ export const LEVELS: LevelMeta[] = [
     label: "Compare",
     requiredPlan: "compare",
     kind: "host_arbitrage",
-    tagline: "Same model, cheaper host.",
+    tagline:
+      "Same model, run through whichever provider charges less for it. Nothing about the output changes. Only who gets paid.",
+    tag: "Same model, cheaper host",
   },
   {
     key: "certify",
     label: "Certify",
     requiredPlan: "certify",
     kind: "quality_match",
-    tagline: "Cheaper model, same measured quality.",
+    tagline:
+      "A cheaper model, proven to score the same as what you're running today. 'Certified' means it cleared a benchmark test built to catch the difference. Not just a claim that it's just as good.",
+    tag: "Cheaper model, proven equal",
   },
   {
     key: "rightsize",
     label: "Rightsize",
     requiredPlan: "rightsize",
     kind: "rightsize",
-    tagline: "Oversized models, switched by you.",
+    tagline:
+      "Matches the model to what the task actually requires. Some tasks are running on far more model than the work needs. Rightsize points those at a model built for that size of problem, not a smaller budget.",
+    tag: "Right-fit model for the task",
   },
   {
     key: "govern",
     label: "Govern",
     requiredPlan: "govern",
     kind: null,
-    tagline: "Certified switches, applied unattended.",
+    tagline:
+      "Everything Compare, Certify, and Rightsize already proved safe, applied automatically. Without you clicking anything. Every switch it runs on its own already cleared the same evidence bar Compare, Certify, and Rightsize use for you.",
+    tag: "Proven switches, applied automatically",
   },
 ];
 
