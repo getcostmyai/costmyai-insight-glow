@@ -24,7 +24,7 @@ import { FAQ_CLUSTERS, faqJsonLdFor } from "@/lib/faq/questions";
 
 const TITLE = "How It Works — CostMyAI";
 const DESCRIPTION =
-  "Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. No provider keys, no migration, no prompt content leaving your stack.";
+  "Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. No provider keys, no migration, no prompt content leaving your stack by default.";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
@@ -256,8 +256,13 @@ function Architecture({ stats }: { stats: MarketingStats }) {
           </h2>
           <p className="mt-5 text-base leading-relaxed text-muted-foreground">
             The Verification Engine sits in your stack as middleware. Requests pass through
-            unchanged; only token counts and model names leave your environment. Never prompt
-            content.
+            unchanged; only token counts and model names leave your environment by default. No
+            prompt content leaves your environment unless you explicitly opt in to remote
+            classification —{" "}
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              see how that opt-in works
+            </Link>
+            .
           </p>
         </Reveal>
         <Reveal delay={80} className="mt-14">
