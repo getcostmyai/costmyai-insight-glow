@@ -387,6 +387,28 @@ export async function recomputeSwitchSavings(
   orgId: string,
   only?: string[],
 ): Promise<SavingsWriteResult[]> {
+  /**
+   * Dispatch 267. Same shape as `rebuildRollups`, on the number the headline
+   * savings claim is built from: an aggregate read, computed in TypeScript,
+   * then a `SELECT saved_usd` followed by an `UPDATE ... SET saved_usd` per
+   * switch — no transaction, no optimistic version check. Two concurrent
+   * recomputes for the same org can interleave so the call that read the
+   * smaller traffic set writes last and understates `saved_usd`.
+   *
+   * Serialised per org for the same reason and with the same primitive as
+   * `rebuildRollups`: waited-on, not skipped.
+   */
+  const { withJobLockBlocking } = await import("@/lib/ops/job-lock.server");
+  return withJobLockBlocking(`savings:${orgId}`, () =>
+    recomputeSwitchSavingsLocked(db, orgId, only),
+  );
+}
+
+async function recomputeSwitchSavingsLocked(
+  db: Db,
+  orgId: string,
+  only?: string[],
+): Promise<SavingsWriteResult[]> {
   const wanted = only && only.length > 0 ? new Set(only) : null;
   const computed = (await computeSwitchSavings(db, orgId, only)).filter(
     (s) => !wanted || wanted.has(s.switchId),
