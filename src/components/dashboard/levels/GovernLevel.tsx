@@ -180,7 +180,19 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
               <HeroStat
                 label="Minimum to act"
                 value={usd(govern.policy.minMonthlySavingUsd, 0)}
-                sub={`per switch, per month · a running switch is only given up below ${usd(govern.policy.exitMonthlySavingUsd, 0)}/mo, and a different destination has to beat the one running by ${govern.policy.retargetImprovementPct}%`}
+                sub="per switch, per month · the bar a saving has to clear before Govern will act on it without you, so autonomous changes are always worth making, not just technically available."
+                accent="oklch(0.86 0.09 265)"
+              />
+              <HeroStat
+                label="Exit threshold"
+                value={usd(govern.policy.exitMonthlySavingUsd, 0)}
+                sub="per switch, per month · below this, a running switch is given up. Govern doesn't churn a working switch for pocket change."
+                accent="oklch(0.86 0.09 265)"
+              />
+              <HeroStat
+                label="Switch-over bar"
+                value={`${govern.policy.retargetImprovementPct}%`}
+                sub="how much better a new destination has to be before Govern moves a running switch there · cheaper alone doesn't clear the bar."
                 accent="oklch(0.86 0.09 265)"
               />
               {/* Dispatch 187. The cooldown is per workload, so this tile no
