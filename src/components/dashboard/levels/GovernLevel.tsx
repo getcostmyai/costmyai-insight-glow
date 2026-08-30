@@ -149,6 +149,13 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
 
             </HeroStatRow>
 
+            <p className="mb-4 max-w-3xl text-[11px] leading-relaxed text-white/60">
+              Every autonomous switch clears four deliberately built bars before Govern lets it run
+              unattended: it has to be big enough to matter, it only gets replaced once it stops
+              paying off, a new destination has to be a clear improvement before it takes over, and
+              it waits between changes so nothing gets touched twice in a row.
+            </p>
+
             <HeroStatRow title="Govern · what runs without you">
               <HeroStat
                 label="Running unattended"
