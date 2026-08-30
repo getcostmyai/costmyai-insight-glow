@@ -250,6 +250,37 @@ export async function rebuildRollups(
   const from = bucketStart(min, "day");
   const to = new Date(bucketStart(max, "day").getTime() + DAY_MS);
 
+  /**
+   * Dispatch 267. This whole function is a read-a-snapshot / compute-in-app /
+   * write-it-back cycle across several round trips (events, prices, catalog,
+   * aliases, then a DELETE and a batched upsert) — nothing here is one atomic
+   * statement. Two `ingestEvents()` calls for the same org with overlapping
+   * windows (two gateway containers on one workspace flushing near-
+   * simultaneously) can otherwise interleave so the call that read the
+   * smaller snapshot DELETEs+INSERTs after the other's commit and silently
+   * reverts the rollup to a state that excludes the other call's traffic.
+   *
+   * Serialised per org, not per call: a Postgres lease held for the whole
+   * read-compute-write (see job-lock.server.ts's `withJobLockBlocking`), the
+   * same primitive already used for single-flighting the scheduled sweep,
+   * just waited-on instead of skipped, because this traffic does not get
+   * re-offered later.
+   */
+  const { withJobLockBlocking } = await import("@/lib/ops/job-lock.server");
+  return withJobLockBlocking(`rollup:${orgId}`, () =>
+    rebuildRollupsLocked(db, orgId, isSynthetic, from, to),
+  );
+}
+
+async function rebuildRollupsLocked(
+  db: ReturnType<typeof adminClient>,
+  orgId: string,
+  isSynthetic: boolean,
+  from: Date,
+  to: Date,
+): Promise<number> {
+
+
   // Paged: a rollup rebuilt from a truncated page would under-report the day's
   // real spend, and the truncation is silent.
   const raw = await fetchAllRows(
