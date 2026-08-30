@@ -90,7 +90,7 @@ export function ArchitectureDiagram() {
           from.
         </p>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-          Aggregate rows. Token counts, model names, hosts. No prompt content, by default.
+          Aggregate rows. Token counts, model names, hosts. No prompt content by default.
         </p>
       </Reveal>
     </div>

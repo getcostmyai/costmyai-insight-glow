@@ -142,7 +142,7 @@ function Hero({ stats }: { stats: MarketingStats }) {
         </Reveal>
 
         <Reveal delay={280} as="p" className="mt-3 text-sm text-muted-foreground">
-          Metadata only. Never your prompt content by default.
+          Metadata only by default. Never without an explicit opt-in.
         </Reveal>
 
         {stats.live ? (

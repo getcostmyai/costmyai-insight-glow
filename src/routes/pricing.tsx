@@ -281,7 +281,7 @@ function NeverPay({ moves }: { moves: number }) {
             <ShieldCheck className="h-6 w-6 text-primary" />
           </div>
           <h3 className="mt-6 text-2xl font-semibold tracking-[-0.035em] sm:text-[2rem]">
-            Metadata only. Never your prompt content, by default.
+            Metadata only by default. Never without an explicit opt-in.
           </h3>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Every level runs on the same architecture: the Verification Engine sits in your
