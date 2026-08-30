@@ -19,7 +19,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Compare is free forever and finds the cheapest host for models you already run. Certify proves a switch is safe, Rightsize catches oversized workloads, Govern switches autonomously inside the equivalence band.",
+          "Compare is free forever and finds the cheapest host for models you already run. Certify checks a switch is inside the measured equivalence band, Rightsize catches oversized workloads, Govern applies those checked switches automatically.",
       },
       { property: "og:title", content: "Pricing — pay for the level you're on" },
       {
@@ -316,7 +316,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can we switch back?",
-    a: "Every switch is one click to roll back on Rightsize and above, and Govern's autonomous switches stay inside the equivalence band and are fully audited.",
+    a: "Every switch is one click to roll back on Rightsize and above. Govern only switches automatically when the new model's benchmark score is close enough to your current one that the test can't tell them apart. Every switch is logged and fully audited.",
   },
 ];
 

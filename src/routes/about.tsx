@@ -37,7 +37,7 @@ const LEVELS = [
   },
   {
     name: "Certify",
-    body: "A different model, priced against an independent third party benchmark, recommended only when its measured quality sits inside a real equivalence band around what you run today.",
+    body: "A different model, priced against an independent benchmark. Recommended only when its score is close enough to what you run today that the benchmark can't tell them apart.",
   },
   {
     name: "Rightsize",
