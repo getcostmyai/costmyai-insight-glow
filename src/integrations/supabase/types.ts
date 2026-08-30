@@ -1723,6 +1723,59 @@ export type Database = {
           },
         ]
       }
+      refusal_events: {
+        Row: {
+          computed_at: string
+          created_at: string
+          detail: string | null
+          from_host: string
+          from_model: string
+          id: string
+          is_synthetic: boolean
+          kind: Database["public"]["Enums"]["rec_kind"]
+          org_id: string
+          reason: Database["public"]["Enums"]["refusal_reason"]
+          refusal_class: Database["public"]["Enums"]["refusal_class"]
+          task_hint: string | null
+        }
+        Insert: {
+          computed_at?: string
+          created_at?: string
+          detail?: string | null
+          from_host: string
+          from_model: string
+          id?: string
+          is_synthetic?: boolean
+          kind: Database["public"]["Enums"]["rec_kind"]
+          org_id: string
+          reason: Database["public"]["Enums"]["refusal_reason"]
+          refusal_class: Database["public"]["Enums"]["refusal_class"]
+          task_hint?: string | null
+        }
+        Update: {
+          computed_at?: string
+          created_at?: string
+          detail?: string | null
+          from_host?: string
+          from_model?: string
+          id?: string
+          is_synthetic?: boolean
+          kind?: Database["public"]["Enums"]["rec_kind"]
+          org_id?: string
+          reason?: Database["public"]["Enums"]["refusal_reason"]
+          refusal_class?: Database["public"]["Enums"]["refusal_class"]
+          task_hint?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refusal_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       routing_rules: {
         Row: {
           basis: string
@@ -2850,6 +2903,22 @@ export type Database = {
       plan_tier: "compare" | "certify" | "rightsize" | "govern"
       rec_kind: "host_arbitrage" | "quality_match" | "rightsize"
       rec_status: "open" | "dismissed" | "activated" | "refused"
+      refusal_class: "measured" | "unmeasurable" | "no_candidate"
+      refusal_reason:
+        | "no_baseline_price"
+        | "no_baseline_score"
+        | "no_valid_instrument"
+        | "task_label_low_confidence"
+        | "benchmark_data_stale"
+        | "benchmark_not_discriminating"
+        | "no_candidate_clears_bar"
+        | "no_cheaper_candidate"
+        | "latency_ceiling_unmet"
+        | "saving_below_floor"
+        | "no_model_tier"
+        | "insufficient_sample"
+        | "already_right_sized"
+        | "no_target_tier_priced"
       routing_source: "manual" | "autonomous"
       routing_state: "active" | "paused" | "rolled_back"
       switch_status: "active" | "paused" | "rolled_back"
@@ -2997,6 +3066,23 @@ export const Constants = {
       plan_tier: ["compare", "certify", "rightsize", "govern"],
       rec_kind: ["host_arbitrage", "quality_match", "rightsize"],
       rec_status: ["open", "dismissed", "activated", "refused"],
+      refusal_class: ["measured", "unmeasurable", "no_candidate"],
+      refusal_reason: [
+        "no_baseline_price",
+        "no_baseline_score",
+        "no_valid_instrument",
+        "task_label_low_confidence",
+        "benchmark_data_stale",
+        "benchmark_not_discriminating",
+        "no_candidate_clears_bar",
+        "no_cheaper_candidate",
+        "latency_ceiling_unmet",
+        "saving_below_floor",
+        "no_model_tier",
+        "insufficient_sample",
+        "already_right_sized",
+        "no_target_tier_priced",
+      ],
       routing_source: ["manual", "autonomous"],
       routing_state: ["active", "paused", "rolled_back"],
       switch_status: ["active", "paused", "rolled_back"],
