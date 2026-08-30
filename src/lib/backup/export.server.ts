@@ -115,9 +115,45 @@ export async function runBackupExport(): Promise<ExportResult> {
     const counts = await supabaseAdmin.rpc("backup_export_counts");
     if (counts.error) return fail(`row counts failed: ${counts.error.message}`);
 
-    const dump = await supabaseAdmin.rpc("backup_export_sql");
-    if (dump.error) return fail(`export failed: ${dump.error.message}`);
-    const sql = dump.data as unknown as string;
+    const schema = await supabaseAdmin.rpc("backup_export_schema_sql");
+    if (schema.error) return fail(`export failed: ${schema.error.message}`);
+
+    // Paginated per-table data export. Each call is bounded to PAGE_SIZE rows,
+    // so no single call's runtime scales with total table size the way the
+    // old monolithic backup_export_sql() call did -- table growth adds page
+    // count, not per-call risk of hitting statement_timeout. Mirrors the
+    // walk-until-short-page convention in src/lib/paginate.server.ts.
+    const PAGE_SIZE = 500;
+    const MAX_PAGES_PER_TABLE = 500; // refuses to page past 250k rows/table
+
+    let dataSql = "";
+    for (const table of DR_TABLES) {
+      let after: string | null = null;
+      let sawFullPage = true;
+      for (let page = 0; sawFullPage && page < MAX_PAGES_PER_TABLE; page++) {
+        const res = await supabaseAdmin.rpc("backup_export_table_page_sql", {
+          _table: table,
+          // The generated arg type is non-nullable, but the function's first
+          // page is explicitly driven by SQL NULL (`$1 IS NULL OR id > $1`).
+          _after: after as unknown as string,
+          _page_size: PAGE_SIZE,
+        });
+        if (res.error) return fail(`export failed on ${table} (page ${page}): ${res.error.message}`);
+        const rows = res.data as unknown as Array<{ chunk_sql: string; last_id: string | null; row_count: number }>;
+        const row = rows?.[0];
+        dataSql += row?.chunk_sql ?? "";
+        after = row?.last_id ?? after;
+        sawFullPage = (row?.row_count ?? 0) >= PAGE_SIZE;
+        if (page === MAX_PAGES_PER_TABLE - 1 && sawFullPage) {
+          return fail(`export refused to page past ${MAX_PAGES_PER_TABLE * PAGE_SIZE} rows for ${table} — the DR export looks unbounded.`);
+        }
+      }
+    }
+
+    const triggersSql = await supabaseAdmin.rpc("backup_export_triggers_sql");
+    if (triggersSql.error) return fail(`export failed: ${triggersSql.error.message}`);
+
+    const sql = `${schema.data as unknown as string}${dataSql}${triggersSql.data as unknown as string}`;
     if (!sql || sql.length < 100) return fail("export produced an empty payload");
 
     const statements = await applyDump(cfg, sql, DR_TABLES);

@@ -2509,7 +2509,16 @@ export type Database = {
         Returns: string
       }
       backup_export_counts: { Args: never; Returns: Json }
-      backup_export_sql: { Args: never; Returns: string }
+      backup_export_schema_sql: { Args: never; Returns: string }
+      backup_export_table_page_sql: {
+        Args: { _after: string; _page_size?: number; _table: string }
+        Returns: {
+          chunk_sql: string
+          last_id: string
+          row_count: number
+        }[]
+      }
+      backup_export_triggers_sql: { Args: never; Returns: string }
       benchmark_ask_threshold: { Args: never; Returns: number }
       benchmark_cut: {
         Args: { _industry?: string; _revenue_band?: string; _use_case?: string }
