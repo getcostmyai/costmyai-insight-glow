@@ -3,6 +3,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { Readable, Writable } from "node:stream";
 
 import { CONTAINER_DEFAULTS, loadConfig, type ContainerConfig } from "./config.js";
+import { createInvoiceReader } from "./billing-readers.js";
+import { BillingScheduler, BillingStateStore } from "./billing-schedule.js";
 import { REMOTE_POOL_WIDTH, RemoteClassifier } from "./classify-remote.js";
 import { handleProxy } from "./proxy.js";
 import { UpstreamQueue } from "./queue.js";
@@ -41,6 +43,40 @@ export function createGateway(config: ContainerConfig) {
   const switches = new SwitchMap(config, fetch);
   const stopSwitchPoll = switches.start(config.switchPollIntervalMs);
 
+  /**
+   * Billing reconciliation (`pollProvider`), wired at last.
+   *
+   * Fully optional and off unless the customer set
+   * `COSTMYAI_BILLING_<PROVIDER>_KEY` for the provider this container fronts
+   * AND we have a real reader for that provider. Either condition unmet means
+   * no scheduler object exists, so the poll path is unreachable rather than
+   * idle — the posture of every container shipped before this is unchanged.
+   */
+  const billingReader = config.billingKey
+    ? createInvoiceReader(config.billingProvider, config.billingKey, fetch)
+    : null;
+  const billing = billingReader
+    ? new BillingScheduler(
+        config.billingProvider,
+        billingReader,
+        queue,
+        new BillingStateStore(config.billingStateFile),
+        config.billingPollIntervalMs,
+      )
+    : null;
+  const stopBillingPoll = billing ? billing.start() : null;
+  if (billing) {
+    log("billing reconciliation enabled", {
+      provider: config.billingProvider,
+      intervalMs: config.billingPollIntervalMs,
+      note: "the provider billing credential stays in this process; only invoiced totals are sent",
+    });
+  } else if (config.billingKey) {
+    log("billing credential set but no reader exists for this provider", {
+      provider: config.billingProvider,
+    });
+  }
+
   let lastError: string | undefined;
   let lastFlushAt: string | undefined;
 
@@ -72,6 +108,7 @@ export function createGateway(config: ContainerConfig) {
         lastFlushAt: lastFlushAt ?? null,
         lastError: lastError ?? null,
         switches: switches.status(),
+        billing: billing ? billing.status() : { enabled: false, provider: config.billingProvider },
       });
       res.writeHead(200, { "content-type": "application/json" });
       res.end(body);
@@ -109,6 +146,7 @@ export function createGateway(config: ContainerConfig) {
     log("shutting down", { signal, queued: queue.size });
     clearInterval(timer);
     stopSwitchPoll();
+    stopBillingPoll?.();
     await new Promise<void>((resolve) => server.close(() => resolve()));
     spool.persist(queue.snapshot());
     await flush();
@@ -116,7 +154,7 @@ export function createGateway(config: ContainerConfig) {
     log("shutdown complete", { queued: queue.size });
   }
 
-  return { server, queue, spool, switches, flush, shutdown };
+  return { server, queue, spool, switches, billing, flush, shutdown };
 }
 
 function toWebRequest(req: IncomingMessage, url: URL): Request {

@@ -9,6 +9,7 @@
  */
 export {
   BACKFILL_LOOKBACK_DAYS,
+  BILLING_POLL_INTERVAL_MS,
   captureIdempotencyKey,
   CONTAINER_DEFAULTS,
   containerImageRef,
@@ -26,7 +27,12 @@ export {
 } from "../../../src/lib/ingest/contract.js";
 export type { ParseStatus, TaskHint } from "../../../src/lib/ingest/contract.js";
 
-import { CONTAINER_DEFAULTS, ROUTE_KEY_ENV_PREFIX } from "../../../src/lib/ingest/contract.js";
+import {
+  BILLING_POLL_INTERVAL_MS,
+  CONTAINER_DEFAULTS,
+  providerForHost,
+  ROUTE_KEY_ENV_PREFIX,
+} from "../../../src/lib/ingest/contract.js";
 
 export interface ContainerConfig {
   /** Where CostMyAI lives. Overridable for self-hosted or staging targets. */
@@ -89,6 +95,26 @@ export interface ContainerConfig {
    * degrades to the same honest `unknown` on any failure.
    */
   classifyRemote: boolean;
+  /**
+   * Billing reconciliation (`pollProvider`). The customer's own PROVIDER
+   * billing/admin credential, read from
+   * `COSTMYAI_BILLING_<PROVIDER>_KEY` for the provider this container fronts.
+   *
+   * Optional, and null for almost every deployment. When it is null no
+   * scheduler is constructed at all, so the poll path is unreachable rather
+   * than merely idle. The value never leaves the customer's process: only the
+   * invoiced TOTAL per period is sent upstream.
+   */
+  billingKey: string | null;
+  /** Canonical provider name derived from the upstream URL. */
+  billingProvider: string;
+  /** How often the invoice poll runs. Never on the request path. */
+  billingPollIntervalMs: number;
+  /**
+   * Where the poll's `ProviderConnectionState` is persisted, so a restart
+   * resumes the 3-day rolling window instead of repeating a 30-day backfill.
+   */
+  billingStateFile: string;
 }
 
 
@@ -110,6 +136,27 @@ export function routeKeysFrom(env: Record<string, string | undefined>): Record<s
     keys[host] = trimmed;
   }
   return keys;
+}
+
+/**
+ * `COSTMYAI_BILLING_OPENAI_KEY` carries the billing credential for `openai`;
+ * `..._AI21_LABS_KEY` for `ai21-labs`. Inverted from
+ * `COSTMYAI_ROUTE_KEY_<PROVIDER>` — the provider is in the middle, the noun is
+ * the suffix — but the provider spelling rule is identical: underscores become
+ * hyphens, because that is how the plan and the contract spell a multi-word
+ * provider, and a key looked up under the other spelling is a key nobody finds.
+ */
+export function billingKeyEnvName(provider: string): string {
+  return `COSTMYAI_BILLING_${provider.trim().toUpperCase().replace(/-/g, "_")}_KEY`;
+}
+
+/** The billing credential for one provider, or null when it was not set. */
+export function billingKeyFrom(
+  env: Record<string, string | undefined>,
+  provider: string,
+): string | null {
+  const trimmed = (env[billingKeyEnvName(provider)] ?? "").trim();
+  return trimmed || null;
 }
 
 function intFrom(value: string | undefined, fallback: number): number {
@@ -191,11 +238,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       `${e.upstream} is not set. Point it at the provider this instance should front, e.g. ${e.upstream}=https://api.openai.com. Run one container per upstream.`,
     );
   }
+  const billingProvider = providerForHost(new URL(upstreamUrl).host);
+  const spoolDir = env[e.spoolDir] ?? CONTAINER_DEFAULTS.spoolDir;
   return {
     baseUrl: (env[e.baseUrl] ?? CONTAINER_DEFAULTS.appUrl).replace(/\/+$/, ""),
     ingestToken,
     upstreamUrl: upstreamUrl.replace(/\/+$/, ""),
-    spoolDir: env[e.spoolDir] ?? CONTAINER_DEFAULTS.spoolDir,
+    spoolDir,
     flushIntervalMs: intFrom(env[e.flushInterval], 30_000),
     upstreamTimeoutMs: intFrom(env[e.upstreamTimeout], 120_000),
     port: intFrom(env[e.port], CONTAINER_DEFAULTS.port),
@@ -204,6 +253,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     containerId: env["COSTMYAI_CONTAINER_ID"]?.trim() || null,
     classifyLocal: classifyLocalFrom(env),
     classifyRemote: classifyRemoteFrom(env, classifyLocalFrom(env)),
+    billingKey: billingKeyFrom(env, billingProvider),
+    billingProvider,
+    billingPollIntervalMs: BILLING_POLL_INTERVAL_MS,
+    billingStateFile: `${spoolDir.replace(/\/+$/, "")}/billing-state.json`,
 
     spoolMaxItems: 10_000,
     spoolMaxAgeMs: 7 * 24 * 60 * 60 * 1000,
