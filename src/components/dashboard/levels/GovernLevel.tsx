@@ -185,7 +185,12 @@ export function GovernLevel({ ctl }: { ctl: DashboardController }) {
                   label="Cooldown remaining"
                   value={
                     cooldownRemainingHours >= 1
-                      ? `${Math.floor(cooldownRemainingHours)}h ${Math.round((cooldownRemainingHours % 1) * 60)}m`
+                      ? (() => {
+                          // Round total minutes first so 1.999h renders
+                          // "2h 0m", not "1h 60m" (Phase 5 QA, Jones).
+                          const totalMin = Math.round(cooldownRemainingHours * 60);
+                          return `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`;
+                        })()
                       : `${Math.max(1, Math.round(cooldownRemainingHours * 60))}m`
                   }
                   sub={
