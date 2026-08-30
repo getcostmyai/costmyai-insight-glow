@@ -578,20 +578,31 @@ describe("the manual switch path, through an authenticated RLS-scoped client", (
       /rightsize/i,
     );
 
-    // And the database refuses the write underneath the guard, too.
-    const direct = await owner.client.from("routing_rules").insert({
-      org_id: freeOrgId,
-      from_model: OVERSIZED.modelKey,
-      from_host: OVERSIZED.host,
-      to_model: expectedTarget.model,
-      to_host: expectedTarget.host,
-      source: "manual",
-      state: "active",
-      basis: "right-sized",
-      is_synthetic: true,
-    });
+    const { data: rec, error: recErr } = await admin
+      .from("recommendations")
+      .insert({
+        org_id: freeOrgId,
+        kind: "rightsize",
+        min_plan: "rightsize",
+        from_model: OVERSIZED.modelKey,
+        from_host: OVERSIZED.host,
+        to_model: expectedTarget.model,
+        to_host: expectedTarget.host,
+        task_hint: OVERSIZED.taskHint,
+        monthly_saving_usd: 1,
+        basis: "right-sized",
+        is_synthetic: true,
+      })
+      .select("id")
+      .single();
+    expect(recErr).toBeNull();
+
+    const direct = await owner.client.rpc("apply_switch", { _rec_id: rec!.id, _autonomous: false });
     expect(direct.error).not.toBeNull();
-    console.log(`[compare] requirePlan refused; direct write refused: ${direct.error?.message}`);
+    expect(direct.error?.message ?? "").toMatch(/not on the rightsize plan/i);
+    console.log(`[compare] requirePlan refused; apply_switch refused underneath: ${direct.error?.message}`);
+
+    await admin.from("recommendations").delete().eq("id", rec!.id);
   }, 60_000);
 });
 
