@@ -15,6 +15,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ingestEvents } from "@/lib/ingest/ingest.server";
+import { ingestEventSchema } from "@/lib/ingest/schema";
 import { guardIntegrationDatabase } from "../../__tests__/support/isolation";
 
 const URL = process.env["SUPABASE_URL"]!;
@@ -74,7 +75,10 @@ let syntheticOrgId: string;
 const occurredAt = new Date().toISOString();
 
 function eventFor(idempotencyKey: string) {
-  return {
+  // Parsed through the real schema so every defaulted field (cache tokens,
+  // parse_status, classifier_revision) matches what the endpoint would hand
+  // ingestEvents in production.
+  return ingestEventSchema.parse({
     occurred_at: occurredAt,
     model_key: "gpt-5.5",
     host: "api.openai.com",
@@ -84,7 +88,7 @@ function eventFor(idempotencyKey: string) {
     latency_ms: 120,
     status: "ok",
     idempotency_key: idempotencyKey,
-  };
+  });
 }
 
 beforeAll(async () => {
