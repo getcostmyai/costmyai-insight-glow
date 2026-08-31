@@ -92,16 +92,42 @@ export function buildShareSvg(card: ShareCard, citation: ShareImageCitation): st
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
+    <!-- Matches the gradient-brand-wide token in src/styles.css, so the poster wordmark
+         is the same gradient as the on-site <Wordmark /> component. -->
+    <linearGradient id="wordmarkGradient" x1="0%" y1="20%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="34%" stop-color="#7C3AED"/>
+      <stop offset="62%" stop-color="#C03CC8"/>
+      <stop offset="88%" stop-color="#FB715C"/>
+      <stop offset="100%" stop-color="#FBB059"/>
+    </linearGradient>
     <radialGradient id="glow" cx="0.1" cy="0.08" r="0.8">
       <stop offset="0%" stop-color="${accent}" stop-opacity="0.13"/>
       <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
     </radialGradient>
+    <!-- Brand-family wash: indigo → violet → magenta, each barely there. The
+         card content still reads as the subject; this only tints the field. -->
+    <radialGradient id="brandGlowA" cx="0.08" cy="0.05" r="0.75">
+      <stop offset="0%" stop-color="#6366F1" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="brandGlowB" cx="0.62" cy="0.02" r="0.62">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="brandGlowC" cx="1" cy="0.9" r="0.7">
+      <stop offset="0%" stop-color="#C03CC8" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#C03CC8" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <rect width="1200" height="630" fill="${PALETTE.bg}"/>
+  <rect width="1200" height="630" fill="url(#brandGlowA)"/>
+  <rect width="1200" height="630" fill="url(#brandGlowB)"/>
+  <rect width="1200" height="630" fill="url(#brandGlowC)"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
   <rect x="0" y="0" width="1200" height="6" fill="${PALETTE.primary}"/>
 
-  <text x="72" y="104" font-family="Inter" font-size="26" font-weight="600" fill="${PALETTE.ink}">Cost<tspan fill="${PALETTE.primary}">My</tspan>AI</text>
+  <text x="72" y="104" font-family="Inter" font-size="26" font-weight="600" fill="${PALETTE.ink}">Cost<tspan fill="url(#wordmarkGradient)">My</tspan>AI</text>
   <text x="215" y="104" font-family="Inter" font-size="26" font-weight="400" fill="${PALETTE.muted}">Intelligence</text>
 
   <text x="72" y="${330 - (valueSize - 208) / 2}" font-family="Inter" font-size="${valueSize}" font-weight="600" fill="${accent}" letter-spacing="-6">${esc(card.value)}</text>
@@ -114,11 +140,10 @@ export function buildShareSvg(card: ShareCard, citation: ShareImageCitation): st
     )
     .join("\n  ")}
 
-  <rect x="72" y="536" width="1056" height="1" fill="${PALETTE.hairline}"/>
-  <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">${esc(monthLabel)}</text>
-  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="${noteSize}" font-weight="400" fill="${PALETTE.muted}">${esc(footerNote)}</text>
-  <text x="1128" y="574" text-anchor="end" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">Powered by CostMyAI</text>
-  <text x="1128" y="602" text-anchor="end" font-family="Inter" font-size="20" font-weight="400" fill="${PALETTE.muted}">${esc(permalink)}</text>
+  <rect x="72" y="530" width="1056" height="1" fill="${PALETTE.hairline}"/>
+  <text x="72" y="568" font-family="Inter" font-size="${noteSize}" font-weight="400" fill="${PALETTE.muted}"><tspan font-size="24" font-weight="600" fill="${PALETTE.ink}">${esc(monthLabel)}</tspan> ${esc(footerNote)}</text>
+  <text x="72" y="600" font-family="Inter" font-size="20" font-weight="400" fill="${PALETTE.muted}">${esc(permalink)}</text>
+  <text x="1128" y="600" text-anchor="end" font-family="Inter" font-size="22" font-weight="600" fill="${PALETTE.ink}">Powered by CostMyAI</text>
 
 </svg>`;
 }
