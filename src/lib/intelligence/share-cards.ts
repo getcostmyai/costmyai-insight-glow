@@ -171,6 +171,9 @@ export interface CardMeta {
   title: string;
   description: string;
   imageUrl: string;
+  imageWidth: number;
+  imageHeight: number;
+  imageType: string;
 }
 
 /** One formatter for card-specific OG meta, so the share preview and the
@@ -180,5 +183,8 @@ export function buildCardMeta(card: ShareCard, imageUrl: string): CardMeta {
     title: `${card.value}. ${card.label} | CostMyAI Intelligence`,
     description: card.detail,
     imageUrl,
+    imageWidth: 1200,
+    imageHeight: 630,
+    imageType: "image/png",
   };
 }
