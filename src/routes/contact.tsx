@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Linkedin } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { InstagramMark } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
