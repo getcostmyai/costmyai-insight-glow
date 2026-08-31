@@ -39,12 +39,11 @@ describe("renderSvgToPng abort budget", () => {
     const pending = renderSvgToPng("<svg/>", 1200);
     const assertion = expect(pending).rejects.toThrow(/abort/i);
 
-    // Two attempts, each capped at the same budget.
-    await vi.advanceTimersByTimeAsync(RENDER_TIMEOUT_MS + 1);
+    // One attempt, capped at the total budget.
     await vi.advanceTimersByTimeAsync(RENDER_TIMEOUT_MS + 1);
     await assertion;
 
-    expect(signals).toHaveLength(2);
+    expect(signals).toHaveLength(1);
     for (const signal of signals) {
       expect(signal).toBeInstanceOf(AbortSignal);
       expect(signal.aborted).toBe(true);
