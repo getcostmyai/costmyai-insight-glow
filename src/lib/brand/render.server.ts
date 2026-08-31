@@ -10,6 +10,9 @@
  * itself — a renderer outage must never turn into a 500.
  */
 
+/** Per-attempt budget for the renderer call. See the retry loop below. */
+export const RENDER_TIMEOUT_MS = 4000;
+
 export const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -30,22 +33,35 @@ export async function renderSvgToPng(
    * Two attempts, not one: a rolling deploy can leave a stale instance behind
    * the same hostname for a while, and one bad hit should not cost the caller
    * its PNG. Anything still failing after the retry throws, and the route falls
-   * back to serving the SVG.
+   * back to a static poster.
+   *
+   * Each attempt is capped at 4s. A cold renderer instance fetches its fonts
+   * before it can rasterise anything, and an unbounded wait there is what turns
+   * a slow start into a crawler seeing no image at all: LinkedIn gives up around
+   * five seconds. Failing fast inside that budget lets the fallback win the race.
    */
   let last = "";
   for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json", "x-render-secret": secret },
         body,
+        signal: controller.signal,
       });
       if (res.ok) return new Uint8Array(await res.arrayBuffer());
       last = `renderer service returned ${res.status}`;
     } catch (err) {
+      // An abort arrives here like any other fetch failure, so a timeout simply
+      // rolls on to the next attempt.
       last = err instanceof Error ? err.message : String(err);
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw new Error(last);
 }
+
 

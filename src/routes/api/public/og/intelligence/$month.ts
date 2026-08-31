@@ -35,14 +35,21 @@ export const Route = createFileRoute("/api/public/og/intelligence/$month")({
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("share image render failed", message);
-          // Fallback: serve the same poster as vector. Browsers and Slack render
-          // it; some crawlers ignore SVG previews, but a live image beats a 500.
-          const { buildShareSvg } = await import("@/lib/intelligence/share-image.server");
-          return new Response(buildShareSvg(card, { kind: "frozen", monthKey: frozen.month }), {
+          /*
+           * Never SVG here. LinkedIn's crawler cannot parse an SVG og:image and
+           * shows "No image found", and the bad answer then sits in cache for
+           * the route's TTL. This is a pre-baked PNG read straight from bytes,
+           * with no call to the renderer service, so a renderer outage cannot
+           * reach it.
+           */
+          const { ogFallbackPngBytes } = await import(
+            "@/lib/intelligence/generated/og-fallback-png"
+          );
+          return new Response(ogFallbackPngBytes() as unknown as BodyInit, {
             headers: {
-              "content-type": "image/svg+xml; charset=utf-8",
+              "content-type": "image/png",
               "cache-control": "public, max-age=300",
-              "x-costmyai-render": "svg-fallback",
+              "x-costmyai-render": "static-png-fallback",
             },
           });
         }
