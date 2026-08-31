@@ -15,9 +15,10 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { guardIntegrationDatabase } from "@/lib/__tests__/support/isolation";
 
-const sendTemplateEmail = vi.fn(async () => ({ sent: true as const }));
+type SendArgs = [string, string, { templateData: { confirmUrl: string; unsubscribeUrl: string } }];
+const sendTemplateEmail = vi.fn(async (..._args: SendArgs) => ({ sent: true as const }));
 vi.mock("@/lib/email-templates/send-email", () => ({
-  sendTemplateEmail: (...args: unknown[]) => sendTemplateEmail(...(args as [])),
+  sendTemplateEmail: (...args: SendArgs) => sendTemplateEmail(...args),
 }));
 
 const admin = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!, {
@@ -39,11 +40,7 @@ afterAll(async () => {
 
 /** The token the confirmation mail would have carried for the most recent send. */
 function lastConfirmToken(): string {
-  const call = sendTemplateEmail.mock.calls.at(-1) as unknown as [
-    string,
-    string,
-    { templateData: { confirmUrl: string } },
-  ];
+  const call = sendTemplateEmail.mock.calls.at(-1)!;
   return new URL(call[2].templateData.confirmUrl).searchParams.get("token")!;
 }
 
