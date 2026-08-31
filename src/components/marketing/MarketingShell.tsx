@@ -176,7 +176,28 @@ export function MarketingFooter() {
               Certified, quality-checked switches that cut AI spend without touching output
               quality. We never hold your provider keys.
             </p>
+            <div className="mt-4 flex items-center gap-3">
+              <a
+                href="https://www.linkedin.com/company/costmyai"
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label="CostMyAI on LinkedIn"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.instagram.com/costmyai"
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label="CostMyAI on Instagram"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <InstagramMark className="h-5 w-5" />
+              </a>
+            </div>
           </div>
+
 
           <div className="grid grid-cols-2 gap-x-14 gap-y-8 sm:grid-cols-4">
             <FooterColumn title="Product">
