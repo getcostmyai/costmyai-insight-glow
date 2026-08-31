@@ -53,10 +53,18 @@ export function buildIndexHead(data: IntelligencePayload | undefined, cardId: st
           { property: "og:description", content: meta.description },
           { property: "og:image", content: meta.imageUrl },
           { property: "og:type", content: "website" },
-          { property: "og:url", content: "https://www.costmyai.com/intelligence" },
+          {
+            property: "og:url",
+            content: `https://www.costmyai.com/intelligence?card=${encodeURIComponent(cardId)}`,
+          },
           { name: "twitter:card", content: "summary_large_image" },
         ],
-        links: [{ rel: "canonical", href: "https://www.costmyai.com/intelligence" }],
+        links: [
+          {
+            rel: "canonical",
+            href: `https://www.costmyai.com/intelligence?card=${encodeURIComponent(cardId)}`,
+          },
+        ],
       };
     }
   }

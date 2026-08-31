@@ -50,10 +50,18 @@ export function buildMonthHead(
           { property: "og:description", content: meta.description },
           { property: "og:image", content: meta.imageUrl },
           { property: "og:type", content: "article" },
-          { property: "og:url", content: `https://www.costmyai.com/intelligence/${month}` },
+          {
+            property: "og:url",
+            content: `https://www.costmyai.com/intelligence/${month}?card=${encodeURIComponent(cardId)}`,
+          },
           { name: "twitter:card", content: "summary_large_image" },
         ],
-        links: [{ rel: "canonical", href: `https://www.costmyai.com/intelligence/${month}` }],
+        links: [
+          {
+            rel: "canonical",
+            href: `https://www.costmyai.com/intelligence/${month}?card=${encodeURIComponent(cardId)}`,
+          },
+        ],
       };
     }
   }

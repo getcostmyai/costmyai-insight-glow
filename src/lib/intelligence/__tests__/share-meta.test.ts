@@ -84,7 +84,10 @@ const CARDS = ["kpi-moves", moveCardId("increase", "gpt-4o", "openai"), spreadCa
 describe("buildIndexHead", () => {
   for (const id of CARDS) {
     it(`renders card-specific meta for ${id}`, () => {
-      const head = buildIndexHead(payload(), id) as { meta: Record<string, unknown>[] };
+      const head = buildIndexHead(payload(), id) as {
+        meta: Record<string, unknown>[];
+        links: Record<string, string>[];
+      };
       const title = prop(head, "og:title")!;
       expect(title).toContain("| CostMyAI Intelligence");
       expect(title).not.toContain("the live AI price and quality market");
@@ -92,6 +95,13 @@ describe("buildIndexHead", () => {
       expect(prop(head, "og:image")).toBe(
         `https://www.costmyai.com/api/public/og/intelligence/live?card=${encodeURIComponent(id)}`,
       );
+      expect(prop(head, "og:url")).toBe(
+        `https://www.costmyai.com/intelligence?card=${encodeURIComponent(id)}`,
+      );
+      expect(head.links).toContainEqual({
+        rel: "canonical",
+        href: `https://www.costmyai.com/intelligence?card=${encodeURIComponent(id)}`,
+      });
       expect(get(head, "title", title)).toBeTruthy();
     });
   }
@@ -130,13 +140,20 @@ describe("buildMonthHead", () => {
     it(`renders card-specific meta for ${id}`, () => {
       const head = buildMonthHead({ frozen: frozen() }, "2026-07", id) as {
         meta: Record<string, unknown>[];
+        links: Record<string, string>[];
       };
       expect(prop(head, "og:title")).toContain("| CostMyAI Intelligence");
       expect(prop(head, "og:title")).not.toContain("frozen figures | CostMyAI");
       expect(prop(head, "og:image")).toBe(
         `https://www.costmyai.com/api/public/og/intelligence/2026-07?card=${encodeURIComponent(id)}`,
       );
-      expect(prop(head, "og:url")).toBe("https://www.costmyai.com/intelligence/2026-07");
+      expect(prop(head, "og:url")).toBe(
+        `https://www.costmyai.com/intelligence/2026-07?card=${encodeURIComponent(id)}`,
+      );
+      expect(head.links).toContainEqual({
+        rel: "canonical",
+        href: `https://www.costmyai.com/intelligence/2026-07?card=${encodeURIComponent(id)}`,
+      });
     });
   }
 
