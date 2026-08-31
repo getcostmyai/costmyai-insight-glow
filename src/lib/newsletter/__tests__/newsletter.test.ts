@@ -26,7 +26,7 @@ describe("newsletter input validation", () => {
 
   it("clamps the source string so the form is not a free write channel", () => {
     expect(normalizeSource("Footer Form")).toBe("footer-form");
-    expect(normalizeSource("<script>alert(1)</script>")).toBe("-script-alert-1-­-script-".replace("­", ""));
+    expect(normalizeSource("<script>alert(1)</script>")).toBe("-script-alert-1---script-");
     expect(normalizeSource("x".repeat(200))?.length).toBe(60);
     expect(normalizeSource(null)).toBeNull();
     expect(normalizeSource("   ")).toBeNull();
