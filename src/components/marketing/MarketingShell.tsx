@@ -12,7 +12,32 @@ import { MARKETING_NAV } from "@/lib/nav";
 import { Wordmark } from "./Wordmark";
 
 /**
+ * Inline Instagram logomark on a 24-unit grid so it matches the lucide icons and
+ * inherits currentColor. Mirrors the XMark pattern in BlogShareButton.tsx.
+ */
+function InstagramMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+/**
  * The marketing chrome: light, spacious, Apple-adjacent — deliberately not the
+
  * dark dashboard language. Every page-level CTA inside this shell uses the
  * shared .btn-gradient utility, so the brand gradient has exactly one source.
  */
