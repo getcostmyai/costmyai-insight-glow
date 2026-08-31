@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.pin_synthetic_false() FROM PUBLIC, anon, authenticated;
