@@ -43,6 +43,10 @@ export type LeadEventType =
   | "models_searched"
   /* Site-wide page views. Payload is `{ path, routeId, source? }` only. */
   | "page_viewed"
+  /* Newsletter funnel. Payload is `{ source }` only — never the address. */
+  | "newsletter_signup_shown"
+  | "newsletter_signup_submitted"
+  | "newsletter_signup_confirmed"
   | "workspace_created"
   | "plan_changed";
 
