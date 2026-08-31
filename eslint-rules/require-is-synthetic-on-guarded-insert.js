@@ -13,7 +13,13 @@ const GUARDED_TABLES = new Set([
   'objectives',
   'workload_profiles',
   'refusal_events',
+  // Org-less tables: is_synthetic is pinned to false by pin_synthetic_false()
+  // rather than derived by enforce_synthetic_flag(). The presence requirement
+  // still applies so a writer states the classification it expects.
+  'newsletter_subscribers',
+  'newsletter_sends',
 ]);
+
 
 const INSERT_METHODS = new Set(['insert', 'upsert']);
 
