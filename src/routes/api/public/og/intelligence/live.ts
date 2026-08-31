@@ -41,12 +41,21 @@ export const Route = createFileRoute("/api/public/og/intelligence/live")({
             "live share image render failed",
             err instanceof Error ? err.message : String(err),
           );
-          const { buildShareSvg } = await import("@/lib/intelligence/share-image.server");
-          return new Response(buildShareSvg(card, citation), {
+          /*
+           * Never SVG here. LinkedIn's crawler cannot parse an SVG og:image and
+           * shows "No image found", and the bad answer then sits in cache for
+           * the route's TTL. This is a pre-baked PNG read straight from bytes,
+           * with no call to the renderer service, so a renderer outage cannot
+           * reach it.
+           */
+          const { ogFallbackPngBytes } = await import(
+            "@/lib/intelligence/generated/og-fallback-png"
+          );
+          return new Response(ogFallbackPngBytes() as unknown as BodyInit, {
             headers: {
-              "content-type": "image/svg+xml; charset=utf-8",
+              "content-type": "image/png",
               "cache-control": "public, max-age=120",
-              "x-costmyai-render": "svg-fallback",
+              "x-costmyai-render": "static-png-fallback",
             },
           });
         }
