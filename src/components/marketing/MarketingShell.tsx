@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { CircleUserRound, LogIn, Menu, X } from "lucide-react";
+import { CircleUserRound, Linkedin, LogIn, Menu, X } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import { resetConsent } from "@/lib/analytics";
