@@ -32,7 +32,7 @@ export function buildMonthHead(
   }
   const payload = loaderData.frozen.payload;
   const label = payload.monthLabel;
-  const genericTitle = `${label} AI price report — frozen figures | CostMyAI`;
+  const genericTitle = `${label} AI price report. Frozen figures | CostMyAI`;
   const genericDescription = `Frozen ${label} market figures: ${payload.changesTotal} price moves (${payload.increases} up, ${payload.decreases} down) across ${payload.liveModels} models and ${payload.liveHosts} providers. Written once, never edited.`;
 
   if (cardId) {

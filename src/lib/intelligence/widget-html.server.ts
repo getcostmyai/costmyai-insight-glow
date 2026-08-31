@@ -86,7 +86,7 @@ export function renderWidgetDocument(payload: WidgetPayload, opts: WidgetDocOpti
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex" />
-<title>AI price market — via CostMyAI</title>
+<title>AI price market, via CostMyAI</title>
 <style nonce="${nonce}">
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -258,7 +258,7 @@ export function renderWidgetUnavailable(opts: WidgetDocOptions): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex" />
-<title>AI price market — via CostMyAI</title>
+<title>AI price market, via CostMyAI</title>
 <style nonce="${nonce}">
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}

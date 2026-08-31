@@ -16,13 +16,13 @@ import type { IntelligencePayload } from "@/lib/intelligence/intelligence.server
 import { buildCardMeta, findShareCard } from "@/lib/intelligence/share-cards";
 
 const GENERIC_META = [
-  { title: "Intelligence — live AI price and quality market data | CostMyAI" },
+  { title: "Intelligence: live AI price and quality market data | CostMyAI" },
   {
     name: "description",
     content:
       "Live market intelligence on the AI model economy: models and providers tracked, price moves this month, multi-provider price spreads and the cheapest model clearing each measured quality band.",
   },
-  { property: "og:title", content: "Intelligence — the live AI price and quality market" },
+  { property: "og:title", content: "Intelligence: the live AI price and quality market" },
   {
     property: "og:description",
     content:

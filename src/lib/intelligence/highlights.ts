@@ -125,7 +125,7 @@ export function postDraft(opts: {
   url: string;
 }): string {
   return [
-    `${opts.value} — ${opts.label}`,
+    `${opts.value}. ${opts.label}`,
     opts.detail,
     opts.window ?? null,
     `Source: CostMyAI Intelligence. ${opts.url}`,
