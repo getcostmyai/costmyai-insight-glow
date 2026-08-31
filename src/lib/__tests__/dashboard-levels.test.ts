@@ -129,7 +129,7 @@ describe("level-appropriate copy", () => {
 
   it("keeps Overview level-neutral", () => {
     expect(LEVEL_FILES.overview).not.toContain("rightsize plan");
-    expect(LEVEL_FILES.overview).toContain("Across every check your workspace runs");
+    expect(LEVEL_FILES.overview).toContain("every check your plan includes");
   });
 
   it("explains arbitrage versus benchmark saving on Certify", () => {

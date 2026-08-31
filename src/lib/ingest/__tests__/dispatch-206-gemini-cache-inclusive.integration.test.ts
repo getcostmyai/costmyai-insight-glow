@@ -165,8 +165,10 @@ live("a real cached Gemini prefix (inclusive shape)", () => {
   it("is stored as a SUBSET of the prompt total and priced without double-counting", async () => {
     // 1. First call warms the implicit cache; the second repeats the prefix.
     const first = await call("Reply with the single word: one");
-    if (first.status === 429) {
-      console.warn("[dispatch-206] Gemini returned 429 (free-tier quota); cannot prove today.");
+    if (first.status === 429 || first.status === 503) {
+      console.warn(
+        `[dispatch-206] Gemini returned ${first.status} (provider unavailable); cannot prove today.`,
+      );
       return;
     }
     expect(first.status).toBe(200);
@@ -174,6 +176,12 @@ live("a real cached Gemini prefix (inclusive shape)", () => {
 
     await new Promise((r) => setTimeout(r, 2000));
     const second = await call("Reply with the single word: two");
+    if (second.status === 429 || second.status === 503) {
+      console.warn(
+        `[dispatch-206] Gemini returned ${second.status} on repeat call (provider unavailable); cannot prove today.`,
+      );
+      return;
+    }
     expect(second.status).toBe(200);
 
     const cachedTokens = second.usage.cachedContentTokenCount ?? 0;

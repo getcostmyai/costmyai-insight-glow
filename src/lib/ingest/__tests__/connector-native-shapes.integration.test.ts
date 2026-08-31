@@ -141,10 +141,12 @@ describe("the Google native envelope, from generativelanguage.googleapis.com", (
 
       modelVersion: string;
     };
-    if (response.status === 429) {
-      // Upstream provider quota, not a connector defect. Report it instead of
-      // failing a check that never actually ran.
-      console.warn("upstream returned 429 (provider quota); cannot prove today.");
+    if (response.status === 429 || response.status === 503) {
+      // Upstream provider quota or outage, not a connector defect. Report it
+      // instead of failing a check that never actually ran.
+      console.warn(
+        `upstream returned ${response.status} (provider unavailable); cannot prove today.`,
+      );
       return;
     }
     expect(response.status).toBe(200);

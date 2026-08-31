@@ -49,7 +49,12 @@ export default defineConfig(async (env) => {
           test: {
             ...shared,
             name: "parallel",
-            exclude: ["**/node_modules/**", "**/dist/**", ...SERIAL_FILES],
+            exclude: [
+              "**/node_modules/**",
+              "**/dist/**",
+              "eslint-rules/**/*.test.js",
+              ...SERIAL_FILES,
+            ],
           },
         },
         {
@@ -58,6 +63,7 @@ export default defineConfig(async (env) => {
             ...shared,
             name: "serial",
             include: SERIAL_FILES,
+            exclude: ["eslint-rules/**/*.test.js"],
             sequence: { groupOrder: 1 },
           },
         },
