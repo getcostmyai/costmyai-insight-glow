@@ -49,6 +49,9 @@ export function buildMonthHead(
           { property: "og:title", content: meta.title },
           { property: "og:description", content: meta.description },
           { property: "og:image", content: meta.imageUrl },
+          { property: "og:image:width", content: String(meta.imageWidth) },
+          { property: "og:image:height", content: String(meta.imageHeight) },
+          { property: "og:image:type", content: meta.imageType },
           { property: "og:type", content: "article" },
           {
             property: "og:url",
