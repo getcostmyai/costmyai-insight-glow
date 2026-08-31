@@ -22,12 +22,16 @@ const card = {
   tone: "brand" as const,
 };
 
-// Frozen-style citation, then the month stamp is swapped out: this poster is
-// static and must not claim a month it cannot vouch for.
-let svg = buildShareSvg(card as never, { kind: "frozen", monthKey: "2026-01" });
+// The month stamp is swapped out afterwards: this poster is static and must
+// not claim a month, or a timestamp, that it cannot vouch for.
+let svg = buildShareSvg(card as never, {
+  kind: "live",
+  monthLabel: "",
+  generatedAt: new Date().toISOString(),
+});
 svg = svg.replace(
   /<tspan font-size="24" font-weight="600"[^>]*>[^<]*<\/tspan>[^<]*/,
-  '<tspan font-size="24" font-weight="600" fill="#11131D">CostMyAI Intelligence</tspan> · live figures at costmyai.com/intelligence',
+  '<tspan font-size="24" font-weight="600" fill="#11131D">CostMyAI Intelligence</tspan> · live provider pricing, updated continuously',
 );
 
 const css = await fetch(
