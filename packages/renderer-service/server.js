@@ -21,6 +21,7 @@ const DEFAULT_WIDTH = 1200;
  * TTF URLs when the request carries no modern browser UA, and resvg cannot read
  * woff2. Cached for the life of the process.
  */
+// Touched 2026-08-31 to force a cold instance for the OG cold-start verification.
 let fontCache = null;
 
 async function loadFonts() {
