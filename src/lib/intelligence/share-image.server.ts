@@ -77,7 +77,10 @@ export function buildShareSvg(card: ShareCard, citation: ShareImageCitation): st
   const footerNote =
     citation.kind === "frozen"
       ? "· final, frozen figures"
-      : `· as of ${asOfLabel(citation.generatedAt)} · live, still moving`;
+      : `· live, still moving · as of ${asOfLabel(citation.generatedAt)}`;
+  // The frozen note is short enough to sit at footer size; the live stamp
+  // carries a timestamp and would otherwise run into "Powered by CostMyAI".
+  const noteSize = citation.kind === "frozen" ? 24 : 19;
   const permalink =
     citation.kind === "frozen"
       ? `costmyai.com/intelligence/${citation.monthKey}`
@@ -113,7 +116,7 @@ export function buildShareSvg(card: ShareCard, citation: ShareImageCitation): st
 
   <rect x="72" y="536" width="1056" height="1" fill="${PALETTE.hairline}"/>
   <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">${esc(monthLabel)}</text>
-  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="${PALETTE.muted}">${esc(footerNote)}</text>
+  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="${noteSize}" font-weight="400" fill="${PALETTE.muted}">${esc(footerNote)}</text>
   <text x="1128" y="574" text-anchor="end" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">Powered by CostMyAI</text>
   <text x="1128" y="602" text-anchor="end" font-family="Inter" font-size="20" font-weight="400" fill="${PALETTE.muted}">${esc(permalink)}</text>
 

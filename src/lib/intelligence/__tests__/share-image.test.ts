@@ -32,7 +32,7 @@ describe("buildShareSvg", () => {
       monthLabel: "August 2026",
       generatedAt,
     });
-    expect(svg).toContain(`· as of ${asOfLabel(generatedAt)} · live, still moving`);
+    expect(svg).toContain(`· live, still moving · as of ${asOfLabel(generatedAt)}`);
     expect(svg).toContain("costmyai.com/intelligence<");
     expect(svg).not.toContain("costmyai.com/intelligence/");
     expect(svg).not.toContain("final, frozen figures");
