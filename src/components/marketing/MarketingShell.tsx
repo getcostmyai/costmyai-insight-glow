@@ -195,8 +195,9 @@ export function MarketingFooter() {
         </div>
 
         <p className="mt-12 text-xs text-muted-foreground">
-          <span className="num">©</span> CostMyAI. Prices and benchmarks are sourced from public
-          provider and evaluation feeds; every recommendation states the measurement it rests on.
+          <span className="num">©</span> CostMyAI. Made in Austria. Prices and benchmarks are sourced
+          from public provider and evaluation feeds; every recommendation states the measurement it
+          rests on.
         </p>
       </div>
     </footer>
