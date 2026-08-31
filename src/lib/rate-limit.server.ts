@@ -91,6 +91,20 @@ export const RATE_RULES = {
    * genuine browse.
    */
   pageTelemetry: { name: "page-telemetry", limit: 200, windowSec: 300 },
+  /**
+   * Newsletter signup. A person subscribes once, and every accepted call sends
+   * a real confirmation email, so this sits at the partner-application end of
+   * the scale: 5 per hour absorbs a double-submit and a corrected typo, and
+   * nothing legitimate needs more.
+   */
+  newsletterSignup: { name: "newsletter-signup", limit: 5, windowSec: 3600 },
+  /** Signup-form impressions. One per rendered form; matches the other telemetry ceilings. */
+  newsletterTelemetry: { name: "newsletter-telemetry", limit: 60, windowSec: 300 },
+  /**
+   * Confirm and unsubscribe. Deliberately generous for a human clicking a link
+   * twice, deliberately far below what a token-guessing sweep would need.
+   */
+  newsletterToken: { name: "newsletter-token", limit: 30, windowSec: 300 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({
