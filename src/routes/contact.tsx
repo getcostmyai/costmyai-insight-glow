@@ -80,8 +80,31 @@ function ContactPage() {
                   Vienna, Austria
                 </p>
               </Row>
+              <Row label="Social">
+                <div className="flex items-center gap-5">
+                  <a
+                    href="https://www.linkedin.com/company/costmyai"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label="CostMyAI on LinkedIn"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Linkedin className="h-7 w-7" />
+                  </a>
+                  <a
+                    href="https://www.instagram.com/costmyai"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label="CostMyAI on Instagram"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <InstagramMark className="h-7 w-7" />
+                  </a>
+                </div>
+              </Row>
             </div>
           </Reveal>
+
         </div>
       </section>
     </MarketingShell>
