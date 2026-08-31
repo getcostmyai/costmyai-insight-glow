@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-31T14:52:47.251Z",
+  "generatedAt": "2026-08-31T22:43:01.345Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -826,6 +826,24 @@
       "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at, status\") .eq(\"feed\", PRICING_FEED)"
     },
     {
+      "file": "src/lib/newsletter/newsletter.server.ts",
+      "line": 73,
+      "table": "newsletter_subscribers",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_subscribers\") .select(\"id, status\") .ilike(\"email\", email)"
+    },
+    {
+      "file": "src/lib/newsletter/newsletter.server.ts",
+      "line": 190,
+      "table": "newsletter_subscribers",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_subscribers\") .select(\"id, status, unsubscribed_at\") .eq(\"confirm_token\", token)"
+    },
+    {
       "file": "src/lib/partner-application.server.ts",
       "line": 95,
       "table": "partner_applications",
@@ -1102,7 +1120,7 @@
     },
     {
       "file": "src/lib/telemetry/lead-events.server.ts",
-      "line": 181,
+      "line": 185,
       "table": "partners",
       "filters": [
         "status"
