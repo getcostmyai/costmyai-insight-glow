@@ -15,7 +15,7 @@ const WIDGET_PATH = "/embed/intelligence-widget";
 
 function snippetFor(origin: string) {
   return `<iframe src="${origin}${WIDGET_PATH}"
-  title="AI price market — via CostMyAI"
+  title="AI price market, via CostMyAI"
   width="100%" height="200" loading="lazy"
   style="border:0;max-width:520px"
   referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
@@ -60,7 +60,7 @@ export function EmbedWidgetSection() {
           <Reveal>
             <iframe
               src={WIDGET_PATH}
-              title="AI price market — via CostMyAI"
+              title="AI price market, via CostMyAI"
               width="100%"
               height={200}
               loading="lazy"

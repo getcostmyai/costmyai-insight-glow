@@ -125,7 +125,7 @@ function Figure({
           <ShareCardButton
             cardId={cardId}
             citation={ctx.shareCitation}
-            title={`${format ? format(value) : value} — ${label}`}
+            title={`${format ? format(value) : value}. ${label}`}
           />
         ) : null}
       </div>
@@ -399,7 +399,7 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                 <ShareCardButton
                   cardId={headline.cardId}
                   citation={ctx.shareCitation}
-                  title={`${headline.value} — ${headline.label}`}
+                  title={`${headline.value}. ${headline.label}`}
                   postText={postDraft({
                     value: headline.value,
                     label: headline.label,

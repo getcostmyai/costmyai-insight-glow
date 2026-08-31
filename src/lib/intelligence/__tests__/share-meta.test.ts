@@ -110,13 +110,13 @@ describe("buildIndexHead", () => {
     const head = buildIndexHead(payload(), undefined);
     expect(head).toEqual({
       meta: [
-        { title: "Intelligence — live AI price and quality market data | CostMyAI" },
+        { title: "Intelligence: live AI price and quality market data | CostMyAI" },
         {
           name: "description",
           content:
             "Live market intelligence on the AI model economy: models and providers tracked, price moves this month, multi-provider price spreads and the cheapest model clearing each measured quality band.",
         },
-        { property: "og:title", content: "Intelligence — the live AI price and quality market" },
+        { property: "og:title", content: "Intelligence: the live AI price and quality market" },
         {
           property: "og:description",
           content:
@@ -158,7 +158,7 @@ describe("buildMonthHead", () => {
   }
 
   it("keeps the month-aggregate meta unchanged with no card param", () => {
-    const title = "August 2026 AI price report — frozen figures | CostMyAI";
+    const title = "August 2026 AI price report. Frozen figures | CostMyAI";
     const description =
       "Frozen August 2026 market figures: 42 price moves (20 up, 22 down) across 120 models and 14 providers. Written once, never edited.";
     expect(buildMonthHead({ frozen: frozen() }, "2026-07", undefined)).toEqual({

@@ -177,7 +177,7 @@ export interface CardMeta {
  * rendered share image can never say two different things about the same card. */
 export function buildCardMeta(card: ShareCard, imageUrl: string): CardMeta {
   return {
-    title: `${card.value} — ${card.label} | CostMyAI Intelligence`,
+    title: `${card.value}. ${card.label} | CostMyAI Intelligence`,
     description: card.detail,
     imageUrl,
   };
