@@ -10,7 +10,67 @@ import {
   dateLabel,
   type ReportContext,
 } from "@/components/marketing/IntelligenceReport";
-import { frozenMonthQuery } from "@/lib/intelligence.functions";
+import { frozenMonthQuery, type FrozenMonth } from "@/lib/intelligence.functions";
+import { buildCardMeta, findShareCard } from "@/lib/intelligence/share-cards";
+
+/**
+ * A shared archive link carries `?card=<id>`. Without reading it, every card on
+ * a month page previewed as the same month-aggregate summary.
+ */
+export function buildMonthHead(
+  loaderData: { frozen: FrozenMonth | null } | undefined,
+  month: string,
+  cardId: string | undefined,
+) {
+  if (!loaderData?.frozen) {
+    return {
+      meta: [
+        { title: "Month not archived | CostMyAI" },
+        { name: "robots", content: "noindex" },
+      ],
+    };
+  }
+  const payload = loaderData.frozen.payload;
+  const label = payload.monthLabel;
+  const genericTitle = `${label} AI price report — frozen figures | CostMyAI`;
+  const genericDescription = `Frozen ${label} market figures: ${payload.changesTotal} price moves (${payload.increases} up, ${payload.decreases} down) across ${payload.liveModels} models and ${payload.liveHosts} providers. Written once, never edited.`;
+
+  if (cardId) {
+    const card = findShareCard(payload, cardId);
+    if (card) {
+      const meta = buildCardMeta(
+        card,
+        `https://www.costmyai.com/api/public/og/intelligence/${month}?card=${encodeURIComponent(cardId)}`,
+      );
+      return {
+        meta: [
+          { title: meta.title },
+          { name: "description", content: meta.description },
+          { property: "og:title", content: meta.title },
+          { property: "og:description", content: meta.description },
+          { property: "og:image", content: meta.imageUrl },
+          { property: "og:type", content: "article" },
+          { property: "og:url", content: `https://www.costmyai.com/intelligence/${month}` },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+        links: [{ rel: "canonical", href: `https://www.costmyai.com/intelligence/${month}` }],
+      };
+    }
+  }
+
+  return {
+    meta: [
+      { title: genericTitle },
+      { name: "description", content: genericDescription },
+      { property: "og:title", content: genericTitle },
+      { property: "og:description", content: genericDescription },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: `https://www.costmyai.com/intelligence/${month}` },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: `https://www.costmyai.com/intelligence/${month}` }],
+  };
+}
 
 /**
  * The permanent archive page for one closed month.
@@ -20,31 +80,16 @@ import { frozenMonthQuery } from "@/lib/intelligence.functions";
  * which is what lets a per-card share land on the right card here.
  */
 export const Route = createFileRoute("/intelligence/$month")({
+  validateSearch: (search: Record<string, unknown>): { card?: string } => {
+    const card = typeof search.card === "string" ? search.card : undefined;
+    return card ? { card } : {};
+  },
   loader: async ({ context, params }) => {
     const res = await context.queryClient.ensureQueryData(frozenMonthQuery(params.month));
     if (!res.frozen) throw notFound();
     return res;
   },
-  head: ({ params, loaderData }) => {
-    if (!loaderData?.frozen) {
-      return { meta: [{ title: "Month not archived | CostMyAI" }, { name: "robots", content: "noindex" }] };
-    }
-    const label = loaderData.frozen.payload.monthLabel;
-    const title = `${label} AI price report — frozen figures | CostMyAI`;
-    const description = `Frozen ${label} market figures: ${loaderData.frozen.payload.changesTotal} price moves (${loaderData.frozen.payload.increases} up, ${loaderData.frozen.payload.decreases} down) across ${loaderData.frozen.payload.liveModels} models and ${loaderData.frozen.payload.liveHosts} providers. Written once, never edited.`;
-    return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:type", content: "article" },
-        { property: "og:url", content: `https://www.costmyai.com/intelligence/${params.month}` },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-      links: [{ rel: "canonical", href: `https://www.costmyai.com/intelligence/${params.month}` }],
-    };
-  },
+  head: ({ params, loaderData, match }) => buildMonthHead(loaderData, params.month, match.search.card),
   notFoundComponent: MonthNotFound,
   component: FrozenMonthPage,
 });

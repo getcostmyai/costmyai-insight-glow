@@ -12,6 +12,59 @@ import {
   type ReportContext,
 } from "@/components/marketing/IntelligenceReport";
 import { intelligenceQuery } from "@/lib/intelligence.functions";
+import type { IntelligencePayload } from "@/lib/intelligence/intelligence.server";
+import { buildCardMeta, findShareCard } from "@/lib/intelligence/share-cards";
+
+const GENERIC_META = [
+  { title: "Intelligence — live AI price and quality market data | CostMyAI" },
+  {
+    name: "description",
+    content:
+      "Live market intelligence on the AI model economy: models and providers tracked, price moves this month, multi-provider price spreads and the cheapest model clearing each measured quality band.",
+  },
+  { property: "og:title", content: "Intelligence — the live AI price and quality market" },
+  {
+    property: "og:description",
+    content:
+      "Price moves this month, provider-to-provider spreads on identical weights, and quality-per-dollar winners inside measured benchmark margins.",
+  },
+  { property: "og:type", content: "website" },
+  { property: "og:url", content: "https://www.costmyai.com/intelligence" },
+  { name: "twitter:card", content: "summary_large_image" },
+];
+
+/**
+ * A shared card link carries `?card=<id>`, so the scraper that follows it must
+ * be told about that one card — not the page in general.
+ */
+export function buildIndexHead(data: IntelligencePayload | undefined, cardId: string | undefined) {
+  if (cardId && data) {
+    const card = findShareCard(data, cardId);
+    if (card) {
+      const meta = buildCardMeta(
+        card,
+        `https://www.costmyai.com/api/public/og/intelligence/live?card=${encodeURIComponent(cardId)}`,
+      );
+      return {
+        meta: [
+          { title: meta.title },
+          { name: "description", content: meta.description },
+          { property: "og:title", content: meta.title },
+          { property: "og:description", content: meta.description },
+          { property: "og:image", content: meta.imageUrl },
+          { property: "og:type", content: "website" },
+          { property: "og:url", content: "https://www.costmyai.com/intelligence" },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+        links: [{ rel: "canonical", href: "https://www.costmyai.com/intelligence" }],
+      };
+    }
+  }
+  return {
+    meta: GENERIC_META,
+    links: [{ rel: "canonical", href: "https://www.costmyai.com/intelligence" }],
+  };
+}
 
 /**
  * The live page. It recomputes on every request for the still-open month —
@@ -19,27 +72,12 @@ import { intelligenceQuery } from "@/lib/intelligence.functions";
  * control points at the newest frozen month, never at these moving numbers.
  */
 export const Route = createFileRoute("/intelligence/")({
-  head: () => ({
-    meta: [
-      { title: "Intelligence — live AI price and quality market data | CostMyAI" },
-      {
-        name: "description",
-        content:
-          "Live market intelligence on the AI model economy: models and providers tracked, price moves this month, multi-provider price spreads and the cheapest model clearing each measured quality band.",
-      },
-      { property: "og:title", content: "Intelligence — the live AI price and quality market" },
-      {
-        property: "og:description",
-        content:
-          "Price moves this month, provider-to-provider spreads on identical weights, and quality-per-dollar winners inside measured benchmark margins.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://www.costmyai.com/intelligence" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: "https://www.costmyai.com/intelligence" }],
-  }),
+  validateSearch: (search: Record<string, unknown>): { card?: string } => {
+    const card = typeof search.card === "string" ? search.card : undefined;
+    return card ? { card } : {};
+  },
   loader: ({ context }) => context.queryClient.ensureQueryData(intelligenceQuery()),
+  head: ({ loaderData, match }) => buildIndexHead(loaderData?.data, match.search.card),
   component: IntelligencePage,
 });
 
