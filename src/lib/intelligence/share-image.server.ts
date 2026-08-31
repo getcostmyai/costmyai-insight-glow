@@ -92,7 +92,7 @@ export function buildShareSvg(card: ShareCard, citation: ShareImageCitation): st
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
-    <!-- Matches --gradient-brand-wide in src/styles.css, so the poster wordmark
+    <!-- Matches the gradient-brand-wide token in src/styles.css, so the poster wordmark
          is the same gradient as the on-site <Wordmark /> component. -->
     <linearGradient id="wordmarkGradient" x1="0%" y1="20%" x2="100%" y2="80%">
       <stop offset="0%" stop-color="#6366F1"/>
