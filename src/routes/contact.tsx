@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Linkedin } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { InstagramMark } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
+
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -77,8 +80,31 @@ function ContactPage() {
                   Vienna, Austria
                 </p>
               </Row>
+              <Row label="Social">
+                <div className="flex items-center gap-5">
+                  <a
+                    href="https://www.linkedin.com/company/costmyai"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label="CostMyAI on LinkedIn"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Linkedin className="h-7 w-7" />
+                  </a>
+                  <a
+                    href="https://www.instagram.com/costmyai"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label="CostMyAI on Instagram"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <InstagramMark className="h-7 w-7" />
+                  </a>
+                </div>
+              </Row>
             </div>
           </Reveal>
+
         </div>
       </section>
     </MarketingShell>

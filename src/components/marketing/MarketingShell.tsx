@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { CircleUserRound, LogIn, Menu, X } from "lucide-react";
+import { CircleUserRound, Linkedin, LogIn, Menu, X } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import { resetConsent } from "@/lib/analytics";
@@ -11,7 +12,33 @@ import { MARKETING_NAV } from "@/lib/nav";
 import { Wordmark } from "./Wordmark";
 
 /**
+ * Inline Instagram logomark on a 24-unit grid so it matches the lucide icons and
+ * inherits currentColor. Mirrors the XMark pattern in BlogShareButton.tsx.
+ */
+export function InstagramMark({ className }: { className?: string }) {
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+/**
  * The marketing chrome: light, spacious, Apple-adjacent — deliberately not the
+
  * dark dashboard language. Every page-level CTA inside this shell uses the
  * shared .btn-gradient utility, so the brand gradient has exactly one source.
  */
@@ -150,7 +177,28 @@ export function MarketingFooter() {
               Certified, quality-checked switches that cut AI spend without touching output
               quality. We never hold your provider keys.
             </p>
+            <div className="mt-4 flex items-center gap-3">
+              <a
+                href="https://www.linkedin.com/company/costmyai"
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label="CostMyAI on LinkedIn"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.instagram.com/costmyai"
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label="CostMyAI on Instagram"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <InstagramMark className="h-5 w-5" />
+              </a>
+            </div>
           </div>
+
 
           <div className="grid grid-cols-2 gap-x-14 gap-y-8 sm:grid-cols-4">
             <FooterColumn title="Product">
