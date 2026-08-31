@@ -16,7 +16,13 @@ import {
 } from "@/components/marketing/IntelligenceCharts";
 import type { IntelligencePayload } from "@/lib/intelligence.functions";
 import type { PriceMove } from "@/lib/intelligence/intelligence.server";
-import { bandCardId, moveCardId, repricerCardId, spreadCardId } from "@/lib/intelligence/share-cards";
+import {
+  asOfLabel,
+  bandCardId,
+  moveCardId,
+  repricerCardId,
+  spreadCardId,
+} from "@/lib/intelligence/share-cards";
 import { LABELS, notesForMonth, notesNewestFirst } from "@/lib/intelligence/notes";
 import {
   citationLine,
@@ -36,12 +42,25 @@ import { useOrigin } from "@/lib/use-origin";
  * the same card on the frozen page that the reader clicked on the live one.
  */
 
+/**
+ * What a per-card share should cite.
+ *
+ * A frozen archive page cites its own permanent month. The live page cites
+ * itself, as of the moment it was computed — never the previous frozen month,
+ * which is not the number the reader is looking at.
+ */
+export type ShareCitation =
+  | { kind: "frozen"; month: string }
+  | { kind: "live"; generatedAt: string };
+
 export interface ReportContext {
   /** Frozen month key when this is an archive page, else null (live page). */
   frozenMonth: string | null;
   /** Month a share link should cite: this frozen month, or the newest archive. */
   citableMonth: string | null;
   archive: { month: string; frozenAt: string }[];
+  /** What every per-card share control on this page cites. */
+  shareCitation: ShareCitation;
 }
 
 const usd = (n: number) => (n >= 1 ? `$${n.toFixed(2)}` : `$${n.toFixed(n < 0.01 ? 4 : 3)}`);
@@ -105,7 +124,7 @@ function Figure({
         {cardId && ctx ? (
           <ShareCardButton
             cardId={cardId}
-            month={ctx.citableMonth}
+            citation={ctx.shareCitation}
             title={`${format ? format(value) : value} — ${label}`}
           />
         ) : null}
@@ -189,7 +208,7 @@ function MoveList({
                 </div>
                 <ShareCardButton
                   cardId={id}
-                  month={ctx.citableMonth}
+                  citation={ctx.shareCitation}
                   title={`${r.modelKey} at ${r.hostLabel}: ${signedPct(r.pct)}`}
                 />
               </div>
@@ -379,18 +398,21 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
                 <p className="text-base font-medium tracking-tight">{headline.label}</p>
                 <ShareCardButton
                   cardId={headline.cardId}
-                  month={ctx.citableMonth}
+                  citation={ctx.shareCitation}
                   title={`${headline.value} — ${headline.label}`}
-                  postText={
-                    ctx.citableMonth
-                      ? postDraft({
-                          value: headline.value,
-                          label: headline.label,
-                          detail: headline.detail,
-                          url: `https://costmyai.com/intelligence/${ctx.citableMonth}`,
-                        })
-                      : undefined
-                  }
+                  postText={postDraft({
+                    value: headline.value,
+                    label: headline.label,
+                    detail: headline.detail,
+                    window:
+                      ctx.shareCitation.kind === "live"
+                        ? `As of ${asOfLabel(ctx.shareCitation.generatedAt)}, live and still moving.`
+                        : undefined,
+                    url:
+                      ctx.shareCitation.kind === "frozen"
+                        ? `https://costmyai.com/intelligence/${ctx.shareCitation.month}`
+                        : "https://costmyai.com/intelligence",
+                  })}
                 />
               </div>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -485,6 +507,8 @@ function CopyLine({ label, text }: { label: string; text: string }) {
 
 function CiteAndReuse({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const origin = useOrigin();
+  // Intentionally unaffected by the live-share fix: citations always point at
+  // the frozen month so a quoted figure stays stable. Do not "fix" this.
   const month = ctx.frozenMonth ?? ctx.citableMonth;
   const dataMonth = ctx.frozenMonth ?? "live";
   const permalink = month ? shareUrl(origin, `/intelligence/${month}`, "cite") : null;
@@ -709,7 +733,7 @@ function PriceMoves({ data, ctx }: { data: IntelligencePayload; ctx: ReportConte
                     </span>
                     <ShareCardButton
                       cardId={repricerCardId(r.host)}
-                      month={ctx.citableMonth}
+                      citation={ctx.shareCitation}
                       title={`${r.hostLabel}: ${r.changes} price moves`}
                     />
                   </div>
@@ -801,7 +825,7 @@ function MarketStructure({ data, ctx }: { data: IntelligencePayload; ctx: Report
                     </div>
                     <ShareCardButton
                       cardId={spreadCardId(s.modelKey)}
-                      month={ctx.citableMonth}
+                      citation={ctx.shareCitation}
                       title={`${s.displayName}: +${Math.round(s.spreadPct)}% provider spread`}
                     />
                   </div>
@@ -870,7 +894,7 @@ function QualityPerDollar({ data, ctx }: { data: IntelligencePayload; ctx: Repor
                   </div>
                   <ShareCardButton
                     cardId={bandCardId(w.taskClass)}
-                    month={ctx.citableMonth}
+                    citation={ctx.shareCitation}
                     title={`${w.taskClass}: ${w.displayName} clears the band at ${usd(w.pricePerMtok)}/MTok`}
                   />
                 </div>

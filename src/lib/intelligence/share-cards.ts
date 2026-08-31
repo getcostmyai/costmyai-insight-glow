@@ -22,6 +22,27 @@ export interface ShareCard {
   tone: ShareTone;
 }
 
+/**
+ * One formatter for "when was this true", shared by the copyable post text and
+ * the rendered share image so the two can never drift apart.
+ */
+export function asOfLabel(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  const time = d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+    hour12: false,
+  });
+  return `${date}, ${time} UTC`;
+}
+
 export function slugify(value: string): string {
   return value
     .toLowerCase()

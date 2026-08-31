@@ -95,6 +95,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicGatewayIngestRouteImport } from './routes/api/public/gateway/ingest'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
+import { Route as ApiPublicOgIntelligenceLiveRouteImport } from './routes/api/public/og/intelligence/live'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 import { Route as ApiPublicDataIntelligenceMonthRouteImport } from './routes/api/public/data/intelligence/$month'
 
@@ -546,6 +547,12 @@ const ApiPublicBadgeCodeRoute = ApiPublicBadgeCodeRouteImport.update({
   path: '/api/public/badge/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOgIntelligenceLiveRoute =
+  ApiPublicOgIntelligenceLiveRouteImport.update({
+    id: '/api/public/og/intelligence/live',
+    path: '/api/public/og/intelligence/live',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOgIntelligenceMonthRoute =
   ApiPublicOgIntelligenceMonthRouteImport.update({
     id: '/api/public/og/intelligence/$month',
@@ -647,6 +654,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
+  '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -733,6 +741,7 @@ export interface FileRoutesByTo {
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
+  '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -824,6 +833,7 @@ export interface FileRoutesById {
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
+  '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -915,6 +925,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
+    | '/api/public/og/intelligence/live'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1001,6 +1012,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
+    | '/api/public/og/intelligence/live'
   id:
     | '__root__'
     | '/'
@@ -1091,6 +1103,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
+    | '/api/public/og/intelligence/live'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1155,6 +1168,7 @@ export interface RootRouteChildren {
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   ApiPublicDataIntelligenceMonthRoute: typeof ApiPublicDataIntelligenceMonthRoute
   ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
+  ApiPublicOgIntelligenceLiveRoute: typeof ApiPublicOgIntelligenceLiveRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1761,6 +1775,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBadgeCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og/intelligence/live': {
+      id: '/api/public/og/intelligence/live'
+      path: '/api/public/og/intelligence/live'
+      fullPath: '/api/public/og/intelligence/live'
+      preLoaderRoute: typeof ApiPublicOgIntelligenceLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/og/intelligence/$month': {
       id: '/api/public/og/intelligence/$month'
       path: '/api/public/og/intelligence/$month'
@@ -1932,6 +1953,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   ApiPublicDataIntelligenceMonthRoute: ApiPublicDataIntelligenceMonthRoute,
   ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
+  ApiPublicOgIntelligenceLiveRoute: ApiPublicOgIntelligenceLiveRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -79,6 +79,7 @@ function FrozenMonthPage() {
     frozenMonth: frozen.month,
     citableMonth: frozen.month,
     archive: data.archive,
+    shareCitation: { kind: "frozen", month: frozen.month },
   };
 
   return (

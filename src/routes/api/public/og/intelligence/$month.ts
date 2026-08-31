@@ -31,14 +31,14 @@ export const Route = createFileRoute("/api/public/og/intelligence/$month")({
 
         try {
           const { renderShareImage } = await import("@/lib/intelligence/share-image.server");
-          return await renderShareImage(card, frozen.month, url.origin);
+          return await renderShareImage(card, { kind: "frozen", monthKey: frozen.month }, url.origin);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("share image render failed", message);
           // Fallback: serve the same poster as vector. Browsers and Slack render
           // it; some crawlers ignore SVG previews, but a live image beats a 500.
           const { buildShareSvg } = await import("@/lib/intelligence/share-image.server");
-          return new Response(buildShareSvg(card, frozen.month), {
+          return new Response(buildShareSvg(card, { kind: "frozen", monthKey: frozen.month }), {
             headers: {
               "content-type": "image/svg+xml; charset=utf-8",
               "cache-control": "public, max-age=300",

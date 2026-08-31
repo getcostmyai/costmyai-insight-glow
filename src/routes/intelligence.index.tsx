@@ -49,6 +49,7 @@ function IntelligencePage() {
     frozenMonth: null,
     citableMonth: live.citableMonth,
     archive: live.archive,
+    shareCitation: { kind: "live", generatedAt: live.data.generatedAt },
   };
 
   return (
