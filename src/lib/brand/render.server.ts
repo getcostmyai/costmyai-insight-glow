@@ -10,8 +10,8 @@
  * itself — a renderer outage must never turn into a 500.
  */
 
-/** Per-attempt budget for the renderer call. See the retry loop below. */
-export const RENDER_TIMEOUT_MS = 4000;
+/** Total budget for the renderer call — one attempt, no retry. See below. */
+export const RENDER_TIMEOUT_MS = 3000;
 
 export const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -30,38 +30,30 @@ export async function renderSvgToPng(
   const body = JSON.stringify({ svg, width });
 
   /*
-   * Two attempts, not one: a rolling deploy can leave a stale instance behind
-   * the same hostname for a while, and one bad hit should not cost the caller
-   * its PNG. Anything still failing after the retry throws, and the route falls
-   * back to a static poster.
-   *
-   * Each attempt is capped at 4s. A cold renderer instance fetches its fonts
-   * before it can rasterise anything, and an unbounded wait there is what turns
-   * a slow start into a crawler seeing no image at all: LinkedIn gives up around
-   * five seconds. Failing fast inside that budget lets the fallback win the race.
+   * Single attempt, not two: two 4s attempts could take up to 8s worst-case
+   * before falling back, past LinkedIn's ~5s crawler patience — a confirmed
+   * cause of "no image" on native Share to Feed (2026-08-31 diagnosis). A cold
+   * renderer instance fetches its fonts before it can rasterise anything, and
+   * an unbounded wait there is what turns a slow start into a crawler seeing
+   * no image at all. One 3s shot, then straight to the static-poster fallback,
+   * keeps the worst case safely under that ceiling.
    */
-  let last = "";
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-render-secret": secret },
-        body,
-        signal: controller.signal,
-      });
-      if (res.ok) return new Uint8Array(await res.arrayBuffer());
-      last = `renderer service returned ${res.status}`;
-    } catch (err) {
-      // An abort arrives here like any other fetch failure, so a timeout simply
-      // rolls on to the next attempt.
-      last = err instanceof Error ? err.message : String(err);
-    } finally {
-      clearTimeout(timer);
-    }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-render-secret": secret },
+      body,
+      signal: controller.signal,
+    });
+    if (res.ok) return new Uint8Array(await res.arrayBuffer());
+    throw new Error(`renderer service returned ${res.status}`);
+  } catch (err) {
+    throw err instanceof Error ? err : new Error(String(err));
+  } finally {
+    clearTimeout(timer);
   }
-  throw new Error(last);
 }
 
 
