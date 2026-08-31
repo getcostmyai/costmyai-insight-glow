@@ -10,6 +10,9 @@
  * itself — a renderer outage must never turn into a 500.
  */
 
+/** Per-attempt budget for the renderer call. See the retry loop below. */
+export const RENDER_TIMEOUT_MS = 4000;
+
 export const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
