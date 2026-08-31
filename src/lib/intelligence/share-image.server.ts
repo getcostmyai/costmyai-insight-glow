@@ -1,6 +1,6 @@
 import { esc, renderSvgToPng } from "@/lib/brand/render.server";
 
-import type { ShareCard } from "./share-cards";
+import { asOfLabel, type ShareCard } from "./share-cards";
 import { monthLabelOf } from "./snapshot.server";
 
 /**
@@ -63,8 +63,28 @@ function wrap(text: string, maxChars: number, maxLines: number): string[] {
   return lines;
 }
 
-export function buildShareSvg(card: ShareCard, monthKey: string): string {
-  const monthLabel = monthLabelOf(monthKey);
+/**
+ * What the poster footer states. A frozen month is a permanent citation; the
+ * live month is honestly stamped with the moment it was computed.
+ */
+export type ShareImageCitation =
+  | { kind: "frozen"; monthKey: string }
+  | { kind: "live"; monthLabel: string; generatedAt: string };
+
+export function buildShareSvg(card: ShareCard, citation: ShareImageCitation): string {
+  const monthLabel =
+    citation.kind === "frozen" ? monthLabelOf(citation.monthKey) : citation.monthLabel;
+  const footerNote =
+    citation.kind === "frozen"
+      ? "· final, frozen figures"
+      : `· live, still moving · as of ${asOfLabel(citation.generatedAt)}`;
+  // The frozen note is short enough to sit at footer size; the live stamp
+  // carries a timestamp and would otherwise run into "Powered by CostMyAI".
+  const noteSize = citation.kind === "frozen" ? 24 : 19;
+  const permalink =
+    citation.kind === "frozen"
+      ? `costmyai.com/intelligence/${citation.monthKey}`
+      : "costmyai.com/intelligence";
   const accent = TONE[card.tone];
   const len = card.value.length;
   const valueSize = len > 8 ? 132 : len > 5 ? 168 : 208;
@@ -96,25 +116,27 @@ export function buildShareSvg(card: ShareCard, monthKey: string): string {
 
   <rect x="72" y="536" width="1056" height="1" fill="${PALETTE.hairline}"/>
   <text x="72" y="580" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">${esc(monthLabel)}</text>
-  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="24" font-weight="400" fill="${PALETTE.muted}">· final, frozen figures</text>
+  <text x="72" y="580" dx="${monthLabel.length * 13 + 14}" font-family="Inter" font-size="${noteSize}" font-weight="400" fill="${PALETTE.muted}">${esc(footerNote)}</text>
   <text x="1128" y="574" text-anchor="end" font-family="Inter" font-size="24" font-weight="600" fill="${PALETTE.ink}">Powered by CostMyAI</text>
-  <text x="1128" y="602" text-anchor="end" font-family="Inter" font-size="20" font-weight="400" fill="${PALETTE.muted}">costmyai.com/intelligence/${esc(monthKey)}</text>
+  <text x="1128" y="602" text-anchor="end" font-family="Inter" font-size="20" font-weight="400" fill="${PALETTE.muted}">${esc(permalink)}</text>
 
 </svg>`;
 }
 
 export async function renderShareImage(
   card: ShareCard,
-  monthKey: string,
+  citation: ShareImageCitation,
   origin: string,
 ): Promise<Response> {
-  const png = await renderSvgToPng(buildShareSvg(card, monthKey), 1200, origin);
+  const png = await renderSvgToPng(buildShareSvg(card, citation), 1200, origin);
 
   return new Response(png as unknown as BodyInit, {
     headers: {
       "content-type": "image/png",
-      // A frozen figure never changes, so this is safe to cache hard.
-      "cache-control": "public, max-age=31536000, immutable",
+      // A frozen figure never changes, so it is safe to cache hard. A live one
+      // moves, so it must not be cached like a permanent citation.
+      "cache-control":
+        citation.kind === "frozen" ? "public, max-age=31536000, immutable" : "public, max-age=120",
     },
   });
 }
