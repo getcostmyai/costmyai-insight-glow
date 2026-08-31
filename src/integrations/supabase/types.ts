@@ -864,6 +864,134 @@ export type Database = {
           },
         ]
       }
+      newsletter_issues: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          markdown_body: string
+          sent_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          markdown_body: string
+          sent_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          markdown_body?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_sends: {
+        Row: {
+          id: string
+          is_synthetic: boolean
+          issue_id: string
+          sent_at: string
+          status: string
+          subscriber_id: string
+        }
+        Insert: {
+          id?: string
+          is_synthetic?: boolean
+          issue_id: string
+          sent_at?: string
+          status?: string
+          subscriber_id: string
+        }
+        Update: {
+          id?: string
+          is_synthetic?: boolean
+          issue_id?: string
+          sent_at?: string
+          status?: string
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_sends_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_sends_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirm_token: string | null
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          id: string
+          is_synthetic: boolean
+          referred_by_partner_id: string | null
+          session_id: string | null
+          source: string | null
+          status: string
+          unsubscribed_at: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          confirm_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_synthetic?: boolean
+          referred_by_partner_id?: string | null
+          session_id?: string | null
+          source?: string | null
+          status?: string
+          unsubscribed_at?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          confirm_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_synthetic?: boolean
+          referred_by_partner_id?: string | null
+          session_id?: string | null
+          source?: string | null
+          status?: string
+          unsubscribed_at?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_referred_by_partner_id_fkey"
+            columns: ["referred_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       objectives: {
         Row: {
           created_at: string
