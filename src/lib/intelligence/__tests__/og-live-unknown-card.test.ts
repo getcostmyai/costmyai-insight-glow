@@ -33,7 +33,7 @@ vi.mock("@/lib/intelligence/intelligence.server", () => ({
   }),
 }));
 
-import { Route } from "../live";
+import { Route } from "@/routes/api/public/og/intelligence/live";
 
 const GET = (Route.options as any).server.handlers.GET as (ctx: {
   request: Request;
