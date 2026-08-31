@@ -15,7 +15,8 @@ import { Wordmark } from "./Wordmark";
  * Inline Instagram logomark on a 24-unit grid so it matches the lucide icons and
  * inherits currentColor. Mirrors the XMark pattern in BlogShareButton.tsx.
  */
-function InstagramMark({ className }: { className?: string }) {
+export function InstagramMark({ className }: { className?: string }) {
+
   return (
     <svg
       viewBox="0 0 24 24"
