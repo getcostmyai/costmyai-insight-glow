@@ -166,3 +166,19 @@ export function shareCards(data: IntelligencePayload): ShareCard[] {
 export function findShareCard(data: IntelligencePayload, id: string): ShareCard | null {
   return shareCards(data).find((c) => c.id === id) ?? null;
 }
+
+export interface CardMeta {
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
+/** One formatter for card-specific OG meta, so the share preview and the
+ * rendered share image can never say two different things about the same card. */
+export function buildCardMeta(card: ShareCard, imageUrl: string): CardMeta {
+  return {
+    title: `${card.value} — ${card.label} | CostMyAI Intelligence`,
+    description: card.detail,
+    imageUrl,
+  };
+}

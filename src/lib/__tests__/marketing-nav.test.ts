@@ -92,7 +92,9 @@ describe("marketing nav", () => {
 describe("new public pages", () => {
   it("each ships its own unique head metadata", () => {
     for (const src of [INTELLIGENCE, PARTNERS]) {
-      expect(src).toMatch(/head:\s*\(\)\s*=>/);
+      // A route may read its own loader data / search params in head() — the
+      // Intelligence page does, to serve per-card share previews.
+      expect(src).toMatch(/head:\s*\([^)]*\)\s*=>/);
       expect(src).toMatch(/name:\s*"description"/);
       expect(src).toMatch(/property:\s*"og:title"/);
       expect(src).not.toMatch(/Lovable/);
