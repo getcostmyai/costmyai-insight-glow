@@ -311,6 +311,14 @@ function AdminHome() {
                 value="Mint cgw_ key"
                 detail="Create tenant gateway-container ingest tokens"
               />
+              <Card
+                to="/admin/newsletter"
+                icon={<Mail className="h-4 w-4" />}
+                title="Newsletter"
+                value="Write an issue"
+                detail="Compose, preview and send the weekly briefing by hand"
+              />
+
             </div>
           </section>
 
