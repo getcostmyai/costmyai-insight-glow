@@ -59,6 +59,16 @@ vi.mock("@/lib/email-templates/send-email", () => ({
   },
 }));
 
+// Bulk issue delivery now goes through Brevo; the idempotency guarantee is the
+// same, so the existing assertions stay valid by retargeting the mock.
+vi.mock("@/lib/newsletter/brevo-send.server", () => ({
+  sendBrevoNewsletter: async (to: string, _options: any) => {
+    attempts.push(to);
+    if (failing.has(to)) throw new Error("provider exploded");
+    return { sent: true as const };
+  },
+}));
+
 vi.mock("@/lib/partner-welcome.server", () => ({
   siteOrigin: () => "https://costmyai.test",
 }));
