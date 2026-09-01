@@ -28,6 +28,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'partner-welcome': partnerWelcome,
   'ops-alert': opsAlert,
   'newsletter-confirm': newsletterConfirm,
+  'newsletter-issue': newsletterIssue,
   'partner-application-alert': partnerApplicationAlert,
   'partner-application-received': partnerApplicationReceived,
 }
