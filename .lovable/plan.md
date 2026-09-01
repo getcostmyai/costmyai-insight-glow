@@ -8,8 +8,9 @@ The issue goes out every Monday, covering the seven days behind it.
 
 - The composer gets a fixed window label derived from the send date: "1 Sep to 7 Sep 2026", plus a standing subhead line "The last 7 days in AI pricing".
 - Copy rule added to project memory so no future draft says "this week", "so far this month" or similar. Phrasing becomes "in the last 7 days" / "over the past seven days".
-- The existing saved draft is rewritten to match (its numbers already come from a rolling 7-day query, so only wording changes).
+- The existing saved draft is reworded in place. Its title becomes "Price moved 1,052 times in the last 7 days. The bigger number is 14.4x.", and the six body phrases that say "this week" / "this month" / "same week" are rewritten to the seven-day form. No numbers change, since they already came from a rolling 7-day query.
 - The data queries behind a draft are pinned to `now() - interval '7 days'` explicitly, so headline and query always agree.
+
 
 ## 2. Graphics that are actually worth looking at
 
