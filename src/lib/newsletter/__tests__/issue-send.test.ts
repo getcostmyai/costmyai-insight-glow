@@ -208,7 +208,7 @@ describe("send idempotency", () => {
 
     // Once every confirmed subscriber has a delivered row, the issue closes.
     expect(db.issues[0]!.status).toBe("sent");
-    expect(db.issues[0]!.sentAt ?? db.issues[0]!.sent_at).toBeTruthy();
+    expect(db.issues[0]!.sent_at).toBeTruthy();
   });
 
   it("is a no-op when the whole issue already went out", async () => {
