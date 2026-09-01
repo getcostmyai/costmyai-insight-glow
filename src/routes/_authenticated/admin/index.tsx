@@ -10,6 +10,7 @@ import {
   KeyRound,
   Lightbulb,
   Loader2,
+  Mail,
   Split,
   Users,
 } from "lucide-react";
@@ -382,7 +383,8 @@ function Card({
     | "/admin/payouts"
     | "/admin/referrals"
     | "/admin/customers"
-    | "/admin/gateway-keys";
+    | "/admin/gateway-keys"
+    | "/admin/newsletter";
   icon: React.ReactNode;
   title: string;
   value: string | null;
