@@ -217,6 +217,7 @@ export async function renderIssueHtml(input: {
       markdownBody: input.markdownBody,
       unsubscribeUrl: `${base}/newsletter/unsubscribe?token=preview`,
       archiveUrl: `${base}/intelligence`,
+      siteOrigin: base,
     }),
   );
 }
@@ -241,6 +242,7 @@ export async function sendTestIssue(input: {
       markdownBody: issue.markdownBody,
       unsubscribeUrl: `${base}/newsletter/unsubscribe?token=test`,
       archiveUrl: `${base}/intelligence`,
+      siteOrigin: base,
     },
     // Distinct per click, so an editor can iterate and actually see each version.
     idempotencyKey: `newsletter-test-${input.issueId}-${Date.now()}`,
@@ -292,6 +294,7 @@ export async function sendIssueToAll(issueId: string): Promise<SendReport> {
               ? `${base}/newsletter/unsubscribe?token=${subscriber.confirm_token}`
               : `${base}/newsletter/unsubscribe`,
             archiveUrl: `${base}/intelligence`,
+            siteOrigin: base,
             // Stable across retries: if a run died after the provider accepted
             // the mail but before the row was written, the retry does not
             // deliver a second copy.

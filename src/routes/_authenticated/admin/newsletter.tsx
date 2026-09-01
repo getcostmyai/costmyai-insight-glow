@@ -296,9 +296,27 @@ function IssueEditor({
             onChange={(e) => setBody(e.target.value)}
             readOnly={locked}
             rows={22}
-            placeholder={"## What moved this week\n\nA paragraph.\n\n- A bullet\n- Another bullet\n\n> A pull quote.\n"}
+            placeholder={"## What moved in the last 7 days\n\nA paragraph.\n\n- A bullet\n- Another bullet\n\n> A pull quote.\n\n::chart kind=bars title=\"Biggest cuts, last 7 days\" data=\"GPT-5.1:-40|Claude cache:-12\"\n"}
             className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed outline-none focus:border-primary"
           />
+          <div className="mt-2 space-y-1 text-[11px] leading-relaxed text-muted-foreground">
+            <p>
+              Charts are one line each. The numbers live in the line, so a sent issue renders the
+              same picture forever.
+            </p>
+            <p>
+              <code>::chart kind=bars data="Label:-40|Label:-12"</code> percentages
+            </p>
+            <p>
+              <code>::chart kind=spread data="DeepSeek V3.2:0.234:3.375"</code> cheapest to dearest
+            </p>
+            <p>
+              <code>::chart kind=scatter data="Claude Opus 5:89.1:10|GLM-5.3-Flash:84.3:0.1188"</code>{" "}
+              score then blended price
+            </p>
+            <p>Optional on any of them: <code>title="…"</code> and <code>note="…"</code>.</p>
+          </div>
+
         </div>
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">

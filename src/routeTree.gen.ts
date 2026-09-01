@@ -96,6 +96,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicGatewayIngestRouteImport } from './routes/api/public/gateway/ingest'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
+import { Route as ApiPublicOgNewsletterChartDotpngRouteImport } from './routes/api/public/og/newsletter/chart[.]png'
 import { Route as ApiPublicOgIntelligenceLiveRouteImport } from './routes/api/public/og/intelligence/live'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 import { Route as ApiPublicDataIntelligenceMonthRouteImport } from './routes/api/public/data/intelligence/$month'
@@ -554,6 +555,12 @@ const ApiPublicBadgeCodeRoute = ApiPublicBadgeCodeRouteImport.update({
   path: '/api/public/badge/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOgNewsletterChartDotpngRoute =
+  ApiPublicOgNewsletterChartDotpngRouteImport.update({
+    id: '/api/public/og/newsletter/chart.png',
+    path: '/api/public/og/newsletter/chart.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOgIntelligenceLiveRoute =
   ApiPublicOgIntelligenceLiveRouteImport.update({
     id: '/api/public/og/intelligence/live',
@@ -663,6 +670,7 @@ export interface FileRoutesByFullPath {
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
+  '/api/public/og/newsletter/chart.png': typeof ApiPublicOgNewsletterChartDotpngRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -751,6 +759,7 @@ export interface FileRoutesByTo {
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
+  '/api/public/og/newsletter/chart.png': typeof ApiPublicOgNewsletterChartDotpngRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -844,6 +853,7 @@ export interface FileRoutesById {
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
+  '/api/public/og/newsletter/chart.png': typeof ApiPublicOgNewsletterChartDotpngRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -937,6 +947,7 @@ export interface FileRouteTypes {
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
+    | '/api/public/og/newsletter/chart.png'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1025,6 +1036,7 @@ export interface FileRouteTypes {
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
+    | '/api/public/og/newsletter/chart.png'
   id:
     | '__root__'
     | '/'
@@ -1117,6 +1129,7 @@ export interface FileRouteTypes {
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
+    | '/api/public/og/newsletter/chart.png'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1182,6 +1195,7 @@ export interface RootRouteChildren {
   ApiPublicDataIntelligenceMonthRoute: typeof ApiPublicDataIntelligenceMonthRoute
   ApiPublicOgIntelligenceMonthRoute: typeof ApiPublicOgIntelligenceMonthRoute
   ApiPublicOgIntelligenceLiveRoute: typeof ApiPublicOgIntelligenceLiveRoute
+  ApiPublicOgNewsletterChartDotpngRoute: typeof ApiPublicOgNewsletterChartDotpngRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1795,6 +1809,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBadgeCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og/newsletter/chart.png': {
+      id: '/api/public/og/newsletter/chart.png'
+      path: '/api/public/og/newsletter/chart.png'
+      fullPath: '/api/public/og/newsletter/chart.png'
+      preLoaderRoute: typeof ApiPublicOgNewsletterChartDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/og/intelligence/live': {
       id: '/api/public/og/intelligence/live'
       path: '/api/public/og/intelligence/live'
@@ -1976,6 +1997,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDataIntelligenceMonthRoute: ApiPublicDataIntelligenceMonthRoute,
   ApiPublicOgIntelligenceMonthRoute: ApiPublicOgIntelligenceMonthRoute,
   ApiPublicOgIntelligenceLiveRoute: ApiPublicOgIntelligenceLiveRoute,
+  ApiPublicOgNewsletterChartDotpngRoute: ApiPublicOgNewsletterChartDotpngRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
