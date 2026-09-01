@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-31T22:43:01.345Z",
+  "generatedAt": "2026-09-01T07:28:54.814Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -824,6 +824,80 @@
         "status"
       ],
       "snippet": ".from(\"pricing_snapshots\") .select(\"synced_at, status\") .eq(\"feed\", PRICING_FEED)"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 68,
+      "table": "newsletter_issues",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_issues\") .select(\"id, title, status, created_at, updated_at, sent_at\") .order(\"created_at\", "
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 75,
+      "table": "newsletter_sends",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_sends\") .select(\"issue_id, status\")"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 98,
+      "table": "newsletter_issues",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_issues\") .select(\"id, title, markdown_body, status, created_at, updated_at, sent_at\") .eq(\"i"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 106,
+      "table": "newsletter_sends",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_sends\") .select(\"issue_id, status\") .eq(\"issue_id\", id)"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 140,
+      "table": "newsletter_issues",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_issues\") .select(\"status\") .eq(\"id\", input.id)"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 178,
+      "table": "newsletter_subscribers",
+      "filters": [
+        "is_synthetic",
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_subscribers\") .select(\"id\", { count: \"exact\", head: true }) .eq(\"status\", \"confirmed\")"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 191,
+      "table": "newsletter_subscribers",
+      "filters": [
+        "is_synthetic",
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_subscribers\") .select(\"id, email, confirm_token\") .eq(\"status\", \"confirmed\")"
+    },
+    {
+      "file": "src/lib/newsletter/issues.server.ts",
+      "line": 261,
+      "table": "newsletter_sends",
+      "filters": [
+        "status"
+      ],
+      "snippet": ".from(\"newsletter_sends\") .select(\"subscriber_id, status\") .eq(\"issue_id\", issueId)"
     },
     {
       "file": "src/lib/newsletter/newsletter.server.ts",
