@@ -21,6 +21,8 @@ export interface SendBrevoNewsletterOptions {
   markdownBody: string
   unsubscribeUrl: string
   archiveUrl: string
+  /** Absolute origin the chart images are fetched from. */
+  siteOrigin: string
   idempotencyKey: string
 }
 
@@ -48,6 +50,7 @@ export async function sendBrevoNewsletter(
     markdownBody: options.markdownBody,
     unsubscribeUrl: options.unsubscribeUrl,
     archiveUrl: options.archiveUrl,
+    siteOrigin: options.siteOrigin,
   }
 
   const subject =

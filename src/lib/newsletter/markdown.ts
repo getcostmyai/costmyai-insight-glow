@@ -21,12 +21,99 @@ export interface Inline {
   href?: string;
 }
 
+export type ChartKind = "bars" | "spread" | "scatter";
+
+export interface ChartSpec {
+  kind: ChartKind;
+  title: string;
+  note?: string;
+  /** Raw `A:1|B:2` payload, kind-specific. Frozen into the image URL. */
+  data: string;
+}
+
 export type Block =
   | { kind: "heading"; level: 1 | 2 | 3; spans: Inline[] }
   | { kind: "paragraph"; spans: Inline[] }
   | { kind: "list"; ordered: boolean; items: Inline[][] }
   | { kind: "quote"; spans: Inline[] }
+  | { kind: "chart"; chart: ChartSpec }
   | { kind: "rule" };
+
+export const CHART_KINDS: ChartKind[] = ["bars", "spread", "scatter"];
+
+/** Canvas width every chart is drawn at; the email displays it at half size. */
+export const CHART_WIDTH = 1040;
+
+/** `Label:1:2|Other:3:4` into trimmed parts. A malformed row is dropped rather
+ * than failing the whole image: one typo must not blank an issue. */
+export function parseChartRows(data: string): string[][] {
+  return data
+    .split("|")
+    .map((entry) => entry.split(":").map((part) => part.trim()))
+    .filter((parts) => (parts[0] ?? "").length > 0);
+}
+
+/**
+ * Canvas height, defined here rather than in the renderer so the email can
+ * reserve the exact space before the image loads. Both sides read this.
+ */
+export function chartPixelHeight(spec: ChartSpec): number {
+  const count = Math.max(parseChartRows(spec.data).length, 1);
+  if (spec.kind === "scatter") return 620;
+  if (spec.kind === "spread") return 110 + Math.min(count, 5) * 92 + (spec.note ? 52 : 24);
+  return 108 + Math.min(count, 6) * 62 + (spec.note ? 62 : 30);
+}
+
+/** Absolute, self-contained image URL. Every number lives in the query string,
+ * so a sent issue renders the same chart forever with no database lookup. */
+export function chartImageUrl(spec: ChartSpec, origin: string): string {
+  const params = new URLSearchParams({ kind: spec.kind, title: spec.title, data: spec.data });
+  if (spec.note) params.set("note", spec.note);
+  return `${origin.replace(/\/$/, "")}/api/public/og/newsletter/chart.png?${params.toString()}`;
+}
+
+/** Readable description for alt text and for clients that block images. */
+export function chartAltText(spec: ChartSpec): string {
+  const rows = parseChartRows(spec.data)
+    .map((parts) => parts.join(" "))
+    .join("; ");
+  return `${spec.title}. ${rows}`.trim();
+}
+
+/**
+ * `::chart kind=bars title="Biggest drops" data="A:-40|B:-12" note="..."`
+ *
+ * Returns null for anything malformed, and the caller then keeps the line as
+ * plain text. A typo in a directive must degrade to visible words the editor
+ * can fix, never to a silently missing section.
+ */
+export function parseChartDirective(line: string): ChartSpec | null {
+  const trimmed = line.trim();
+  if (!/^::chart\b/i.test(trimmed)) return null;
+
+  const attrs: Record<string, string> = {};
+  const pattern = /(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+  let match = pattern.exec(trimmed);
+  while (match) {
+    attrs[match[1]!.toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? "";
+    match = pattern.exec(trimmed);
+  }
+
+  const kind = (attrs["kind"] ?? "").toLowerCase() as ChartKind;
+  const data = attrs["data"] ?? "";
+  if (!CHART_KINDS.includes(kind)) return null;
+  if (parseChartRows(data).length === 0) return null;
+
+  const spec: ChartSpec = {
+    kind,
+    title: (attrs["title"] ?? "").slice(0, 90),
+    data: data.slice(0, 600),
+  };
+  const note = (attrs["note"] ?? "").slice(0, 140);
+  if (note) spec.note = note;
+  return spec;
+}
+
 
 /** Only http(s) and mailto survive. A markdown link is author-controlled, but
  * `javascript:` in a rendered preview iframe is still not something to allow. */
@@ -92,6 +179,16 @@ export function parseMarkdown(source: string): Block[] {
       flushParagraph();
       continue;
     }
+
+    if (/^::chart\b/i.test(trimmed)) {
+      flushParagraph();
+      const chart = parseChartDirective(trimmed);
+      if (chart) blocks.push({ kind: "chart", chart });
+      // A malformed directive stays visible as text so the editor sees it.
+      else blocks.push({ kind: "paragraph", spans: parseInline(trimmed) });
+      continue;
+    }
+
 
     if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
       flushParagraph();
