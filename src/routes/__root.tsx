@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { trackPageView } from "../lib/analytics";
 import { CookieConsent } from "@/components/CookieConsent";
+import { NewsletterPrompt } from "@/components/marketing/NewsletterPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { trackPageViewed } from "@/lib/page-telemetry.functions";
@@ -236,6 +237,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <CookieConsent />
+      <NewsletterPrompt />
     </QueryClientProvider>
   );
 }

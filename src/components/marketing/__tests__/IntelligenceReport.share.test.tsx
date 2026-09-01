@@ -14,6 +14,11 @@ vi.mock("@/lib/use-origin", () => ({ useOrigin: () => "https://www.costmyai.com"
 vi.mock("@/lib/intelligence-telemetry.functions", () => ({
   trackIntelligenceShare: vi.fn(() => Promise.resolve()),
 }));
+// The report now embeds a newsletter block; it is not what this file tests.
+vi.mock("@/components/marketing/NewsletterSignupForm", () => ({
+  NewsletterBlock: () => null,
+  NewsletterSignupForm: () => null,
+}));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ to, children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => (
     <a href={String(to ?? "#")} {...(rest as object)}>

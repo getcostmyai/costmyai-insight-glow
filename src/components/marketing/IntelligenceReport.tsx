@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Check, Copy, Download } from "lucide-react";
 
+import { NewsletterBlock } from "@/components/marketing/NewsletterSignupForm";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
+
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { ShareCardButton } from "@/components/marketing/ShareCardButton";
 import { EmbedWidgetSection } from "@/components/marketing/EmbedWidgetSection";
@@ -297,6 +299,11 @@ export function IntelligenceReport({
       <PriceMoves data={d} ctx={ctx} />
       <MarketStructure data={d} ctx={ctx} />
       <QualityPerDollar data={d} ctx={ctx} />
+      <NewsletterBlock
+        source="intelligence-page"
+        headline="These numbers, weekly."
+        deck="One email a week: the price moves we recorded, which switches cleared quality, and what changed for the cheapest model good enough for a given job. No pitch, unsubscribe in one click."
+      />
       {/*
         Method sits before the reuse block on purpose. A reader who is about to
         quote us should have read how the number is produced before they are

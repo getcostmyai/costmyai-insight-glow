@@ -9,7 +9,9 @@ import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { MARKETING_NAV } from "@/lib/nav";
 
 
+import { NewsletterSignupForm } from "./NewsletterSignupForm";
 import { Wordmark } from "./Wordmark";
+
 
 /**
  * Inline Instagram logomark on a 24-unit grid so it matches the lucide icons and
@@ -241,6 +243,15 @@ export function MarketingFooter() {
 
           </div>
         </div>
+
+        <div className="mt-12 max-w-md border-t border-border/70 pt-8">
+          <p className="eyebrow">Weekly brief</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            One email a week on what AI model prices actually did, and what it means for your bill.
+          </p>
+          <NewsletterSignupForm source="footer" className="mt-4" />
+        </div>
+
 
         <p className="mt-12 text-xs text-muted-foreground">
           <span className="num">©</span> CostMyAI. Made in Austria. Prices and benchmarks are sourced
