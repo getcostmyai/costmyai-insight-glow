@@ -270,7 +270,7 @@ export async function sendIssueToAll(issueId: string): Promise<SendReport> {
   const base = await origin();
   // Bulk issue delivery uses Brevo. Confirmation emails and test sends stay on
   // Lovable's transactional service, which is the correct channel for those.
-  const { sendBrevoNewsletter } = await import("../brevo-send.server");
+  const { sendBrevoNewsletter } = await import("./brevo-send.server");
 
   const report: SendReport = {
     confirmed: recipients.length,
