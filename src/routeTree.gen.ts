@@ -36,6 +36,8 @@ import { Route as ReportsCheapestApiCallsRouteImport } from './routes/reports.ch
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
+import { Route as NewsletterUnsubscribeRouteImport } from './routes/newsletter.unsubscribe'
+import { Route as NewsletterConfirmRouteImport } from './routes/newsletter.confirm'
 import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
 import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
 import { Route as GuidesAiCostManagementRouteImport } from './routes/guides.ai-cost-management'
@@ -233,6 +235,16 @@ const PartnersApplyRoute = PartnersApplyRouteImport.update({
 const PartnerLoginRoute = PartnerLoginRouteImport.update({
   id: '/partner_/login',
   path: '/partner/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterUnsubscribeRoute = NewsletterUnsubscribeRouteImport.update({
+  id: '/newsletter/unsubscribe',
+  path: '/newsletter/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterConfirmRoute = NewsletterConfirmRouteImport.update({
+  id: '/newsletter/confirm',
+  path: '/newsletter/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
@@ -614,6 +626,8 @@ export interface FileRoutesByFullPath {
   '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
+  '/newsletter/confirm': typeof NewsletterConfirmRoute
+  '/newsletter/unsubscribe': typeof NewsletterUnsubscribeRoute
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
@@ -703,6 +717,8 @@ export interface FileRoutesByTo {
   '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
+  '/newsletter/confirm': typeof NewsletterConfirmRoute
+  '/newsletter/unsubscribe': typeof NewsletterUnsubscribeRoute
   '/partner/login': typeof PartnerLoginRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
@@ -797,6 +813,8 @@ export interface FileRoutesById {
   '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
   '/intelligence/$month': typeof IntelligenceMonthRoute
   '/legal/methodology': typeof LegalMethodologyRoute
+  '/newsletter/confirm': typeof NewsletterConfirmRoute
+  '/newsletter/unsubscribe': typeof NewsletterUnsubscribeRoute
   '/partner_/login': typeof PartnerLoginRoute
   '/partners_/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
@@ -891,6 +909,8 @@ export interface FileRouteTypes {
     | '/guides/ai-cost-management'
     | '/intelligence/$month'
     | '/legal/methodology'
+    | '/newsletter/confirm'
+    | '/newsletter/unsubscribe'
     | '/partner/login'
     | '/partners/apply'
     | '/r/$code'
@@ -980,6 +1000,8 @@ export interface FileRouteTypes {
     | '/guides/ai-cost-management'
     | '/intelligence/$month'
     | '/legal/methodology'
+    | '/newsletter/confirm'
+    | '/newsletter/unsubscribe'
     | '/partner/login'
     | '/partners/apply'
     | '/r/$code'
@@ -1073,6 +1095,8 @@ export interface FileRouteTypes {
     | '/guides/ai-cost-management'
     | '/intelligence/$month'
     | '/legal/methodology'
+    | '/newsletter/confirm'
+    | '/newsletter/unsubscribe'
     | '/partner_/login'
     | '/partners_/apply'
     | '/r/$code'
@@ -1156,6 +1180,8 @@ export interface RootRouteChildren {
   GuidesAiCostManagementRoute: typeof GuidesAiCostManagementRoute
   IntelligenceMonthRoute: typeof IntelligenceMonthRoute
   LegalMethodologyRoute: typeof LegalMethodologyRoute
+  NewsletterConfirmRoute: typeof NewsletterConfirmRoute
+  NewsletterUnsubscribeRoute: typeof NewsletterUnsubscribeRoute
   PartnerLoginRoute: typeof PartnerLoginRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
   RCodeRoute: typeof RCodeRoute
@@ -1387,6 +1413,20 @@ declare module '@tanstack/react-router' {
       path: '/partner/login'
       fullPath: '/partner/login'
       preLoaderRoute: typeof PartnerLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter/unsubscribe': {
+      id: '/newsletter/unsubscribe'
+      path: '/newsletter/unsubscribe'
+      fullPath: '/newsletter/unsubscribe'
+      preLoaderRoute: typeof NewsletterUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter/confirm': {
+      id: '/newsletter/confirm'
+      path: '/newsletter/confirm'
+      fullPath: '/newsletter/confirm'
+      preLoaderRoute: typeof NewsletterConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal/methodology': {
@@ -1958,6 +1998,8 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesAiCostManagementRoute: GuidesAiCostManagementRoute,
   IntelligenceMonthRoute: IntelligenceMonthRoute,
   LegalMethodologyRoute: LegalMethodologyRoute,
+  NewsletterConfirmRoute: NewsletterConfirmRoute,
+  NewsletterUnsubscribeRoute: NewsletterUnsubscribeRoute,
   PartnerLoginRoute: PartnerLoginRoute,
   PartnersApplyRoute: PartnersApplyRoute,
   RCodeRoute: RCodeRoute,

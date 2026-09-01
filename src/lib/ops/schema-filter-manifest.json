@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-01T07:28:54.814Z",
+  "generatedAt": "2026-09-01T16:08:54.395Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -892,7 +892,7 @@
     },
     {
       "file": "src/lib/newsletter/issues.server.ts",
-      "line": 261,
+      "line": 263,
       "table": "newsletter_sends",
       "filters": [
         "status"
