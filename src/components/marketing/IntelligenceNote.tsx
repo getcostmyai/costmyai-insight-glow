@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 
+import { NewsletterBlock } from "@/components/marketing/NewsletterSignupForm";
 import { Reveal } from "@/components/marketing/Reveal";
 import { NoteShareButton } from "@/components/marketing/NoteShareButton";
 import { DecompositionBar } from "@/components/marketing/IntelligenceCharts";
@@ -200,6 +201,8 @@ export function IntelligenceNoteView({ note }: { note: Note }) {
           ))}
         </div>
       </div>
+
+      <NewsletterBlock source="article-end" />
 
       <section className="border-t border-border/60 px-5 py-24 sm:px-8 sm:py-32">
         <div className="mx-auto max-w-3xl">

@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BlogShareButton } from "@/components/marketing/BlogShareButton";
+import { NewsletterBlock } from "@/components/marketing/NewsletterSignupForm";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
@@ -215,6 +216,8 @@ export function BlogArticle({ post }: { post: BlogPost }) {
           ))}
         </div>
       </div>
+
+      <NewsletterBlock source="article-end" />
 
       <KeepReading slug={post.slug} />
 
