@@ -221,15 +221,15 @@ describe("send idempotency", () => {
     expect(again.skipped).toBe(3);
   });
 
-  it("uses one stable idempotency key per issue and recipient", async () => {
-    const { sendTemplateEmail } = (await import("@/lib/email-templates/send-email")) as unknown as {
-      sendTemplateEmail: (...a: unknown[]) => unknown;
-    };
-    // The key is derived from ids, not from the clock, so a retry reuses it.
-    expect(typeof sendTemplateEmail).toBe("function");
+  it("records no send row for a test send, so a later real send still reaches that address", async () => {
+    const { sendTestIssue } = await import("../issues.server");
+    await sendTestIssue({ issueId: ISSUE_ID, toEmail: "reader1@example.test" });
+    expect(db.sends).toHaveLength(0);
 
-    await sendIssueToAll(ISSUE_ID);
-    expect(attempts).toHaveLength(3);
+    attempts.length = 0;
+    const report = await sendIssueToAll(ISSUE_ID);
+    expect(report.attempted).toBe(3);
+    expect(attempts).toContain("reader1@example.test");
   });
 });
 
