@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 
 import { template as newsletterConfirm } from './newsletter-confirm'
+import { template as newsletterIssue } from './newsletter-issue'
 import { template as opsAlert } from './ops-alert'
 import { template as partnerApplicationAlert } from './partner-application-alert'
 import { template as partnerApplicationReceived } from './partner-application-received'
@@ -27,6 +28,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'partner-welcome': partnerWelcome,
   'ops-alert': opsAlert,
   'newsletter-confirm': newsletterConfirm,
+  'newsletter-issue': newsletterIssue,
   'partner-application-alert': partnerApplicationAlert,
   'partner-application-received': partnerApplicationReceived,
 }

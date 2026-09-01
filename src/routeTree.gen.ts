@@ -67,6 +67,7 @@ import { Route as AuthenticatedBetaPlanRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPartnerApplicationsRouteImport } from './routes/_authenticated/admin/partner-applications'
+import { Route as AuthenticatedAdminNewsletterRouteImport } from './routes/_authenticated/admin/newsletter'
 import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin/leads'
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as AuthenticatedAdminGatewayKeysRouteImport } from './routes/_authenticated/admin/gateway-keys'
@@ -396,6 +397,12 @@ const AuthenticatedAdminPartnerApplicationsRoute =
     path: '/admin/partner-applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminNewsletterRoute =
+  AuthenticatedAdminNewsletterRouteImport.update({
+    id: '/admin/newsletter',
+    path: '/admin/newsletter',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
   id: '/admin/leads',
   path: '/admin/leads',
@@ -613,6 +620,7 @@ export interface FileRoutesByFullPath {
   '/admin/gateway-keys': typeof AuthenticatedAdminGatewayKeysRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -700,6 +708,7 @@ export interface FileRoutesByTo {
   '/admin/gateway-keys': typeof AuthenticatedAdminGatewayKeysRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
   '/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -792,6 +801,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/gateway-keys': typeof AuthenticatedAdminGatewayKeysRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/_authenticated/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
   '/_authenticated/admin/partner-applications': typeof AuthenticatedAdminPartnerApplicationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
@@ -884,6 +894,7 @@ export interface FileRouteTypes {
     | '/admin/gateway-keys'
     | '/admin/jobs'
     | '/admin/leads'
+    | '/admin/newsletter'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -971,6 +982,7 @@ export interface FileRouteTypes {
     | '/admin/gateway-keys'
     | '/admin/jobs'
     | '/admin/leads'
+    | '/admin/newsletter'
     | '/admin/partner-applications'
     | '/admin/payouts'
     | '/admin/referrals'
@@ -1062,6 +1074,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/gateway-keys'
     | '/_authenticated/admin/jobs'
     | '/_authenticated/admin/leads'
+    | '/_authenticated/admin/newsletter'
     | '/_authenticated/admin/partner-applications'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/referrals'
@@ -1579,6 +1592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPartnerApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/newsletter': {
+      id: '/_authenticated/admin/newsletter'
+      path: '/admin/newsletter'
+      fullPath: '/admin/newsletter'
+      preLoaderRoute: typeof AuthenticatedAdminNewsletterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/leads': {
       id: '/_authenticated/admin/leads'
       path: '/admin/leads'
@@ -1831,6 +1851,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminGatewayKeysRoute: typeof AuthenticatedAdminGatewayKeysRoute
   AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRoute
   AuthenticatedAdminLeadsRoute: typeof AuthenticatedAdminLeadsRoute
+  AuthenticatedAdminNewsletterRoute: typeof AuthenticatedAdminNewsletterRoute
   AuthenticatedAdminPartnerApplicationsRoute: typeof AuthenticatedAdminPartnerApplicationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
@@ -1848,6 +1869,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminGatewayKeysRoute: AuthenticatedAdminGatewayKeysRoute,
   AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRoute,
   AuthenticatedAdminLeadsRoute: AuthenticatedAdminLeadsRoute,
+  AuthenticatedAdminNewsletterRoute: AuthenticatedAdminNewsletterRoute,
   AuthenticatedAdminPartnerApplicationsRoute:
     AuthenticatedAdminPartnerApplicationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
