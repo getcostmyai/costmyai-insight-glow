@@ -268,7 +268,9 @@ export async function sendIssueToAll(issueId: string): Promise<SendReport> {
   const pending = recipients.filter((r) => !done.has(String(r.id)));
 
   const base = await origin();
-  const { sendTemplateEmail } = await import("../email-templates/send-email");
+  // Bulk issue delivery uses Brevo. Confirmation emails and test sends stay on
+  // Lovable's transactional service, which is the correct channel for those.
+  const { sendBrevoNewsletter } = await import("./brevo-send.server");
 
   const report: SendReport = {
     confirmed: recipients.length,
@@ -283,15 +285,13 @@ export async function sendIssueToAll(issueId: string): Promise<SendReport> {
     const results = await Promise.all(
       batch.map(async (subscriber) => {
         try {
-          const outcome = await sendTemplateEmail("newsletter-issue", subscriber.email, {
-            templateData: {
-              title: issue.title,
-              markdownBody: issue.markdownBody,
-              unsubscribeUrl: subscriber.confirm_token
-                ? `${base}/newsletter/unsubscribe?token=${subscriber.confirm_token}`
-                : `${base}/newsletter/unsubscribe`,
-              archiveUrl: `${base}/intelligence`,
-            },
+          const outcome = await sendBrevoNewsletter(subscriber.email, {
+            title: issue.title,
+            markdownBody: issue.markdownBody,
+            unsubscribeUrl: subscriber.confirm_token
+              ? `${base}/newsletter/unsubscribe?token=${subscriber.confirm_token}`
+              : `${base}/newsletter/unsubscribe`,
+            archiveUrl: `${base}/intelligence`,
             // Stable across retries: if a run died after the provider accepted
             // the mail but before the row was written, the retry does not
             // deliver a second copy.
