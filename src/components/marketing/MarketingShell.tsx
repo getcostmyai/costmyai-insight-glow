@@ -79,7 +79,7 @@ export function MarketingNav() {
           <Link to="/" className="shrink-0 text-[17px]">
             <Wordmark />
           </Link>
-          <nav className="hidden items-center gap-7 lg:flex">
+          <nav className="hidden items-center gap-7 xl:flex">
             {NAV.map((item) => (
               <Link
                 key={item.label}
@@ -125,7 +125,7 @@ export function MarketingNav() {
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((v) => !v)}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border lg:hidden"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border xl:hidden"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -133,7 +133,7 @@ export function MarketingNav() {
       </div>
 
       {open ? (
-        <nav className="border-t border-border bg-card px-5 py-3 lg:hidden">
+        <nav className="border-t border-border bg-card px-5 py-3 xl:hidden">
           {NAV.map((item) => (
             <Link
               key={item.label}
