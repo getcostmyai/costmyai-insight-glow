@@ -1,60 +1,51 @@
-# Screen recordings: what to show, in what order, and why
+# In-product feedback board ("Suggest a feature")
 
-Goal of every recording: move a viewer from "my AI bill is rising" to "this thing tells me the truth and I want to see my own number." Desire here does not come from features. It comes from three moments: a number they did not know existed, a refusal that proves we are not selling them a switch, and a one-click action that makes money appear.
+A Featurebase-style board, built into CostMyAI, for signed-in customers only. Posting, upvoting, comments, and a status from you (planned / building / shipped). No third-party service, no monthly fee, matching the product's design language.
 
-## Tooling
+## Why this shape
 
-Loom is fine and I would keep it for the short pieces: instant link, viewer analytics, no editing tax. Two caveats worth knowing before you record.
+- Customers-only keeps signal high and avoids a public empty forum. Every post gets a personal reply, which doubles as churn defense.
+- Built into the app: customer data never leaves to a third party, design matches, and it becomes part of the product rather than an embedded widget on an external domain.
+- A public read-only roadmap page is deliberately NOT in scope now. It becomes a one-line flip later once the board has content.
 
-- Loom's free tier caps at 5 minutes per video. Everything below is designed under 3 minutes anyway, so that is not a real limit.
-- For the flagship 90-second hero video that will sit on the homepage, Loom's chrome (avatar bubble, watermark, player) works against a premium look. Screen Studio (macOS, one-off purchase) gives automatic zoom-on-click, smooth cursor motion and clean 4K export. That "it moves like an Apple keynote" feel is exactly the polish this brand's design standard implies.
+## Schema (one migration)
 
-Recommendation: Screen Studio for the homepage hero and the pricing-page loops (silent, autoplay, no narration). Loom for everything else, including sales follow-ups and the partner walkthrough.
+Three tables in `public`, each followed by GRANTs, RLS enabled, then policies:
 
-## The five recordings
+- `feedback_posts`: id, author_id (references auth.users via profiles pattern), title (max 120 chars), body (max 2000), category (enum: feature, improvement, bug, integration), status (enum: open, planned, building, shipped, declined — default open, writable only by platform admin), created_at, updated_at.
+- `feedback_votes`: post_id + user_id, unique pair (one vote per user per post), insert/delete only.
+- `feedback_comments`: id, post_id, author_id, body (max 1000), created_at. Plus an `is_admin_reply` flag set server-side from `has_role`, never client-writable.
 
-### 1. Hero loop, 45 to 60 seconds, silent, autoplays on the homepage
-Not a demo. A single visual argument on repeat.
+Policies: any authenticated user can SELECT all posts/votes/comments; INSERT scoped to `auth.uid()`; UPDATE/DELETE only own rows (and only while status is open, for posts); only admins can change `status` via a security-definer function `set_feedback_status(post_id, status)` guarded by `public.has_role(auth.uid(), 'admin')`. Vote counting is a view or computed count, not a writable column, so counts can never be gamed.
 
-Sequence: live price catalog moving, then one workload row expanding to reveal the same model priced across hosts with a wide spread, then a switch activated and the savings figure counting up. No face, no voice, captions only.
+## App surfaces
 
-Why: the homepage visitor is deciding in four seconds whether this is real. Motion over a real product beats any hero illustration.
+1. **`/feedback` route** under `_authenticated/`, added to the dashboard sidebar ("Feedback"). Board list: search box, category filter, sort by votes or newest, each row shows title, vote count, status chip, comment count. "New suggestion" opens a form (client + server validation via zod).
+2. **Post detail** at `/feedback/$id`: full body, upvote button (optimistic, one vote per user), comment thread, and an admin-only status control for you.
+3. **Admin**: status changes live on the post detail page itself (no separate admin screen needed yet); optionally surfaced in the admin command center later.
+4. **Entry points**: sidebar nav item plus a small "Suggest a feature" link in the workspace header.
 
-### 2. "The 3-minute tour", 2 to 3 minutes, narrated, on /how-it-works and in every sales email
-The main asset. Order matters, and it is deliberately not the order of our plan tiers.
+## Server functions (`src/lib/feedback.functions.ts` + `feedback.server.ts`)
 
-1. **Open on their pain, in the product.** Overview screen: total spend, then the "available" figure right beside it. First line spoken: "This is real money, on real traffic, in the last 30 days." (0:00 to 0:20)
-2. **The spread reveal.** Compare level: same model, same weights, different hosts, wide multiple. This is the single most surprising fact we own. Do not rush it. (0:20 to 0:50)
-3. **The refusal.** Certify level: show the certified count, then scroll deliberately to "Why some candidates are refused" and read one refusal aloud with its benchmark, score and margin. Say plainly: "We will not certify this one, and here is the measurement that stopped us." (0:50 to 1:35)
-4. **The switch.** Activate one workload. Show the SAME MODEL versus CERTIFIED badges, the friction tier, and the rollback control in the same frame. "One click on, one click off." (1:35 to 2:10)
-5. **Close on the audit trail.** Govern: an automated decision written down, re-checked at the moment of action. "This is the page you hand to finance." (2:10 to 2:40)
+`listFeedbackPosts`, `getFeedbackPost`, `createFeedbackPost`, `toggleFeedbackVote`, `addFeedbackComment`, `deleteOwnFeedbackComment`, `setFeedbackStatus` (admin-gated). All behind `requireSupabaseAuth`; zod-validated input; rate limit on create-comment/create-post reusing the existing shared Postgres-backed limiter (e.g. 10 posts/day, 60 comments/day per user).
 
-Why this order: steps 1 and 2 create desire, step 3 creates trust, step 4 removes the fear of acting, step 5 makes it defensible to the person who signs off. Most tools skip step 3 and are therefore forgettable. The refusal is the emotional peak of this video, not the savings number.
+## Notifications (small but important)
 
-### 3. "Sixty seconds to first verdict", 60 seconds, on /how-it-works next to the connect step
-The setup objection, killed on camera. Run the Verification Engine, change the SDK base URL to point at it, send one request, and show the row appear. Say out loud that the provider key never leaves their environment.
+When you set a status or reply as admin, the post author gets an email via the existing transactional email path ("Your suggestion is now: Planned"). No notifications to voters in v1.
 
-Why: the honest answer to "how hard is this" is worth more than any claim about it, and this is the objection that stalls engineers at exactly the moment they were ready.
+## Tests
 
-### 4. "Read the market for free", 60 to 90 seconds, on /intelligence and attached to every share
-Walk the live Intelligence page: price moves in the last 7 days, host spreads, the cheapest model clearing a measured quality band. End on the share control.
+- RLS: user cannot edit another's post or set status; admin function works.
+- One vote per user enforced; toggle removes it.
+- Server-fn tests for create/vote/comment validation and rate limiting.
+- Route renders for a signed-in user (board + detail).
 
-Why: this is the top-of-funnel asset. It gives something away, is quotable, and earns links without asking for a signup.
+## Explicitly out of scope
 
-### 5. Partner walkthrough, 2 minutes, gated behind /partners
-Referral link, attribution, the commission ledger, the payout. Show that commission is only ever written on a real paid invoice.
+Public/anonymous access, email digests, markdown in comments, attachments, admin analytics on feedback. Each is a later decision.
 
-Why: partners are selling their own reputation. Showing the ledger mechanics is what makes them comfortable putting their name on it.
+## Technical notes
 
-## Rules for all of them
-
-- Real data, never a mockup. Use the internal demo workspace, not a slide.
-- Never say "Supabase", never show internal IDs, emails, or any real customer's workload names.
-- Say the number out loud when it appears on screen. Spoken plus shown lands twice.
-- One idea per recording. If a video needs an "and also", it is two videos.
-- Every video ends on the same call to action, spoken and on screen: connect and see your own number.
-- Recordings age. Anything with a hard figure in it gets re-recorded when the figure stops being true.
-
-## What I would build alongside (optional, ask before I do)
-
-If you want these embedded rather than linked, I can add a lightweight video section to the homepage and /how-it-works that lazy-loads the player so it does not cost page speed, plus `VideoObject` JSON-LD so the videos can surface in search. Say the word and I will plan that separately.
+- Reuses: `requireSupabaseAuth`, `has_role`, the shared rate limiter (`mem://features/rate-limiting`), the transactional email sender, `AccountShell`/dashboard chrome for layout, existing design tokens (no hardcoded colors).
+- Route files: `src/routes/_authenticated/feedback.index.tsx`, `src/routes/_authenticated/feedback.$id.tsx`. Sidebar key added in `DashboardSidebar.tsx`.
+- Migration order per standing rules: CREATE TABLE → GRANT → ENABLE RLS → POLICIES, all in one migration; no FK to `auth.users` beyond the established profiles pattern.
