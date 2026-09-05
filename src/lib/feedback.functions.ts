@@ -256,9 +256,7 @@ export const setFeedbackStatus = createServerFn({ method: "POST" })
   .inputValidator((data) => statusSchema.parse(data))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabase, userId } = context;
-    const { data: isAdmin, error: roleErr } = await supabase.rpc("is_platform_admin", {
-      _user_id: userId,
-    });
+    const { data: isAdmin, error: roleErr } = await supabase.rpc("is_platform_admin");
     if (roleErr || isAdmin !== true) throw new Error("Forbidden: platform admins only");
 
     const { error } = await supabase.rpc("set_feedback_status", {
