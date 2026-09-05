@@ -13,6 +13,15 @@ Research on how companies actually spend on AI in 2026 splits the market into fo
 
 So today's honest ICP is group 1 only: engineering-led companies, roughly seed to Series B, or agencies running client work, one or two providers, spend material enough to hurt, no gateway yet, and they own their own deploy.
 
+## A worry worth defusing: provider coverage
+
+The narrow door is not the provider list. The container fronts any HTTPS upstream, and parsing works in three tiers: eleven providers fully parsed (OpenAI, Azure OpenAI, Anthropic, Google, Alibaba, DeepInfra, Venice, Groq, Together, Fireworks, Ionstream), every other OpenAI-compatible provider parsed by shared response shape, and anything truly unknown still forwarded untouched and honestly labelled "unparsed" rather than guessed at. New providers that follow an existing format work the day they ship.
+
+Two soft spots remain and belong in the plan:
+
+- **The docs and the site's "how it works" flow only show setup for three providers by name.** A reader could reasonably conclude we only support those three. The compatibility page (item 2) should carry the real tiered list, and the container docs should show a generic "any OpenAI-compatible provider" example.
+- **"Unparsed" coverage is invisible in the marketing.** Forwarding untouched with an honest label is a genuine strength; today nobody outside the CONNECT.md troubleshooting table knows it exists.
+
 ## The uncomfortable challenge
 
 Our strongest marketing promise, "your provider key never leaves your environment," is what makes group 2 and 4 unreachable, because it presumes there is a key and traffic we can sit beside. Meanwhile OpenAI and Anthropic both now publish organisation-level usage and cost APIs with real granularity: per workspace, per key, per model, per day, with cached tokens broken out separately. A read-only credential against those gives most of the "what are we spending, and where" picture with no container, no network change, and no deploy.
