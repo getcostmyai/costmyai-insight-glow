@@ -56,6 +56,7 @@ import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as IntelligenceNotesIndexRouteImport } from './routes/intelligence.notes.index'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
 import { Route as IntelligenceNotesSlugRouteImport } from './routes/intelligence.notes.$slug'
@@ -65,6 +66,7 @@ import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
 import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_authenticated/workspace.certify'
+import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
 import { Route as AuthenticatedBetaPlanRouteImport } from './routes/_authenticated/beta.$plan'
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
@@ -338,6 +340,12 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedFeedbackIndexRoute =
+  AuthenticatedFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -387,6 +395,11 @@ const AuthenticatedWorkspaceCertifyRoute =
     path: '/certify',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedFeedbackIdRoute = AuthenticatedFeedbackIdRouteImport.update({
+  id: '/feedback/$id',
+  path: '/feedback/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBetaPlanRoute = AuthenticatedBetaPlanRouteImport.update({
   id: '/beta/$plan',
   path: '/beta/$plan',
@@ -646,6 +659,7 @@ export interface FileRoutesByFullPath {
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/beta/$plan': typeof AuthenticatedBetaPlanRoute
+  '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -655,6 +669,7 @@ export interface FileRoutesByFullPath {
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -737,6 +752,7 @@ export interface FileRoutesByTo {
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/beta/$plan': typeof AuthenticatedBetaPlanRoute
+  '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -746,6 +762,7 @@ export interface FileRoutesByTo {
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/feedback': typeof AuthenticatedFeedbackIndexRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -833,6 +850,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/_authenticated/beta/$plan': typeof AuthenticatedBetaPlanRoute
+  '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -842,6 +860,7 @@ export interface FileRoutesById {
   '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
   '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -929,6 +948,7 @@ export interface FileRouteTypes {
     | '/admin/payouts'
     | '/admin/referrals'
     | '/beta/$plan'
+    | '/feedback/$id'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -938,6 +958,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/admin/'
+    | '/feedback/'
     | '/workspace/'
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
@@ -1020,6 +1041,7 @@ export interface FileRouteTypes {
     | '/admin/payouts'
     | '/admin/referrals'
     | '/beta/$plan'
+    | '/feedback/$id'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -1029,6 +1051,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/$slug'
     | '/partner/verify/$code'
     | '/admin'
+    | '/feedback'
     | '/workspace'
     | '/intelligence/notes'
     | '/api/public/badge/$code'
@@ -1115,6 +1138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/referrals'
     | '/_authenticated/beta/$plan'
+    | '/_authenticated/feedback/$id'
     | '/_authenticated/workspace/certify'
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
@@ -1124,6 +1148,7 @@ export interface FileRouteTypes {
     | '/intelligence/notes/$slug'
     | '/partner_/verify/$code'
     | '/_authenticated/admin/'
+    | '/_authenticated/feedback/'
     | '/_authenticated/workspace/'
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
@@ -1555,6 +1580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/feedback/': {
+      id: '/_authenticated/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback/'
+      preLoaderRoute: typeof AuthenticatedFeedbackIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
@@ -1617,6 +1649,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/workspace/certify'
       preLoaderRoute: typeof AuthenticatedWorkspaceCertifyRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/feedback/$id': {
+      id: '/_authenticated/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/feedback/$id'
+      preLoaderRoute: typeof AuthenticatedFeedbackIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/beta/$plan': {
       id: '/_authenticated/beta/$plan'
@@ -1917,7 +1956,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminReferralsRoute: typeof AuthenticatedAdminReferralsRoute
   AuthenticatedBetaPlanRoute: typeof AuthenticatedBetaPlanRoute
+  AuthenticatedFeedbackIdRoute: typeof AuthenticatedFeedbackIdRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedFeedbackIndexRoute: typeof AuthenticatedFeedbackIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1936,7 +1977,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
   AuthenticatedAdminReferralsRoute: AuthenticatedAdminReferralsRoute,
   AuthenticatedBetaPlanRoute: AuthenticatedBetaPlanRoute,
+  AuthenticatedFeedbackIdRoute: AuthenticatedFeedbackIdRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedFeedbackIndexRoute: AuthenticatedFeedbackIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -7,6 +7,7 @@ import {
   Layers,
   LineChart,
   Lock,
+  MessageSquarePlus,
   Settings,
   ShieldCheck,
   Users,
@@ -25,7 +26,7 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  * left no way back into the dashboard except the browser's Back button.
  */
 
-export type AccountKey = "settings" | "billing" | "team" | "partner";
+export type AccountKey = "settings" | "billing" | "team" | "partner" | "feedback";
 
 export const ICONS: Record<LevelKey, typeof Layers> = {
   overview: Layers,
@@ -40,6 +41,7 @@ const accountNav = [
   { key: "billing" as const, label: "Billing", to: "/billing", icon: CreditCard },
   { key: "team" as const, label: "Team", to: "/team", icon: Users },
   { key: "partner" as const, label: "Partner", to: "/partner", icon: Handshake },
+  { key: "feedback" as const, label: "Feedback", to: "/feedback", icon: MessageSquarePlus },
 ];
 
 /** Literal paths so the router type-checks every destination. */

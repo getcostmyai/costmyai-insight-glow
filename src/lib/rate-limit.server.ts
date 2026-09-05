@@ -105,6 +105,10 @@ export const RATE_RULES = {
    * twice, deliberately far below what a token-guessing sweep would need.
    */
   newsletterToken: { name: "newsletter-token", limit: 30, windowSec: 300 },
+  /** Feedback board: 10 suggestions a day, 60 comments a day, 120 votes per 5 min. */
+  feedbackPost: { name: "feedback-post", limit: 10, windowSec: 86400 },
+  feedbackComment: { name: "feedback-comment", limit: 60, windowSec: 86400 },
+  feedbackVote: { name: "feedback-vote", limit: 120, windowSec: 300 },
 } as const satisfies Record<string, RateRule>;
 
 const allow = (rule: RateRule): RateVerdict => ({

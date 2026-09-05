@@ -6,6 +6,7 @@ import { template as opsAlert } from './ops-alert'
 import { template as partnerApplicationAlert } from './partner-application-alert'
 import { template as partnerApplicationReceived } from './partner-application-received'
 import { template as partnerWelcome } from './partner-welcome'
+import { template as feedbackStatus } from './feedback-status'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -31,4 +32,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'newsletter-issue': newsletterIssue,
   'partner-application-alert': partnerApplicationAlert,
   'partner-application-received': partnerApplicationReceived,
+  'feedback-status': feedbackStatus,
 }
