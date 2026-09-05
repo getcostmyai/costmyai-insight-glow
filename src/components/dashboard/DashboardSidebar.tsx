@@ -41,7 +41,7 @@ const accountNav = [
   { key: "billing" as const, label: "Billing", to: "/billing", icon: CreditCard },
   { key: "team" as const, label: "Team", to: "/team", icon: Users },
   { key: "partner" as const, label: "Partner", to: "/partner", icon: Handshake },
-  { key: "feedback" as const, label: "Feedback", to: "/feedback", icon: MessageSquarePlus },
+  { key: "feedback" as const, label: "Suggest a feature", to: "/feedback", icon: MessageSquarePlus },
 ];
 
 /** Literal paths so the router type-checks every destination. */
