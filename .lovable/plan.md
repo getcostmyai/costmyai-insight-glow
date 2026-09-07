@@ -59,3 +59,9 @@ Phase 1 is item 1 plus item 2: keyless connect for OpenAI and Anthropic, and the
 - Records ingested this way must be marked as a distinct fidelity level, so Certify, switching and savings math keep refusing to run on data that has no per-request shape. Nothing that claims a certified switch may ever be computed from daily aggregates.
 - Dashboard needs a visible fidelity badge, plus a prompt to install the engine to unlock the rungs that aggregates cannot support.
 - Compatibility page as a normal marketing route with its own metadata, matching the existing mesh/hairline standard.
+
+## Small side item found while investigating a suspicious lead
+
+A partner application arrived from a disposable test inbox (`...@<random>.resend.app`) and the admin review queue labelled it a genuine prospect. The classifier only knows three fixed test domains, so throwaway and catch-all addresses read as real leads.
+
+Fix: widen the classifier to also flag known disposable and test-mail domains (`*.resend.app`, `mailinator`, `example.com`, and similar), plus obvious placeholder phone patterns, and surface them as a distinct "likely automated" verdict rather than hiding them. Small, self-contained, and independent of the rest of this plan.
