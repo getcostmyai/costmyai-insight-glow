@@ -68,7 +68,7 @@ describe("authenticated copy buttons reach a visible terminal state", () => {
     fireEvent.click(screen.getByLabelText("Copy token"));
     await expectState("Copy failed", "fail");
     expect(
-      screen.getAllByText("Copy failed. The token is still on screen, select it and copy it by hand."),
+      screen.getAllByText("The token is still on screen. Select it and copy it by hand."),
     ).not.toHaveLength(0);
   });
 
@@ -86,7 +86,7 @@ describe("authenticated copy buttons reach a visible terminal state", () => {
     fireEvent.click(screen.getByLabelText("Copy key"));
     await expectState("Copy failed", "fail");
     expect(
-      screen.getAllByText("Copy failed. The key is still on screen, select it and copy it by hand."),
+      screen.getAllByText("The key is still on screen. Select it and copy it by hand."),
     ).not.toHaveLength(0);
   });
 

@@ -256,7 +256,7 @@ export function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onD
       </div>
       {copied === "fail" ? (
         <p className="mt-2 text-xs text-destructive">
-          Copy failed. The token is still on screen, select it and copy it by hand.
+          The token is still on screen. Select it and copy it by hand.
         </p>
       ) : null}
       <span aria-live="polite" className="sr-only">
@@ -264,7 +264,7 @@ export function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onD
           ? ""
           : copied === "ok"
             ? "Token copied"
-            : "Copy failed. The token is still on screen, select it and copy it by hand."}
+            : "The token is still on screen. Select it and copy it by hand."}
       </span>
       <button
         onClick={onDismiss}
