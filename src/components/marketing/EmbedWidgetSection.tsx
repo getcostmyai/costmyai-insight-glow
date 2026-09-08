@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 
 import { Reveal } from "@/components/marketing/Reveal";
 import { copyText } from "@/lib/copy-text";
@@ -24,12 +24,12 @@ function snippetFor(origin: string) {
 
 export function EmbedWidgetSection() {
   const [origin, setOrigin] = useState("https://costmyai.com");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
 
   useEffect(() => setOrigin(window.location.origin), []);
   useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 1800);
+    if (copied === "idle") return;
+    const t = setTimeout(() => setCopied("idle"), 2000);
     return () => clearTimeout(t);
   }, [copied]);
 
@@ -76,14 +76,31 @@ export function EmbedWidgetSection() {
               </pre>
               <button
                 type="button"
+                aria-label={
+                  copied === "ok"
+                    ? "Embed code copied"
+                    : copied === "fail"
+                      ? "Copy failed"
+                      : "Copy embed code"
+                }
+                data-copy-state={copied}
                 onClick={() => {
-                  void copyText(snippet).then((ok) => setCopied(ok));
+                  void copyText(snippet).then((ok) => setCopied(ok ? "ok" : "fail"));
                 }}
                 className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium shadow-sm transition-opacity hover:opacity-70"
               >
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? "Copied" : "Copy"}
+                {copied === "ok" ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : copied === "fail" ? (
+                  <X className="h-3.5 w-3.5 text-destructive" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy"}
               </button>
+              <span aria-live="polite" className="sr-only">
+                {copied === "idle" ? "" : copied === "ok" ? "Embed code copied" : "Copy failed"}
+              </span>
             </div>
             <ul className="mt-8 divide-y divide-border/60 border-t border-border/60 text-sm">
               {[

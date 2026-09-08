@@ -217,28 +217,55 @@ function Tokens({ orgId }: { orgId: string; orgName: string }) {
 }
 
 /** The one moment the raw token exists in the browser. */
-function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onDismiss: () => void }) {
-  const [copied, setCopied] = useState(false);
+export function MintedPanel({ minted, onDismiss }: { minted: MintedTokenRow; onDismiss: () => void }) {
+  const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
+  const label =
+    copied === "ok" ? "Token copied" : copied === "fail" ? "Copy failed" : "Copy token";
   return (
     <div className="mt-8 rounded-2xl border border-primary/40 bg-primary/5 p-6">
       <p className="text-sm font-semibold">Copy your token now</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        This is the only time it is shown. Store it in your secret manager — if you lose it, rotate.
+        This is the only time it is shown. Store it in your secret manager, and if you lose it,
+        rotate.
       </p>
       <div className="mt-4 flex items-center gap-2">
         <code className="min-w-0 flex-1 truncate rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs">
           {minted.token}
         </code>
         <button
-          onClick={async () => {
-            setCopied(await copyText(minted.token));
+          type="button"
+          aria-label={label}
+          data-copy-state={copied}
+          onClick={() => {
+            void copyText(minted.token).then((ok) => {
+              setCopied(ok ? "ok" : "fail");
+              setTimeout(() => setCopied("idle"), 2000);
+            });
           }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
         >
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? "Copied" : "Copy"}
+          {copied === "ok" ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : copied === "fail" ? (
+            <X className="h-3.5 w-3.5 text-destructive" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+          {copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy"}
         </button>
       </div>
+      {copied === "fail" ? (
+        <p className="mt-2 text-xs text-destructive">
+          Copy failed. The token is still on screen, select it and copy it by hand.
+        </p>
+      ) : null}
+      <span aria-live="polite" className="sr-only">
+        {copied === "idle"
+          ? ""
+          : copied === "ok"
+            ? "Token copied"
+            : "Copy failed. The token is still on screen, select it and copy it by hand."}
+      </span>
       <button
         onClick={onDismiss}
         className="mt-4 text-xs text-muted-foreground underline hover:text-foreground"

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Check, Copy, Filter, Handshake, TrendingUp } from "lucide-react";
+import { ArrowLeft, Check, Copy, Filter, Handshake, TrendingUp, X } from "lucide-react";
 
 import { getMyPartner, type PartnerDashboard } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
@@ -367,11 +367,33 @@ function TierProgress({ partner }: { partner: PartnerDashboard["partner"] }) {
   );
 }
 
-function ReferralCode({ code }: { code: string }) {
-  const [copied, setCopied] = useState<"link" | "code" | null>(null);
+export function ReferralCode({ code }: { code: string }) {
+  const [copied, setCopied] = useState<
+    "idle" | "link-ok" | "link-fail" | "code-ok" | "code-fail"
+  >("idle");
   const [origin, setOrigin] = useState("https://costmyai.com");
   useEffect(() => setOrigin(window.location.origin), []);
   const link = `${origin}/r/${code}`;
+
+  function run(which: "link" | "code", text: string) {
+    void copyText(text).then((ok) => {
+      setCopied(`${which}-${ok ? "ok" : "fail"}` as typeof copied);
+      setTimeout(() => setCopied("idle"), 2000);
+    });
+  }
+
+  const linkLabel =
+    copied === "link-ok" ? "Link copied" : copied === "link-fail" ? "Copy failed" : "Copy link";
+  const codeLabel =
+    copied === "code-ok" ? "Code copied" : copied === "code-fail" ? "Copy failed" : "Copy code only";
+  const announcement =
+    copied === "idle"
+      ? ""
+      : copied === "link-ok"
+        ? "Link copied"
+        : copied === "code-ok"
+          ? "Code copied"
+          : "Copy failed";
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -380,23 +402,39 @@ function ReferralCode({ code }: { code: string }) {
       </code>
       <div className="flex shrink-0 items-center gap-2">
         <button
-          onClick={async () => {
-            if (await copyText(link)) setCopied("link");
-          }}
+          type="button"
+          aria-label={linkLabel}
+          data-copy-state={copied}
+          onClick={() => run("link", link)}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
         >
-          {copied === "link" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied === "link" ? "Copied" : "Copy link"}
+          {copied === "link-ok" ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : copied === "link-fail" ? (
+            <X className="h-3.5 w-3.5 text-destructive" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+          {copied === "link-ok" ? "Copied" : copied === "link-fail" ? "Copy failed" : "Copy link"}
         </button>
         <button
-          onClick={async () => {
-            if (await copyText(code)) setCopied("code");
-          }}
+          type="button"
+          aria-label={codeLabel}
+          data-copy-state={copied}
+          onClick={() => run("code", code)}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
         >
-          {copied === "code" ? "Copied" : "Copy code only"}
+          {copied === "code-fail" ? <X className="h-3.5 w-3.5 text-destructive" /> : null}
+          {copied === "code-ok"
+            ? "Copied"
+            : copied === "code-fail"
+              ? "Copy failed"
+              : "Copy code only"}
         </button>
       </div>
+      <span aria-live="polite" className="sr-only">
+        {announcement}
+      </span>
     </div>
   );
 }
