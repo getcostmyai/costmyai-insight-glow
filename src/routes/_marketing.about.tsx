@@ -7,7 +7,7 @@ import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
-export const Route = createFileRoute("/about")({
+export const Route = createFileRoute("/_marketing/about")({
   head: () => ({
     meta: [
       { title: "About CostMyAI — Financial Governance for AI spend" },

@@ -90,7 +90,7 @@ export function buildMonthHead(
  * shared today reads identically in a year. Anchors match the live page exactly,
  * which is what lets a per-card share land on the right card here.
  */
-export const Route = createFileRoute("/intelligence/$month")({
+export const Route = createFileRoute("/_marketing/intelligence/$month")({
   validateSearch: (search: Record<string, unknown>): { card?: string } => {
     const card = typeof search.card === "string" ? search.card : undefined;
     return card ? { card } : {};

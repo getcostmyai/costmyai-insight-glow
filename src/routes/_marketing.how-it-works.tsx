@@ -26,7 +26,7 @@ const TITLE = "How It Works — CostMyAI";
 const DESCRIPTION =
   "Run the CostMyAI Verification Engine in your environment, point your SDK base URL at it, and get benchmark-backed switching decisions. No provider keys, no migration, no prompt content leaving your stack by default.";
 
-export const Route = createFileRoute("/how-it-works")({
+export const Route = createFileRoute("/_marketing/how-it-works")({
   head: () => ({
     meta: [
       { title: TITLE },

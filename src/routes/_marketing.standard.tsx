@@ -66,7 +66,7 @@ const SUPPORTING = [
 ];
 
 
-export const Route = createFileRoute("/standard")({
+export const Route = createFileRoute("/_marketing/standard")({
   head: () => ({
     meta: [
       { title: "The CostMyAI Standard — AI spend governance framework" },

@@ -13,7 +13,7 @@ import { unsubscribeFromNewsletter } from "@/lib/newsletter.functions";
  * "unsubscribed" too, so the only other outcome is a token that never meant
  * anything.
  */
-export const Route = createFileRoute("/newsletter/unsubscribe")({
+export const Route = createFileRoute("/_marketing/newsletter/unsubscribe")({
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search.token === "string" ? search.token : "",
   }),

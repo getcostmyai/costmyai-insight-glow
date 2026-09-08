@@ -11,7 +11,7 @@ import { marketingStatsQuery } from "@/lib/marketing.functions";
  * Blog index in the homepage design language: mesh hero, the price-drift band
  * as recurring artwork, hairline rails instead of cards, oversized type.
  */
-export const Route = createFileRoute("/blog/")({
+export const Route = createFileRoute("/_marketing/blog/")({
   head: () => ({
     meta: [
       { title: "Blog — AI cost governance, measured | CostMyAI" },

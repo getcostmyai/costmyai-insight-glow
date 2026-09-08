@@ -11,7 +11,7 @@ import { getPartnerBadge } from "@/lib/partner-badge.functions";
  * code is not an active CostMyAI partner, this route is a real 404 — the badge
  * is only as good as what it resolves to.
  */
-export const Route = createFileRoute("/partner_/verify/$code")({
+export const Route = createFileRoute("/_marketing/partner_/verify/$code")({
   loader: async ({ params }) => {
     const badge = await getPartnerBadge({ data: { code: params.code } });
     if (!badge) throw notFound();

@@ -21,7 +21,7 @@ import {
   type StartingSoonBucket,
 } from "@/lib/partner-application";
 
-export const Route = createFileRoute("/partners_/apply")({
+export const Route = createFileRoute("/_marketing/partners_/apply")({
   loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
   head: () => ({
     meta: [
