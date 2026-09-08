@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { memo, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CircleUserRound, Linkedin, LogIn, Menu, X } from "lucide-react";
 
 
@@ -68,8 +68,7 @@ function useSignedIn() {
   return signedIn;
 }
 
-function MarketingNavImpl() {
-  if (typeof window !== "undefined") (window as any).__navRenders = ((window as any).__navRenders || 0) + 1;
+export function MarketingNav() {
   const signedIn = useSignedIn();
   const [open, setOpen] = useState(false);
 
@@ -169,15 +168,7 @@ function MarketingNavImpl() {
 }
 
 
-/**
- * Both chrome components take no props, so memo bails out of re-rendering the
- * 27 nav and footer Link children whenever an unrelated store update commits
- * further down the page.
- */
-export const MarketingNav = memo(MarketingNavImpl);
-
-function MarketingFooterImpl() {
-  if (typeof window !== "undefined") (window as any).__footRenders = ((window as any).__footRenders || 0) + 1;
+export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
@@ -271,8 +262,6 @@ function MarketingFooterImpl() {
     </footer>
   );
 }
-
-export const MarketingFooter = memo(MarketingFooterImpl);
 
 function FooterColumn({ title, children }: { title: string; children: ReactNode }) {
   return (
