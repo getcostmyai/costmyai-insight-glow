@@ -26,8 +26,8 @@ vi.mock("@/lib/newsletter.functions", () => ({
   unsubscribeFromNewsletter: (args: { data: { token: string } }) => unsubscribeFn(args),
 }));
 
-import { ConfirmPage } from "@/routes/newsletter.confirm";
-import { UnsubscribePage } from "@/routes/newsletter.unsubscribe";
+import { ConfirmPage } from "@/routes/_marketing.newsletter.confirm";
+import { UnsubscribePage } from "@/routes/_marketing.newsletter.unsubscribe";
 
 beforeEach(() => {
   confirmFn.mockReset();
