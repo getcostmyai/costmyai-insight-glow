@@ -18,16 +18,25 @@ function prefersReducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
-/** How long published prose may stay hidden waiting on an observer entry. */
+/** How long an element waits on the observer before the rect check takes over. */
 const REVEAL_FAILSAFE_MS = 1200;
+
+/** True when any part of the element is currently within the viewport. */
+function onScreen(el: HTMLElement) {
+  const rect = el.getBoundingClientRect();
+  return rect.bottom > 0 && rect.top < window.innerHeight;
+}
 
 /**
  * Fires once, when the element first scrolls into view.
  *
- * A safety net runs alongside the observer: if no entry has reported
- * intersection within 1200ms, the content is revealed anyway. Sections below
- * the fold on a page nobody scrolls (or any layout where the observer never
- * reports) must never leave published prose invisible.
+ * The observer is the primary path. It can miss legitimately visible content:
+ * with a threshold of 0.25 inside a root shrunk by 10%, a block taller than
+ * roughly 90% of the viewport can never reach that ratio, so it would stay
+ * hidden even when fully scrolled onto the screen. A rect fallback covers that
+ * without defeating the scroll-reveal itself: 1200ms after mount, and on every
+ * scroll or resize thereafter, the element reveals only if it is genuinely on
+ * screen. Content below the fold stays hidden until the reader reaches it.
  */
 function useInView<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -40,27 +49,57 @@ function useInView<T extends HTMLElement>() {
       setInView(true);
       return;
     }
+
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let done = false;
+    // Late images and webfonts move blocks after the timer has already looked.
+    // A document-height change is the event that says "positions moved", so the
+    // rect check runs again then rather than on a frame loop.
+    const shift =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => check());
+
+    const stop = () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+      shift?.disconnect();
+      io.disconnect();
+    };
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      stop();
+      setInView(true);
+    };
+
+    // One shared handler per element, on passive listeners. No frame loop.
+    function check() {
+      if (!done && onScreen(el as HTMLElement)) finish();
+    }
+
     const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        if (timer) clearTimeout(timer);
-        setInView(true);
-        io.disconnect();
-      }
+      if (entries.some((e) => e.isIntersecting)) finish();
     }, OBSERVER_OPTIONS);
     io.observe(el);
+
     timer = setTimeout(() => {
-      setInView(true);
-      io.disconnect();
+      window.addEventListener("scroll", check, { passive: true });
+      window.addEventListener("resize", check, { passive: true });
+      shift?.observe(document.documentElement);
+      check();
     }, REVEAL_FAILSAFE_MS);
+
     return () => {
-      if (timer) clearTimeout(timer);
-      io.disconnect();
+      done = true;
+      stop();
     };
   }, []);
 
+
   return { ref, inView };
 }
+
 
 
 /**
