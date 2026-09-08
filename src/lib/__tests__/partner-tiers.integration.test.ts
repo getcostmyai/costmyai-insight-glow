@@ -71,7 +71,7 @@ describe("partner page ladder is live", () => {
 
   it("the page source contains no hardcoded rate ladder", async () => {
     const src = await import("node:fs/promises").then((fs) =>
-      fs.readFile("src/routes/partners.tsx", "utf8"),
+      fs.readFile("src/routes/_marketing.partners.tsx", "utf8"),
     );
     // Any literal percentage or dollar threshold in the page would survive a
     // real tier change in the database — exactly the drift this test forbids.

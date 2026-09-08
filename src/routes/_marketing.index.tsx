@@ -29,7 +29,7 @@ import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_marketing/")({
   head: () => {
     const homepageFaqItems = HOMEPAGE_FAQ_IDS.map((id) => findFaqItem(id)).filter(
       (i): i is NonNullable<typeof i> => Boolean(i),

@@ -12,7 +12,7 @@ import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
 import type { PlanTier } from "@/lib/engine/types";
 
-export const Route = createFileRoute("/pricing")({
+export const Route = createFileRoute("/_marketing/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — pay for the level you're on | CostMyAI" },

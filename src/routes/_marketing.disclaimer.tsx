@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { LegalPage, LegalSection } from "@/components/marketing/LegalPage";
 
-export const Route = createFileRoute("/disclaimer")({
+export const Route = createFileRoute("/_marketing/disclaimer")({
   head: () => ({
     meta: [
       { title: "Disclaimer — CostMyAI" },

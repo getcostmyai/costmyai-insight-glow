@@ -18,7 +18,7 @@ const DESCRIPTION =
  * behind the phrase is definitional and repeat-visited, so it must not carry a
  * publication date that ages, and it must be linkable from navigation forever.
  */
-export const Route = createFileRoute("/guides/ai-cost-management")({
+export const Route = createFileRoute("/_marketing/guides/ai-cost-management")({
   head: () => ({
     meta: [
       { title: TITLE },

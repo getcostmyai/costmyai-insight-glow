@@ -12,8 +12,8 @@ import { APP_NAV, MARKETING_NAV } from "@/lib/nav";
 
 const SHELL = readFileSync("src/components/marketing/MarketingShell.tsx", "utf8");
 const DASH = readFileSync("src/components/dashboard/DashboardShell.tsx", "utf8");
-const INTELLIGENCE = readFileSync("src/routes/intelligence.index.tsx", "utf8");
-const PARTNERS = readFileSync("src/routes/partners.tsx", "utf8");
+const INTELLIGENCE = readFileSync("src/routes/_marketing.intelligence.index.tsx", "utf8");
+const PARTNERS = readFileSync("src/routes/_marketing.partners.tsx", "utf8");
 
 describe("marketing nav", () => {
   it("lists the sections in the agreed order", () => {
@@ -58,7 +58,7 @@ describe("marketing nav", () => {
     expect(how?.hash).toBeUndefined();
     // The homepage teaser must still exist and link onward, so the anchor
     // target is not orphaned.
-    const INDEX = readFileSync("src/routes/index.tsx", "utf8");
+    const INDEX = readFileSync("src/routes/_marketing.index.tsx", "utf8");
     expect(INDEX).toMatch(/id="how"/);
     expect(INDEX).toMatch(/to="\/how-it-works"/);
     // ...and the four-step copy must live in exactly one module.

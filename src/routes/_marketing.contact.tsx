@@ -10,7 +10,7 @@ import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
 
-export const Route = createFileRoute("/contact")({
+export const Route = createFileRoute("/_marketing/contact")({
   head: () => ({
     meta: [
       { title: "Contact CostMyAI — a real person, no ticket queue" },

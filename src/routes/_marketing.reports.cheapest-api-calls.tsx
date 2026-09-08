@@ -12,7 +12,7 @@ const TITLE = "Cheapest API call 2026: prices compared by model and provider | C
 const DESCRIPTION =
   "Cheapest LLM API prices compared for 2026: which provider sells the cheapest API call for each model, live rates in USD per million tokens, and the gap to the dearest host.";
 
-export const Route = createFileRoute("/reports/cheapest-api-calls")({
+export const Route = createFileRoute("/_marketing/reports/cheapest-api-calls")({
   head: () => ({
     meta: [
       { title: TITLE },

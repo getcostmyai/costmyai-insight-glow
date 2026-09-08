@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { LegalPage, LegalSection, MailLink } from "@/components/marketing/LegalPage";
 
-export const Route = createFileRoute("/privacy")({
+export const Route = createFileRoute("/_marketing/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Policy — CostMyAI" },
