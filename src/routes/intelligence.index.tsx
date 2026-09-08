@@ -82,7 +82,7 @@ export function buildIndexHead(data: IntelligencePayload | undefined, cardId: st
  * Phase 3 did not change that. What it adds is a citation target: every share
  * control points at the newest frozen month, never at these moving numbers.
  */
-export const Route = createFileRoute("/_marketing/intelligence/")({
+export const Route = createFileRoute("/intelligence/")({
   validateSearch: (search: Record<string, unknown>): { card?: string } => {
     const card = typeof search.card === "string" ? search.card : undefined;
     return card ? { card } : {};

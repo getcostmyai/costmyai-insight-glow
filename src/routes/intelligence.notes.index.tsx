@@ -14,7 +14,7 @@ import { formatNoteDate, notesNewestFirst, type Note } from "@/lib/intelligence/
  * empty section that promises analysis is exactly the kind of copy Dispatch 119
  * removed everywhere else. It flips to indexable the moment a note exists.
  */
-export const Route = createFileRoute("/_marketing/intelligence/notes/")({
+export const Route = createFileRoute("/intelligence/notes/")({
   loader: () => ({ notes: notesNewestFirst() }),
   head: ({ loaderData }) => {
     const empty = (loaderData?.notes.length ?? 0) === 0;

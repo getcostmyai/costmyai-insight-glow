@@ -10,7 +10,7 @@ import { LABELS, noteBySlug } from "@/lib/intelligence/notes";
  * The provenance label is carried into the meta description as well as the
  * page, so a note cannot be shared in a form that drops the qualifier.
  */
-export const Route = createFileRoute("/_marketing/intelligence/notes/$slug")({
+export const Route = createFileRoute("/intelligence/notes/$slug")({
   loader: ({ params }) => {
     const note = noteBySlug(params.slug);
     if (!note) throw notFound();

@@ -16,7 +16,7 @@ import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tier
 
 type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
 
-export const Route = createFileRoute("/_marketing/partners")({
+export const Route = createFileRoute("/partners")({
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(partnerLadderQuery()),

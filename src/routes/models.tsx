@@ -13,7 +13,7 @@ import { marketingStatsQuery } from "@/lib/marketing.functions";
 import { trackModelsEvent } from "@/lib/models-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
 
-export const Route = createFileRoute("/_marketing/models")({
+export const Route = createFileRoute("/models")({
   head: () => ({
     meta: [
       { title: "Model catalog — same model, different price | CostMyAI" },

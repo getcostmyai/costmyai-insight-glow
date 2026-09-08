@@ -14,7 +14,7 @@ const TITLE = "LLM pricing comparison calculator | CostMyAI";
 const DESCRIPTION =
   "Compare LLM API pricing across providers with your own token volumes. Enter monthly input and output tokens and see the real monthly cost of every model at its cheapest verified host.";
 
-export const Route = createFileRoute("/_marketing/tools/llm-price-comparison")({
+export const Route = createFileRoute("/tools/llm-price-comparison")({
   head: () => ({
     meta: [
       { title: TITLE },

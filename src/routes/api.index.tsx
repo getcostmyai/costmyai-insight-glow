@@ -7,7 +7,7 @@ import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 
-export const Route = createFileRoute("/_marketing/api/")({
+export const Route = createFileRoute("/api/")({
   head: () => ({
     meta: [
       { title: "API — how CostMyAI connects to your data | CostMyAI" },
