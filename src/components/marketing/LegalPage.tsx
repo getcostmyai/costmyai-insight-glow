@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 
 /**
@@ -22,7 +23,7 @@ export function LegalPage({
   children: ReactNode;
 }) {
   return (
-    <>
+    <MarketingShell>
       <div className="flex flex-col">
         <section className="relative overflow-hidden border-b border-border">
           <div
@@ -53,7 +54,7 @@ export function LegalPage({
           </div>
         </section>
       </div>
-    </>
+    </MarketingShell>
   );
 }
 

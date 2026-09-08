@@ -9,57 +9,59 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StandardRouteImport } from './routes/standard'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PressRouteImport } from './routes/press'
+import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as ModelsRouteImport } from './routes/models'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as MarketingRouteImport } from './routes/_marketing'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as IntelligenceIndexRouteImport } from './routes/intelligence.index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
-import { Route as MarketingIndexRouteImport } from './routes/_marketing.index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as ApiIndexRouteImport } from './routes/api.index'
+import { Route as ToolsLlmPriceComparisonRouteImport } from './routes/tools.llm-price-comparison'
+import { Route as ReportsCheapestApiCallsRouteImport } from './routes/reports.cheapest-api-calls'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as PartnersApplyRouteImport } from './routes/partners_.apply'
 import { Route as PartnerLoginRouteImport } from './routes/partner_.login'
+import { Route as NewsletterUnsubscribeRouteImport } from './routes/newsletter.unsubscribe'
+import { Route as NewsletterConfirmRouteImport } from './routes/newsletter.confirm'
+import { Route as LegalMethodologyRouteImport } from './routes/legal/methodology'
+import { Route as IntelligenceMonthRouteImport } from './routes/intelligence.$month'
+import { Route as GuidesAiCostManagementRouteImport } from './routes/guides.ai-cost-management'
 import { Route as EmbedIntelligenceWidgetRouteImport } from './routes/embed/intelligence-widget'
 import { Route as DemoRightsizeRouteImport } from './routes/demo.rightsize'
 import { Route as DemoOverviewRouteImport } from './routes/demo.overview'
 import { Route as DemoGovernRouteImport } from './routes/demo.govern'
 import { Route as DemoCompareRouteImport } from './routes/demo.compare'
 import { Route as DemoCertifyRouteImport } from './routes/demo.certify'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth_.reset-password'
-import { Route as MarketingTermsRouteImport } from './routes/_marketing.terms'
-import { Route as MarketingStandardRouteImport } from './routes/_marketing.standard'
-import { Route as MarketingPrivacyRouteImport } from './routes/_marketing.privacy'
-import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricing'
-import { Route as MarketingPressRouteImport } from './routes/_marketing.press'
-import { Route as MarketingPartnersRouteImport } from './routes/_marketing.partners'
-import { Route as MarketingModelsRouteImport } from './routes/_marketing.models'
-import { Route as MarketingHowItWorksRouteImport } from './routes/_marketing.how-it-works'
-import { Route as MarketingFaqRouteImport } from './routes/_marketing.faq'
-import { Route as MarketingDisclaimerRouteImport } from './routes/_marketing.disclaimer'
-import { Route as MarketingContactRouteImport } from './routes/_marketing.contact'
-import { Route as MarketingBlogRouteImport } from './routes/_marketing.blog'
-import { Route as MarketingAboutRouteImport } from './routes/_marketing.about'
 import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticated/partner'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
-import { Route as MarketingIntelligenceIndexRouteImport } from './routes/_marketing.intelligence.index'
-import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing.blog.index'
-import { Route as MarketingApiIndexRouteImport } from './routes/_marketing.api.index'
+import { Route as IntelligenceNotesIndexRouteImport } from './routes/intelligence.notes.index'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
+import { Route as IntelligenceNotesSlugRouteImport } from './routes/intelligence.notes.$slug'
 import { Route as DeRCodeRouteImport } from './routes/de.r.$code'
 import { Route as ApiPublicBuildInfoRouteImport } from './routes/api/public/build-info'
-import { Route as MarketingToolsLlmPriceComparisonRouteImport } from './routes/_marketing.tools.llm-price-comparison'
-import { Route as MarketingReportsCheapestApiCallsRouteImport } from './routes/_marketing.reports.cheapest-api-calls'
-import { Route as MarketingPartnersApplyRouteImport } from './routes/_marketing.partners_.apply'
-import { Route as MarketingNewsletterUnsubscribeRouteImport } from './routes/_marketing.newsletter.unsubscribe'
-import { Route as MarketingNewsletterConfirmRouteImport } from './routes/_marketing.newsletter.confirm'
-import { Route as MarketingLegalMethodologyRouteImport } from './routes/_marketing.legal.methodology'
-import { Route as MarketingIntelligenceMonthRouteImport } from './routes/_marketing.intelligence.$month'
-import { Route as MarketingGuidesAiCostManagementRouteImport } from './routes/_marketing.guides.ai-cost-management'
-import { Route as MarketingBlogSlugRouteImport } from './routes/_marketing.blog.$slug'
 import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_authenticated/workspace.rightsize'
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
@@ -74,7 +76,6 @@ import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as AuthenticatedAdminGatewayKeysRouteImport } from './routes/_authenticated/admin/gateway-keys'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin/customers'
-import { Route as MarketingIntelligenceNotesIndexRouteImport } from './routes/_marketing.intelligence.notes.index'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -99,16 +100,64 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicGatewayIngestRouteImport } from './routes/api/public/gateway/ingest'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
-import { Route as MarketingPartnerVerifyCodeRouteImport } from './routes/_marketing.partner_.verify.$code'
-import { Route as MarketingIntelligenceNotesSlugRouteImport } from './routes/_marketing.intelligence.notes.$slug'
 import { Route as ApiPublicOgNewsletterChartDotpngRouteImport } from './routes/api/public/og/newsletter/chart[.]png'
 import { Route as ApiPublicOgIntelligenceLiveRouteImport } from './routes/api/public/og/intelligence/live'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
 import { Route as ApiPublicDataIntelligenceMonthRouteImport } from './routes/api/public/data/intelligence/$month'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StandardRoute = StandardRouteImport.update({
+  id: '/standard',
+  path: '/standard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PressRoute = PressRouteImport.update({
+  id: '/press',
+  path: '/press',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelsRoute = ModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -116,17 +165,38 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingRoute = MarketingRouteImport.update({
-  id: '/_marketing',
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceIndexRoute = IntelligenceIndexRouteImport.update({
+  id: '/intelligence/',
+  path: '/intelligence/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
@@ -134,19 +204,64 @@ const DemoIndexRoute = DemoIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DemoRoute,
 } as any)
-const MarketingIndexRoute = MarketingIndexRouteImport.update({
+const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => MarketingRoute,
+  getParentRoute: () => BlogRoute,
+} as any)
+const ApiIndexRoute = ApiIndexRouteImport.update({
+  id: '/api/',
+  path: '/api/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsLlmPriceComparisonRoute = ToolsLlmPriceComparisonRouteImport.update({
+  id: '/tools/llm-price-comparison',
+  path: '/tools/llm-price-comparison',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsCheapestApiCallsRoute = ReportsCheapestApiCallsRouteImport.update({
+  id: '/reports/cheapest-api-calls',
+  path: '/reports/cheapest-api-calls',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnersApplyRoute = PartnersApplyRouteImport.update({
+  id: '/partners_/apply',
+  path: '/partners/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartnerLoginRoute = PartnerLoginRouteImport.update({
   id: '/partner_/login',
   path: '/partner/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterUnsubscribeRoute = NewsletterUnsubscribeRouteImport.update({
+  id: '/newsletter/unsubscribe',
+  path: '/newsletter/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterConfirmRoute = NewsletterConfirmRouteImport.update({
+  id: '/newsletter/confirm',
+  path: '/newsletter/confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalMethodologyRoute = LegalMethodologyRouteImport.update({
+  id: '/legal/methodology',
+  path: '/legal/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceMonthRoute = IntelligenceMonthRouteImport.update({
+  id: '/intelligence/$month',
+  path: '/intelligence/$month',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesAiCostManagementRoute = GuidesAiCostManagementRouteImport.update({
+  id: '/guides/ai-cost-management',
+  path: '/guides/ai-cost-management',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmbedIntelligenceWidgetRoute = EmbedIntelligenceWidgetRouteImport.update({
@@ -179,75 +294,15 @@ const DemoCertifyRoute = DemoCertifyRouteImport.update({
   path: '/certify',
   getParentRoute: () => DemoRoute,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   id: '/auth_/reset-password',
   path: '/auth/reset-password',
   getParentRoute: () => rootRouteImport,
-} as any)
-const MarketingTermsRoute = MarketingTermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingStandardRoute = MarketingStandardRouteImport.update({
-  id: '/standard',
-  path: '/standard',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPrivacyRoute = MarketingPrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPricingRoute = MarketingPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPressRoute = MarketingPressRouteImport.update({
-  id: '/press',
-  path: '/press',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingPartnersRoute = MarketingPartnersRouteImport.update({
-  id: '/partners',
-  path: '/partners',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingModelsRoute = MarketingModelsRouteImport.update({
-  id: '/models',
-  path: '/models',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingHowItWorksRoute = MarketingHowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingFaqRoute = MarketingFaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingDisclaimerRoute = MarketingDisclaimerRouteImport.update({
-  id: '/disclaimer',
-  path: '/disclaimer',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingContactRoute = MarketingContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingBlogRoute = MarketingBlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingAboutRoute = MarketingAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => MarketingRoute,
 } as any)
 const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
   id: '/workspace',
@@ -274,21 +329,10 @@ const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const MarketingIntelligenceIndexRoute =
-  MarketingIntelligenceIndexRouteImport.update({
-    id: '/intelligence/',
-    path: '/intelligence/',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MarketingBlogRoute,
-} as any)
-const MarketingApiIndexRoute = MarketingApiIndexRouteImport.update({
-  id: '/api/',
-  path: '/api/',
-  getParentRoute: () => MarketingRoute,
+const IntelligenceNotesIndexRoute = IntelligenceNotesIndexRouteImport.update({
+  id: '/intelligence/notes/',
+  path: '/intelligence/notes/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedWorkspaceIndexRoute =
   AuthenticatedWorkspaceIndexRouteImport.update({
@@ -307,6 +351,16 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const PartnerVerifyCodeRoute = PartnerVerifyCodeRouteImport.update({
+  id: '/partner_/verify/$code',
+  path: '/partner/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceNotesSlugRoute = IntelligenceNotesSlugRouteImport.update({
+  id: '/intelligence/notes/$slug',
+  path: '/intelligence/notes/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeRCodeRoute = DeRCodeRouteImport.update({
   id: '/de/r/$code',
   path: '/de/r/$code',
@@ -316,58 +370,6 @@ const ApiPublicBuildInfoRoute = ApiPublicBuildInfoRouteImport.update({
   id: '/api/public/build-info',
   path: '/api/public/build-info',
   getParentRoute: () => rootRouteImport,
-} as any)
-const MarketingToolsLlmPriceComparisonRoute =
-  MarketingToolsLlmPriceComparisonRouteImport.update({
-    id: '/tools/llm-price-comparison',
-    path: '/tools/llm-price-comparison',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingReportsCheapestApiCallsRoute =
-  MarketingReportsCheapestApiCallsRouteImport.update({
-    id: '/reports/cheapest-api-calls',
-    path: '/reports/cheapest-api-calls',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingPartnersApplyRoute = MarketingPartnersApplyRouteImport.update({
-  id: '/partners_/apply',
-  path: '/partners/apply',
-  getParentRoute: () => MarketingRoute,
-} as any)
-const MarketingNewsletterUnsubscribeRoute =
-  MarketingNewsletterUnsubscribeRouteImport.update({
-    id: '/newsletter/unsubscribe',
-    path: '/newsletter/unsubscribe',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingNewsletterConfirmRoute =
-  MarketingNewsletterConfirmRouteImport.update({
-    id: '/newsletter/confirm',
-    path: '/newsletter/confirm',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingLegalMethodologyRoute =
-  MarketingLegalMethodologyRouteImport.update({
-    id: '/legal/methodology',
-    path: '/legal/methodology',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingIntelligenceMonthRoute =
-  MarketingIntelligenceMonthRouteImport.update({
-    id: '/intelligence/$month',
-    path: '/intelligence/$month',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingGuidesAiCostManagementRoute =
-  MarketingGuidesAiCostManagementRouteImport.update({
-    id: '/guides/ai-cost-management',
-    path: '/guides/ai-cost-management',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingBlogSlugRoute = MarketingBlogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => MarketingBlogRoute,
 } as any)
 const AuthenticatedWorkspaceRightsizeRoute =
   AuthenticatedWorkspaceRightsizeRouteImport.update({
@@ -448,12 +450,6 @@ const AuthenticatedAdminCustomersRoute =
     id: '/admin/customers',
     path: '/admin/customers',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const MarketingIntelligenceNotesIndexRoute =
-  MarketingIntelligenceNotesIndexRouteImport.update({
-    id: '/intelligence/notes/',
-    path: '/intelligence/notes/',
-    getParentRoute: () => MarketingRoute,
   } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
@@ -584,18 +580,6 @@ const ApiPublicBadgeCodeRoute = ApiPublicBadgeCodeRouteImport.update({
   path: '/api/public/badge/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingPartnerVerifyCodeRoute =
-  MarketingPartnerVerifyCodeRouteImport.update({
-    id: '/partner_/verify/$code',
-    path: '/partner/verify/$code',
-    getParentRoute: () => MarketingRoute,
-  } as any)
-const MarketingIntelligenceNotesSlugRoute =
-  MarketingIntelligenceNotesSlugRouteImport.update({
-    id: '/intelligence/notes/$slug',
-    path: '/intelligence/notes/$slug',
-    getParentRoute: () => MarketingRoute,
-  } as any)
 const ApiPublicOgNewsletterChartDotpngRoute =
   ApiPublicOgNewsletterChartDotpngRouteImport.update({
     id: '/api/public/og/newsletter/chart.png',
@@ -622,38 +606,50 @@ const ApiPublicDataIntelligenceMonthRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof MarketingIndexRoute
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/contact': typeof ContactRoute
   '/demo': typeof DemoRouteWithChildren
+  '/disclaimer': typeof DisclaimerRoute
+  '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/models': typeof ModelsRoute
+  '/partners': typeof PartnersRoute
+  '/press': typeof PressRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standard': typeof StandardRoute
+  '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
-  '/about': typeof MarketingAboutRoute
-  '/blog': typeof MarketingBlogRouteWithChildren
-  '/contact': typeof MarketingContactRoute
-  '/disclaimer': typeof MarketingDisclaimerRoute
-  '/faq': typeof MarketingFaqRoute
-  '/how-it-works': typeof MarketingHowItWorksRoute
-  '/models': typeof MarketingModelsRoute
-  '/partners': typeof MarketingPartnersRoute
-  '/press': typeof MarketingPressRoute
-  '/pricing': typeof MarketingPricingRoute
-  '/privacy': typeof MarketingPrivacyRoute
-  '/standard': typeof MarketingStandardRoute
-  '/terms': typeof MarketingTermsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
+  '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
+  '/intelligence/$month': typeof IntelligenceMonthRoute
+  '/legal/methodology': typeof LegalMethodologyRoute
+  '/newsletter/confirm': typeof NewsletterConfirmRoute
+  '/newsletter/unsubscribe': typeof NewsletterUnsubscribeRoute
   '/partner/login': typeof PartnerLoginRoute
+  '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
+  '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
+  '/tools/llm-price-comparison': typeof ToolsLlmPriceComparisonRoute
+  '/api/': typeof ApiIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/intelligence/': typeof IntelligenceIndexRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/gateway-keys': typeof AuthenticatedAdminGatewayKeysRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
@@ -668,25 +664,14 @@ export interface FileRoutesByFullPath {
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
-  '/blog/$slug': typeof MarketingBlogSlugRoute
-  '/guides/ai-cost-management': typeof MarketingGuidesAiCostManagementRoute
-  '/intelligence/$month': typeof MarketingIntelligenceMonthRoute
-  '/legal/methodology': typeof MarketingLegalMethodologyRoute
-  '/newsletter/confirm': typeof MarketingNewsletterConfirmRoute
-  '/newsletter/unsubscribe': typeof MarketingNewsletterUnsubscribeRoute
-  '/partners/apply': typeof MarketingPartnersApplyRoute
-  '/reports/cheapest-api-calls': typeof MarketingReportsCheapestApiCallsRoute
-  '/tools/llm-price-comparison': typeof MarketingToolsLlmPriceComparisonRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/de/r/$code': typeof DeRCodeRoute
+  '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
+  '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
-  '/api/': typeof MarketingApiIndexRoute
-  '/blog/': typeof MarketingBlogIndexRoute
-  '/intelligence/': typeof MarketingIntelligenceIndexRoute
-  '/intelligence/notes/$slug': typeof MarketingIntelligenceNotesSlugRoute
-  '/partner/verify/$code': typeof MarketingPartnerVerifyCodeRoute
+  '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
@@ -711,42 +696,53 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/intelligence/notes/': typeof MarketingIntelligenceNotesIndexRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
   '/api/public/og/newsletter/chart.png': typeof ApiPublicOgNewsletterChartDotpngRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof MarketingIndexRoute
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/disclaimer': typeof DisclaimerRoute
+  '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/models': typeof ModelsRoute
+  '/partners': typeof PartnersRoute
+  '/press': typeof PressRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standard': typeof StandardRoute
+  '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
-  '/about': typeof MarketingAboutRoute
-  '/contact': typeof MarketingContactRoute
-  '/disclaimer': typeof MarketingDisclaimerRoute
-  '/faq': typeof MarketingFaqRoute
-  '/how-it-works': typeof MarketingHowItWorksRoute
-  '/models': typeof MarketingModelsRoute
-  '/partners': typeof MarketingPartnersRoute
-  '/press': typeof MarketingPressRoute
-  '/pricing': typeof MarketingPricingRoute
-  '/privacy': typeof MarketingPrivacyRoute
-  '/standard': typeof MarketingStandardRoute
-  '/terms': typeof MarketingTermsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
+  '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
+  '/intelligence/$month': typeof IntelligenceMonthRoute
+  '/legal/methodology': typeof LegalMethodologyRoute
+  '/newsletter/confirm': typeof NewsletterConfirmRoute
+  '/newsletter/unsubscribe': typeof NewsletterUnsubscribeRoute
   '/partner/login': typeof PartnerLoginRoute
+  '/partners/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
+  '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
+  '/tools/llm-price-comparison': typeof ToolsLlmPriceComparisonRoute
+  '/api': typeof ApiIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
+  '/intelligence': typeof IntelligenceIndexRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/gateway-keys': typeof AuthenticatedAdminGatewayKeysRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
@@ -761,25 +757,14 @@ export interface FileRoutesByTo {
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
-  '/blog/$slug': typeof MarketingBlogSlugRoute
-  '/guides/ai-cost-management': typeof MarketingGuidesAiCostManagementRoute
-  '/intelligence/$month': typeof MarketingIntelligenceMonthRoute
-  '/legal/methodology': typeof MarketingLegalMethodologyRoute
-  '/newsletter/confirm': typeof MarketingNewsletterConfirmRoute
-  '/newsletter/unsubscribe': typeof MarketingNewsletterUnsubscribeRoute
-  '/partners/apply': typeof MarketingPartnersApplyRoute
-  '/reports/cheapest-api-calls': typeof MarketingReportsCheapestApiCallsRoute
-  '/tools/llm-price-comparison': typeof MarketingToolsLlmPriceComparisonRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/de/r/$code': typeof DeRCodeRoute
+  '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
+  '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
-  '/api': typeof MarketingApiIndexRoute
-  '/blog': typeof MarketingBlogIndexRoute
-  '/intelligence': typeof MarketingIntelligenceIndexRoute
-  '/intelligence/notes/$slug': typeof MarketingIntelligenceNotesSlugRoute
-  '/partner/verify/$code': typeof MarketingPartnerVerifyCodeRoute
+  '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
@@ -804,7 +789,6 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/intelligence/notes': typeof MarketingIntelligenceNotesIndexRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
@@ -812,40 +796,51 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/_marketing': typeof MarketingRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/contact': typeof ContactRoute
   '/demo': typeof DemoRouteWithChildren
+  '/disclaimer': typeof DisclaimerRoute
+  '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/models': typeof ModelsRoute
+  '/partners': typeof PartnersRoute
+  '/press': typeof PressRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/standard': typeof StandardRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/partner': typeof AuthenticatedPartnerRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
-  '/_marketing/about': typeof MarketingAboutRoute
-  '/_marketing/blog': typeof MarketingBlogRouteWithChildren
-  '/_marketing/contact': typeof MarketingContactRoute
-  '/_marketing/disclaimer': typeof MarketingDisclaimerRoute
-  '/_marketing/faq': typeof MarketingFaqRoute
-  '/_marketing/how-it-works': typeof MarketingHowItWorksRoute
-  '/_marketing/models': typeof MarketingModelsRoute
-  '/_marketing/partners': typeof MarketingPartnersRoute
-  '/_marketing/press': typeof MarketingPressRoute
-  '/_marketing/pricing': typeof MarketingPricingRoute
-  '/_marketing/privacy': typeof MarketingPrivacyRoute
-  '/_marketing/standard': typeof MarketingStandardRoute
-  '/_marketing/terms': typeof MarketingTermsRoute
   '/auth_/reset-password': typeof AuthResetPasswordRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/demo/certify': typeof DemoCertifyRoute
   '/demo/compare': typeof DemoCompareRoute
   '/demo/govern': typeof DemoGovernRoute
   '/demo/overview': typeof DemoOverviewRoute
   '/demo/rightsize': typeof DemoRightsizeRoute
   '/embed/intelligence-widget': typeof EmbedIntelligenceWidgetRoute
+  '/guides/ai-cost-management': typeof GuidesAiCostManagementRoute
+  '/intelligence/$month': typeof IntelligenceMonthRoute
+  '/legal/methodology': typeof LegalMethodologyRoute
+  '/newsletter/confirm': typeof NewsletterConfirmRoute
+  '/newsletter/unsubscribe': typeof NewsletterUnsubscribeRoute
   '/partner_/login': typeof PartnerLoginRoute
+  '/partners_/apply': typeof PartnersApplyRoute
   '/r/$code': typeof RCodeRoute
-  '/_marketing/': typeof MarketingIndexRoute
+  '/reports/cheapest-api-calls': typeof ReportsCheapestApiCallsRoute
+  '/tools/llm-price-comparison': typeof ToolsLlmPriceComparisonRoute
+  '/api/': typeof ApiIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/intelligence/': typeof IntelligenceIndexRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/gateway-keys': typeof AuthenticatedAdminGatewayKeysRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
@@ -860,25 +855,14 @@ export interface FileRoutesById {
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
   '/_authenticated/workspace/rightsize': typeof AuthenticatedWorkspaceRightsizeRoute
-  '/_marketing/blog/$slug': typeof MarketingBlogSlugRoute
-  '/_marketing/guides/ai-cost-management': typeof MarketingGuidesAiCostManagementRoute
-  '/_marketing/intelligence/$month': typeof MarketingIntelligenceMonthRoute
-  '/_marketing/legal/methodology': typeof MarketingLegalMethodologyRoute
-  '/_marketing/newsletter/confirm': typeof MarketingNewsletterConfirmRoute
-  '/_marketing/newsletter/unsubscribe': typeof MarketingNewsletterUnsubscribeRoute
-  '/_marketing/partners_/apply': typeof MarketingPartnersApplyRoute
-  '/_marketing/reports/cheapest-api-calls': typeof MarketingReportsCheapestApiCallsRoute
-  '/_marketing/tools/llm-price-comparison': typeof MarketingToolsLlmPriceComparisonRoute
   '/api/public/build-info': typeof ApiPublicBuildInfoRoute
   '/de/r/$code': typeof DeRCodeRoute
+  '/intelligence/notes/$slug': typeof IntelligenceNotesSlugRoute
+  '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
-  '/_marketing/api/': typeof MarketingApiIndexRoute
-  '/_marketing/blog/': typeof MarketingBlogIndexRoute
-  '/_marketing/intelligence/': typeof MarketingIntelligenceIndexRoute
-  '/_marketing/intelligence/notes/$slug': typeof MarketingIntelligenceNotesSlugRoute
-  '/_marketing/partner_/verify/$code': typeof MarketingPartnerVerifyCodeRoute
+  '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
@@ -903,7 +887,6 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/_marketing/intelligence/notes/': typeof MarketingIntelligenceNotesIndexRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
@@ -913,17 +896,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
-    | '/demo'
-    | '/sitemap.xml'
-    | '/billing'
-    | '/partner'
-    | '/settings'
-    | '/team'
-    | '/workspace'
     | '/about'
+    | '/auth'
     | '/blog'
     | '/contact'
+    | '/demo'
     | '/disclaimer'
     | '/faq'
     | '/how-it-works'
@@ -932,18 +909,36 @@ export interface FileRouteTypes {
     | '/press'
     | '/pricing'
     | '/privacy'
+    | '/sitemap.xml'
     | '/standard'
     | '/terms'
+    | '/billing'
+    | '/partner'
+    | '/settings'
+    | '/team'
+    | '/workspace'
     | '/auth/reset-password'
+    | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
     | '/embed/intelligence-widget'
+    | '/guides/ai-cost-management'
+    | '/intelligence/$month'
+    | '/legal/methodology'
+    | '/newsletter/confirm'
+    | '/newsletter/unsubscribe'
     | '/partner/login'
+    | '/partners/apply'
     | '/r/$code'
+    | '/reports/cheapest-api-calls'
+    | '/tools/llm-price-comparison'
+    | '/api/'
+    | '/blog/'
     | '/demo/'
+    | '/intelligence/'
     | '/admin/customers'
     | '/admin/gateway-keys'
     | '/admin/jobs'
@@ -958,25 +953,14 @@ export interface FileRouteTypes {
     | '/workspace/compare'
     | '/workspace/govern'
     | '/workspace/rightsize'
-    | '/blog/$slug'
-    | '/guides/ai-cost-management'
-    | '/intelligence/$month'
-    | '/legal/methodology'
-    | '/newsletter/confirm'
-    | '/newsletter/unsubscribe'
-    | '/partners/apply'
-    | '/reports/cheapest-api-calls'
-    | '/tools/llm-price-comparison'
     | '/api/public/build-info'
     | '/de/r/$code'
+    | '/intelligence/notes/$slug'
+    | '/partner/verify/$code'
     | '/admin/'
     | '/feedback/'
     | '/workspace/'
-    | '/api/'
-    | '/blog/'
-    | '/intelligence/'
-    | '/intelligence/notes/$slug'
-    | '/partner/verify/$code'
+    | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/gateway/ingest'
@@ -1001,7 +985,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
-    | '/intelligence/notes/'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
@@ -1009,13 +992,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
-    | '/sitemap.xml'
-    | '/billing'
-    | '/partner'
-    | '/settings'
-    | '/team'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/disclaimer'
     | '/faq'
@@ -1025,18 +1003,35 @@ export interface FileRouteTypes {
     | '/press'
     | '/pricing'
     | '/privacy'
+    | '/sitemap.xml'
     | '/standard'
     | '/terms'
+    | '/billing'
+    | '/partner'
+    | '/settings'
+    | '/team'
     | '/auth/reset-password'
+    | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
     | '/embed/intelligence-widget'
+    | '/guides/ai-cost-management'
+    | '/intelligence/$month'
+    | '/legal/methodology'
+    | '/newsletter/confirm'
+    | '/newsletter/unsubscribe'
     | '/partner/login'
+    | '/partners/apply'
     | '/r/$code'
+    | '/reports/cheapest-api-calls'
+    | '/tools/llm-price-comparison'
+    | '/api'
+    | '/blog'
     | '/demo'
+    | '/intelligence'
     | '/admin/customers'
     | '/admin/gateway-keys'
     | '/admin/jobs'
@@ -1051,25 +1046,14 @@ export interface FileRouteTypes {
     | '/workspace/compare'
     | '/workspace/govern'
     | '/workspace/rightsize'
-    | '/blog/$slug'
-    | '/guides/ai-cost-management'
-    | '/intelligence/$month'
-    | '/legal/methodology'
-    | '/newsletter/confirm'
-    | '/newsletter/unsubscribe'
-    | '/partners/apply'
-    | '/reports/cheapest-api-calls'
-    | '/tools/llm-price-comparison'
     | '/api/public/build-info'
     | '/de/r/$code'
+    | '/intelligence/notes/$slug'
+    | '/partner/verify/$code'
     | '/admin'
     | '/feedback'
     | '/workspace'
-    | '/api'
-    | '/blog'
-    | '/intelligence'
-    | '/intelligence/notes/$slug'
-    | '/partner/verify/$code'
+    | '/intelligence/notes'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/gateway/ingest'
@@ -1094,47 +1078,57 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
-    | '/intelligence/notes'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
     | '/api/public/og/newsletter/chart.png'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
-    | '/_marketing'
+    | '/about'
     | '/auth'
+    | '/blog'
+    | '/contact'
     | '/demo'
+    | '/disclaimer'
+    | '/faq'
+    | '/how-it-works'
+    | '/models'
+    | '/partners'
+    | '/press'
+    | '/pricing'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/standard'
+    | '/terms'
     | '/_authenticated/billing'
     | '/_authenticated/partner'
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/workspace'
-    | '/_marketing/about'
-    | '/_marketing/blog'
-    | '/_marketing/contact'
-    | '/_marketing/disclaimer'
-    | '/_marketing/faq'
-    | '/_marketing/how-it-works'
-    | '/_marketing/models'
-    | '/_marketing/partners'
-    | '/_marketing/press'
-    | '/_marketing/pricing'
-    | '/_marketing/privacy'
-    | '/_marketing/standard'
-    | '/_marketing/terms'
     | '/auth_/reset-password'
+    | '/blog/$slug'
     | '/demo/certify'
     | '/demo/compare'
     | '/demo/govern'
     | '/demo/overview'
     | '/demo/rightsize'
     | '/embed/intelligence-widget'
+    | '/guides/ai-cost-management'
+    | '/intelligence/$month'
+    | '/legal/methodology'
+    | '/newsletter/confirm'
+    | '/newsletter/unsubscribe'
     | '/partner_/login'
+    | '/partners_/apply'
     | '/r/$code'
-    | '/_marketing/'
+    | '/reports/cheapest-api-calls'
+    | '/tools/llm-price-comparison'
+    | '/api/'
+    | '/blog/'
     | '/demo/'
+    | '/intelligence/'
     | '/_authenticated/admin/customers'
     | '/_authenticated/admin/gateway-keys'
     | '/_authenticated/admin/jobs'
@@ -1149,25 +1143,14 @@ export interface FileRouteTypes {
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
     | '/_authenticated/workspace/rightsize'
-    | '/_marketing/blog/$slug'
-    | '/_marketing/guides/ai-cost-management'
-    | '/_marketing/intelligence/$month'
-    | '/_marketing/legal/methodology'
-    | '/_marketing/newsletter/confirm'
-    | '/_marketing/newsletter/unsubscribe'
-    | '/_marketing/partners_/apply'
-    | '/_marketing/reports/cheapest-api-calls'
-    | '/_marketing/tools/llm-price-comparison'
     | '/api/public/build-info'
     | '/de/r/$code'
+    | '/intelligence/notes/$slug'
+    | '/partner_/verify/$code'
     | '/_authenticated/admin/'
     | '/_authenticated/feedback/'
     | '/_authenticated/workspace/'
-    | '/_marketing/api/'
-    | '/_marketing/blog/'
-    | '/_marketing/intelligence/'
-    | '/_marketing/intelligence/notes/$slug'
-    | '/_marketing/partner_/verify/$code'
+    | '/intelligence/notes/'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/gateway/ingest'
@@ -1192,7 +1175,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
-    | '/_marketing/intelligence/notes/'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
@@ -1200,17 +1182,43 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  MarketingRoute: typeof MarketingRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
+  ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRouteWithChildren
+  DisclaimerRoute: typeof DisclaimerRoute
+  FaqRoute: typeof FaqRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  ModelsRoute: typeof ModelsRoute
+  PartnersRoute: typeof PartnersRoute
+  PressRoute: typeof PressRoute
+  PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StandardRoute: typeof StandardRoute
+  TermsRoute: typeof TermsRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   EmbedIntelligenceWidgetRoute: typeof EmbedIntelligenceWidgetRoute
+  GuidesAiCostManagementRoute: typeof GuidesAiCostManagementRoute
+  IntelligenceMonthRoute: typeof IntelligenceMonthRoute
+  LegalMethodologyRoute: typeof LegalMethodologyRoute
+  NewsletterConfirmRoute: typeof NewsletterConfirmRoute
+  NewsletterUnsubscribeRoute: typeof NewsletterUnsubscribeRoute
   PartnerLoginRoute: typeof PartnerLoginRoute
+  PartnersApplyRoute: typeof PartnersApplyRoute
   RCodeRoute: typeof RCodeRoute
+  ReportsCheapestApiCallsRoute: typeof ReportsCheapestApiCallsRoute
+  ToolsLlmPriceComparisonRoute: typeof ToolsLlmPriceComparisonRoute
+  ApiIndexRoute: typeof ApiIndexRoute
+  IntelligenceIndexRoute: typeof IntelligenceIndexRoute
   ApiPublicBuildInfoRoute: typeof ApiPublicBuildInfoRoute
   DeRCodeRoute: typeof DeRCodeRoute
+  IntelligenceNotesSlugRoute: typeof IntelligenceNotesSlugRoute
+  PartnerVerifyCodeRoute: typeof PartnerVerifyCodeRoute
+  IntelligenceNotesIndexRoute: typeof IntelligenceNotesIndexRoute
   ApiPublicBadgeCodeRoute: typeof ApiPublicBadgeCodeRoute
   ApiPublicEmbedIntelligenceWidgetRoute: typeof ApiPublicEmbedIntelligenceWidgetRoute
   ApiPublicGatewayIngestRoute: typeof ApiPublicGatewayIngestRoute
@@ -1243,11 +1251,81 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/standard': {
+      id: '/standard'
+      path: '/standard'
+      fullPath: '/standard'
+      preLoaderRoute: typeof StandardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/press': {
+      id: '/press'
+      path: '/press'
+      fullPath: '/press'
+      preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/models': {
+      id: '/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof ModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -1257,6 +1335,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -1264,11 +1356,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_marketing': {
-      id: '/_marketing'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof MarketingRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1278,6 +1370,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence/': {
+      id: '/intelligence/'
+      path: '/intelligence'
+      fullPath: '/intelligence/'
+      preLoaderRoute: typeof IntelligenceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/': {
       id: '/demo/'
       path: '/'
@@ -1285,12 +1391,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoIndexRouteImport
       parentRoute: typeof DemoRoute
     }
-    '/_marketing/': {
-      id: '/_marketing/'
+    '/blog/': {
+      id: '/blog/'
       path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof MarketingIndexRouteImport
-      parentRoute: typeof MarketingRoute
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/api/': {
+      id: '/api/'
+      path: '/api'
+      fullPath: '/api/'
+      preLoaderRoute: typeof ApiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/llm-price-comparison': {
+      id: '/tools/llm-price-comparison'
+      path: '/tools/llm-price-comparison'
+      fullPath: '/tools/llm-price-comparison'
+      preLoaderRoute: typeof ToolsLlmPriceComparisonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports/cheapest-api-calls': {
+      id: '/reports/cheapest-api-calls'
+      path: '/reports/cheapest-api-calls'
+      fullPath: '/reports/cheapest-api-calls'
+      preLoaderRoute: typeof ReportsCheapestApiCallsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
       id: '/r/$code'
@@ -1299,11 +1426,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partners_/apply': {
+      id: '/partners_/apply'
+      path: '/partners/apply'
+      fullPath: '/partners/apply'
+      preLoaderRoute: typeof PartnersApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/partner_/login': {
       id: '/partner_/login'
       path: '/partner/login'
       fullPath: '/partner/login'
       preLoaderRoute: typeof PartnerLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter/unsubscribe': {
+      id: '/newsletter/unsubscribe'
+      path: '/newsletter/unsubscribe'
+      fullPath: '/newsletter/unsubscribe'
+      preLoaderRoute: typeof NewsletterUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter/confirm': {
+      id: '/newsletter/confirm'
+      path: '/newsletter/confirm'
+      fullPath: '/newsletter/confirm'
+      preLoaderRoute: typeof NewsletterConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/methodology': {
+      id: '/legal/methodology'
+      path: '/legal/methodology'
+      fullPath: '/legal/methodology'
+      preLoaderRoute: typeof LegalMethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence/$month': {
+      id: '/intelligence/$month'
+      path: '/intelligence/$month'
+      fullPath: '/intelligence/$month'
+      preLoaderRoute: typeof IntelligenceMonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/ai-cost-management': {
+      id: '/guides/ai-cost-management'
+      path: '/guides/ai-cost-management'
+      fullPath: '/guides/ai-cost-management'
+      preLoaderRoute: typeof GuidesAiCostManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/embed/intelligence-widget': {
@@ -1348,103 +1517,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoCertifyRouteImport
       parentRoute: typeof DemoRoute
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/auth_/reset-password': {
       id: '/auth_/reset-password'
       path: '/auth/reset-password'
       fullPath: '/auth/reset-password'
       preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_marketing/terms': {
-      id: '/_marketing/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof MarketingTermsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/standard': {
-      id: '/_marketing/standard'
-      path: '/standard'
-      fullPath: '/standard'
-      preLoaderRoute: typeof MarketingStandardRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/privacy': {
-      id: '/_marketing/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof MarketingPrivacyRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/pricing': {
-      id: '/_marketing/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof MarketingPricingRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/press': {
-      id: '/_marketing/press'
-      path: '/press'
-      fullPath: '/press'
-      preLoaderRoute: typeof MarketingPressRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/partners': {
-      id: '/_marketing/partners'
-      path: '/partners'
-      fullPath: '/partners'
-      preLoaderRoute: typeof MarketingPartnersRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/models': {
-      id: '/_marketing/models'
-      path: '/models'
-      fullPath: '/models'
-      preLoaderRoute: typeof MarketingModelsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/how-it-works': {
-      id: '/_marketing/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof MarketingHowItWorksRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/faq': {
-      id: '/_marketing/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof MarketingFaqRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/disclaimer': {
-      id: '/_marketing/disclaimer'
-      path: '/disclaimer'
-      fullPath: '/disclaimer'
-      preLoaderRoute: typeof MarketingDisclaimerRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/contact': {
-      id: '/_marketing/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof MarketingContactRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog': {
-      id: '/_marketing/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof MarketingBlogRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/about': {
-      id: '/_marketing/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof MarketingAboutRouteImport
-      parentRoute: typeof MarketingRoute
     }
     '/_authenticated/workspace': {
       id: '/_authenticated/workspace'
@@ -1481,26 +1566,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_marketing/intelligence/': {
-      id: '/_marketing/intelligence/'
-      path: '/intelligence'
-      fullPath: '/intelligence/'
-      preLoaderRoute: typeof MarketingIntelligenceIndexRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/': {
-      id: '/_marketing/blog/'
-      path: '/'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof MarketingBlogIndexRouteImport
-      parentRoute: typeof MarketingBlogRoute
-    }
-    '/_marketing/api/': {
-      id: '/_marketing/api/'
-      path: '/api'
-      fullPath: '/api/'
-      preLoaderRoute: typeof MarketingApiIndexRouteImport
-      parentRoute: typeof MarketingRoute
+    '/intelligence/notes/': {
+      id: '/intelligence/notes/'
+      path: '/intelligence/notes'
+      fullPath: '/intelligence/notes/'
+      preLoaderRoute: typeof IntelligenceNotesIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/workspace/': {
       id: '/_authenticated/workspace/'
@@ -1523,6 +1594,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/partner_/verify/$code': {
+      id: '/partner_/verify/$code'
+      path: '/partner/verify/$code'
+      fullPath: '/partner/verify/$code'
+      preLoaderRoute: typeof PartnerVerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence/notes/$slug': {
+      id: '/intelligence/notes/$slug'
+      path: '/intelligence/notes/$slug'
+      fullPath: '/intelligence/notes/$slug'
+      preLoaderRoute: typeof IntelligenceNotesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/de/r/$code': {
       id: '/de/r/$code'
       path: '/de/r/$code'
@@ -1536,69 +1621,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/build-info'
       preLoaderRoute: typeof ApiPublicBuildInfoRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_marketing/tools/llm-price-comparison': {
-      id: '/_marketing/tools/llm-price-comparison'
-      path: '/tools/llm-price-comparison'
-      fullPath: '/tools/llm-price-comparison'
-      preLoaderRoute: typeof MarketingToolsLlmPriceComparisonRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/reports/cheapest-api-calls': {
-      id: '/_marketing/reports/cheapest-api-calls'
-      path: '/reports/cheapest-api-calls'
-      fullPath: '/reports/cheapest-api-calls'
-      preLoaderRoute: typeof MarketingReportsCheapestApiCallsRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/partners_/apply': {
-      id: '/_marketing/partners_/apply'
-      path: '/partners/apply'
-      fullPath: '/partners/apply'
-      preLoaderRoute: typeof MarketingPartnersApplyRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/newsletter/unsubscribe': {
-      id: '/_marketing/newsletter/unsubscribe'
-      path: '/newsletter/unsubscribe'
-      fullPath: '/newsletter/unsubscribe'
-      preLoaderRoute: typeof MarketingNewsletterUnsubscribeRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/newsletter/confirm': {
-      id: '/_marketing/newsletter/confirm'
-      path: '/newsletter/confirm'
-      fullPath: '/newsletter/confirm'
-      preLoaderRoute: typeof MarketingNewsletterConfirmRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/legal/methodology': {
-      id: '/_marketing/legal/methodology'
-      path: '/legal/methodology'
-      fullPath: '/legal/methodology'
-      preLoaderRoute: typeof MarketingLegalMethodologyRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/intelligence/$month': {
-      id: '/_marketing/intelligence/$month'
-      path: '/intelligence/$month'
-      fullPath: '/intelligence/$month'
-      preLoaderRoute: typeof MarketingIntelligenceMonthRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/guides/ai-cost-management': {
-      id: '/_marketing/guides/ai-cost-management'
-      path: '/guides/ai-cost-management'
-      fullPath: '/guides/ai-cost-management'
-      preLoaderRoute: typeof MarketingGuidesAiCostManagementRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/blog/$slug': {
-      id: '/_marketing/blog/$slug'
-      path: '/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof MarketingBlogSlugRouteImport
-      parentRoute: typeof MarketingBlogRoute
     }
     '/_authenticated/workspace/rightsize': {
       id: '/_authenticated/workspace/rightsize'
@@ -1697,13 +1719,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/customers'
       preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_marketing/intelligence/notes/': {
-      id: '/_marketing/intelligence/notes/'
-      path: '/intelligence/notes'
-      fullPath: '/intelligence/notes/'
-      preLoaderRoute: typeof MarketingIntelligenceNotesIndexRouteImport
-      parentRoute: typeof MarketingRoute
     }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
@@ -1873,20 +1888,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBadgeCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_marketing/partner_/verify/$code': {
-      id: '/_marketing/partner_/verify/$code'
-      path: '/partner/verify/$code'
-      fullPath: '/partner/verify/$code'
-      preLoaderRoute: typeof MarketingPartnerVerifyCodeRouteImport
-      parentRoute: typeof MarketingRoute
-    }
-    '/_marketing/intelligence/notes/$slug': {
-      id: '/_marketing/intelligence/notes/$slug'
-      path: '/intelligence/notes/$slug'
-      fullPath: '/intelligence/notes/$slug'
-      preLoaderRoute: typeof MarketingIntelligenceNotesSlugRouteImport
-      parentRoute: typeof MarketingRoute
-    }
     '/api/public/og/newsletter/chart.png': {
       id: '/api/public/og/newsletter/chart.png'
       path: '/api/public/og/newsletter/chart.png'
@@ -1984,83 +1985,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface MarketingBlogRouteChildren {
-  MarketingBlogSlugRoute: typeof MarketingBlogSlugRoute
-  MarketingBlogIndexRoute: typeof MarketingBlogIndexRoute
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
-const MarketingBlogRouteChildren: MarketingBlogRouteChildren = {
-  MarketingBlogSlugRoute: MarketingBlogSlugRoute,
-  MarketingBlogIndexRoute: MarketingBlogIndexRoute,
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 
-const MarketingBlogRouteWithChildren = MarketingBlogRoute._addFileChildren(
-  MarketingBlogRouteChildren,
-)
-
-interface MarketingRouteChildren {
-  MarketingAboutRoute: typeof MarketingAboutRoute
-  MarketingBlogRoute: typeof MarketingBlogRouteWithChildren
-  MarketingContactRoute: typeof MarketingContactRoute
-  MarketingDisclaimerRoute: typeof MarketingDisclaimerRoute
-  MarketingFaqRoute: typeof MarketingFaqRoute
-  MarketingHowItWorksRoute: typeof MarketingHowItWorksRoute
-  MarketingModelsRoute: typeof MarketingModelsRoute
-  MarketingPartnersRoute: typeof MarketingPartnersRoute
-  MarketingPressRoute: typeof MarketingPressRoute
-  MarketingPricingRoute: typeof MarketingPricingRoute
-  MarketingPrivacyRoute: typeof MarketingPrivacyRoute
-  MarketingStandardRoute: typeof MarketingStandardRoute
-  MarketingTermsRoute: typeof MarketingTermsRoute
-  MarketingIndexRoute: typeof MarketingIndexRoute
-  MarketingGuidesAiCostManagementRoute: typeof MarketingGuidesAiCostManagementRoute
-  MarketingIntelligenceMonthRoute: typeof MarketingIntelligenceMonthRoute
-  MarketingLegalMethodologyRoute: typeof MarketingLegalMethodologyRoute
-  MarketingNewsletterConfirmRoute: typeof MarketingNewsletterConfirmRoute
-  MarketingNewsletterUnsubscribeRoute: typeof MarketingNewsletterUnsubscribeRoute
-  MarketingPartnersApplyRoute: typeof MarketingPartnersApplyRoute
-  MarketingReportsCheapestApiCallsRoute: typeof MarketingReportsCheapestApiCallsRoute
-  MarketingToolsLlmPriceComparisonRoute: typeof MarketingToolsLlmPriceComparisonRoute
-  MarketingApiIndexRoute: typeof MarketingApiIndexRoute
-  MarketingIntelligenceIndexRoute: typeof MarketingIntelligenceIndexRoute
-  MarketingIntelligenceNotesSlugRoute: typeof MarketingIntelligenceNotesSlugRoute
-  MarketingPartnerVerifyCodeRoute: typeof MarketingPartnerVerifyCodeRoute
-  MarketingIntelligenceNotesIndexRoute: typeof MarketingIntelligenceNotesIndexRoute
-}
-
-const MarketingRouteChildren: MarketingRouteChildren = {
-  MarketingAboutRoute: MarketingAboutRoute,
-  MarketingBlogRoute: MarketingBlogRouteWithChildren,
-  MarketingContactRoute: MarketingContactRoute,
-  MarketingDisclaimerRoute: MarketingDisclaimerRoute,
-  MarketingFaqRoute: MarketingFaqRoute,
-  MarketingHowItWorksRoute: MarketingHowItWorksRoute,
-  MarketingModelsRoute: MarketingModelsRoute,
-  MarketingPartnersRoute: MarketingPartnersRoute,
-  MarketingPressRoute: MarketingPressRoute,
-  MarketingPricingRoute: MarketingPricingRoute,
-  MarketingPrivacyRoute: MarketingPrivacyRoute,
-  MarketingStandardRoute: MarketingStandardRoute,
-  MarketingTermsRoute: MarketingTermsRoute,
-  MarketingIndexRoute: MarketingIndexRoute,
-  MarketingGuidesAiCostManagementRoute: MarketingGuidesAiCostManagementRoute,
-  MarketingIntelligenceMonthRoute: MarketingIntelligenceMonthRoute,
-  MarketingLegalMethodologyRoute: MarketingLegalMethodologyRoute,
-  MarketingNewsletterConfirmRoute: MarketingNewsletterConfirmRoute,
-  MarketingNewsletterUnsubscribeRoute: MarketingNewsletterUnsubscribeRoute,
-  MarketingPartnersApplyRoute: MarketingPartnersApplyRoute,
-  MarketingReportsCheapestApiCallsRoute: MarketingReportsCheapestApiCallsRoute,
-  MarketingToolsLlmPriceComparisonRoute: MarketingToolsLlmPriceComparisonRoute,
-  MarketingApiIndexRoute: MarketingApiIndexRoute,
-  MarketingIntelligenceIndexRoute: MarketingIntelligenceIndexRoute,
-  MarketingIntelligenceNotesSlugRoute: MarketingIntelligenceNotesSlugRoute,
-  MarketingPartnerVerifyCodeRoute: MarketingPartnerVerifyCodeRoute,
-  MarketingIntelligenceNotesIndexRoute: MarketingIntelligenceNotesIndexRoute,
-}
-
-const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
-  MarketingRouteChildren,
-)
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
 interface DemoRouteChildren {
   DemoCertifyRoute: typeof DemoCertifyRoute
@@ -2083,17 +2018,43 @@ const DemoRouteChildren: DemoRouteChildren = {
 const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  MarketingRoute: MarketingRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
+  ContactRoute: ContactRoute,
   DemoRoute: DemoRouteWithChildren,
+  DisclaimerRoute: DisclaimerRoute,
+  FaqRoute: FaqRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  ModelsRoute: ModelsRoute,
+  PartnersRoute: PartnersRoute,
+  PressRoute: PressRoute,
+  PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StandardRoute: StandardRoute,
+  TermsRoute: TermsRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   EmbedIntelligenceWidgetRoute: EmbedIntelligenceWidgetRoute,
+  GuidesAiCostManagementRoute: GuidesAiCostManagementRoute,
+  IntelligenceMonthRoute: IntelligenceMonthRoute,
+  LegalMethodologyRoute: LegalMethodologyRoute,
+  NewsletterConfirmRoute: NewsletterConfirmRoute,
+  NewsletterUnsubscribeRoute: NewsletterUnsubscribeRoute,
   PartnerLoginRoute: PartnerLoginRoute,
+  PartnersApplyRoute: PartnersApplyRoute,
   RCodeRoute: RCodeRoute,
+  ReportsCheapestApiCallsRoute: ReportsCheapestApiCallsRoute,
+  ToolsLlmPriceComparisonRoute: ToolsLlmPriceComparisonRoute,
+  ApiIndexRoute: ApiIndexRoute,
+  IntelligenceIndexRoute: IntelligenceIndexRoute,
   ApiPublicBuildInfoRoute: ApiPublicBuildInfoRoute,
   DeRCodeRoute: DeRCodeRoute,
+  IntelligenceNotesSlugRoute: IntelligenceNotesSlugRoute,
+  PartnerVerifyCodeRoute: PartnerVerifyCodeRoute,
+  IntelligenceNotesIndexRoute: IntelligenceNotesIndexRoute,
   ApiPublicBadgeCodeRoute: ApiPublicBadgeCodeRoute,
   ApiPublicEmbedIntelligenceWidgetRoute: ApiPublicEmbedIntelligenceWidgetRoute,
   ApiPublicGatewayIngestRoute: ApiPublicGatewayIngestRoute,

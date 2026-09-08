@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { buildIndexHead } from "@/routes/_marketing.intelligence.index";
-import { buildMonthHead } from "@/routes/_marketing.intelligence.$month";
+import { buildIndexHead } from "@/routes/intelligence.index";
+import { buildMonthHead } from "@/routes/intelligence.$month";
 import type { IntelligencePayload } from "@/lib/intelligence/intelligence.server";
 import type { FrozenMonth } from "@/lib/intelligence/snapshot.server";
 import { moveCardId, spreadCardId } from "@/lib/intelligence/share-cards";
