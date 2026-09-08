@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BadgeCheck, Check, Copy, Download, Loader2 } from "lucide-react";
+import { BadgeCheck, Check, Copy, Download, Loader2, X } from "lucide-react";
 
 import { getMyPartnerBanner } from "@/lib/partner-badge.functions";
 import { copyText } from "@/lib/copy-text";
@@ -38,7 +38,7 @@ const ITEMS: { format: Format; title: string; spec: string; body: string }[] = [
 export function BrandKitCard({ referralCode, active }: { referralCode: string; active: boolean }) {
   const [busy, setBusy] = useState<Format | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
 
   const verifyUrl =
     typeof window === "undefined"
@@ -89,14 +89,39 @@ export function BrandKitCard({ referralCode, active }: { referralCode: string; a
               {verifyUrl}
             </code>
             <button
-              onClick={async () => {
-                setCopied(await copyText(verifyUrl));
+              type="button"
+              aria-label={
+                copied === "ok"
+                  ? "Verification link copied"
+                  : copied === "fail"
+                    ? "Copy failed"
+                    : "Copy verification link"
+              }
+              data-copy-state={copied}
+              onClick={() => {
+                void copyText(verifyUrl).then((ok) => {
+                  setCopied(ok ? "ok" : "fail");
+                  setTimeout(() => setCopied("idle"), 2000);
+                });
               }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
             >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? "Copied" : "Copy verification link"}
+              {copied === "ok" ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : copied === "fail" ? (
+                <X className="h-3.5 w-3.5 text-destructive" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy verification link"}
             </button>
+            <span aria-live="polite" className="sr-only">
+              {copied === "idle"
+                ? ""
+                : copied === "ok"
+                  ? "Verification link copied"
+                  : "Copy failed"}
+            </span>
             <a
               href={verifyUrl}
               target="_blank"

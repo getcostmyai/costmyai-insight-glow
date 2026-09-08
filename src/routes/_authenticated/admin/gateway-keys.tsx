@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Copy, KeyRound, Loader2 } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2, X } from "lucide-react";
 
 import { mintGatewayKey } from "@/lib/keys.functions";
 import { copyText } from "@/lib/copy-text";
@@ -94,7 +94,7 @@ function GatewayKeysPage() {
   );
 }
 
-function MintedPanel({
+export function MintedPanel({
   token,
   name,
   onDismiss,
@@ -103,13 +103,13 @@ function MintedPanel({
   name: string;
   onDismiss: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
   return (
     <div className="mt-8 rounded-2xl border border-primary/40 bg-primary/5 p-6">
       <p className="text-sm font-semibold">Copy this key now</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        It will not be shown again. Store it in the tenant's secret manager — if lost, mint a new
-        one and revoke the old key.
+        It will not be shown again. Store it in the tenant's secret manager, and if it is lost, mint
+        a new one and revoke the old key.
       </p>
       <p className="mt-4 text-xs text-muted-foreground">
         Name: <span className="font-medium text-foreground">{name}</span>
@@ -120,15 +120,40 @@ function MintedPanel({
         </code>
         <button
           type="button"
-          onClick={async () => {
-            setCopied(await copyText(token));
+          aria-label={
+            copied === "ok" ? "Key copied" : copied === "fail" ? "Copy failed" : "Copy key"
+          }
+          data-copy-state={copied}
+          onClick={() => {
+            void copyText(token).then((ok) => {
+              setCopied(ok ? "ok" : "fail");
+              setTimeout(() => setCopied("idle"), 2000);
+            });
           }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
         >
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? "Copied" : "Copy"}
+          {copied === "ok" ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : copied === "fail" ? (
+            <X className="h-3.5 w-3.5 text-destructive" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+          {copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy"}
         </button>
       </div>
+      {copied === "fail" ? (
+        <p className="mt-2 text-xs text-destructive">
+          Copy failed. The key is still on screen, select it and copy it by hand.
+        </p>
+      ) : null}
+      <span aria-live="polite" className="sr-only">
+        {copied === "idle"
+          ? ""
+          : copied === "ok"
+            ? "Key copied"
+            : "Copy failed. The key is still on screen, select it and copy it by hand."}
+      </span>
       <button
         type="button"
         onClick={onDismiss}

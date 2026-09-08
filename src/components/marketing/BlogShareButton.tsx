@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Link2, Linkedin } from "lucide-react";
+import { Check, Link2, Linkedin, X } from "lucide-react";
 
 import {
   Tooltip,
@@ -44,7 +44,9 @@ export function BlogShareButton({
   title: string;
   className?: string;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
+  const copyLabel =
+    copied === "ok" ? "Link copied" : copied === "fail" ? "Copy failed" : "Copy link";
   const origin = useOrigin();
 
   const url = `${origin}/blog/${slug}`;
@@ -97,26 +99,32 @@ export function BlogShareButton({
           <TooltipTrigger asChild>
             <button
               type="button"
-              aria-label={copied ? "Link copied" : "Copy link"}
+              aria-label={copyLabel}
+              data-copy-state={copied}
               className={linkBase}
               onClick={() => {
                 void copyText(url).then((ok) => {
-                  setCopied(ok);
-                  setTimeout(() => setCopied(false), 2000);
+                  setCopied(ok ? "ok" : "fail");
+                  setTimeout(() => setCopied("idle"), 2000);
                 });
               }}
             >
-              {copied ? (
+              {copied === "ok" ? (
                 <Check className="h-3.5 w-3.5 text-saving" />
+              ) : copied === "fail" ? (
+                <X className="h-3.5 w-3.5 text-destructive" />
               ) : (
                 <Link2 className="h-3.5 w-3.5" />
               )}
             </button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>{copied ? "Link copied" : "Copy link"}</p>
+            <p>{copyLabel}</p>
           </TooltipContent>
         </Tooltip>
+        <span aria-live="polite" className="sr-only">
+          {copied === "idle" ? "" : copyLabel}
+        </span>
       </div>
     </TooltipProvider>
   );
