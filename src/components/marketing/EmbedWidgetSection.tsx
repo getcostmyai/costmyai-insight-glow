@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Check, Copy } from "lucide-react";
 
 import { Reveal } from "@/components/marketing/Reveal";
+import { copyText } from "@/lib/copy-text";
 
 /**
  * Copy-paste embed block.
@@ -76,7 +77,7 @@ export function EmbedWidgetSection() {
               <button
                 type="button"
                 onClick={() => {
-                  void navigator.clipboard.writeText(snippet).then(() => setCopied(true));
+                  void copyText(snippet).then((ok) => setCopied(ok));
                 }}
                 className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium shadow-sm transition-opacity hover:opacity-70"
               >
