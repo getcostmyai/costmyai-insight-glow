@@ -52,14 +52,24 @@ function useInView<T extends HTMLElement>() {
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     let done = false;
+    // Late images and webfonts move blocks after the timer has already looked.
+    // A document-height change is the event that says "positions moved", so the
+    // rect check runs again then rather than on a frame loop.
+    const shift =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => check());
+
+    const stop = () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+      shift?.disconnect();
+      io.disconnect();
+    };
 
     const finish = () => {
       if (done) return;
       done = true;
-      if (timer) clearTimeout(timer);
-      window.removeEventListener("scroll", check);
-      window.removeEventListener("resize", check);
-      io.disconnect();
+      stop();
       setInView(true);
     };
 
@@ -76,17 +86,16 @@ function useInView<T extends HTMLElement>() {
     timer = setTimeout(() => {
       window.addEventListener("scroll", check, { passive: true });
       window.addEventListener("resize", check, { passive: true });
+      shift?.observe(document.documentElement);
       check();
     }, REVEAL_FAILSAFE_MS);
 
     return () => {
       done = true;
-      if (timer) clearTimeout(timer);
-      window.removeEventListener("scroll", check);
-      window.removeEventListener("resize", check);
-      io.disconnect();
+      stop();
     };
   }, []);
+
 
   return { ref, inView };
 }
