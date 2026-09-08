@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { memo, useEffect, useState, type ReactNode } from "react";
 import { CircleUserRound, Linkedin, LogIn, Menu, X } from "lucide-react";
 
 
@@ -174,7 +174,7 @@ function MarketingNavImpl() {
  * 27 nav and footer Link children whenever an unrelated store update commits
  * further down the page.
  */
-export const MarketingNav = MarketingNavImpl;
+export const MarketingNav = memo(MarketingNavImpl);
 
 function MarketingFooterImpl() {
   if (typeof window !== "undefined") (window as any).__footRenders = ((window as any).__footRenders || 0) + 1;
@@ -272,7 +272,7 @@ function MarketingFooterImpl() {
   );
 }
 
-export const MarketingFooter = MarketingFooterImpl;
+export const MarketingFooter = memo(MarketingFooterImpl);
 
 function FooterColumn({ title, children }: { title: string; children: ReactNode }) {
   return (
