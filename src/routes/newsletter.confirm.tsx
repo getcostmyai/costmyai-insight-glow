@@ -14,7 +14,7 @@ import { confirmNewsletterSubscription } from "@/lib/newsletter.functions";
  * address is now on the list, or the link is spent. Nothing here reveals
  * whether the address ever existed.
  */
-export const Route = createFileRoute("/_marketing/newsletter/confirm")({
+export const Route = createFileRoute("/newsletter/confirm")({
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search.token === "string" ? search.token : "",
   }),

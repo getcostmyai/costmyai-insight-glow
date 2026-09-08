@@ -6,7 +6,7 @@ import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 
-export const Route = createFileRoute("/_marketing/press")({
+export const Route = createFileRoute("/press")({
   head: () => ({
     meta: [
       { title: "Press and media — CostMyAI" },

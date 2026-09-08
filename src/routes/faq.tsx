@@ -12,7 +12,7 @@ const TITLE = "AI cost FAQ — pricing, safe model switching, key security";
 const DESCRIPTION =
   "Straight answers on what AI actually costs, why bills rise while token prices fall, how to switch models without losing quality, and why no tool should ever hold your provider keys.";
 
-export const Route = createFileRoute("/_marketing/faq")({
+export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
       { title: TITLE },

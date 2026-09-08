@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-const HOME = readFileSync("src/routes/_marketing.index.tsx", "utf8");
+const HOME = readFileSync("src/routes/index.tsx", "utf8");
 
 describe("front-page competitive positioning", () => {
   it("names no competitor and contrasts internal reports with independent benchmarks", () => {

@@ -5,7 +5,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { marketingStatsQuery } from "@/lib/marketing.functions";
 
-export const Route = createFileRoute("/_marketing/legal/methodology")({
+export const Route = createFileRoute("/legal/methodology")({
   head: () => ({
     meta: [
       { title: "Methodology — what counts as a price move, and how a switch is proven" },

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { LegalPage, LegalSection, MailLink } from "@/components/marketing/LegalPage";
 
-export const Route = createFileRoute("/_marketing/terms")({
+export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms of Service — CostMyAI" },
