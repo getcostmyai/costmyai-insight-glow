@@ -69,6 +69,7 @@ function useSignedIn() {
 }
 
 function MarketingNavImpl() {
+  if (typeof window !== "undefined") (window as any).__navRenders = ((window as any).__navRenders || 0) + 1;
   const signedIn = useSignedIn();
   const [open, setOpen] = useState(false);
 
@@ -176,6 +177,7 @@ function MarketingNavImpl() {
 export const MarketingNav = memo(MarketingNavImpl);
 
 function MarketingFooterImpl() {
+  if (typeof window !== "undefined") (window as any).__footRenders = ((window as any).__footRenders || 0) + 1;
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
