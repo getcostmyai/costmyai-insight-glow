@@ -10,6 +10,7 @@ import { FUNNEL_WINDOWS, stageLabel, type FunnelStageRow, type FunnelWindow } fr
 
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 import { BrandKitCard } from "@/components/partner/BrandKitCard";
+import { copyText } from "@/lib/copy-text";
 
 
 export const Route = createFileRoute("/_authenticated/partner")({
@@ -380,8 +381,7 @@ function ReferralCode({ code }: { code: string }) {
       <div className="flex shrink-0 items-center gap-2">
         <button
           onClick={async () => {
-            await navigator.clipboard.writeText(link);
-            setCopied("link");
+            if (await copyText(link)) setCopied("link");
           }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
         >
@@ -390,8 +390,7 @@ function ReferralCode({ code }: { code: string }) {
         </button>
         <button
           onClick={async () => {
-            await navigator.clipboard.writeText(code);
-            setCopied("code");
+            if (await copyText(code)) setCopied("code");
           }}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
         >

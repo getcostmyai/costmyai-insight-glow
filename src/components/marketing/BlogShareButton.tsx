@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useOrigin } from "@/lib/use-origin";
+import { copyText } from "@/lib/copy-text";
 
 
 /**
@@ -99,8 +100,8 @@ export function BlogShareButton({
               aria-label={copied ? "Link copied" : "Copy link"}
               className={linkBase}
               onClick={() => {
-                void navigator.clipboard?.writeText(url).then(() => {
-                  setCopied(true);
+                void copyText(url).then((ok) => {
+                  setCopied(ok);
                   setTimeout(() => setCopied(false), 2000);
                 });
               }}

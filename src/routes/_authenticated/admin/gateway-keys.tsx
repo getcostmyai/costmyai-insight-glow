@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy, KeyRound, Loader2 } from "lucide-react";
 
 import { mintGatewayKey } from "@/lib/keys.functions";
+import { copyText } from "@/lib/copy-text";
 
 export const Route = createFileRoute("/_authenticated/admin/gateway-keys")({
   head: () => ({
@@ -120,8 +121,7 @@ function MintedPanel({
         <button
           type="button"
           onClick={async () => {
-            await navigator.clipboard.writeText(token);
-            setCopied(true);
+            setCopied(await copyText(token));
           }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
         >

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BadgeCheck, Check, Copy, Download, Loader2 } from "lucide-react";
 
 import { getMyPartnerBanner } from "@/lib/partner-badge.functions";
+import { copyText } from "@/lib/copy-text";
 
 /**
  * Badge and banner downloads.
@@ -89,8 +90,7 @@ export function BrandKitCard({ referralCode, active }: { referralCode: string; a
             </code>
             <button
               onClick={async () => {
-                await navigator.clipboard.writeText(verifyUrl);
-                setCopied(true);
+                setCopied(await copyText(verifyUrl));
               }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
             >

@@ -18,7 +18,17 @@ function prefersReducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
-/** Fires once, when the element first scrolls into view. */
+/** How long published prose may stay hidden waiting on an observer entry. */
+const REVEAL_FAILSAFE_MS = 1200;
+
+/**
+ * Fires once, when the element first scrolls into view.
+ *
+ * A safety net runs alongside the observer: if no entry has reported
+ * intersection within 1200ms, the content is revealed anyway. Sections below
+ * the fold on a page nobody scrolls (or any layout where the observer never
+ * reports) must never leave published prose invisible.
+ */
 function useInView<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
@@ -30,18 +40,28 @@ function useInView<T extends HTMLElement>() {
       setInView(true);
       return;
     }
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver((entries) => {
       if (entries.some((e) => e.isIntersecting)) {
+        if (timer) clearTimeout(timer);
         setInView(true);
         io.disconnect();
       }
     }, OBSERVER_OPTIONS);
     io.observe(el);
-    return () => io.disconnect();
+    timer = setTimeout(() => {
+      setInView(true);
+      io.disconnect();
+    }, REVEAL_FAILSAFE_MS);
+    return () => {
+      if (timer) clearTimeout(timer);
+      io.disconnect();
+    };
   }, []);
 
   return { ref, inView };
 }
+
 
 /**
  * Fade-and-rise on entry. Content is fully present in the SSR markup and for

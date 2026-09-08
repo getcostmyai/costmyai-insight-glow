@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Check, ClipboardCheck, Image as ImageIcon, Link2, Linkedin, Quote } from "lucide-react";
+import {
+  Check,
+  ClipboardCheck,
+  Image as ImageIcon,
+  Link2,
+  Linkedin,
+  Quote,
+  X,
+} from "lucide-react";
 
 import {
   Tooltip,
@@ -7,10 +15,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { copyText } from "@/lib/copy-text";
 import {
   trackIntelligenceShare,
   type SharePlatform,
 } from "@/lib/intelligence-telemetry.functions";
+
+/** Idle, copied, or a write we could not complete. */
+type CopyState = "idle" | "ok" | "fail";
+
 
 /**
  * lucide-react still ships the retired bird as `Twitter`, and the label next to
@@ -66,8 +79,9 @@ export function ShareControls({
   className?: string;
   copyLabel?: string;
 }) {
-  const [copied, setCopied] = useState(false);
-  const [postCopied, setPostCopied] = useState(false);
+  const [copied, setCopied] = useState<CopyState>("idle");
+  const [postCopied, setPostCopied] = useState<CopyState>("idle");
+
 
   const track = (platform: SharePlatform) => {
     void trackIntelligenceShare({ data: { cardId, platform } }).catch(() => {});
@@ -80,6 +94,18 @@ export function ShareControls({
   return (
     <TooltipProvider delayDuration={0}>
       <div className={`inline-flex items-center gap-0.5 ${className}`}>
+        <span aria-live="polite" className="sr-only">
+          {copied === "ok"
+            ? "Link copied"
+            : copied === "fail"
+              ? "Copy failed"
+              : postCopied === "ok"
+                ? "Post copied"
+                : postCopied === "fail"
+                  ? "Copy failed"
+                  : ""}
+        </span>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <a
@@ -122,27 +148,34 @@ export function ShareControls({
           <TooltipTrigger asChild>
             <button
               type="button"
-              aria-label={copied ? "Link copied" : copyLabel}
+              aria-label={
+                copied === "ok" ? "Link copied" : copied === "fail" ? "Copy failed" : copyLabel
+              }
               data-share-platform="copy_link"
+              data-share-state={copied}
               data-share-url={url}
               className={shareLinkClass}
               onClick={() => {
                 track("copy_link");
-                void navigator.clipboard?.writeText(url).then(() => {
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
+                void copyText(url).then((ok) => {
+                  setCopied(ok ? "ok" : "fail");
+                  setTimeout(() => setCopied("idle"), 2000);
                 });
               }}
             >
-              {copied ? (
+              {copied === "ok" ? (
                 <Check className="h-3.5 w-3.5 text-saving" />
+              ) : copied === "fail" ? (
+                <X className="h-3.5 w-3.5 text-destructive" />
               ) : (
                 <Link2 className="h-3.5 w-3.5" />
               )}
             </button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>{copied ? "Link copied" : copyLabel}</p>
+            <p>
+              {copied === "ok" ? "Link copied" : copied === "fail" ? "Copy failed" : copyLabel}
+            </p>
           </TooltipContent>
         </Tooltip>
 
@@ -151,29 +184,45 @@ export function ShareControls({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                aria-label={postCopied ? "Post copied" : `Copy a ready post: ${title}`}
+                aria-label={
+                  postCopied === "ok"
+                    ? "Post copied"
+                    : postCopied === "fail"
+                      ? "Copy failed"
+                      : `Copy a ready post: ${title}`
+                }
                 data-share-platform="copy_post"
+                data-share-state={postCopied}
                 className={shareLinkClass}
                 onClick={() => {
                   track("copy_post");
-                  void navigator.clipboard?.writeText(postText).then(() => {
-                    setPostCopied(true);
-                    setTimeout(() => setPostCopied(false), 2000);
+                  void copyText(postText).then((ok) => {
+                    setPostCopied(ok ? "ok" : "fail");
+                    setTimeout(() => setPostCopied("idle"), 2000);
                   });
                 }}
               >
-                {postCopied ? (
+                {postCopied === "ok" ? (
                   <ClipboardCheck className="h-3.5 w-3.5 text-saving" />
+                ) : postCopied === "fail" ? (
+                  <X className="h-3.5 w-3.5 text-destructive" />
                 ) : (
                   <Quote className="h-3.5 w-3.5" />
                 )}
               </button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p>{postCopied ? "Post copied" : "Copy a ready post with the source line"}</p>
+              <p>
+                {postCopied === "ok"
+                  ? "Post copied"
+                  : postCopied === "fail"
+                    ? "Copy failed"
+                    : "Copy a ready post with the source line"}
+              </p>
             </TooltipContent>
           </Tooltip>
         ) : null}
+
 
         {imageUrl ? (
           <Tooltip>

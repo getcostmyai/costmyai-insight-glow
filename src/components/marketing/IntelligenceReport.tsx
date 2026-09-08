@@ -1,6 +1,18 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, Check, Copy, Download } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  Copy,
+  Download,
+  ExternalLink,
+  X,
+} from "lucide-react";
+
+import { copyText } from "@/lib/copy-text";
+
 
 import { NewsletterBlock } from "@/components/marketing/NewsletterSignupForm";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
@@ -483,7 +495,13 @@ function Verdict({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext 
  * ------------------------------------------------------------------------- */
 
 function CopyLine({ label, text }: { label: string; text: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
+  const state =
+    copied === "ok"
+      ? `${label} copied`
+      : copied === "fail"
+        ? "Copy failed"
+        : `Copy ${label.toLowerCase()}`;
   return (
     <div>
       <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
@@ -495,22 +513,33 @@ function CopyLine({ label, text }: { label: string; text: string }) {
         </p>
         <button
           type="button"
-          aria-label={copied ? `${label} copied` : `Copy ${label.toLowerCase()}`}
+          aria-label={state}
+          data-copy-state={copied}
           className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border/70 px-3 text-xs transition-colors hover:border-foreground/40"
           onClick={() => {
-            void navigator.clipboard?.writeText(text).then(() => {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
+            void copyText(text).then((ok) => {
+              setCopied(ok ? "ok" : "fail");
+              setTimeout(() => setCopied("idle"), 2000);
             });
           }}
         >
-          {copied ? <Check className="h-3 w-3 text-saving" /> : <Copy className="h-3 w-3" />}
-          {copied ? "Copied" : "Copy"}
+          {copied === "ok" ? (
+            <Check className="h-3 w-3 text-saving" />
+          ) : copied === "fail" ? (
+            <X className="h-3 w-3 text-destructive" />
+          ) : (
+            <Copy className="h-3 w-3" />
+          )}
+          {copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy"}
         </button>
       </div>
+      <span aria-live="polite" className="sr-only">
+        {copied === "idle" ? "" : state}
+      </span>
     </div>
   );
 }
+
 
 function CiteAndReuse({ data, ctx }: { data: IntelligencePayload; ctx: ReportContext }) {
   const origin = useOrigin();
@@ -598,8 +627,9 @@ function CiteAndReuse({ data, ctx }: { data: IntelligencePayload; ctx: ReportCon
                   rel="noreferrer noopener"
                   className="inline-flex items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm transition-colors hover:border-foreground/40"
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  Feed image, 1200 by 630
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open feed image, 1200 by 630
+
                 </a>
               ) : null}
             </div>
