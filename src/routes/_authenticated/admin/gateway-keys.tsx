@@ -144,7 +144,7 @@ export function MintedPanel({
       </div>
       {copied === "fail" ? (
         <p className="mt-2 text-xs text-destructive">
-          Copy failed. The key is still on screen, select it and copy it by hand.
+          The key is still on screen. Select it and copy it by hand.
         </p>
       ) : null}
       <span aria-live="polite" className="sr-only">
@@ -152,7 +152,7 @@ export function MintedPanel({
           ? ""
           : copied === "ok"
             ? "Key copied"
-            : "Copy failed. The key is still on screen, select it and copy it by hand."}
+            : "The key is still on screen. Select it and copy it by hand."}
       </span>
       <button
         type="button"
