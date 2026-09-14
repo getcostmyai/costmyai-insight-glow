@@ -6,7 +6,7 @@ import { OpportunityRing } from "@/components/dashboard/SavingsRing";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
 import { groupFor } from "@/lib/dashboard/group";
 import { supersededOption } from "@/components/dashboard/SupersededNote";
-import { levelCount, levelSaving } from "@/lib/dashboard/figures";
+import { certificationRate, levelCount, levelSaving } from "@/lib/dashboard/figures";
 import { SwitchCard } from "@/components/dashboard/SwitchCard";
 import { LevelEmpty, LevelLocked } from "@/components/dashboard/LevelState";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -53,6 +53,60 @@ export function TransparencyLists({ ctl }: { ctl: DashboardController }) {
  * best-single-saving from the findings array, coverage from measured window
  * spend — never the live ticker, whose forward accrual would drift the ratio.
  */
+export interface ListStat {
+  label: string;
+  value: string;
+  sub: string;
+  accent: string;
+}
+
+/**
+ * The one summary panel a transparency list sits under.
+ *
+ * Compare's cheaper-host strip and Certify's benchmark strip are the same
+ * object with different figures, so they share this shell: same gradient, same
+ * four-stat grid, same ring on the right. A second copy would drift.
+ */
+export function ListStatsPanel({
+  eyebrow,
+  stats,
+  ringSaving,
+  ringSpend,
+  ringLabel,
+  period,
+}: {
+  eyebrow: string;
+  stats: ListStat[];
+  ringSaving: number;
+  ringSpend: number;
+  ringLabel: string;
+  period: string;
+}) {
+  return (
+    <div
+      className="mb-6 grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
+      style={{ background: "var(--gradient-hero)" }}
+    >
+      <div>
+        <p className="eyebrow text-white/60">{eyebrow}</p>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map((s) => (
+            <HeroStat key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.accent} />
+          ))}
+        </div>
+      </div>
+      <div className="lg:w-[260px]">
+        <OpportunityRing
+          saving={ringSaving}
+          spend={ringSpend}
+          period={period}
+          label={ringLabel}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
   const { data, activeRange } = ctl;
   const all = data.hostArbitrage;
@@ -64,53 +118,96 @@ export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
   const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : null;
 
   return (
-    <div
-      className="mb-6 grid gap-6 rounded-3xl p-6 text-white lg:grid-cols-[1fr_auto] lg:items-center"
-      style={{ background: "var(--gradient-hero)" }}
-    >
-      <div>
-        <p className="eyebrow text-white/60">Cheaper-host check · {activeRange.long}</p>
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          <HeroStat
-            label="Cheaper hosts identified"
-            value={`${found}`}
-            sub="identical weights, zero quality risk"
-            accent="oklch(0.83 0.11 195)"
-          />
-          <HeroStat
-            label={`Available · ${activeRange.long}`}
-            value={usd(available, 0)}
-            sub="what moving to those hosts would have saved"
-            accent="oklch(0.82 0.16 155)"
-          />
-          <HeroStat
-            label="Best single saving"
-            value={bestPct > 0 ? `${bestPct.toFixed(0)}%` : "—"}
-            sub={bestPct > 0 ? "on one workload's host swap" : "nothing left to move"}
-            accent="oklch(0.86 0.09 265)"
-          />
-          <HeroStat
-            label="On cheapest host"
-            value={coveragePct === null ? "—" : `${Math.round(coveragePct)}%`}
-            sub={
-              coveragePct === null
-                ? "not enough priced traffic yet to judge"
-                : "of your spend already optimal"
-            }
-            accent="oklch(0.9 0.03 285)"
-          />
-        </div>
-      </div>
-      <div className="lg:w-[260px]">
-        <OpportunityRing
-          saving={available}
-          spend={measuredSpend}
-          period={activeRange.long}
-          label="Cheaper hosts"
-        />
-      </div>
-    </div>
+    <ListStatsPanel
+      eyebrow={`Cheaper-host check · ${activeRange.long}`}
+      period={activeRange.long}
+      ringSaving={available}
+      ringSpend={measuredSpend}
+      ringLabel="Cheaper hosts"
+      stats={[
+        {
+          label: "Cheaper hosts identified",
+          value: `${found}`,
+          sub: "identical weights, zero quality risk",
+          accent: "oklch(0.83 0.11 195)",
+        },
+        {
+          label: `Available · ${activeRange.long}`,
+          value: usd(available, 0),
+          sub: "what moving to those hosts would have saved",
+          accent: "oklch(0.82 0.16 155)",
+        },
+        {
+          label: "Best single saving",
+          value: bestPct > 0 ? `${bestPct.toFixed(0)}%` : "—",
+          sub: bestPct > 0 ? "on one workload's host swap" : "nothing left to move",
+          accent: "oklch(0.86 0.09 265)",
+        },
+        {
+          label: "On cheapest host",
+          value: coveragePct === null ? "—" : `${Math.round(coveragePct)}%`,
+          sub:
+            coveragePct === null
+              ? "not enough priced traffic yet to judge"
+              : "of your spend already optimal",
+          accent: "oklch(0.9 0.03 285)",
+        },
+      ]}
+    />
+  );
+}
 
+/**
+ * Certify's equivalent of the cheaper-host strip, over List B.
+ *
+ * Same four shapes as the arbitrage panel: what was found, what it is worth
+ * over the window, the best single one, and how much of what we could measure
+ * actually certified.
+ */
+export function BenchmarkStats({ ctl }: { ctl: DashboardController }) {
+  const { data, activeRange } = ctl;
+  const all = data.qualityMatched;
+  const found = levelCount(data, "quality_match");
+  const available = levelSaving(data, "quality_match");
+  const measuredSpend = data.totals.spend;
+  const bestPct = all.length > 0 ? Math.max(...all.map((r) => r.savingPct)) : 0;
+  const certifiable = data.stats.qualityCertifiable ?? data.stats.qualityEvaluated;
+  const rate = certificationRate(data.stats);
+
+  return (
+    <ListStatsPanel
+      eyebrow={`Benchmark check · ${activeRange.long}`}
+      period={activeRange.long}
+      ringSaving={available}
+      ringSpend={measuredSpend}
+      ringLabel="Certified switches"
+      stats={[
+        {
+          label: "Certified switches found",
+          value: `${found}`,
+          sub: "quality proven before the swap is offered",
+          accent: "oklch(0.83 0.11 195)",
+        },
+        {
+          label: `Available · ${activeRange.long}`,
+          value: usd(available, 0),
+          sub: "what those certified swaps would have saved",
+          accent: "oklch(0.82 0.16 155)",
+        },
+        {
+          label: "Best single saving",
+          value: bestPct > 0 ? `${bestPct.toFixed(0)}%` : "—",
+          sub: bestPct > 0 ? "on one workload's model swap" : "nothing cleared the bar",
+          accent: "oklch(0.86 0.09 265)",
+        },
+        {
+          label: "Certification rate",
+          value: certifiable > 0 ? `${Math.round(rate)}%` : "—",
+          sub: certifiable > 0 ? "of everything we could measure" : "nothing measurable yet",
+          accent: "oklch(0.9 0.03 285)",
+        },
+      ]}
+    />
   );
 }
 
@@ -278,6 +375,9 @@ export function BenchmarkList({
 
   return (
     <section>
+      {/* Parity with List A: the benchmark check states its own figures. */}
+      <BenchmarkStats ctl={ctl} />
+
       <SectionTitle
         eyebrow="List B · benchmark saves"
         title="Cheaper model, same measured quality"
