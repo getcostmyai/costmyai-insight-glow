@@ -16,7 +16,11 @@ import {
   ObjectiveSelect,
 } from "@/components/dashboard/LevelState";
 
-import { ArbitrageList, NonQualifyingList } from "@/components/dashboard/TransparencyLists";
+import {
+  ArbitrageList,
+  BenchmarkStats,
+  NonQualifyingList,
+} from "@/components/dashboard/TransparencyLists";
 import { WorkloadAlternatives } from "@/components/dashboard/WorkloadAlternatives";
 import { groupFor, isBestRow } from "@/lib/dashboard/group";
 import type { DashboardController } from "@/components/dashboard/useDashboardController";
@@ -202,6 +206,9 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
       <ArbitrageList ctl={ctl} discovery />
 
       <section>
+        {/* Parity with List A's cheaper-host panel, in Certify's own figures. */}
+        <BenchmarkStats ctl={ctl} />
+
         <SectionTitle
           eyebrow="List B · benchmark saves"
           title="Cheaper model, same measured quality"

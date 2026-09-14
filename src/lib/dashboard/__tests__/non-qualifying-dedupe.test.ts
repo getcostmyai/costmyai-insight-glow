@@ -91,3 +91,30 @@ describe("List C dedupe", () => {
     expect(rows[0]!.label).not.toMatch(/quality/i);
   });
 });
+
+describe("List C excludes workloads that have a switch", () => {
+  it("never lists a workload that holds an arbitrage recommendation, even when another engine refused it", () => {
+    const rows = buildNonQualifying(
+      [
+        refusal({
+          kind: "rightsize",
+          reason: "already_right_sized",
+          detail: "openai/gpt-4 is already the right size for this task.",
+        }),
+      ],
+      usage,
+      [{ fromModel: "openai/gpt-4", fromHost: "azure", taskHint: "chat" }],
+    );
+
+    expect(rows).toHaveLength(0);
+  });
+
+  it("still lists a workload whose recommendation belongs to a different workload", () => {
+    const rows = buildNonQualifying([refusal({})], usage, [
+      { fromModel: "openai/gpt-4", fromHost: "azure", taskHint: "summarise" },
+    ]);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.taskHint).toBe("chat");
+  });
+});

@@ -314,11 +314,23 @@ const refusalLabelFor = (reason: string) => REFUSAL_LABEL[reason] ?? reason.repl
 export function buildNonQualifying(
   refusals: Refusal[],
   usage: UsageAggregate[],
+  /**
+   * Every accepted recommendation, from all three mechanisms. A workload that
+   * one engine refused is not a workload with nothing to switch to: rightsize
+   * saying "already right sized" while arbitrage found a cheaper host is a
+   * single engine's verdict, not the product's. List C states "no switch
+   * offered", so any workload holding a real switch anywhere is excluded here.
+   */
+  recommendations: { fromModel: string; fromHost: string; taskHint: string }[] = [],
 ): NonQualifyingWorkload[] {
   const usageByKey = new Map(usage.map((u) => [`${u.model_key}|${u.host}|${u.task_hint}`, u]));
+  const switched = new Set(
+    recommendations.map((r) => `${r.fromModel}|${r.fromHost}|${r.taskHint}`),
+  );
   const byWorkload = new Map<string, Refusal[]>();
   for (const r of refusals) {
     const key = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
+    if (switched.has(key)) continue;
     const group = byWorkload.get(key);
     if (group) group.push(r);
     else byWorkload.set(key, [r]);
@@ -1378,7 +1390,11 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    * List C. Every workload an engine evaluated and refused, deduped to one row
    * per workload the way Govern's list already is.
    */
-  const nonQualifying: NonQualifyingWorkload[] = buildNonQualifying(result.refusals, usage);
+  const nonQualifying: NonQualifyingWorkload[] = buildNonQualifying(result.refusals, usage, [
+    ...result.hostArbitrage,
+    ...result.qualityMatched,
+    ...result.oversized,
+  ]);
 
 
   /** One shared statement of how the four levels' counts relate. */
