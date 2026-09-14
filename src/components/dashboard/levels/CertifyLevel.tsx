@@ -74,6 +74,14 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   // The two checks this level is responsible for, deduped per workload by the
   // server. Never the three-mechanism total: Certify cannot see the third.
   const certifyIdentified = data.certifySavings.identified;
+  /**
+   * The only figure entitled to the phrase "only a benchmark can unlock".
+   * Computed server-side as the certified rows whose workload has no
+   * cheaper-host switch at all, so nothing in it is reachable without a
+   * benchmark. Always at or below the gross benchmark figure.
+   */
+  const benchmarkOnly = data.certifySavings.benchmarkOnly;
+  const benchmarkAlsoArbitrage = Math.max(0, benchmarkSaving - benchmarkOnly);
 
   // Dispatch 172. Refusals are split by whether a measurement actually
   // happened. A workload with no instrument for its task class was never
@@ -98,7 +106,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
    * The ring still shows the deduped `certifySavings.identified` figure — what
    * is counted did not change, only how it is laid out.
    */
-  const certifyArithmetic = `${usd(arbitrageSaving, 0)} from cheaper hosts, plus ${usd(benchmarkSaving, 0)} from certified model swaps on top of that. Where one workload qualifies for both, only the larger of its two savings can ever be banked, so the two figures combine to ${usd(certifyIdentified, 0)} identified on this level rather than adding up.`;
+  const certifyArithmetic = `The cheaper-host check found ${usd(arbitrageSaving, 0)} and the benchmark check found ${usd(benchmarkSaving, 0)}, but ${usd(benchmarkAlsoArbitrage, 0)} of that benchmark money sits on workloads a cheaper host already reaches, so only ${usd(benchmarkOnly, 0)} of it needs a benchmark at all. A workload can only be saved on once, and we keep the larger of its two options, which is why the two checks come to ${usd(certifyIdentified, 0)} identified on this level instead of adding up.`;
 
   return (
     <>
@@ -113,7 +121,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
         }
         headline={
           <>
-            <span className="num text-[oklch(0.83_0.11_195)]">{usd(benchmarkSaving)}</span>{" "}
+            <span className="num text-[oklch(0.83_0.11_195)]">{usd(benchmarkOnly)}</span>{" "}
             <span className="text-white/80">
               in the {activeRange.long} that only a benchmark can unlock.
             </span>
@@ -137,7 +145,13 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Benchmark saving"
               value={usd(benchmarkSaving, 0)}
-              sub="Different model, quality proven before it is shown"
+              sub="Different model, quality proven before it is shown, including workloads a cheaper host also reaches"
+              accent="oklch(0.83 0.11 195)"
+            />
+            <HeroStat
+              label="Benchmark only"
+              value={usd(benchmarkOnly, 0)}
+              sub="No cheaper host exists for these workloads, so nothing but a benchmark unlocks them"
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat

@@ -14,7 +14,7 @@ import { SwitchAction, actionLabelFor } from "@/components/dashboard/ExecutionNo
 import { FrictionTierBadge } from "@/components/dashboard/FrictionTierBadge";
 import { SupersededNote } from "@/components/dashboard/SupersededNote";
 import type { WorkloadOption } from "@/lib/dashboard/group";
-import { isHeadlineEligible, CERTIFICATION_MARGIN_CAP } from "@/lib/engine/equivalence";
+import { CERTIFICATION_MARGIN_CAP } from "@/lib/engine/equivalence";
 
 /** One certified switch opportunity, ranked by saving. */
 export function SwitchCard({
@@ -93,8 +93,17 @@ export function SwitchCard({
   const armed = !discovery && isSameTarget(activeSwitch, row.toModel, row.toHost);
   const superseded = !discovery && !!activeSwitch && !armed;
 
+  /**
+   * Display only. "Strong match" means the replacement scored measurably
+   * higher, which is still the margin cap and no longer the same question as
+   * headline eligibility: an even match now counts toward headline money while
+   * still reading, correctly, as an even match on the card.
+   */
   const isStrongMatch =
-    row.kind === "quality" && isHeadlineEligible({ qualityDelta: row.qualityDelta ?? null });
+    row.kind === "quality" &&
+    row.qualityDelta !== null &&
+    row.qualityDelta !== undefined &&
+    row.qualityDelta >= CERTIFICATION_MARGIN_CAP;
 
   return (
     <div className="group card-surface flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-float)] sm:flex-row sm:items-center">

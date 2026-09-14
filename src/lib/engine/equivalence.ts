@@ -40,16 +40,28 @@ export const UNMEASURED_MARGIN = 0.5;
 export const CERTIFICATION_MARGIN_CAP = 5;
 
 /**
- * Dispatch — the single definition of "headline eligible" for a
- * quality-matched row. A row inside the "equivalent" band (-5 to +5) is a
- * real, valid, certified match — legitimately shown and legitimately
- * activatable — it is excluded only from money a page calls a headline.
+ * The single definition of "headline eligible" for a quality-matched row.
+ *
+ * Claim standard, decided by Robin: an even match counts. A row inside the
+ * measured equivalence band (delta between -CERTIFICATION_MARGIN_CAP and
+ * +CERTIFICATION_MARGIN_CAP) is certified, shown and activatable, so the money
+ * behind it is real money a page may headline. The old rule demanded the
+ * replacement score measurably HIGHER, which quietly excluded most certified
+ * switches from every headline total.
+ *
+ * Every certified row already satisfies delta >= -margin by construction (the
+ * engine's bar is currentScore - margin), so in practice this is now "any row
+ * carrying a measured quality delta". The null check stays and is the whole
+ * remaining job: host_arbitrage rows are same-model and make no quality claim,
+ * oversized rows are governed by their own required-tier gate, and neither
+ * belongs in a benchmark figure.
+ *
  * Previously reimplemented inline in two places (dashboard.server.ts's
- * aggregate totals and, missing, figures.ts's levelSaving); both now
- * import this one definition so they cannot drift apart again.
+ * aggregate totals and, missing, figures.ts's levelSaving); both now import
+ * this one definition so they cannot drift apart again.
  */
 export const isHeadlineEligible = (r: { qualityDelta: number | null }): boolean =>
-  r.qualityDelta !== null && r.qualityDelta >= CERTIFICATION_MARGIN_CAP;
+  r.qualityDelta !== null;
 
 
 /**
