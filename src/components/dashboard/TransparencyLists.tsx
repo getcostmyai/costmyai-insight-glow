@@ -162,13 +162,15 @@ export function ArbitrageStats({ ctl }: { ctl: DashboardController }) {
  *
  * Same four shapes as the arbitrage panel: what was found, what it is worth
  * over the window, the best single one, and how much of what we could measure
- * actually certified.
+ * actually certified. The "available" figure is the benchmark-only portion —
+ * certified swaps on workloads no cheaper host already reaches — so the ring
+ * adds cleanly to the arbitrage panel instead of double-counting overlap.
  */
 export function BenchmarkStats({ ctl }: { ctl: DashboardController }) {
   const { data, activeRange } = ctl;
   const all = data.qualityMatched;
   const found = levelCount(data, "quality_match");
-  const available = levelSaving(data, "quality_match");
+  const available = data.certifySavings.benchmarkOnly;
   const measuredSpend = data.totals.spend;
   const bestPct = all.length > 0 ? Math.max(...all.map((r) => r.savingPct)) : 0;
   const certifiable = data.stats.qualityCertifiable ?? data.stats.qualityEvaluated;
@@ -191,7 +193,7 @@ export function BenchmarkStats({ ctl }: { ctl: DashboardController }) {
         {
           label: `Available · ${activeRange.long}`,
           value: usd(available, 0),
-          sub: "what those certified swaps would have saved",
+          sub: "certified swaps not already reachable by a cheaper host",
           accent: "oklch(0.82 0.16 155)",
         },
         {
