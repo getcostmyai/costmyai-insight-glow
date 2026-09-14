@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-14T20:03:46.220Z",
+  "generatedAt": "2026-09-14T20:54:15.071Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -197,7 +197,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 515,
+      "line": 527,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -206,7 +206,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 527,
+      "line": 539,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -215,7 +215,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 539,
+      "line": 551,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -224,7 +224,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 545,
+      "line": 557,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -233,7 +233,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 550,
+      "line": 562,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -242,7 +242,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 556,
+      "line": 568,
       "table": "switches",
       "filters": [
         "org_id",
@@ -252,7 +252,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 570,
+      "line": 582,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -261,7 +261,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 576,
+      "line": 588,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -270,7 +270,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 582,
+      "line": 594,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -280,7 +280,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 593,
+      "line": 605,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -289,7 +289,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 603,
+      "line": 615,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -298,7 +298,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 967,
+      "line": 979,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -307,7 +307,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 982,
+      "line": 994,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -316,7 +316,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1113,
+      "line": 1125,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -325,7 +325,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1136,
+      "line": 1148,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -334,7 +334,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1144,
+      "line": 1156,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
