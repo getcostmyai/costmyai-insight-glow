@@ -9,6 +9,7 @@ const friction = {
   label: "Some setup",
   summary: "Different provider, same request shape.",
   revalidationRecommended: false,
+  apiDistance: "same-shape" as const,
   parity: [{ label: "Request shape", status: "ok" as const, detail: "identical" }],
 };
 
