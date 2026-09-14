@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-01T16:08:54.395Z",
+  "generatedAt": "2026-09-14T20:03:46.220Z",
   "queries": [
     {
       "file": "src/lib/admin/customers.server.ts",
@@ -197,7 +197,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 431,
+      "line": 515,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -206,7 +206,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 443,
+      "line": 527,
       "table": "host_prices",
       "filters": [
         "is_active"
@@ -215,7 +215,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 455,
+      "line": 539,
       "table": "benchmarks",
       "filters": [
         "is_fixture"
@@ -224,7 +224,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 461,
+      "line": 545,
       "table": "benchmark_margins",
       "filters": [
         "is_fixture"
@@ -233,7 +233,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 466,
+      "line": 550,
       "table": "model_catalog",
       "filters": [
         "is_active"
@@ -242,7 +242,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 472,
+      "line": 556,
       "table": "switches",
       "filters": [
         "org_id",
@@ -252,7 +252,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 486,
+      "line": 570,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -261,7 +261,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 492,
+      "line": 576,
       "table": "objectives",
       "filters": [
         "org_id"
@@ -270,7 +270,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 498,
+      "line": 582,
       "table": "subscriptions",
       "filters": [
         "org_id",
@@ -280,7 +280,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 509,
+      "line": 593,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -289,7 +289,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 519,
+      "line": 603,
       "table": "pricing_snapshots",
       "filters": [
         "status"
@@ -298,7 +298,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 883,
+      "line": 967,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -307,7 +307,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 898,
+      "line": 982,
       "table": "usage_rollups",
       "filters": [
         "org_id"
@@ -316,7 +316,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1029,
+      "line": 1113,
       "table": "switch_events",
       "filters": [
         "org_id"
@@ -325,7 +325,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1052,
+      "line": 1136,
       "table": "billing_captures",
       "filters": [
         "org_id"
@@ -334,7 +334,7 @@
     },
     {
       "file": "src/lib/dashboard.server.ts",
-      "line": 1060,
+      "line": 1144,
       "table": "billing_reconciliations",
       "filters": [
         "superseded_at"
@@ -537,6 +537,34 @@
         "is_active"
       ],
       "snippet": ".from(\"model_catalog\").select(\"model_key, display_name\").eq(\"is_active\", true).range(f, t)"
+    },
+    {
+      "file": "src/lib/feedback.functions.ts",
+      "line": 81,
+      "table": "feedback_posts",
+      "filters": [],
+      "snippet": ".from(\"feedback_posts\").select(POST_SELECT).order(\"created_at\", { ascending: false })"
+    },
+    {
+      "file": "src/lib/feedback.functions.ts",
+      "line": 94,
+      "table": "feedback_posts",
+      "filters": [],
+      "snippet": ".from(\"feedback_posts\").select(POST_SELECT).eq(\"id\", data.id).maybeSingle()"
+    },
+    {
+      "file": "src/lib/feedback.functions.ts",
+      "line": 188,
+      "table": "feedback_posts",
+      "filters": [],
+      "snippet": ".from(\"feedback_posts\") .select(\"title, profiles!feedback_posts_author_id_fkey(email)\") .eq(\"id\", opts.postId)"
+    },
+    {
+      "file": "src/lib/feedback.functions.ts",
+      "line": 229,
+      "table": "feedback_posts",
+      "filters": [],
+      "snippet": ".from(\"feedback_posts\") .select(\"author_id\") .eq(\"id\", data.postId)"
     },
     {
       "file": "src/lib/ingest/billing.server.ts",
