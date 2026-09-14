@@ -15,6 +15,7 @@ import type {
   PlanTier,
   PriceRow,
   Recommendation,
+  Refusal,
   UsageAggregate,
 } from "./engine/types";
 import { isHeadlineEligible } from "./engine/equivalence";
@@ -153,6 +154,11 @@ export interface NonQualifyingWorkload {
   label: string;
   detail: string;
   monthlySpend: number;
+  /**
+   * The other engines' verdicts on the same workload, most informative first.
+   * Empty when only one engine refused it.
+   */
+  alsoLabels: string[];
 }
 
 /** The four-cell certification matrix, in the words a customer reads. */
@@ -168,7 +174,11 @@ export const REFUSAL_LABEL: Record<string, string> = {
   benchmark_not_discriminating:
     "no model currently differentiates enough on this to certify a switch",
   no_candidate_clears_bar: "quality gap outside the equivalence band",
-  no_cheaper_candidate: "already the cheapest model that holds this quality",
+  // Emitted by three engines with three different meanings: no cheaper host
+  // for the same model (arbitrage), no cheaper model that holds the measured
+  // quality (equivalence), no cheaper model at the required tier (rightsize).
+  // The label has to be true of all three, so it names neither host nor score.
+  no_cheaper_candidate: "nothing cheaper to switch to",
   latency_ceiling_unmet: "no equal-quality option met your latency ceiling",
   saving_below_floor: "the saving is too small to be worth a switch",
 };
@@ -261,6 +271,80 @@ const round2 = (n: number) => {
   }
   return Math.round(n * 100) / 100;
 };
+
+/**
+ * Most informative refusal first. Reasons that report a completed evaluation
+ * rank above reasons that report missing inputs, because the first tells the
+ * reader something about their workload and the second tells them something
+ * about our data. Anything unlisted sorts last.
+ */
+const REFUSAL_RANK: string[] = [
+  "no_candidate_clears_bar",
+  "latency_ceiling_unmet",
+  "saving_below_floor",
+  "no_cheaper_candidate",
+  "already_right_sized",
+  "benchmark_not_discriminating",
+  "benchmark_data_stale",
+  "no_baseline_score",
+  "no_baseline_price",
+  "no_target_tier_priced",
+  "no_valid_instrument",
+  "task_label_low_confidence",
+  "insufficient_sample",
+  "no_model_tier",
+];
+
+const refusalRank = (reason: string) => {
+  const i = REFUSAL_RANK.indexOf(reason);
+  return i === -1 ? REFUSAL_RANK.length : i;
+};
+
+const refusalLabelFor = (reason: string) => REFUSAL_LABEL[reason] ?? reason.replace(/_/g, " ");
+
+/**
+ * List C rows. Arbitrage, equivalence and rightsize each walk the same usage
+ * rows independently, so one workload can arrive with up to three refusals.
+ * Rendered as separate rows those read as the product contradicting itself on
+ * the same model, host and spend, so the workload gets exactly one row: the
+ * most informative verdict leads it and the rest sit beside it, which keeps
+ * every verdict on screen without ever claiming two things at once. Same
+ * one-workload-one-row rule `dedupeByWorkload` applies to Govern's list.
+ */
+export function buildNonQualifying(
+  refusals: Refusal[],
+  usage: UsageAggregate[],
+): NonQualifyingWorkload[] {
+  const usageByKey = new Map(usage.map((u) => [`${u.model_key}|${u.host}|${u.task_hint}`, u]));
+  const byWorkload = new Map<string, Refusal[]>();
+  for (const r of refusals) {
+    const key = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
+    const group = byWorkload.get(key);
+    if (group) group.push(r);
+    else byWorkload.set(key, [r]);
+  }
+  return [...byWorkload.entries()]
+    .map(([key, group]) => {
+      const ordered = [...group].sort((a, b) => refusalRank(a.reason) - refusalRank(b.reason));
+      const primary = ordered[0]!;
+      const u = usageByKey.get(key);
+      const label = refusalLabelFor(primary.reason);
+      const alsoLabels = [...new Set(ordered.slice(1).map((r) => refusalLabelFor(r.reason)))].filter(
+        (l) => l !== label,
+      );
+      return {
+        fromModel: primary.fromModel,
+        fromHost: primary.fromHost,
+        taskHint: primary.taskHint,
+        reason: primary.reason,
+        label,
+        detail: primary.detail,
+        monthlySpend: u ? round2((u.cost_usd / Math.max(1, u.days)) * 30) : 0,
+        alsoLabels,
+      };
+    })
+    .sort((a, b) => b.monthlySpend - a.monthlySpend);
+}
 
 /** Real percentage, one decimal, always short of a bare 100%. */
 const pct1 = (n: number) => Math.min(99.9, Math.max(0, Math.round(n * 10) / 10));
@@ -1291,26 +1375,10 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   governRefusals.sort((a, b) => b.saving - a.saving);
 
   /**
-   * List C. Every workload the equivalence check evaluated and refused, with
-   * the engine's own verdict code — never invented copy — and what that
-   * workload costs per month, so a refusal can be weighed against its bill.
+   * List C. Every workload an engine evaluated and refused, deduped to one row
+   * per workload the way Govern's list already is.
    */
-  const usageByKey = new Map(usage.map((u) => [`${u.model_key}|${u.host}|${u.task_hint}`, u]));
-  const nonQualifying: NonQualifyingWorkload[] = result.refusals
-    .map((r) => {
-      const u = usageByKey.get(`${r.fromModel}|${r.fromHost}|${r.taskHint}`);
-      const monthlySpend = u ? round2((u.cost_usd / Math.max(1, u.days)) * 30) : 0;
-      return {
-        fromModel: r.fromModel,
-        fromHost: r.fromHost,
-        taskHint: r.taskHint,
-        reason: r.reason,
-        label: REFUSAL_LABEL[r.reason] ?? r.reason.replace(/_/g, " "),
-        detail: r.detail,
-        monthlySpend,
-      };
-    })
-    .sort((a, b) => b.monthlySpend - a.monthlySpend);
+  const nonQualifying: NonQualifyingWorkload[] = buildNonQualifying(result.refusals, usage);
 
 
   /** One shared statement of how the four levels' counts relate. */

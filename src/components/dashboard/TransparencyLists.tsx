@@ -384,9 +384,11 @@ export function NonQualifyingList({
       ) : (
 
         <div className="card-surface divide-y divide-border overflow-hidden">
-          {rows.map((r) => (
+          {rows.map((r, i) => (
             <div
-              key={`${r.fromModel}|${r.fromHost}|${r.taskHint}`}
+              /* Deduped one row per workload upstream; the index keeps the key
+                 unique even if a future upstream change stops guaranteeing it. */
+              key={`${r.fromModel}|${r.fromHost}|${r.taskHint}#${i}`}
               className="flex flex-wrap items-center gap-x-6 gap-y-2 p-5"
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -417,6 +419,11 @@ export function NonQualifyingList({
               <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold tracking-wide text-muted-foreground">
                 {r.label}
               </span>
+              {r.alsoLabels.length > 0 ? (
+                <span className="text-[11px] text-muted-foreground">
+                  also: {r.alsoLabels.join(", ")}
+                </span>
+              ) : null}
               <div className="text-right">
                 <div className="num text-base text-spend">{usd(r.monthlySpend, 0)}</div>
                 <p className="text-[11px] text-muted-foreground">

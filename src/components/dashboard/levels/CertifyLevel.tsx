@@ -94,7 +94,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
    * The ring still shows the deduped `certifySavings.identified` figure — what
    * is counted did not change, only how it is laid out.
    */
-  const certifyArithmetic = `${usd(arbitrageSaving, 0)} from cheaper hosts and ${usd(benchmarkSaving, 0)} from certified model swaps is ${usd(certifyIdentified, 0)} identified on this level, each workload counted once.`;
+  const certifyArithmetic = `${usd(arbitrageSaving, 0)} from cheaper hosts, plus ${usd(benchmarkSaving, 0)} from certified model swaps on top of that. Where one workload qualifies for both, only the larger of its two savings can ever be banked, so the two figures combine to ${usd(certifyIdentified, 0)} identified on this level rather than adding up.`;
 
   return (
     <>
