@@ -191,8 +191,7 @@ async function notifyAuthor(opts: { postId: string; statusLabel?: string; detail
       .maybeSingle();
     const email = (post as any)?.profiles?.email as string | undefined;
     if (!email) return;
-    const origin =
-      process.env["SITE_ORIGIN"] ?? process.env["VITE_SITE_ORIGIN"] ?? "https://www.costmyai.com";
+    const { feedbackPostUrl } = await import("./email-links");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
     await sendTemplateEmail("feedback-status", email, {
       templateData: {
