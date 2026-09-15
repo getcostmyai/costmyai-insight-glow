@@ -66,7 +66,8 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-function HomePage() {
+// Exported so a component test can render the page directly, without a router.
+export function HomePage() {
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
 
   return (
