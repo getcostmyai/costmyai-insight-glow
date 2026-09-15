@@ -88,13 +88,10 @@ async function renderHomeWithFailedStats() {
   const stats = await ensureMarketingStats(queryClient);
   expect(stats.degraded).toBe(true);
 
-  const Component = (Route as unknown as { options: { component: () => React.ReactElement } }).options
-    .component;
-
   render(
     <QueryClientProvider client={queryClient}>
       <Suspense fallback={<div>loading</div>}>
-        <Component />
+        <HomePage />
       </Suspense>
     </QueryClientProvider>,
   );
