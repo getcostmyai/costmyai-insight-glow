@@ -6,7 +6,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { InstagramMark } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 
 
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/contact")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: ContactPage,
 });
 

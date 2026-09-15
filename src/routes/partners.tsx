@@ -11,7 +11,7 @@ import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
 
 type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/partners")({
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(partnerLadderQuery()),
-      context.queryClient.ensureQueryData(marketingStatsQuery()),
+      ensureMarketingStats(context.queryClient),
     ]);
   },
   head: () => ({

@@ -5,7 +5,7 @@ import { Mail } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/api/")({
   head: () => ({
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/")({
     ],
     links: [{ rel: "canonical", href: "/api" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: ApiPage,
 });
 

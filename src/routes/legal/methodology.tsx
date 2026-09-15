@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/legal/methodology")({
   head: () => ({
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/legal/methodology")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/legal/methodology" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: MethodologyPage,
 });
 

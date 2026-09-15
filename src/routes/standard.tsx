@@ -11,7 +11,7 @@ import {
   RungStack,
 } from "@/components/marketing/StandardVisuals";
 import { intelligenceQuery } from "@/lib/intelligence.functions";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import type { BandWinner } from "@/lib/intelligence/intelligence.server";
 
 
@@ -95,7 +95,7 @@ export const Route = createFileRoute("/standard")({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(intelligenceQuery()),
-      context.queryClient.ensureQueryData(marketingStatsQuery()),
+      ensureMarketingStats(context.queryClient),
     ]),
   component: StandardPage,
 });

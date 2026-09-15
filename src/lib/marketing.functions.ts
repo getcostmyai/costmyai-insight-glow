@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
 
 import type { MarketingStats } from "./marketing.server";
 
@@ -26,3 +26,36 @@ export const marketingStatsQuery = () =>
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
   });
+
+/**
+ * Client-side mirror of the server's degraded shape, duplicated here so the
+ * route files never pull the server module into the browser graph.
+ */
+export const DEGRADED_MARKETING_STATS: MarketingStats = {
+  modelCount: 0,
+  providerCount: 0,
+  priceChangesTracked: 0,
+  trackingSince: null,
+  providers: [],
+  live: false,
+  degraded: true,
+};
+
+/**
+ * Loader entry point for every marketing route.
+ *
+ * The read itself already degrades server-side; this also covers the transport
+ * failing outright. Either way the cache is seeded with a resolvable value, so
+ * the page's `useSuspenseQuery` renders counters or nothing instead of leaving
+ * the document request unanswered.
+ */
+export async function ensureMarketingStats(queryClient: QueryClient): Promise<MarketingStats> {
+  const options = marketingStatsQuery();
+  try {
+    return await queryClient.ensureQueryData(options);
+  } catch (err) {
+    console.error("[marketing-stats] loader degraded:", err instanceof Error ? err.message : err);
+    queryClient.setQueryData(options.queryKey, DEGRADED_MARKETING_STATS);
+    return DEGRADED_MARKETING_STATS;
+  }
+}
