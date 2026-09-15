@@ -1,4 +1,5 @@
 import { esc, renderSvgToPng } from "@/lib/brand/render.server";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/public-origin";
 
 /**
  * Partner badge and LinkedIn banners.
@@ -208,8 +209,15 @@ export const BANNER_SPEC: Record<BannerFormat, { width: number; height: number; 
   company: { width: 4200, height: 700, label: "LinkedIn company page cover" },
 };
 
-export function badgeVerifyUrl(origin: string, code: string): string {
-  return `${origin.replace(/\/$/, "")}/partner/verify/${code.toUpperCase()}`;
+/**
+ * The verification URL baked into every badge and banner.
+ *
+ * Pinned to the production origin: these pixels are pasted into LinkedIn and
+ * decks, so a URL derived from whatever host rendered them would ship a preview
+ * link into somebody's profile banner.
+ */
+export function badgeVerifyUrl(_origin: string, code: string): string {
+  return `${PUBLIC_SITE_ORIGIN}/partner/verify/${code.toUpperCase()}`;
 }
 
 export async function renderBadgePng(
