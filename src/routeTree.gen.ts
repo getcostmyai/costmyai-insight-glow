@@ -56,6 +56,7 @@ import { Route as AuthenticatedPartnerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as IntelligenceNotesIndexRouteImport } from './routes/intelligence.notes.index'
 import { Route as AuthenticatedWorkspaceIndexRouteImport } from './routes/_authenticated/workspace.index'
+import { Route as AuthenticatedPartnerIndexRouteImport } from './routes/_authenticated/partner.index'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as PartnerVerifyCodeRouteImport } from './routes/partner_.verify.$code'
@@ -66,6 +67,8 @@ import { Route as AuthenticatedWorkspaceRightsizeRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkspaceGovernRouteImport } from './routes/_authenticated/workspace.govern'
 import { Route as AuthenticatedWorkspaceCompareRouteImport } from './routes/_authenticated/workspace.compare'
 import { Route as AuthenticatedWorkspaceCertifyRouteImport } from './routes/_authenticated/workspace.certify'
+import { Route as AuthenticatedPartnerSettingsRouteImport } from './routes/_authenticated/partner.settings'
+import { Route as AuthenticatedPartnerEarningsRouteImport } from './routes/_authenticated/partner.earnings'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
 import { Route as AuthenticatedBetaPlanRouteImport } from './routes/_authenticated/beta.$plan'
 import { Route as AuthenticatedAdminReferralsRouteImport } from './routes/_authenticated/admin/referrals'
@@ -340,6 +343,12 @@ const AuthenticatedWorkspaceIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
   } as any)
+const AuthenticatedPartnerIndexRoute =
+  AuthenticatedPartnerIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
 const AuthenticatedFeedbackIndexRoute =
   AuthenticatedFeedbackIndexRouteImport.update({
     id: '/feedback/',
@@ -394,6 +403,18 @@ const AuthenticatedWorkspaceCertifyRoute =
     id: '/certify',
     path: '/certify',
     getParentRoute: () => AuthenticatedWorkspaceRoute,
+  } as any)
+const AuthenticatedPartnerSettingsRoute =
+  AuthenticatedPartnerSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
+const AuthenticatedPartnerEarningsRoute =
+  AuthenticatedPartnerEarningsRouteImport.update({
+    id: '/earnings',
+    path: '/earnings',
+    getParentRoute: () => AuthenticatedPartnerRoute,
   } as any)
 const AuthenticatedFeedbackIdRoute = AuthenticatedFeedbackIdRouteImport.update({
   id: '/feedback/$id',
@@ -624,7 +645,7 @@ export interface FileRoutesByFullPath {
   '/standard': typeof StandardRoute
   '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
-  '/partner': typeof AuthenticatedPartnerRoute
+  '/partner': typeof AuthenticatedPartnerRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
@@ -660,6 +681,8 @@ export interface FileRoutesByFullPath {
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/beta/$plan': typeof AuthenticatedBetaPlanRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
+  '/partner/earnings': typeof AuthenticatedPartnerEarningsRoute
+  '/partner/settings': typeof AuthenticatedPartnerSettingsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -670,6 +693,7 @@ export interface FileRoutesByFullPath {
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
+  '/partner/': typeof AuthenticatedPartnerIndexRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -718,7 +742,6 @@ export interface FileRoutesByTo {
   '/standard': typeof StandardRoute
   '/terms': typeof TermsRoute
   '/billing': typeof AuthenticatedBillingRoute
-  '/partner': typeof AuthenticatedPartnerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -753,6 +776,8 @@ export interface FileRoutesByTo {
   '/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/beta/$plan': typeof AuthenticatedBetaPlanRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
+  '/partner/earnings': typeof AuthenticatedPartnerEarningsRoute
+  '/partner/settings': typeof AuthenticatedPartnerSettingsRoute
   '/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -763,6 +788,7 @@ export interface FileRoutesByTo {
   '/partner/verify/$code': typeof PartnerVerifyCodeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
+  '/partner': typeof AuthenticatedPartnerIndexRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -815,7 +841,7 @@ export interface FileRoutesById {
   '/standard': typeof StandardRoute
   '/terms': typeof TermsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
-  '/_authenticated/partner': typeof AuthenticatedPartnerRoute
+  '/_authenticated/partner': typeof AuthenticatedPartnerRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRouteWithChildren
@@ -851,6 +877,8 @@ export interface FileRoutesById {
   '/_authenticated/admin/referrals': typeof AuthenticatedAdminReferralsRoute
   '/_authenticated/beta/$plan': typeof AuthenticatedBetaPlanRoute
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
+  '/_authenticated/partner/earnings': typeof AuthenticatedPartnerEarningsRoute
+  '/_authenticated/partner/settings': typeof AuthenticatedPartnerSettingsRoute
   '/_authenticated/workspace/certify': typeof AuthenticatedWorkspaceCertifyRoute
   '/_authenticated/workspace/compare': typeof AuthenticatedWorkspaceCompareRoute
   '/_authenticated/workspace/govern': typeof AuthenticatedWorkspaceGovernRoute
@@ -861,6 +889,7 @@ export interface FileRoutesById {
   '/partner_/verify/$code': typeof PartnerVerifyCodeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
+  '/_authenticated/partner/': typeof AuthenticatedPartnerIndexRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
@@ -949,6 +978,8 @@ export interface FileRouteTypes {
     | '/admin/referrals'
     | '/beta/$plan'
     | '/feedback/$id'
+    | '/partner/earnings'
+    | '/partner/settings'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -959,6 +990,7 @@ export interface FileRouteTypes {
     | '/partner/verify/$code'
     | '/admin/'
     | '/feedback/'
+    | '/partner/'
     | '/workspace/'
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
@@ -1007,7 +1039,6 @@ export interface FileRouteTypes {
     | '/standard'
     | '/terms'
     | '/billing'
-    | '/partner'
     | '/settings'
     | '/team'
     | '/auth/reset-password'
@@ -1042,6 +1073,8 @@ export interface FileRouteTypes {
     | '/admin/referrals'
     | '/beta/$plan'
     | '/feedback/$id'
+    | '/partner/earnings'
+    | '/partner/settings'
     | '/workspace/certify'
     | '/workspace/compare'
     | '/workspace/govern'
@@ -1052,6 +1085,7 @@ export interface FileRouteTypes {
     | '/partner/verify/$code'
     | '/admin'
     | '/feedback'
+    | '/partner'
     | '/workspace'
     | '/intelligence/notes'
     | '/api/public/badge/$code'
@@ -1139,6 +1173,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/referrals'
     | '/_authenticated/beta/$plan'
     | '/_authenticated/feedback/$id'
+    | '/_authenticated/partner/earnings'
+    | '/_authenticated/partner/settings'
     | '/_authenticated/workspace/certify'
     | '/_authenticated/workspace/compare'
     | '/_authenticated/workspace/govern'
@@ -1149,6 +1185,7 @@ export interface FileRouteTypes {
     | '/partner_/verify/$code'
     | '/_authenticated/admin/'
     | '/_authenticated/feedback/'
+    | '/_authenticated/partner/'
     | '/_authenticated/workspace/'
     | '/intelligence/notes/'
     | '/api/public/badge/$code'
@@ -1580,6 +1617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
     }
+    '/_authenticated/partner/': {
+      id: '/_authenticated/partner/'
+      path: '/'
+      fullPath: '/partner/'
+      preLoaderRoute: typeof AuthenticatedPartnerIndexRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
     '/_authenticated/feedback/': {
       id: '/_authenticated/feedback/'
       path: '/feedback'
@@ -1649,6 +1693,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/workspace/certify'
       preLoaderRoute: typeof AuthenticatedWorkspaceCertifyRouteImport
       parentRoute: typeof AuthenticatedWorkspaceRoute
+    }
+    '/_authenticated/partner/settings': {
+      id: '/_authenticated/partner/settings'
+      path: '/settings'
+      fullPath: '/partner/settings'
+      preLoaderRoute: typeof AuthenticatedPartnerSettingsRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
+    '/_authenticated/partner/earnings': {
+      id: '/_authenticated/partner/earnings'
+      path: '/earnings'
+      fullPath: '/partner/earnings'
+      preLoaderRoute: typeof AuthenticatedPartnerEarningsRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
     }
     '/_authenticated/feedback/$id': {
       id: '/_authenticated/feedback/$id'
@@ -1919,6 +1977,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedPartnerRouteChildren {
+  AuthenticatedPartnerEarningsRoute: typeof AuthenticatedPartnerEarningsRoute
+  AuthenticatedPartnerSettingsRoute: typeof AuthenticatedPartnerSettingsRoute
+  AuthenticatedPartnerIndexRoute: typeof AuthenticatedPartnerIndexRoute
+}
+
+const AuthenticatedPartnerRouteChildren: AuthenticatedPartnerRouteChildren = {
+  AuthenticatedPartnerEarningsRoute: AuthenticatedPartnerEarningsRoute,
+  AuthenticatedPartnerSettingsRoute: AuthenticatedPartnerSettingsRoute,
+  AuthenticatedPartnerIndexRoute: AuthenticatedPartnerIndexRoute,
+}
+
+const AuthenticatedPartnerRouteWithChildren =
+  AuthenticatedPartnerRoute._addFileChildren(AuthenticatedPartnerRouteChildren)
+
 interface AuthenticatedWorkspaceRouteChildren {
   AuthenticatedWorkspaceCertifyRoute: typeof AuthenticatedWorkspaceCertifyRoute
   AuthenticatedWorkspaceCompareRoute: typeof AuthenticatedWorkspaceCompareRoute
@@ -1943,7 +2016,7 @@ const AuthenticatedWorkspaceRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
-  AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRoute
+  AuthenticatedPartnerRoute: typeof AuthenticatedPartnerRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRouteWithChildren
@@ -1963,7 +2036,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
-  AuthenticatedPartnerRoute: AuthenticatedPartnerRoute,
+  AuthenticatedPartnerRoute: AuthenticatedPartnerRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRouteWithChildren,
