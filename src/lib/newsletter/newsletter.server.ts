@@ -109,15 +109,13 @@ export async function subscribe(
     if (error) throw error;
   }
 
-  const { siteOrigin } = await import("../partner-welcome.server");
-  const origin = siteOrigin();
-
   try {
     const { sendTemplateEmail } = await import("../email-templates/send-email");
+    const { newsletterConfirmUrl, newsletterUnsubscribeUrl } = await import("../email-links");
     const result = await sendTemplateEmail("newsletter-confirm", email, {
       templateData: {
-        confirmUrl: confirmUrl(token, origin),
-        unsubscribeUrl: unsubscribeUrl(token, origin),
+        confirmUrl: newsletterConfirmUrl(token),
+        unsubscribeUrl: newsletterUnsubscribeUrl(token),
       },
       // One token, one mail. A double-submit that lands on the same token
       // cannot produce two messages.

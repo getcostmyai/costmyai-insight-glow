@@ -136,7 +136,7 @@ export const template = {
     partnerName: 'Vincent',
     signInEmail: 'vincent@example.com',
     referralCode: 'VINCENT',
-    referralLink: 'https://costmyai-insight-glow.lovable.app/r/VINCENT',
+    referralLink: partnerReferralUrl('VINCENT'),
     fromApplication: false,
   },
 } satisfies TemplateEntry
