@@ -15,7 +15,6 @@ import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.funct
 import type { BandWinner } from "@/lib/intelligence/intelligence.server";
 import { ensurePublicQuery } from "@/lib/public-query";
 import { degradedIntelligence } from "@/lib/intelligence.functions";
-import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 
 /**
@@ -112,7 +111,6 @@ function StandardPage() {
   const { data: live } = useSuspenseQuery(intelligenceQuery());
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   const winner = live.data.bandWinners[0] ?? ILLUSTRATIVE_BAND;
-  const degraded = live.data.degraded === true;
   const isLiveBand = Boolean(live.data.bandWinners[0]);
 
   return (
