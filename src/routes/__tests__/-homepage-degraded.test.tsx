@@ -75,7 +75,9 @@ afterEach(() => {
 
 async function renderHomeWithFailedStats() {
   vi.spyOn(console, "error").mockImplementation(() => {});
-  const { Route } = await import("../index");
+  // The route's own component, imported by name: the build splits route files,
+  // so Route.options.component is a lazy shell that cannot resolve under vitest.
+  const { HomePage } = await import("../index");
   const { ensureMarketingStats } = await import("@/lib/marketing.functions");
 
   const queryClient = new QueryClient({
