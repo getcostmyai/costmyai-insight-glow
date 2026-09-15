@@ -14,6 +14,7 @@ import {
 import { intelligenceQuery } from "@/lib/intelligence.functions";
 import type { IntelligencePayload } from "@/lib/intelligence/intelligence.server";
 import { buildCardMeta, findShareCard } from "@/lib/intelligence/share-cards";
+import { ensurePublicQuery } from "@/lib/public-query";
 
 const GENERIC_META = [
   { title: "Intelligence: live AI price and quality market data | CostMyAI" },
@@ -87,7 +88,13 @@ export const Route = createFileRoute("/intelligence/")({
     const card = typeof search.card === "string" ? search.card : undefined;
     return card ? { card } : {};
   },
-  loader: ({ context }) => context.queryClient.ensureQueryData(intelligenceQuery()),
+  loader: ({ context }) =>
+    ensurePublicQuery(
+      context.queryClient,
+      intelligenceQuery(),
+      degradedIntelligence(),
+      "market-intelligence",
+    ),
   head: ({ loaderData, match }) => buildIndexHead(loaderData?.data, match.search.card),
   component: IntelligencePage,
 });

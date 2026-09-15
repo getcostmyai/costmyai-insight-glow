@@ -12,6 +12,7 @@ import {
 } from "@/components/marketing/IntelligenceReport";
 import { frozenMonthQuery, type FrozenMonth } from "@/lib/intelligence.functions";
 import { buildCardMeta, findShareCard } from "@/lib/intelligence/share-cards";
+import { ensurePublicQuery } from "@/lib/public-query";
 
 /**
  * A shared archive link carries `?card=<id>`. Without reading it, every card on
@@ -96,7 +97,12 @@ export const Route = createFileRoute("/intelligence/$month")({
     return card ? { card } : {};
   },
   loader: async ({ context, params }) => {
-    const res = await context.queryClient.ensureQueryData(frozenMonthQuery(params.month));
+    const res = await ensurePublicQuery(
+      context.queryClient,
+      frozenMonthQuery(params.month),
+      { frozen: null, archive: [] },
+      "frozen-month",
+    );
     if (!res.frozen) throw notFound();
     return res;
   },

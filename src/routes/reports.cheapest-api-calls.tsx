@@ -6,6 +6,8 @@ import { ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
+import { ensurePublicQuery } from "@/lib/public-query";
+import { EMPTY_CATALOG } from "@/lib/public-empty";
 
 const URL = "https://www.costmyai.com/reports/cheapest-api-calls";
 const TITLE = "Cheapest API call 2026: prices compared by model and provider | CostMyAI";
@@ -25,7 +27,8 @@ export const Route = createFileRoute("/reports/cheapest-api-calls")({
     ],
     links: [{ rel: "canonical", href: URL }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery()),
+  loader: ({ context }) =>
+    ensurePublicQuery(context.queryClient, catalogQuery(), EMPTY_CATALOG, "public-catalog"),
   component: CheapestApiCallsPage,
 });
 
