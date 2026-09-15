@@ -42,13 +42,9 @@ interface SignupContext {
   partnerId?: string | null;
 }
 
-function confirmUrl(token: string, origin: string): string {
-  return `${origin}/newsletter/confirm?token=${token}`;
-}
-
-function unsubscribeUrl(token: string, origin: string): string {
-  return `${origin}/newsletter/unsubscribe?token=${token}`;
-}
+// Confirm and unsubscribe links come from the shared outbound builders. The
+// unsubscribe link especially has to keep resolving for the life of the email,
+// so it is pinned to the production origin, never to whatever host sent it.
 
 /**
  * Sign an address up.
@@ -113,15 +109,13 @@ export async function subscribe(
     if (error) throw error;
   }
 
-  const { siteOrigin } = await import("../partner-welcome.server");
-  const origin = siteOrigin();
-
   try {
     const { sendTemplateEmail } = await import("../email-templates/send-email");
+    const { newsletterConfirmUrl, newsletterUnsubscribeUrl } = await import("../email-links");
     const result = await sendTemplateEmail("newsletter-confirm", email, {
       templateData: {
-        confirmUrl: confirmUrl(token, origin),
-        unsubscribeUrl: unsubscribeUrl(token, origin),
+        confirmUrl: newsletterConfirmUrl(token),
+        unsubscribeUrl: newsletterUnsubscribeUrl(token),
       },
       // One token, one mail. A double-submit that lands on the same token
       // cannot produce two messages.

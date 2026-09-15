@@ -12,6 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 
+import { newsletterConfirmUrl, newsletterUnsubscribeUrl } from '../email-links'
 import type { TemplateEntry } from './registry'
 import * as s from './brand'
 
@@ -32,8 +33,8 @@ export interface NewsletterConfirmProps {
 }
 
 const Email = ({
-  confirmUrl = 'https://costmyai.com/newsletter/confirm',
-  unsubscribeUrl = 'https://costmyai.com/newsletter/unsubscribe',
+  confirmUrl = newsletterConfirmUrl(''),
+  unsubscribeUrl = newsletterUnsubscribeUrl(),
   supportEmail = 'mail@costmyai.com',
 }: NewsletterConfirmProps) => (
   <Html lang="en" dir="ltr">
@@ -97,7 +98,7 @@ export const template = {
   subject: 'Confirm your CostMyAI weekly briefing',
   displayName: 'Newsletter confirmation (double opt-in)',
   previewData: {
-    confirmUrl: 'https://costmyai.com/newsletter/confirm?token=example',
-    unsubscribeUrl: 'https://costmyai.com/newsletter/unsubscribe?token=example',
+    confirmUrl: newsletterConfirmUrl('example'),
+    unsubscribeUrl: newsletterUnsubscribeUrl('example'),
   },
 } satisfies TemplateEntry

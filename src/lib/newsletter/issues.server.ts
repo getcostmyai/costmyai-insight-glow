@@ -197,9 +197,12 @@ async function confirmedSubscribers(): Promise<
   return (data ?? []) as Array<{ id: string; email: string; confirm_token: string | null }>;
 }
 
+// The production origin, always. An issue email outlives the host that sent
+// it, so its chart images, archive link and unsubscribe link cannot be built
+// from a request or an environment variable.
 async function origin(): Promise<string> {
-  const { siteOrigin } = await import("../partner-welcome.server");
-  return siteOrigin();
+  const { OUTBOUND_ORIGIN } = await import("../email-links");
+  return OUTBOUND_ORIGIN;
 }
 
 /** Render the real email template to HTML, for the composer preview. */
@@ -211,12 +214,13 @@ export async function renderIssueHtml(input: {
   const { render } = await import("@react-email/render");
   const { template } = await import("../email-templates/newsletter-issue");
   const base = await origin();
+  const links = await import("../email-links");
   return render(
     React.createElement(template.component, {
       title: input.title,
       markdownBody: input.markdownBody,
-      unsubscribeUrl: `${base}/newsletter/unsubscribe?token=preview`,
-      archiveUrl: `${base}/intelligence`,
+      unsubscribeUrl: links.newsletterUnsubscribeUrl("preview"),
+      archiveUrl: links.newsletterArchiveUrl(),
       siteOrigin: base,
     }),
   );
@@ -235,13 +239,14 @@ export async function sendTestIssue(input: {
   if (!issue) throw new Error("Issue not found");
 
   const base = await origin();
+  const links = await import("../email-links");
   const { sendTemplateEmail } = await import("../email-templates/send-email");
   const result = await sendTemplateEmail("newsletter-issue", input.toEmail, {
     templateData: {
       title: `[TEST] ${issue.title}`,
       markdownBody: issue.markdownBody,
-      unsubscribeUrl: `${base}/newsletter/unsubscribe?token=test`,
-      archiveUrl: `${base}/intelligence`,
+      unsubscribeUrl: links.newsletterUnsubscribeUrl("test"),
+      archiveUrl: links.newsletterArchiveUrl(),
       siteOrigin: base,
     },
     // Distinct per click, so an editor can iterate and actually see each version.
@@ -270,6 +275,7 @@ export async function sendIssueToAll(issueId: string): Promise<SendReport> {
   const pending = recipients.filter((r) => !done.has(String(r.id)));
 
   const base = await origin();
+  const links = await import("../email-links");
   // Bulk issue delivery uses Brevo. Confirmation emails and test sends stay on
   // Lovable's transactional service, which is the correct channel for those.
   const { sendBrevoNewsletter } = await import("./brevo-send.server");
@@ -291,9 +297,9 @@ export async function sendIssueToAll(issueId: string): Promise<SendReport> {
             title: issue.title,
             markdownBody: issue.markdownBody,
             unsubscribeUrl: subscriber.confirm_token
-              ? `${base}/newsletter/unsubscribe?token=${subscriber.confirm_token}`
-              : `${base}/newsletter/unsubscribe`,
-            archiveUrl: `${base}/intelligence`,
+              ? links.newsletterUnsubscribeUrl(subscriber.confirm_token)
+              : links.newsletterUnsubscribeUrl(),
+            archiveUrl: links.newsletterArchiveUrl(),
             siteOrigin: base,
             // Stable across retries: if a run died after the provider accepted
             // the mail but before the row was written, the retry does not

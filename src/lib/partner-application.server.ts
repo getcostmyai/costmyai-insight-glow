@@ -13,7 +13,7 @@ import {
 } from "./partner-application";
 import { classifyApplication, type ApplicationVerdict } from "./admin/partner-applications";
 import { notifyReviewers } from "./partner-application-notify.server";
-import { siteOrigin } from "./partner-welcome.server";
+import { partnerApplicationsReviewUrl } from "./email-links";
 
 export interface StoredApplication {
   id: string;
@@ -171,7 +171,7 @@ export async function submitApplication(input: ApplicationInput) {
           startingSoon: input.startingSoon,
           path: routing.path,
           escalated: routing.escalated,
-          reviewUrl: `${siteOrigin()}/admin/partner-applications`,
+          reviewUrl: partnerApplicationsReviewUrl(),
         }),
         sendApplicationEmail("partner-application-received", contact.email, saved.data.id, {
           firstName: contact.firstName,

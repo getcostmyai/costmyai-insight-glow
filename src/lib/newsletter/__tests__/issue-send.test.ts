@@ -69,10 +69,6 @@ vi.mock("@/lib/newsletter/brevo-send.server", () => ({
   },
 }));
 
-vi.mock("@/lib/partner-welcome.server", () => ({
-  siteOrigin: () => "https://costmyai.test",
-}));
-
 /**
  * A deliberately small fake of the two PostgREST call shapes this module uses.
  * Faking the client rather than the network keeps the assertions on the

@@ -18,11 +18,10 @@ export interface PartnerWelcomeResult {
   email: string | null;
 }
 
-export function siteOrigin(): string {
-  return (
-    process.env["SITE_ORIGIN"] ?? "https://costmyai-insight-glow.lovable.app"
-  ).replace(/\/$/, "");
-}
+// There is deliberately no siteOrigin() here any more. It read an environment
+// variable that was never set in any environment and fell back to a preview
+// host, so every link it built landed in a real inbox pointing at the wrong
+// domain. Outbound links come from src/lib/email-links.ts and nowhere else.
 
 export async function sendPartnerWelcome(
   partnerId: string,
@@ -44,17 +43,16 @@ export async function sendPartnerWelcome(
     return { sent: false, reason: "Partner has no contact email", email: null };
   }
 
-  const origin = siteOrigin();
-
   try {
     const { sendTemplateEmail } = await import("./email-templates/send-email");
+    const { partnerLoginUrl, partnerReferralUrl } = await import("./email-links");
     const result = await sendTemplateEmail("partner-welcome", email, {
       templateData: {
         partnerName: partner.name,
         signInEmail: email,
         referralCode: partner.referral_code,
-        referralLink: `${origin}/r/${partner.referral_code}`,
-        loginUrl: `${origin}/partner/login`,
+        referralLink: partnerReferralUrl(partner.referral_code),
+        loginUrl: partnerLoginUrl(),
         fromApplication: options.fromApplication ?? false,
       },
       // One welcome per partner account, whatever path created it: a retried

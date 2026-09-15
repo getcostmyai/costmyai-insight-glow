@@ -13,6 +13,7 @@ import {
   Text,
 } from '@react-email/components'
 
+import { OUTBOUND_ORIGIN, newsletterArchiveUrl, newsletterUnsubscribeUrl } from '../email-links'
 import type { TemplateEntry } from './registry'
 import * as s from './brand'
 import {
@@ -197,9 +198,9 @@ const darkModeCss = `
 const Email = ({
   title = 'The last 7 days in AI spend',
   markdownBody = '',
-  unsubscribeUrl = 'https://costmyai.com/newsletter/unsubscribe',
-  archiveUrl = 'https://costmyai.com/intelligence',
-  siteOrigin = 'https://costmyai.com',
+  unsubscribeUrl = newsletterUnsubscribeUrl(),
+  archiveUrl = newsletterArchiveUrl(),
+  siteOrigin = OUTBOUND_ORIGIN,
 }: NewsletterIssueProps) => (
   <Html lang="en" dir="ltr">
     <Head>
@@ -264,6 +265,6 @@ export const template = {
     title: 'Price moved 1,052 times in the last 7 days. The bigger number is 14.4x.',
     markdownBody:
       '## What moved\n\nThree frontier models repriced in the last 7 days.\n\n::chart kind=bars title="Biggest cuts, last 7 days" data="GPT-5.1:-40|Claude cache reads:-12|Gemini Flash:-9" note="Blended price per million tokens, cheapest active host."\n\n- **GPT-5.1** output down 40%\n- Claude cache reads down 12%\n\n> The invoice does not update itself.\n',
-    unsubscribeUrl: 'https://costmyai.com/newsletter/unsubscribe?token=example',
+    unsubscribeUrl: newsletterUnsubscribeUrl('example'),
   },
 } satisfies TemplateEntry
