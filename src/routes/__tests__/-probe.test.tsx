@@ -74,33 +74,18 @@ class EB extends RC<{ children: React.ReactNode }, { e: unknown }> {
 }
 
 
-const STATS = { modelCount: 5, providerCount: 1, priceChangesTracked: 0, trackingSince: null, providers: ["Groq"], live: false };
 
-describe("probe4", () => {
-  it("each homepage part", async () => {
-    const mods: [string, () => Promise<any>][] = [
-      ["Estimator", () => import("@/components/marketing/Estimator")],
-      ["ArchitectureDiagram", () => import("@/components/marketing/ArchitectureDiagram")],
-      ["ForecastDiagram", () => import("@/components/marketing/ForecastDiagram")],
-      ["GradientPanel", () => import("@/components/marketing/GradientPanel")],
-      ["PriceDriftRibbon", () => import("@/components/marketing/PriceDriftRibbon")],
-      ["ProviderMarquee", () => import("@/components/marketing/ProviderMarquee")],
-      ["Reveal", () => import("@/components/marketing/Reveal")],
-    ];
-    for (const [name, load] of mods) {
-      const m = await load();
-      const C = m[name];
-      const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-      const { container, unmount } = render(
-        <QueryClientProvider client={qc}>
-          <Suspense fallback={<div>LOADING</div>}>
-            <C stats={STATS}>x</C>
-          </Suspense>
-        </QueryClientProvider>,
-      );
-      await new Promise((r) => setTimeout(r, 200));
-      console.log("PART", name, container.textContent?.slice(0, 40));
-      unmount();
-    }
+describe("probe5", () => {
+  it("homepage cache after render", async () => {
+    const { marketingStatsQuery } = await import("@/lib/marketing.functions");
+    const { Route } = await import("../index");
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    qc.setQueryData(marketingStatsQuery().queryKey, { modelCount: 5, providerCount: 1, priceChangesTracked: 0, trackingSince: null, providers: [], live: false });
+    const C = (Route as any).options.component;
+    console.log("COMPONENT", typeof C, C?.name);
+    render(<QueryClientProvider client={qc}><Suspense fallback={<div>LOADING</div>}><C /></Suspense></QueryClientProvider>);
+    await new Promise((r) => setTimeout(r, 800));
+    console.log("BODY", document.body.textContent?.slice(0, 120));
+    console.log("CACHE", JSON.stringify(qc.getQueryCache().getAll().map((q) => ({ k: q.queryKey, s: q.state.status, f: q.state.fetchStatus, e: String(q.state.error) }))));
   });
 });
