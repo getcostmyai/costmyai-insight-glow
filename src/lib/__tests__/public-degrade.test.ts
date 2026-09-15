@@ -39,7 +39,12 @@ describe("public read degradation", () => {
   });
 
   it("returns the empty result rather than hanging when the read is late", async () => {
-    const res = await degradeRead("t-late", () => new Promise(() => {}), EMPTY_CATALOG, 20);
+    const res = await degradeRead(
+      "t-late",
+      () => new Promise<typeof EMPTY_CATALOG>(() => {}),
+      EMPTY_CATALOG,
+      20,
+    );
     expect(res.degraded).toBe(true);
   });
 
