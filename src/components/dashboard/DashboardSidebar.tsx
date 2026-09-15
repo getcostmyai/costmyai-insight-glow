@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { useIsPartner } from "@/hooks/use-is-partner";
 import type { DashboardScope } from "@/lib/dashboard-queries";
 import type { LevelKey } from "@/lib/dashboard/levels";
 import { LEVELS } from "@/lib/dashboard/levels";
@@ -80,6 +81,7 @@ export function DashboardSidebar({
   account?: AccountKey;
 }) {
   const paths = PATHS[scope];
+  const isPartner = useIsPartner() === true;
   // Dispatch 232 reverses Dispatch 172. A customer sees their own rung plus
   // every rung above it (locked, as the upsell path). Rungs *below* their own
   // are never listed: everything those rungs found is merged inline into the

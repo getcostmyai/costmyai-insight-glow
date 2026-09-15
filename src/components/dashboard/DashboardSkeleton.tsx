@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { CreditCard, Handshake, Settings, Users } from "lucide-react";
 
 import { DashboardMasthead } from "@/components/dashboard/DashboardChrome";
+import { useIsPartner } from "@/hooks/use-is-partner";
 import { ICONS, PATHS } from "@/components/dashboard/DashboardSidebar";
 import type { DashboardScope } from "@/lib/dashboard-queries";
 import { LEVELS } from "@/lib/dashboard/levels";
@@ -37,6 +38,7 @@ export function DashboardFrame({
   children: React.ReactNode;
 }) {
   const paths = PATHS[scope];
+  const isPartner = useIsPartner() === true;
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,6 +76,7 @@ export function DashboardFrame({
             <div className="space-y-1 border-t border-border pt-5">
               <p className="eyebrow px-3 pb-1">Account</p>
               {accountNav.map((item) => {
+                if ("partnerOnly" in item && item.partnerOnly && !isPartner) return null;
                 const Icon = item.icon;
                 return (
                   <Link
