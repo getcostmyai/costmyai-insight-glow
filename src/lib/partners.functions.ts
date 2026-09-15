@@ -250,6 +250,16 @@ export const getMyPartner = createServerFn({ method: "GET" })
         tiers: tierRows,
         nextTier: next,
         toNextTierUsd: next ? Math.max(0, next.minLifetimeReferredUsd - lifetimeRevenueUsd) : null,
+        profile: {
+          companyName: partner.data.company_name,
+          phone: partner.data.phone,
+          website: partner.data.website,
+          addressLine1: partner.data.address_line1,
+          addressLine2: partner.data.address_line2,
+          city: partner.data.city,
+          postalCode: partner.data.postal_code,
+          country: partner.data.country,
+        },
       },
       referrals: (referrals.data ?? []).map((o) => ({
         id: o.id,
