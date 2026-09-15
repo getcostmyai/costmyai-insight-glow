@@ -10,9 +10,9 @@ import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tier
 import { submitPartnerApplication } from "@/lib/partner-application.functions";
 import { trackPartnerEvent } from "@/lib/partner-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
-import {
 import { ensurePublicQuery } from "@/lib/public-query";
 import { EMPTY_PARTNER_LADDER } from "@/lib/public-empty";
+import {
   ACTIVE_CLIENT_BUCKETS,
   REVIEW_TURNAROUND,
   STARTING_SOON_BUCKETS,
