@@ -7,7 +7,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
 import type { PlanTier } from "@/lib/engine/types";
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/pricing")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/pricing" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: PricingPage,
 });
 

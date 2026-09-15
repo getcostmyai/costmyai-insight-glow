@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { formatPublished, postsNewestFirst } from "@/lib/blog/posts";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 
 /**
  * Blog index in the homepage design language: mesh hero, the price-drift band
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/blog/")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/blog" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: BlogIndex,
 });
 

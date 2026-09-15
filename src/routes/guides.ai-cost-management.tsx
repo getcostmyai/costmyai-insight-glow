@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 
 const URL = "https://www.costmyai.com/guides/ai-cost-management";
 const TITLE = "AI cost management: a practical guide for teams | CostMyAI";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/guides/ai-cost-management")({
     links: [{ rel: "canonical", href: URL }],
     scripts: [{ type: "application/ld+json", children: faqJsonLd() }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: AiCostManagementGuide,
 });
 

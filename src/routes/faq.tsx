@@ -5,7 +5,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { FAQ_CLUSTERS, FAQ_ITEMS, faqJsonLd } from "@/lib/faq/questions";
 
 const TITLE = "AI cost FAQ — pricing, safe model switching, key security";
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/faq")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/faq" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: FaqPage,
 });
 

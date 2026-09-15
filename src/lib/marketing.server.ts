@@ -41,9 +41,64 @@ export interface MarketingStats {
   providers: string[];
   /** True only when a pricing sync completed successfully RECENTLY (age-bounded). */
   live: boolean;
+  /**
+   * True when the read failed or ran past its deadline and these are either the
+   * last values we held in this worker or nothing at all. The page renders
+   * without counters rather than not rendering: a missing number is honest,
+   * an unanswerable page is not.
+   */
+  degraded?: boolean;
 }
 
+/** Whole-read deadline. One slow call must not hold the document open. */
+export const MARKETING_STATS_TIMEOUT_MS = 3000;
+
+/** Nothing measured: every counter absent, nothing claimed live. */
+export const EMPTY_MARKETING_STATS: MarketingStats = {
+  modelCount: 0,
+  providerCount: 0,
+  priceChangesTracked: 0,
+  trackingSince: null,
+  providers: [],
+  live: false,
+  degraded: true,
+};
+
+/**
+ * Last successful read in this worker. Purely a render fallback, never a
+ * source of truth: it is only ever served with `degraded: true`.
+ */
+let lastGood: MarketingStats | null = null;
+
+/** Test seam. */
+export function __resetMarketingStatsCache() {
+  lastGood = null;
+}
+
+/**
+ * Never throws. The marketing pages block their SSR on this call, so a backend
+ * problem has to come back as missing numbers, not as a request that hangs.
+ */
 export async function readMarketingStats(now: number = Date.now()): Promise<MarketingStats> {
+  try {
+    const fresh = await withDeadline(readMarketingStatsUnguarded(now), MARKETING_STATS_TIMEOUT_MS);
+    lastGood = fresh;
+    return fresh;
+  } catch (err) {
+    console.error("[marketing-stats] degraded:", err instanceof Error ? err.message : err);
+    return lastGood ? { ...lastGood, degraded: true } : EMPTY_MARKETING_STATS;
+  }
+}
+
+function withDeadline<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`marketing stats timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([work, deadline]).finally(() => clearTimeout(timer)) as Promise<T>;
+}
+
+async function readMarketingStatsUnguarded(now: number): Promise<MarketingStats> {
   const supabase = createPublicServerClient();
 
   const nowDate = new Date(now);

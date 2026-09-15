@@ -8,7 +8,7 @@ import { ArchitectureDiagram } from "@/components/marketing/ArchitectureDiagram"
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
-import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META, PLAN_ORDER } from "@/lib/engine/types";
 import type { PlanTier } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/how-it-works")({
     ],
     links: [{ rel: "canonical", href: "https://www.costmyai.com/how-it-works" }],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: HowItWorksPage,
 });
 

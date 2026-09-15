@@ -9,7 +9,7 @@ import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { trackModelsEvent } from "@/lib/models-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
 
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/models")({
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(catalogQuery()),
-      context.queryClient.ensureQueryData(marketingStatsQuery()),
+      ensureMarketingStats(context.queryClient),
     ]);
   },
   component: ModelsPage,

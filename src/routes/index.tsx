@@ -24,7 +24,7 @@ import { ProviderMarquee } from "@/components/marketing/ProviderMarquee";
 import { CountUp, Reveal } from "@/components/marketing/Reveal";
 import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { FAQ_ITEMS, HOMEPAGE_FAQ_IDS, findFaqItem } from "@/lib/faq/questions";
-import { marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery, type MarketingStats } from "@/lib/marketing.functions";
 import { PLAN_META } from "@/lib/engine/types";
 import { PLAN_FEATURES } from "@/lib/plan-features";
 
@@ -62,11 +62,12 @@ export const Route = createFileRoute("/")({
       }],
     };
   },
-  loader: ({ context }) => context.queryClient.ensureQueryData(marketingStatsQuery()),
+  loader: ({ context }) => ensureMarketingStats(context.queryClient),
   component: HomePage,
 });
 
-function HomePage() {
+// Exported so a component test can render the page directly, without a router.
+export function HomePage() {
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
 
   return (

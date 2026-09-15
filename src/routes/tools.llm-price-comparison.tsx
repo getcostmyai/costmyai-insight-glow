@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
-import { marketingStatsQuery } from "@/lib/marketing.functions";
+import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
 
 const URL = "https://www.costmyai.com/tools/llm-price-comparison";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/tools/llm-price-comparison")({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(catalogQuery()),
-      context.queryClient.ensureQueryData(marketingStatsQuery()),
+      ensureMarketingStats(context.queryClient),
     ]),
   component: LlmPriceComparisonPage,
 });
