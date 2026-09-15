@@ -198,7 +198,7 @@ async function notifyAuthor(opts: { postId: string; statusLabel?: string; detail
         postTitle: (post as any).title,
         statusLabel: opts.statusLabel ?? "New reply",
         detail: opts.detail ?? "The CostMyAI team replied to your suggestion.",
-        postUrl: `${origin}/feedback/${opts.postId}`,
+        postUrl: feedbackPostUrl(opts.postId),
       },
       idempotencyKey: `feedback-${opts.postId}-${opts.statusLabel ?? "reply"}-${Date.now()}`,
     });
