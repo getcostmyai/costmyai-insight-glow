@@ -12,6 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 
+import { partnersPageUrl } from '../email-links'
 import type { TemplateEntry } from './registry'
 import * as s from './brand'
 
@@ -41,7 +42,7 @@ const Email = ({
   firstName = 'there',
   company = '',
   turnaround = '3 business days',
-  partnerUrl = 'https://costmyai.com/partners',
+  partnerUrl = partnersPageUrl(),
   supportEmail = 'mail@costmyai.com',
 }: PartnerApplicationReceivedProps) => (
   <Html lang="en" dir="ltr">

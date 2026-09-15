@@ -25,6 +25,8 @@ export const partnerReferralUrl = (code: string) => publicUrl(`/r/${code}`);
 export const partnerVerifyUrl = (code: string) =>
   publicUrl(`/partner/verify/${code.toUpperCase()}`);
 
+export const partnersPageUrl = () => publicUrl("/partners");
+
 export const partnerApplicationsReviewUrl = () => publicUrl("/admin/partner-applications");
 
 export const newsletterConfirmUrl = (token: string) =>

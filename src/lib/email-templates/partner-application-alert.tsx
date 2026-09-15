@@ -12,6 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 
+import { partnerApplicationsReviewUrl } from '../email-links'
 import type { TemplateEntry } from './registry'
 import * as s from './brand'
 
@@ -61,7 +62,7 @@ const Email = ({
   startingSoon = '',
   path = 'async',
   escalated = false,
-  reviewUrl = 'https://costmyai.com/admin/partner-applications',
+  reviewUrl = partnerApplicationsReviewUrl(),
 }: PartnerApplicationAlertProps) => (
   <Html lang="en" dir="ltr">
     <Head />
