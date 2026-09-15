@@ -10,6 +10,8 @@ import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tier
 import { submitPartnerApplication } from "@/lib/partner-application.functions";
 import { trackPartnerEvent } from "@/lib/partner-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
+import { ensurePublicQuery } from "@/lib/public-query";
+import { EMPTY_PARTNER_LADDER } from "@/lib/public-empty";
 import {
   ACTIVE_CLIENT_BUCKETS,
   REVIEW_TURNAROUND,
@@ -22,7 +24,13 @@ import {
 } from "@/lib/partner-application";
 
 export const Route = createFileRoute("/partners_/apply")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(partnerLadderQuery()),
+  loader: ({ context }) =>
+    ensurePublicQuery(
+      context.queryClient,
+      partnerLadderQuery(),
+      EMPTY_PARTNER_LADDER,
+      "partner-ladder",
+    ),
   head: () => ({
     meta: [
       { title: "Apply to the CostMyAI partner program" },

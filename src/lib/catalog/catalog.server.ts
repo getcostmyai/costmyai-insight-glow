@@ -44,6 +44,11 @@ export interface CatalogPayload {
   vendors: string[];
   providers: string[];
   live: boolean;
+  /**
+   * True when the read failed or ran past its deadline. The page renders its
+   * shell with the table absent rather than not rendering at all.
+   */
+  degraded?: boolean;
 }
 
 const SUITE_COLUMN: Record<string, "gpqa" | "ifbench" | "coding"> = {
@@ -51,6 +56,16 @@ const SUITE_COLUMN: Record<string, "gpqa" | "ifbench" | "coding"> = {
   "aa:ifbench": "ifbench",
   "aa:scicode": "coding",
 };
+
+/**
+ * Never throws. Public pages block their SSR on this read, so a backend problem
+ * has to come back as an absent catalog, not as an unanswerable request.
+ */
+export async function readCatalogSafe(): Promise<CatalogPayload> {
+  const { degradeRead } = await import("@/lib/public-data.server");
+  const { EMPTY_CATALOG } = await import("@/lib/public-empty");
+  return degradeRead("public-catalog", readCatalog, EMPTY_CATALOG);
+}
 
 /** The public model catalog, read through the anon client — catalog data only. */
 export async function readCatalog(): Promise<CatalogPayload> {

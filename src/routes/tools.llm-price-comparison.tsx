@@ -8,6 +8,9 @@ import { Reveal } from "@/components/marketing/Reveal";
 import { PriceDriftRibbon } from "@/components/marketing/PriceDriftRibbon";
 import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
+import { ensurePublicQuery } from "@/lib/public-query";
+import { EMPTY_CATALOG } from "@/lib/public-empty";
+import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 const URL = "https://www.costmyai.com/tools/llm-price-comparison";
 const TITLE = "LLM pricing comparison calculator | CostMyAI";
@@ -29,7 +32,7 @@ export const Route = createFileRoute("/tools/llm-price-comparison")({
   }),
   loader: ({ context }) =>
     Promise.all([
-      context.queryClient.ensureQueryData(catalogQuery()),
+      ensurePublicQuery(context.queryClient, catalogQuery(), EMPTY_CATALOG, "public-catalog"),
       ensureMarketingStats(context.queryClient),
     ]),
   component: LlmPriceComparisonPage,
@@ -50,7 +53,11 @@ function LlmPriceComparisonPage() {
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <Calculator data={data} moves={stats.priceChangesTracked} />
+      {data.degraded ? (
+        <FiguresUnavailable what="The live price list" className="pt-28" />
+      ) : (
+        <Calculator data={data} moves={stats.priceChangesTracked} />
+      )}
       <Notes />
       <Cta moves={stats.priceChangesTracked} />
     </MarketingShell>

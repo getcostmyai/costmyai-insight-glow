@@ -146,6 +146,12 @@ export interface IntelligencePayload {
   hostBuckets: HostBucket[];
   bandWinners: BandWinner[];
   saturation: SaturationRow[];
+  /**
+   * True when the read failed or ran past its deadline, and every figure above
+   * is therefore absent rather than measured. The page says so in its own
+   * words instead of drawing zeroes as if they were findings.
+   */
+  degraded?: boolean;
 }
 
 const pct = (now: number | null, prev: number | null): number | null =>
@@ -213,6 +219,19 @@ export function summarizeMoves(
     decreases: moves.filter((m) => m.kind === "decrease"),
     newListings: rows.filter((h) => h.change_kind === "new").length,
   };
+}
+
+/** Never throws: an unreachable market reads as no market, not as an error page. */
+export async function readIntelligenceSafe(
+  monthStartOverride?: Date,
+): Promise<IntelligencePayload> {
+  const { degradeRead } = await import("@/lib/public-data.server");
+  const { emptyIntelligence } = await import("@/lib/public-empty");
+  return degradeRead(
+    "market-intelligence",
+    () => readIntelligence(monthStartOverride),
+    emptyIntelligence(),
+  );
 }
 
 /**

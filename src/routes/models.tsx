@@ -12,6 +12,9 @@ import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalo
 import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { trackModelsEvent } from "@/lib/models-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
+import { ensurePublicQuery } from "@/lib/public-query";
+import { EMPTY_CATALOG } from "@/lib/public-empty";
+import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 export const Route = createFileRoute("/models")({
   head: () => ({
@@ -36,7 +39,7 @@ export const Route = createFileRoute("/models")({
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(catalogQuery()),
+      ensurePublicQuery(context.queryClient, catalogQuery(), EMPTY_CATALOG, "public-catalog"),
       ensureMarketingStats(context.queryClient),
     ]);
   },
@@ -94,7 +97,7 @@ function ModelsPage() {
     <MarketingShell>
       <Hero data={data} moves={stats.priceChangesTracked} />
       <HowToRead moves={stats.priceChangesTracked} />
-      <Catalog data={data} />
+      {data.degraded ? <FiguresUnavailable what="The model catalog" /> : <Catalog data={data} />}
       <ClosingCta />
     </MarketingShell>
   );

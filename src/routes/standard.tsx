@@ -13,6 +13,8 @@ import {
 import { intelligenceQuery } from "@/lib/intelligence.functions";
 import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import type { BandWinner } from "@/lib/intelligence/intelligence.server";
+import { ensurePublicQuery } from "@/lib/public-query";
+import { degradedIntelligence } from "@/lib/intelligence.functions";
 
 
 /**
@@ -94,7 +96,12 @@ export const Route = createFileRoute("/standard")({
   }),
   loader: ({ context }) =>
     Promise.all([
-      context.queryClient.ensureQueryData(intelligenceQuery()),
+      ensurePublicQuery(
+        context.queryClient,
+        intelligenceQuery(),
+        degradedIntelligence(),
+        "market-intelligence",
+      ),
       ensureMarketingStats(context.queryClient),
     ]),
   component: StandardPage,

@@ -13,13 +13,20 @@ import { BOOK_DEMO_URL } from "@/lib/marketing-links";
 import { partnerLadderQuery } from "@/lib/partner-tiers.functions";
 import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import { formatRate, formatRateRange, formatThreshold } from "@/lib/partner-tiers";
+import { ensurePublicQuery } from "@/lib/public-query";
+import { EMPTY_PARTNER_LADDER } from "@/lib/public-empty";
 
 type PartnerLadder = Awaited<ReturnType<NonNullable<ReturnType<typeof partnerLadderQuery>["queryFn"]>>>;
 
 export const Route = createFileRoute("/partners")({
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(partnerLadderQuery()),
+      ensurePublicQuery(
+        context.queryClient,
+        partnerLadderQuery(),
+        EMPTY_PARTNER_LADDER,
+        "partner-ladder",
+      ),
       ensureMarketingStats(context.queryClient),
     ]);
   },

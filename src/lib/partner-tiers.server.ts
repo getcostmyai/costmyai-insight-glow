@@ -7,6 +7,12 @@ import { toLadder, type PartnerLadder } from "./partner-tiers";
  * partner page never restates these numbers in copy — if the ladder changes in
  * the database, the marketing page changes with it.
  */
+export async function readPartnerLadderSafe(): Promise<PartnerLadder> {
+  const { degradeRead } = await import("./public-data.server");
+  const { EMPTY_PARTNER_LADDER } = await import("./public-empty");
+  return degradeRead("partner-ladder", readPartnerLadder, EMPTY_PARTNER_LADDER);
+}
+
 export async function readPartnerLadder(): Promise<PartnerLadder> {
   const supabase = createPublicServerClient();
   const { data, error } = await supabase
