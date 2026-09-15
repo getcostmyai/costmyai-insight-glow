@@ -8,8 +8,8 @@ import type { PartnerLadder } from "./partner-tiers";
  * policy ("tiers are public"), so the marketing page can state the real rates.
  */
 export const getPartnerLadder = createServerFn({ method: "GET" }).handler(async () => {
-  const { readPartnerLadder } = await import("./partner-tiers.server");
-  return readPartnerLadder();
+  const { readPartnerLadderSafe } = await import("./partner-tiers.server");
+  return readPartnerLadderSafe();
 });
 
 export const partnerLadderQuery = () =>
@@ -17,4 +17,5 @@ export const partnerLadderQuery = () =>
     queryKey: ["partner-ladder"],
     queryFn: () => getPartnerLadder(),
     staleTime: 5 * 60_000,
+    retry: false,
   });
