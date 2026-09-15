@@ -18,11 +18,10 @@ export interface PartnerWelcomeResult {
   email: string | null;
 }
 
-export function siteOrigin(): string {
-  return (
-    process.env["SITE_ORIGIN"] ?? "https://costmyai-insight-glow.lovable.app"
-  ).replace(/\/$/, "");
-}
+// There is deliberately no siteOrigin() here any more. It read an environment
+// variable that was never set in any environment and fell back to a preview
+// host, so every link it built landed in a real inbox pointing at the wrong
+// domain. Outbound links come from src/lib/email-links.ts and nowhere else.
 
 export async function sendPartnerWelcome(
   partnerId: string,
