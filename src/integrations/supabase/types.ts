@@ -1647,11 +1647,18 @@ export type Database = {
       }
       partners: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          company_name: string | null
           contact_email: string | null
+          country: string | null
           created_at: string
           created_by: string | null
           id: string
           name: string
+          phone: string | null
+          postal_code: string | null
           referral_code: string
           status: Database["public"]["Enums"]["partner_status"]
           stripe_connect_account_id: string | null
@@ -1660,13 +1667,21 @@ export type Database = {
           stripe_connect_updated_at: string | null
           tier_override: number | null
           updated_at: string
+          website: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company_name?: string | null
           contact_email?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          phone?: string | null
+          postal_code?: string | null
           referral_code: string
           status?: Database["public"]["Enums"]["partner_status"]
           stripe_connect_account_id?: string | null
@@ -1675,13 +1690,21 @@ export type Database = {
           stripe_connect_updated_at?: string | null
           tier_override?: number | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company_name?: string | null
           contact_email?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          phone?: string | null
+          postal_code?: string | null
           referral_code?: string
           status?: Database["public"]["Enums"]["partner_status"]
           stripe_connect_account_id?: string | null
@@ -1690,6 +1713,7 @@ export type Database = {
           stripe_connect_updated_at?: string | null
           tier_override?: number | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {

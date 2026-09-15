@@ -47,6 +47,17 @@ export interface PartnerSummary {
   nextTier: PartnerTier | null;
   /** Dollars of referred revenue still needed to reach `nextTier`. */
   toNextTierUsd: number | null;
+  /** Editable profile details. Payout, tax and identity live with the provider. */
+  profile: {
+    companyName: string | null;
+    phone: string | null;
+    website: string | null;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    city: string | null;
+    postalCode: string | null;
+    country: string | null;
+  };
 }
 
 export interface ReferredWorkspace {
@@ -126,7 +137,7 @@ export const getMyPartner = createServerFn({ method: "GET" })
         supabase
           .from("partners")
           .select(
-            "id, name, referral_code, contact_email, status, tier_override, stripe_connect_account_id, stripe_connect_status",
+            "id, name, referral_code, contact_email, status, tier_override, stripe_connect_account_id, stripe_connect_status, company_name, phone, website, address_line1, address_line2, city, postal_code, country",
           )
           .eq("id", partnerId)
           .single(),
@@ -239,6 +250,16 @@ export const getMyPartner = createServerFn({ method: "GET" })
         tiers: tierRows,
         nextTier: next,
         toNextTierUsd: next ? Math.max(0, next.minLifetimeReferredUsd - lifetimeRevenueUsd) : null,
+        profile: {
+          companyName: partner.data.company_name,
+          phone: partner.data.phone,
+          website: partner.data.website,
+          addressLine1: partner.data.address_line1,
+          addressLine2: partner.data.address_line2,
+          city: partner.data.city,
+          postalCode: partner.data.postal_code,
+          country: partner.data.country,
+        },
       },
       referrals: (referrals.data ?? []).map((o) => ({
         id: o.id,
@@ -472,4 +493,24 @@ export const readReferralSplit = createServerFn({ method: "GET" })
         }))
         .sort((a, b) => b.referred - a.referred || a.name.localeCompare(b.name)),
     };
+  });
+
+/**
+ * The cheapest possible "is this person a partner" answer.
+ *
+ * The sidebar asks this on every authenticated page, so it must not pull the
+ * whole partner dashboard. One indexed membership row, read through the
+ * caller's own client, is enough.
+ */
+export const amIPartner = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<boolean> => {
+    const { data, error } = await context.supabase
+      .from("partner_users")
+      .select("partner_id")
+      .eq("user_id", context.userId)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return Boolean(data);
   });
