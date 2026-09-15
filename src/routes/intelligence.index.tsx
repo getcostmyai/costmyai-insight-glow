@@ -15,6 +15,8 @@ import { intelligenceQuery } from "@/lib/intelligence.functions";
 import type { IntelligencePayload } from "@/lib/intelligence/intelligence.server";
 import { buildCardMeta, findShareCard } from "@/lib/intelligence/share-cards";
 import { ensurePublicQuery } from "@/lib/public-query";
+import { degradedIntelligence } from "@/lib/intelligence.functions";
+import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 const GENERIC_META = [
   { title: "Intelligence: live AI price and quality market data | CostMyAI" },
@@ -107,6 +109,14 @@ function IntelligencePage() {
     archive: live.archive,
     shareCitation: { kind: "live", generatedAt: live.data.generatedAt },
   };
+
+  if (live.data.degraded) {
+    return (
+      <MarketingShell>
+        <FiguresUnavailable what="The live market figures" className="pt-28" />
+      </MarketingShell>
+    );
+  }
 
   return (
     <MarketingShell>

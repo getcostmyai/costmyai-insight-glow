@@ -14,6 +14,7 @@ import { trackModelsEvent } from "@/lib/models-telemetry.functions";
 import { shouldFire } from "@/lib/telemetry/fire-once";
 import { ensurePublicQuery } from "@/lib/public-query";
 import { EMPTY_CATALOG } from "@/lib/public-empty";
+import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 export const Route = createFileRoute("/models")({
   head: () => ({
@@ -96,7 +97,7 @@ function ModelsPage() {
     <MarketingShell>
       <Hero data={data} moves={stats.priceChangesTracked} />
       <HowToRead moves={stats.priceChangesTracked} />
-      <Catalog data={data} />
+      {data.degraded ? <FiguresUnavailable what="The model catalog" /> : <Catalog data={data} />}
       <ClosingCta />
     </MarketingShell>
   );

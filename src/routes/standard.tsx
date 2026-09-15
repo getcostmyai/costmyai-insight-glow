@@ -14,6 +14,7 @@ import { intelligenceQuery } from "@/lib/intelligence.functions";
 import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.functions";
 import type { BandWinner } from "@/lib/intelligence/intelligence.server";
 import { ensurePublicQuery } from "@/lib/public-query";
+import { degradedIntelligence } from "@/lib/intelligence.functions";
 
 
 /**
