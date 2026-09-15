@@ -89,6 +89,25 @@ export async function readFrozenMonth(monthKey: string): Promise<FrozenMonth | n
   return data ? toFrozen(data as SnapshotRow) : null;
 }
 
+/** Never throws: an unreachable archive reads as an empty archive. */
+export async function listFrozenMonthsSafe(): Promise<{ month: string; frozenAt: string }[]> {
+  const { degradeRead } = await import("@/lib/public-data.server");
+  const res = await degradeRead("frozen-archive", async () => ({ months: await listFrozenMonths() }), {
+    months: [] as { month: string; frozenAt: string }[],
+  });
+  return res.months;
+}
+
+/** Never throws. A degraded read is indistinguishable from "no such month", which is correct: we cannot prove one exists. */
+export async function readFrozenMonthSafe(monthKey: string): Promise<FrozenMonth | null> {
+  try {
+    return await readFrozenMonth(monthKey);
+  } catch (err) {
+    console.error("[frozen-month] degraded:", err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 /** Every archived month, newest first — the permanent index. */
 export async function listFrozenMonths(): Promise<{ month: string; frozenAt: string }[]> {
   const supabase = createPublicServerClient();

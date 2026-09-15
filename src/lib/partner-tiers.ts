@@ -15,6 +15,8 @@ export interface PartnerLadder {
   minRatePct: number | null;
   /** Highest rate on the ladder, e.g. 35. */
   maxRatePct: number | null;
+  /** True when the ladder could not be read. Never a remembered rate. */
+  degraded?: boolean;
 }
 
 function trim(n: number): string {
