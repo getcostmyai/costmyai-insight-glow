@@ -10,6 +10,7 @@ import { FUNNEL_WINDOWS, stageLabel, type FunnelStageRow, type FunnelWindow } fr
 
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 import { BrandKitCard } from "@/components/partner/BrandKitCard";
+import { PartnerSettingsCard } from "@/components/partner/PartnerSettingsCard";
 import { copyText } from "@/lib/copy-text";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-origin";
 import {
@@ -131,6 +132,8 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
         />
 
         <TierProgress partner={partner} />
+
+        <PartnerSettingsCard partner={partner} />
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6">
           <h2 className="text-sm font-semibold">Referred workspaces</h2>
