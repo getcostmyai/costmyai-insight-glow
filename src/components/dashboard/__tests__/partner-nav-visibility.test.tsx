@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 
 /**
  * The Partner entry is for partners. Everyone else used to be sent to a page
@@ -23,6 +23,7 @@ const { DashboardSidebar } = await import("@/components/dashboard/DashboardSideb
 const { DashboardSkeleton } = await import("@/components/dashboard/DashboardSkeleton");
 
 beforeEach(() => {
+  cleanup();
   isPartner.mockReset();
 });
 
@@ -57,6 +58,7 @@ describe("Partner nav entry", () => {
     const { unmount } = render(<DashboardSkeleton scope="mine" level="overview" />);
     expect(screen.queryByText("Partner")).toBeNull();
     unmount();
+    cleanup();
 
     isPartner.mockReturnValue(true);
     render(<DashboardSkeleton scope="mine" level="overview" />);
