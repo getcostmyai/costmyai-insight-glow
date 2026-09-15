@@ -11,7 +11,9 @@ const accountNav = [
   { label: "Settings", to: "/settings", icon: Settings },
   { label: "Billing", to: "/billing", icon: CreditCard },
   { label: "Team", to: "/team", icon: Users },
-  { label: "Partner", to: "/partner", icon: Handshake },
+  // Partner appears only for an actual partner, matching the real sidebar, so
+  // the skeleton never shows a row that vanishes once the page loads.
+  { label: "Partner", to: "/partner", icon: Handshake, partnerOnly: true },
 ] as const;
 
 function Bar({ className = "" }: { className?: string }) {

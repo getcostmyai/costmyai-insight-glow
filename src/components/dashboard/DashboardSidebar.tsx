@@ -147,6 +147,8 @@ export function DashboardSidebar({
         <div className="space-y-1 border-t border-border pt-5">
           <p className="eyebrow px-3 pb-1">Account</p>
           {accountNav.map((item) => {
+            // Hidden while the answer is still unknown, so it never flickers.
+            if (item.partnerOnly && !isPartner) return null;
             const Icon = item.icon;
             const active = item.key === account;
             return (
