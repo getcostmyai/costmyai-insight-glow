@@ -3,6 +3,7 @@ import { BadgeCheck, Check, Copy, Download, Loader2, X } from "lucide-react";
 
 import { getMyPartnerBanner } from "@/lib/partner-badge.functions";
 import { copyText } from "@/lib/copy-text";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/public-origin";
 
 /**
  * Badge and banner downloads.
@@ -40,10 +41,9 @@ export function BrandKitCard({ referralCode, active }: { referralCode: string; a
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
 
-  const verifyUrl =
-    typeof window === "undefined"
-      ? `/partner/verify/${referralCode}`
-      : `${window.location.origin}/partner/verify/${referralCode}`;
+  // Always the production origin. The copy above promises a costmyai.com link,
+  // and a partner viewing this on a preview host must not hand out that host.
+  const verifyUrl = `${PUBLIC_SITE_ORIGIN}/partner/verify/${referralCode}`;
 
   async function download(format: Format) {
     setBusy(format);

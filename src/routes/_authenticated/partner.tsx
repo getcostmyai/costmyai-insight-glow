@@ -11,6 +11,11 @@ import { FUNNEL_WINDOWS, stageLabel, type FunnelStageRow, type FunnelWindow } fr
 import { PayoutAccountCard } from "@/components/partner/PayoutAccountCard";
 import { BrandKitCard } from "@/components/partner/BrandKitCard";
 import { copyText } from "@/lib/copy-text";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/public-origin";
+import {
+  SHOW_PARTNER_BADGE_ASSETS,
+  SHOW_PARTNER_REFERRAL_FUNNEL,
+} from "@/lib/partner-panels";
 
 
 export const Route = createFileRoute("/_authenticated/partner")({
@@ -158,7 +163,7 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
           </p>
         </section>
 
-        <ReferralFunnel />
+        {SHOW_PARTNER_REFERRAL_FUNNEL ? <ReferralFunnel /> : null}
 
 
 
@@ -211,7 +216,12 @@ function PartnerDashboardView({ data }: { data: PartnerDashboard }) {
           )}
         </section>
 
-        <BrandKitCard referralCode={partner.referralCode} active={partner.status === "active"} />
+        {SHOW_PARTNER_BADGE_ASSETS ? (
+          <BrandKitCard
+            referralCode={partner.referralCode}
+            active={partner.status === "active"}
+          />
+        ) : null}
       </div>
     </main>
   );
@@ -371,9 +381,10 @@ export function ReferralCode({ code }: { code: string }) {
   const [copied, setCopied] = useState<
     "idle" | "link-ok" | "link-fail" | "code-ok" | "code-fail"
   >("idle");
-  const [origin, setOrigin] = useState("https://costmyai.com");
-  useEffect(() => setOrigin(window.location.origin), []);
-  const link = `${origin}/r/${code}`;
+  // The production origin, never window.location.origin: this link is pasted
+  // somewhere else, so a preview host copied out of the preview app would be a
+  // dead link for whoever receives it.
+  const link = `${PUBLIC_SITE_ORIGIN}/r/${code}`;
 
   function run(which: "link" | "code", text: string) {
     void copyText(text).then((ok) => {
