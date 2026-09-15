@@ -42,13 +42,9 @@ interface SignupContext {
   partnerId?: string | null;
 }
 
-function confirmUrl(token: string, origin: string): string {
-  return `${origin}/newsletter/confirm?token=${token}`;
-}
-
-function unsubscribeUrl(token: string, origin: string): string {
-  return `${origin}/newsletter/unsubscribe?token=${token}`;
-}
+// Confirm and unsubscribe links come from the shared outbound builders. The
+// unsubscribe link especially has to keep resolving for the life of the email,
+// so it is pinned to the production origin, never to whatever host sent it.
 
 /**
  * Sign an address up.

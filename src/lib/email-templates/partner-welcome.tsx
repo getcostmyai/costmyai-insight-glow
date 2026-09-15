@@ -12,6 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 
+import { partnerLoginUrl, partnerReferralUrl } from '../email-links'
 import type { TemplateEntry } from './registry'
 
 /**
@@ -46,7 +47,9 @@ const Email = ({
   signInEmail = '',
   referralCode = '',
   referralLink = '',
-  loginUrl = 'https://costmyai-insight-glow.lovable.app/partner/login',
+  // Never a preview host: a wrong default here prints a dead link into
+  // someone's inbox permanently, and does it silently.
+  loginUrl = partnerLoginUrl(),
   fromApplication = false,
   supportEmail = 'mail@costmyai.com',
 }: PartnerWelcomeProps) => (
