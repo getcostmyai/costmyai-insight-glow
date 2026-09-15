@@ -10,6 +10,7 @@ import { ensureMarketingStats, marketingStatsQuery } from "@/lib/marketing.funct
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
 import { ensurePublicQuery } from "@/lib/public-query";
 import { EMPTY_CATALOG } from "@/lib/public-empty";
+import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 const URL = "https://www.costmyai.com/tools/llm-price-comparison";
 const TITLE = "LLM pricing comparison calculator | CostMyAI";
@@ -52,7 +53,11 @@ function LlmPriceComparisonPage() {
   const { data: stats } = useSuspenseQuery(marketingStatsQuery());
   return (
     <MarketingShell>
-      <Calculator data={data} moves={stats.priceChangesTracked} />
+      {data.degraded ? (
+        <FiguresUnavailable what="The live price list" className="pt-28" />
+      ) : (
+        <Calculator data={data} moves={stats.priceChangesTracked} />
+      )}
       <Notes />
       <Cta moves={stats.priceChangesTracked} />
     </MarketingShell>

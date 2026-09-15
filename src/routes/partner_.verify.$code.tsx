@@ -13,7 +13,13 @@ import { getPartnerBadge } from "@/lib/partner-badge.functions";
  */
 export const Route = createFileRoute("/partner_/verify/$code")({
   loader: async ({ params }) => {
-    const badge = await getPartnerBadge({ data: { code: params.code } });
+    // A badge we cannot look up is a badge we cannot vouch for. An unreachable
+    // record reads exactly like an unknown code, which is the honest outcome:
+    // this page only ever claims a partnership it has just verified.
+    const badge = await getPartnerBadge({ data: { code: params.code } }).catch((err) => {
+      console.error("[partner-verify] degraded:", err instanceof Error ? err.message : err);
+      return null;
+    });
     if (!badge) throw notFound();
     return badge;
   },

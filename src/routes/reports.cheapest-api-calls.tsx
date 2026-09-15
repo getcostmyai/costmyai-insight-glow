@@ -8,6 +8,7 @@ import { Reveal, CountUp } from "@/components/marketing/Reveal";
 import { catalogQuery, type CatalogPayload, type CatalogRow } from "@/lib/catalog.functions";
 import { ensurePublicQuery } from "@/lib/public-query";
 import { EMPTY_CATALOG } from "@/lib/public-empty";
+import { FiguresUnavailable } from "@/components/marketing/FiguresUnavailable";
 
 const URL = "https://www.costmyai.com/reports/cheapest-api-calls";
 const TITLE = "Cheapest API call 2026: prices compared by model and provider | CostMyAI";
@@ -54,8 +55,14 @@ function CheapestApiCallsPage() {
   return (
     <MarketingShell>
       <Hero data={data} />
-      <Table data={data} />
-      <ByProvider data={data} />
+      {data.degraded ? (
+        <FiguresUnavailable what="The live price list" />
+      ) : (
+        <>
+          <Table data={data} />
+          <ByProvider data={data} />
+        </>
+      )}
       <Method />
       <Cta />
     </MarketingShell>
