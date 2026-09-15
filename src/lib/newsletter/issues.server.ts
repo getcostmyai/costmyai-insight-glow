@@ -197,9 +197,12 @@ async function confirmedSubscribers(): Promise<
   return (data ?? []) as Array<{ id: string; email: string; confirm_token: string | null }>;
 }
 
+// The production origin, always. An issue email outlives the host that sent
+// it, so its chart images, archive link and unsubscribe link cannot be built
+// from a request or an environment variable.
 async function origin(): Promise<string> {
-  const { siteOrigin } = await import("../partner-welcome.server");
-  return siteOrigin();
+  const { OUTBOUND_ORIGIN } = await import("../email-links");
+  return OUTBOUND_ORIGIN;
 }
 
 /** Render the real email template to HTML, for the composer preview. */

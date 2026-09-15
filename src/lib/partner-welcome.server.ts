@@ -43,17 +43,16 @@ export async function sendPartnerWelcome(
     return { sent: false, reason: "Partner has no contact email", email: null };
   }
 
-  const origin = siteOrigin();
-
   try {
     const { sendTemplateEmail } = await import("./email-templates/send-email");
+    const { partnerLoginUrl, partnerReferralUrl } = await import("./email-links");
     const result = await sendTemplateEmail("partner-welcome", email, {
       templateData: {
         partnerName: partner.name,
         signInEmail: email,
         referralCode: partner.referral_code,
-        referralLink: `${origin}/r/${partner.referral_code}`,
-        loginUrl: `${origin}/partner/login`,
+        referralLink: partnerReferralUrl(partner.referral_code),
+        loginUrl: partnerLoginUrl(),
         fromApplication: options.fromApplication ?? false,
       },
       // One welcome per partner account, whatever path created it: a retried
