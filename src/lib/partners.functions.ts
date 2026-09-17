@@ -494,23 +494,3 @@ export const readReferralSplit = createServerFn({ method: "GET" })
         .sort((a, b) => b.referred - a.referred || a.name.localeCompare(b.name)),
     };
   });
-
-/**
- * The cheapest possible "is this person a partner" answer.
- *
- * The sidebar asks this on every authenticated page, so it must not pull the
- * whole partner dashboard. One indexed membership row, read through the
- * caller's own client, is enough.
- */
-export const amIPartner = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<boolean> => {
-    const { data, error } = await context.supabase
-      .from("partner_users")
-      .select("partner_id")
-      .eq("user_id", context.userId)
-      .limit(1)
-      .maybeSingle();
-    if (error) throw error;
-    return Boolean(data);
-  });
