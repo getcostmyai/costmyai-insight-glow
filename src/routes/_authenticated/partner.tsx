@@ -75,13 +75,17 @@ export function PartnerLayout() {
     return <Shell>We could not read your partner account. Try again shortly.</Shell>;
   // Never show "you aren't a partner" while the link is still being checked.
   if (!partner.data && claim !== "done") return <Shell>Linking your partner account…</Shell>;
-  if (!partner.data) return <NotAPartner />;
+  if (!partner.data) return <NotAPartner hasWorkspace={hasWorkspace} />;
 
   return (
     <PartnerDataProvider value={partner.data}>
       <div className="min-h-screen bg-background">
         <div className="mx-auto flex max-w-[1440px] gap-8 px-5 py-8 lg:px-8">
-          <PartnerSidebar partner={partner.data.partner} active={activeKey(pathname)} />
+          <PartnerSidebar
+            partner={partner.data.partner}
+            active={activeKey(pathname)}
+            hasWorkspace={hasWorkspace}
+          />
           <main className="min-w-0 flex-1">
             <Outlet />
           </main>
