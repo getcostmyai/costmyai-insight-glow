@@ -144,13 +144,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Benchmark saving"
               value={usd(benchmarkSaving, 0)}
-              sub="Different model, quality proven before it is shown, including workloads a cheaper host also reaches"
-              accent="oklch(0.83 0.11 195)"
-            />
-            <HeroStat
-              label="Benchmark only"
-              value={usd(benchmarkOnly, 0)}
-              sub="No cheaper host exists for these workloads, so nothing but a benchmark unlocks them"
+              sub="Different model, quality proven before it is shown, measured on top of the cheaper-host saving so the two add"
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat
