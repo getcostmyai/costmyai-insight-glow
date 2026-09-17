@@ -94,15 +94,26 @@ afterAll(async () => {
 
 describe("the shared demo workspace refuses writes", () => {
   it("refuses an objective write against the demo workspace", async () => {
+    // A row with nothing wrong with it: valid enum label, every other column
+    // nullable and left null. The policy is the only reason it can fail.
     const { error } = await caller
       .from("objectives")
-      .insert({ org_id: DEMO_ORG_ID, objective: "cheapest", model_key: "demo-guard-probe" });
+      .insert({
+        org_id: DEMO_ORG_ID,
+        objective: "cost",
+        created_by: userId,
+        is_synthetic: true,
+      });
     expect(error).not.toBeNull();
+    expect(error?.code).not.toBe("22P02"); // invalid enum input, would prove nothing
+    expect(error?.code).not.toBe("23502"); // not-null violation, would prove nothing
+    expect(error?.code).toBe("42501"); // insufficient_privilege: the RLS refusal
+    // Count what this caller could have written, not a string that was never valid.
     const { count } = await admin
       .from("objectives")
       .select("id", { count: "exact", head: true })
       .eq("org_id", DEMO_ORG_ID)
-      .eq("model_key", "demo-guard-probe");
+      .eq("created_by", userId);
     expect(count ?? 0).toBe(0);
   }, 30_000);
 
