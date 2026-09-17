@@ -8,7 +8,7 @@
  */
 
 /** The "Referral funnel" panel on /partner. Events keep being recorded either way. */
-export const SHOW_PARTNER_REFERRAL_FUNNEL = false;
+export const SHOW_PARTNER_REFERRAL_FUNNEL = true;
 
 /** The "Certified Partner badge and banners" panel on /partner. Generation stays live. */
 export const SHOW_PARTNER_BADGE_ASSETS = false;
