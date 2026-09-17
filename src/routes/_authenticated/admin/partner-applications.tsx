@@ -118,7 +118,6 @@ function CreatePartnerCard() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +144,6 @@ function CreatePartnerCard() {
       );
       setName("");
       setEmail("");
-      setCode("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create the partner.");
     } finally {

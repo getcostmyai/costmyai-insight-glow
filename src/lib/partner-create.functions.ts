@@ -70,7 +70,7 @@ export const reissuePartnerCode = createServerFn({ method: "POST" })
   .inputValidator((data: { partnerId: string; reason?: string }) => {
     if (!UUID.test(data?.partnerId ?? "")) throw new Error("Partner not found");
     const reason = (data?.reason ?? "").trim();
-    return { partnerId: data.partnerId, reason: reason ? reason.slice(0, 300) : null };
+    return { partnerId: data.partnerId, reason: reason ? reason.slice(0, 300) : undefined };
   })
   .handler(async ({ data, context }) => {
     const { data: isAdmin, error: adminError } = await context.supabase.rpc("is_platform_admin");
@@ -79,7 +79,7 @@ export const reissuePartnerCode = createServerFn({ method: "POST" })
 
     const { data: result, error } = await context.supabase.rpc("reissue_referral_code", {
       _partner_id: data.partnerId,
-      _reason: data.reason,
+      _reason: data.reason ?? undefined,
     });
     if (error) throw error;
     return result as { partner_id: string; previous_code: string; referral_code: string };
