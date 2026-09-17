@@ -149,7 +149,7 @@ describe("the shared demo workspace refuses writes", () => {
     const after = await admin
       .from("recommendations")
       .select("status")
-      .eq("id", rec.id)
+      .eq("id", rec!.id)
       .single();
     expect(after.data?.status).toBe("open");
   }, 30_000);
