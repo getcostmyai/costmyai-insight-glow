@@ -30,6 +30,18 @@ vi.mock("@/lib/partners.functions", () => ({ getMyPartner: () => getMyPartner() 
 vi.mock("@/lib/partner-application.functions", () => ({
   claimPartnerMembership: () => Promise.resolve({ partnerId: null }),
 }));
+const listMyWorkspaces = vi.fn();
+vi.mock("@/lib/workspace.functions", () => ({
+  listMyWorkspaces: () => listMyWorkspaces(),
+}));
+
+const ACTIVE_PARTNER = {
+  partner: { name: "Quinn Consulting", status: "active", referralCode: "QUINN" },
+  referrals: [],
+  commissions: [],
+  payouts: [],
+  totals: { earnedUsd: 0, outstandingUsd: 0 },
+};
 
 const { PartnerLayout } = await import("@/routes/_authenticated/partner");
 
