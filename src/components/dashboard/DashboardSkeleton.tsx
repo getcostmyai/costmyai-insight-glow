@@ -36,7 +36,6 @@ export function DashboardFrame({
   children: React.ReactNode;
 }) {
   const paths = PATHS[scope];
-  const isPartner = useIsPartner() === true;
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,7 +73,6 @@ export function DashboardFrame({
             <div className="space-y-1 border-t border-border pt-5">
               <p className="eyebrow px-3 pb-1">Account</p>
               {accountNav.map((item) => {
-                if ("partnerOnly" in item && item.partnerOnly && !isPartner) return null;
                 const Icon = item.icon;
                 return (
                   <Link
