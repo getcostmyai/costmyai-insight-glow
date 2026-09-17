@@ -22,9 +22,12 @@ import {
 } from "./visitor-cookie";
 
 export type LeadEventType =
+  /* Partner referral link click. Written only by handleReferralRedirect, and
+     only on a first-touch match, so one row is one new referred visitor. */
+  | "referral_click"
   | "estimator_viewed"
   | "estimator_engaged"
-  /* Allocation-bar progression, one event per real action. */
+
   | "estimator_line_added"
   | "estimator_line_changed"
   | "estimator_line_removed"
