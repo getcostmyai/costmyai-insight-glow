@@ -17,7 +17,6 @@ import { sendPartnerWelcome, type PartnerWelcomeResult } from "./partner-welcome
 export interface CreatePartnerInput {
   name: string;
   email: string;
-  referralCode?: string | null;
   /** Set after the caller has seen and accepted the duplicate warning. */
   allowDuplicate?: boolean;
 }
@@ -117,11 +116,9 @@ export async function createPartnerAndWelcome(
     });
   }
 
-  const requested = (input.referralCode ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const referralCode = await uniqueCode(
-    admin,
-    requested.length >= 3 ? requested : deriveReferralCode(name),
-  );
+  // No caller-chosen codes: a hand-picked code is how name-derived codes come
+  // back. Every partner gets a neutral random one.
+  const referralCode = await mintReferralCode(admin);
 
   const { data: created, error } = await admin
     .from("partners")
