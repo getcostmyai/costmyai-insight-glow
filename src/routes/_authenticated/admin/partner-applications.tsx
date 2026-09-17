@@ -130,7 +130,7 @@ function CreatePartnerCard() {
     if (!allowDuplicate) setWarning(null);
     try {
       const result = await create({
-        data: { name, email, referralCode: code, allowDuplicate },
+        data: { name, email, allowDuplicate },
       });
       if (result.duplicate) {
         setWarning(result.message);
@@ -188,12 +188,6 @@ function CreatePartnerCard() {
               placeholder="Contact email"
               inputMode="email"
               className="min-w-[12rem] flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-            />
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Referral code (optional)"
-              className="min-w-[10rem] rounded-xl border border-border bg-background px-3 py-2 text-sm uppercase outline-none focus:border-primary"
             />
             <button
               type="button"
