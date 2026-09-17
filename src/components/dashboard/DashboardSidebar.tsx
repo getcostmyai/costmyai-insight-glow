@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   CreditCard,
   Gauge,
-  Handshake,
   Layers,
   LineChart,
   Lock,
@@ -13,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { useIsPartner } from "@/hooks/use-is-partner";
 import type { DashboardScope } from "@/lib/dashboard-queries";
 import type { LevelKey } from "@/lib/dashboard/levels";
 import { LEVELS } from "@/lib/dashboard/levels";
@@ -27,7 +25,7 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  * left no way back into the dashboard except the browser's Back button.
  */
 
-export type AccountKey = "settings" | "billing" | "team" | "partner" | "feedback";
+export type AccountKey = "settings" | "billing" | "team" | "feedback";
 
 export const ICONS: Record<LevelKey, typeof Layers> = {
   overview: Layers,
@@ -41,10 +39,9 @@ const accountNav = [
   { key: "settings" as const, label: "Settings", to: "/settings", icon: Settings },
   { key: "billing" as const, label: "Billing", to: "/billing", icon: CreditCard },
   { key: "team" as const, label: "Team", to: "/team", icon: Users },
-  // Partner is only listed for people who actually belong to a partner
-  // account. Everyone else was being sent to a dead end that told them they
-  // are not a partner. The route itself stays reachable by direct URL.
-  { key: "partner" as const, label: "Partner", to: "/partner", icon: Handshake, partnerOnly: true },
+  // The partner area is a separate identity surface from a workspace and is
+  // reached at /partner/login, which every approved partner is sent to. It is
+  // deliberately not listed here — this is not a missing link.
   { key: "feedback" as const, label: "Suggest a feature", to: "/feedback", icon: MessageSquarePlus },
 ];
 
@@ -81,7 +78,6 @@ export function DashboardSidebar({
   account?: AccountKey;
 }) {
   const paths = PATHS[scope];
-  const isPartner = useIsPartner() === true;
   // Dispatch 232 reverses Dispatch 172. A customer sees their own rung plus
   // every rung above it (locked, as the upsell path). Rungs *below* their own
   // are never listed: everything those rungs found is merged inline into the
@@ -149,8 +145,6 @@ export function DashboardSidebar({
         <div className="space-y-1 border-t border-border pt-5">
           <p className="eyebrow px-3 pb-1">Account</p>
           {accountNav.map((item) => {
-            // Hidden while the answer is still unknown, so it never flickers.
-            if (item.partnerOnly && !isPartner) return null;
             const Icon = item.icon;
             const active = item.key === account;
             return (
