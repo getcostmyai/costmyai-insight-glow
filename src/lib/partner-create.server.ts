@@ -17,7 +17,6 @@ import { sendPartnerWelcome, type PartnerWelcomeResult } from "./partner-welcome
 export interface CreatePartnerInput {
   name: string;
   email: string;
-  referralCode?: string | null;
   /** Set after the caller has seen and accepted the duplicate warning. */
   allowDuplicate?: boolean;
 }
@@ -42,27 +41,49 @@ export function normalizePartnerEmail(raw: string): string {
   return (raw ?? "").trim().toLowerCase();
 }
 
-export function deriveReferralCode(name: string): string {
-  const base = (name ?? "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 12);
-  return base.length >= 3 ? base : `PARTNER${Math.floor(Math.random() * 9000 + 1000)}`;
+/**
+ * The code alphabet, and why it looks like this.
+ *
+ * A referral code must never carry the partner's name: a recipient who reads
+ * SLAEPPLE09 knows the sender is paid before they have looked at anything, and
+ * the neutral-recommendation position the partner relies on is gone. So the
+ * code is random, not derived.
+ *
+ * Excluded characters are the ones that break when a code is read aloud on a
+ * call or retyped off a slide: O, 0, I, 1, L. Randomness comes from
+ * crypto.getRandomValues, never Math.random.
+ */
+export const REFERRAL_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export const REFERRAL_CODE_LENGTH = 8;
+
+export function generateReferralCode(): string {
+  const bytes = new Uint32Array(REFERRAL_CODE_LENGTH);
+  crypto.getRandomValues(bytes);
+  let code = "";
+  for (let i = 0; i < REFERRAL_CODE_LENGTH; i++) {
+    code += REFERRAL_CODE_ALPHABET[bytes[i]! % REFERRAL_CODE_ALPHABET.length];
+  }
+  return code;
 }
 
 type Admin = SupabaseClient<Database>;
 
-async function uniqueCode(supabaseAdmin: Admin, seed: string): Promise<string> {
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const candidate = attempt === 0 ? seed : `${seed.slice(0, 10)}${attempt + 1}`;
-    const { data } = await supabaseAdmin
+/**
+ * Unique or nothing. A collision retries; exhausting the retries throws rather
+ * than handing back a code that is already in use.
+ */
+export async function mintReferralCode(supabaseAdmin: Admin): Promise<string> {
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const candidate = generateReferralCode();
+    const { data, error } = await supabaseAdmin
       .from("partners")
       .select("id")
       .ilike("referral_code", candidate)
       .maybeSingle();
+    if (error) throw error;
     if (!data) return candidate;
   }
-  return `${seed.slice(0, 8)}${Date.now().toString(36).toUpperCase().slice(-4)}`;
+  throw new Error("Could not mint a unique referral code after 25 attempts");
 }
 
 export async function createPartnerAndWelcome(
@@ -95,11 +116,9 @@ export async function createPartnerAndWelcome(
     });
   }
 
-  const requested = (input.referralCode ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const referralCode = await uniqueCode(
-    admin,
-    requested.length >= 3 ? requested : deriveReferralCode(name),
-  );
+  // No caller-chosen codes: a hand-picked code is how name-derived codes come
+  // back. Every partner gets a neutral random one.
+  const referralCode = await mintReferralCode(admin);
 
   const { data: created, error } = await admin
     .from("partners")
@@ -117,4 +136,28 @@ export async function createPartnerAndWelcome(
   const welcome = await sendPartnerWelcome(created.id, { fromApplication: false });
 
   return { partnerId: created.id, referralCode: created.referral_code, email, welcome };
+}
+
+/**
+ * Reissue a partner's referral code.
+ *
+ * The admin check runs here, against the caller's own client, before the
+ * database routine is reached, so a non-admin cannot even learn whether a
+ * partner id exists. The routine itself re-checks and writes the audit row.
+ */
+export async function reissueCode(
+  supabase: Admin,
+  partnerId: string,
+  reason?: string,
+): Promise<{ partner_id: string; previous_code: string; referral_code: string }> {
+  const { data: isAdmin, error: adminError } = await supabase.rpc("is_platform_admin");
+  if (adminError) throw adminError;
+  if (!isAdmin) throw new Error("Not found");
+
+  const { data, error } = await supabase.rpc("reissue_referral_code", {
+    _partner_id: partnerId,
+    _reason: reason,
+  });
+  if (error) throw error;
+  return data as unknown as { partner_id: string; previous_code: string; referral_code: string };
 }

@@ -11,20 +11,17 @@ const UUID = /^[0-9a-f-]{36}$/i;
  */
 export const createPartner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (data: { name: string; email: string; referralCode?: string; allowDuplicate?: boolean }) => {
-      const name = (data?.name ?? "").trim();
-      const email = (data?.email ?? "").trim().toLowerCase();
-      if (!name) throw new Error("Partner name is required");
-      if (!email) throw new Error("A contact email is required");
-      return {
-        name: name.slice(0, 120),
-        email: email.slice(0, 200),
-        referralCode: (data?.referralCode ?? "").trim().slice(0, 24),
-        allowDuplicate: data?.allowDuplicate === true,
-      };
-    },
-  )
+  .inputValidator((data: { name: string; email: string; allowDuplicate?: boolean }) => {
+    const name = (data?.name ?? "").trim();
+    const email = (data?.email ?? "").trim().toLowerCase();
+    if (!name) throw new Error("Partner name is required");
+    if (!email) throw new Error("A contact email is required");
+    return {
+      name: name.slice(0, 120),
+      email: email.slice(0, 200),
+      allowDuplicate: data?.allowDuplicate === true,
+    };
+  })
   .handler(async ({ data, context }) => {
     const { data: isAdmin, error } = await context.supabase.rpc("is_platform_admin");
     if (error) throw error;
@@ -59,4 +56,23 @@ export const resendPartnerWelcome = createServerFn({ method: "POST" })
 
     const { sendPartnerWelcome } = await import("./partner-welcome.server");
     return sendPartnerWelcome(data.partnerId, { fromApplication: false });
+  });
+
+/**
+ * Reissue a partner's referral code. Platform admins only.
+ *
+ * Exists so retiring a code is never a founder-run database update again. The
+ * new code is minted in the database routine, the old one is written to
+ * partner_code_audit with the actor, and partners cannot reach this at all.
+ */
+export const reissuePartnerCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { partnerId: string; reason?: string }) => {
+    if (!UUID.test(data?.partnerId ?? "")) throw new Error("Partner not found");
+    const reason = (data?.reason ?? "").trim();
+    return { partnerId: data.partnerId, reason: reason ? reason.slice(0, 300) : undefined };
+  })
+  .handler(async ({ data, context }) => {
+    const { reissueCode } = await import("./partner-create.server");
+    return reissueCode(context.supabase as never, data.partnerId, data.reason);
   });

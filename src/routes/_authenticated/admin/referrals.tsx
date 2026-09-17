@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Split } from "lucide-react";
+import { useState } from "react";
+import { Loader2, RefreshCw, Split } from "lucide-react";
 
 import { readReferralSplit } from "@/lib/partners.functions";
+import { reissuePartnerCode } from "@/lib/partner-create.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/referrals")({
   head: () => ({
@@ -80,6 +82,7 @@ function ReferralSplitPage() {
                     <th className="px-4 py-3 font-medium">Code</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 text-right font-medium">Referred</th>
+                    <th className="px-4 py-3 text-right font-medium">Code</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,6 +94,9 @@ function ReferralSplitPage() {
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{p.status}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{p.referred}</td>
+                      <td className="px-4 py-3 text-right">
+                        <ReissueButton partnerId={p.id} name={p.name} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -117,5 +123,72 @@ function Stat({
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className={`mt-2 text-3xl font-semibold tabular-nums ${tone}`}>{value}</p>
     </div>
+  );
+}
+
+/**
+ * Reissue a partner's referral code.
+ *
+ * Retiring a code used to mean a founder-run database update. It is admin-only,
+ * asks once before it acts because the old link stops resolving immediately,
+ * and every reissue writes an audit row with the previous code and who did it.
+ */
+function ReissueButton({ partnerId, name }: { partnerId: string; name: string }) {
+  const queryClient = useQueryClient();
+  const reissue = useServerFn(reissuePartnerCode);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run() {
+    setBusy(true);
+    setError(null);
+    try {
+      await reissue({ data: { partnerId, reason: `Reissued from the admin referrals page` } });
+      setConfirming(false);
+      await queryClient.invalidateQueries({ queryKey: ["admin-referral-split"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reissue the code.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (error) {
+    return <span className="text-xs text-destructive">{error}</span>;
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        aria-label={`Reissue the referral code for ${name}`}
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted"
+      >
+        <RefreshCw className="h-3 w-3" /> Reissue
+      </button>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="text-xs text-muted-foreground">Old link stops working.</span>
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? "…" : "Confirm"}
+      </button>
+      <button
+        type="button"
+        onClick={() => setConfirming(false)}
+        className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
+      >
+        Cancel
+      </button>
+    </span>
   );
 }
