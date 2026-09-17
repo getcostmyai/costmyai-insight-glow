@@ -27,8 +27,9 @@ export type LeadEventType =
   | "referral_click"
   | "estimator_viewed"
   | "estimator_engaged"
-
+  /* Allocation-bar progression, one event per real action. */
   | "estimator_line_added"
+
   | "estimator_line_changed"
   | "estimator_line_removed"
   | "estimator_split_changed"
