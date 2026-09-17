@@ -1405,23 +1405,50 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     else governRefusals.push({ ...base, reason: verdict.reason, detail: verdict.detail });
   }
   /**
-   * One workload, one autonomous switch. A workload can clear the gate as
-   * arbitrage *and* as a quality match; only the better of the two can ever be
-   * applied, so summing both would promise money twice — the same double count
-   * `aggregateSavings` removes from the headline.
+   * One workload, one autonomous switch, priced the way the dashboard prices
+   * everything else. A workload can clear the gate as arbitrage AND as a
+   * quality or right-size candidate. Those are not competing views of the same
+   * dollars: the cheaper-host figure carries the workload to the baseline and
+   * the certified or right-sized figure carries it past the baseline, so the
+   * switch that actually runs is worth both together. The quality and
+   * right-size destinations are alternatives to each other, so only the larger
+   * of those two increments joins the arbitrage saving.
    */
-  const dedupeByWorkload = <T extends { fromModel: string; fromHost: string; taskHint: string; saving: number }>(
-    rows: T[],
-  ) => {
-    const best = new Map<string, T>();
+  const composeGovern = (rows: GovernCandidate[]): GovernCandidate[] => {
+    const byWorkload = new Map<string, GovernCandidate[]>();
     for (const r of rows) {
       const key = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
-      const seen = best.get(key);
-      if (!seen || r.saving > seen.saving) best.set(key, r);
+      const group = byWorkload.get(key);
+      if (group) group.push(r);
+      else byWorkload.set(key, [r]);
     }
-    return [...best.values()];
+    const out: GovernCandidate[] = [];
+    for (const group of byWorkload.values()) {
+      const arb = group.filter((r) => r.kind === "host_arbitrage");
+      const inc = group.filter((r) => r.kind !== "host_arbitrage");
+      const bestArb = arb.reduce<GovernCandidate | null>(
+        (m, r) => (!m || r.saving > m.saving ? r : m),
+        null,
+      );
+      const bestInc = inc.reduce<GovernCandidate | null>(
+        (m, r) => (!m || r.saving > m.saving ? r : m),
+        null,
+      );
+      // The row the customer sees is the destination that actually runs: the
+      // increment's destination when one exists, otherwise the cheaper host.
+      const lead = bestInc ?? bestArb;
+      if (!lead) continue;
+      out.push({
+        ...lead,
+        saving: round2(composeWorkload(bestArb?.saving ?? 0, [bestInc?.saving ?? 0])),
+        monthlySaving: round2(
+          composeWorkload(bestArb?.monthlySaving ?? 0, [bestInc?.monthlySaving ?? 0]),
+        ),
+      });
+    }
+    return out;
   };
-  const governEligibleUnique = dedupeByWorkload(governEligible);
+  const governEligibleUnique = composeGovern(governEligible);
   governEligibleUnique.sort((a, b) => b.saving - a.saving);
   governEligible.length = 0;
   governEligible.push(...governEligibleUnique);
