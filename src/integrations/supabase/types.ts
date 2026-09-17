@@ -1483,6 +1483,44 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_code_audit: {
+        Row: {
+          actor: string | null
+          created_at: string
+          id: string
+          new_code: string
+          partner_id: string
+          previous_code: string
+          reason: string | null
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          id?: string
+          new_code: string
+          partner_id: string
+          previous_code: string
+          reason?: string | null
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          id?: string
+          new_code?: string
+          partner_id?: string
+          previous_code?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_code_audit_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_payouts: {
         Row: {
           amount_payout_currency: number | null
@@ -2895,6 +2933,7 @@ export type Database = {
           visitors: number
         }[]
       }
+      generate_referral_code: { Args: never; Returns: string }
       has_org_role: {
         Args: {
           _org_id: string
@@ -2928,6 +2967,7 @@ export type Database = {
           visitors: number
         }[]
       }
+      mint_referral_code: { Args: never; Returns: string }
       org_entitled_to: {
         Args: {
           _org_id: string
@@ -3035,6 +3075,10 @@ export type Database = {
       }
       rate_limit_gc: { Args: { _older_than_seconds?: number }; Returns: number }
       rate_limit_prune: { Args: never; Returns: number }
+      reissue_referral_code: {
+        Args: { _partner_id: string; _reason?: string }
+        Returns: Json
+      }
       restore_commission: {
         Args: {
           _environment?: string
