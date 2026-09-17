@@ -141,12 +141,10 @@ describe("the shared demo workspace refuses writes", () => {
       .eq("status", "open")
       .limit(1)
       .maybeSingle();
-    if (!rec?.id) {
-      // Nothing open to attempt right now; the table guards above still hold.
-      expect(true).toBe(true);
-      return;
-    }
-    const { error } = await caller.rpc("apply_switch", { _rec_id: rec.id });
+    // The precondition is an assertion, not a skip: with no open row this probe
+    // would test nothing, and that has to fail loudly.
+    expect(rec?.id, "no open recommendation in the demo workspace to attempt").toBeTruthy();
+    const { error } = await caller.rpc("apply_switch", { _rec_id: rec!.id });
     expect(error).not.toBeNull();
     const after = await admin
       .from("recommendations")
