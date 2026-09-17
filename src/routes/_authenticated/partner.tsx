@@ -47,6 +47,15 @@ export function PartnerLayout() {
   });
   const hasWorkspace =
     workspaces.isPending || workspaces.isError ? undefined : (workspaces.data?.length ?? 0) > 0;
+  // The server decides who may open the demo. Asked here so the sidebar stays
+  // presentational, and read strictly: only a known positive shows the link.
+  const demoAccess = useQuery({
+    queryKey: ["demo-access"],
+    queryFn: () => getDemoAccess(),
+    staleTime: 30_000,
+  });
+  const hasDemoAccess =
+    demoAccess.isPending || demoAccess.isError ? undefined : demoAccess.data?.audience != null;
   const [claim, setClaim] = useState<"idle" | "running" | "done">("idle");
   // The self-link is attempted exactly once per mount. A ref, not effect
   // dependencies: `partner` is a new object every render, so depending on it
