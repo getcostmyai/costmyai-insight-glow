@@ -39,10 +39,9 @@ const accountNav = [
   { key: "settings" as const, label: "Settings", to: "/settings", icon: Settings },
   { key: "billing" as const, label: "Billing", to: "/billing", icon: CreditCard },
   { key: "team" as const, label: "Team", to: "/team", icon: Users },
-  // Partner is only listed for people who actually belong to a partner
-  // account. Everyone else was being sent to a dead end that told them they
-  // are not a partner. The route itself stays reachable by direct URL.
-  { key: "partner" as const, label: "Partner", to: "/partner", icon: Handshake, partnerOnly: true },
+  // The partner area is a separate identity surface from a workspace and is
+  // reached at /partner/login, which every approved partner is sent to. It is
+  // deliberately not listed here — this is not a missing link.
   { key: "feedback" as const, label: "Suggest a feature", to: "/feedback", icon: MessageSquarePlus },
 ];
 
