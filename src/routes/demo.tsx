@@ -30,9 +30,13 @@ export const Route = createFileRoute("/demo")({
 
   head: () => ({
     meta: [
-      { title: "Internal workspace — CostMyAI" },
+      { title: "Demo System | CostMyAI" },
       { name: "robots", content: "noindex, nofollow" },
-      { name: "description", content: "Private internal workspace." },
+      {
+        name: "description",
+        content:
+          "A read-only demo workspace showing CostMyAI running on sample AI spend, for walkthroughs with prospective customers.",
+      },
     ],
   }),
 

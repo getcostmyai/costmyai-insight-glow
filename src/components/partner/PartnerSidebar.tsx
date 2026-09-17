@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Handshake, Settings, Wallet } from "lucide-react";
+import { ArrowLeft, Handshake, MonitorPlay, Settings, Wallet } from "lucide-react";
 
 import type { PartnerDashboard } from "@/lib/partners.functions";
 
@@ -30,6 +30,7 @@ export function PartnerSidebar({
   partner,
   active,
   hasWorkspace,
+  hasDemoAccess,
 }: {
   partner: PartnerDashboard["partner"];
   active: PartnerNavKey;
@@ -39,6 +40,12 @@ export function PartnerSidebar({
    * alternative lands someone on a workspace signup form.
    */
   hasWorkspace?: boolean;
+  /**
+   * The server's own answer to "may this caller open the demo". Only a known
+   * positive renders the link: pending, failed and a null audience all render
+   * nothing, so a suspended partnership loses it on the next read.
+   */
+  hasDemoAccess?: boolean;
 }) {
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
@@ -78,15 +85,26 @@ export function PartnerSidebar({
           })}
         </nav>
 
-        {hasWorkspace === true ? (
+        {hasDemoAccess === true || hasWorkspace === true ? (
           <div className="space-y-1 border-t border-border pt-5">
-            <Link
-              to="/workspace"
-              className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              Back to your workspace
-            </Link>
+            {hasDemoAccess === true ? (
+              <Link
+                to="/demo"
+                className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <MonitorPlay className="size-4" />
+                Demo System
+              </Link>
+            ) : null}
+            {hasWorkspace === true ? (
+              <Link
+                to="/workspace"
+                className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <ArrowLeft className="size-4" />
+                Back to your workspace
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </div>

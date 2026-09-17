@@ -34,6 +34,10 @@ const listMyWorkspaces = vi.fn();
 vi.mock("@/lib/workspace.functions", () => ({
   listMyWorkspaces: () => listMyWorkspaces(),
 }));
+const getDemoAccess = vi.fn();
+vi.mock("@/lib/demo-access.functions", () => ({
+  getDemoAccess: () => getDemoAccess(),
+}));
 
 const ACTIVE_PARTNER = {
   partner: { name: "Quinn Consulting", status: "active", referralCode: "QUINN" },
@@ -59,6 +63,33 @@ beforeEach(() => {
   vi.clearAllMocks();
   pathname = "/partner";
   listMyWorkspaces.mockResolvedValue([{ id: "w1", name: "Acme", slug: "acme", plan: "compare", role: "owner" }]);
+  getDemoAccess.mockResolvedValue({ audience: "partner" });
+});
+
+describe("demo system link", () => {
+  it("renders for an active partner the server grants demo access", async () => {
+    getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
+    mount();
+    await waitFor(() =>
+      expect(screen.getByRole("link", { name: /Demo System/i })).toHaveAttribute("href", "/demo"),
+    );
+  });
+
+  it("is absent when the demo-access answer is null", async () => {
+    getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
+    getDemoAccess.mockResolvedValue({ audience: null });
+    mount();
+    await waitFor(() => expect(screen.getByTestId("outlet")).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: /Demo System/i })).toBeNull();
+  });
+
+  it("is absent while the demo-access read is still pending", async () => {
+    getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
+    getDemoAccess.mockReturnValue(new Promise(() => {}));
+    mount();
+    await waitFor(() => expect(screen.getByTestId("outlet")).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: /Demo System/i })).toBeNull();
+  });
 });
 
 describe("partner area routes", () => {

@@ -6,6 +6,7 @@ import { Check, Copy, Handshake, X } from "lucide-react";
 import { getMyPartner } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
 import { listMyWorkspaces } from "@/lib/workspace.functions";
+import { getDemoAccess } from "@/lib/demo-access.functions";
 
 import { PartnerDataProvider } from "@/components/partner/partner-context";
 import { PartnerSidebar, type PartnerNavKey } from "@/components/partner/PartnerSidebar";
@@ -46,6 +47,15 @@ export function PartnerLayout() {
   });
   const hasWorkspace =
     workspaces.isPending || workspaces.isError ? undefined : (workspaces.data?.length ?? 0) > 0;
+  // The server decides who may open the demo. Asked here so the sidebar stays
+  // presentational, and read strictly: only a known positive shows the link.
+  const demoAccess = useQuery({
+    queryKey: ["demo-access"],
+    queryFn: () => getDemoAccess(),
+    staleTime: 30_000,
+  });
+  const hasDemoAccess =
+    demoAccess.isPending || demoAccess.isError ? undefined : demoAccess.data?.audience != null;
   const [claim, setClaim] = useState<"idle" | "running" | "done">("idle");
   // The self-link is attempted exactly once per mount. A ref, not effect
   // dependencies: `partner` is a new object every render, so depending on it
@@ -85,6 +95,7 @@ export function PartnerLayout() {
             partner={partner.data.partner}
             active={activeKey(pathname)}
             hasWorkspace={hasWorkspace}
+            hasDemoAccess={hasDemoAccess}
           />
           <main className="min-w-0 flex-1">
             <Outlet />
