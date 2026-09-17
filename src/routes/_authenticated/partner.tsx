@@ -6,6 +6,7 @@ import { Check, Copy, Handshake, X } from "lucide-react";
 import { getMyPartner } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
 import { listMyWorkspaces } from "@/lib/workspace.functions";
+import { getDemoAccess } from "@/lib/demo-access.functions";
 
 import { PartnerDataProvider } from "@/components/partner/partner-context";
 import { PartnerSidebar, type PartnerNavKey } from "@/components/partner/PartnerSidebar";
