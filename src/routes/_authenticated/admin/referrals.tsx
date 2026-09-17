@@ -125,3 +125,70 @@ function Stat({
     </div>
   );
 }
+
+/**
+ * Reissue a partner's referral code.
+ *
+ * Retiring a code used to mean a founder-run database update. It is admin-only,
+ * asks once before it acts because the old link stops resolving immediately,
+ * and every reissue writes an audit row with the previous code and who did it.
+ */
+function ReissueButton({ partnerId, name }: { partnerId: string; name: string }) {
+  const queryClient = useQueryClient();
+  const reissue = useServerFn(reissuePartnerCode);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run() {
+    setBusy(true);
+    setError(null);
+    try {
+      await reissue({ data: { partnerId, reason: `Reissued from the admin referrals page` } });
+      setConfirming(false);
+      await queryClient.invalidateQueries({ queryKey: ["admin-referral-split"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reissue the code.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (error) {
+    return <span className="text-xs text-destructive">{error}</span>;
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        aria-label={`Reissue the referral code for ${name}`}
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted"
+      >
+        <RefreshCw className="h-3 w-3" /> Reissue
+      </button>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="text-xs text-muted-foreground">Old link stops working.</span>
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? "…" : "Confirm"}
+      </button>
+      <button
+        type="button"
+        onClick={() => setConfirming(false)}
+        className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-muted"
+      >
+        Cancel
+      </button>
+    </span>
+  );
+}
