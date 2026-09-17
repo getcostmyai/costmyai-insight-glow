@@ -1,21 +1,35 @@
 /**
  * How the money on the dashboard is added up — in one place, once.
  *
- * Two rules this module exists to enforce, both of which were violated before:
+ * Three rules this module exists to enforce, all of which were violated before:
  *
  * 1. A period figure is a real sum of what happened inside that period. It is
  *    never a daily rate multiplied back out to a month, which is how the 7-day
  *    tab came to show a larger "available" number than the 30-day tab.
  * 2. One workload can only be saved once. Arbitrage, the quality check and the
  *    right-size check all run over the same traffic, so the same workload can
- *    appear in two or three lists. Summing the lists counts that workload's
- *    money two or three times, so the totals here keep the best candidate per
- *    workload and report the overlap they removed.
+ *    appear in two or three lists.
+ * 3. Those three figures do not measure the same dollars. Every mechanism
+ *    prices against the same baseline: the cheapest host for the model the
+ *    workload runs on today. Arbitrage is (today's cost minus that baseline).
+ *    The quality and right-size figures are (that baseline minus their own
+ *    destination), so they are increments that sit on top of arbitrage rather
+ *    than alternatives to it. Keeping only the largest candidate therefore
+ *    threw away real money. The quality destination and the right-size
+ *    destination ARE alternatives to each other, so only the larger of those
+ *    two increments may be counted.
+ *
+ * Per workload: arbitrage saving, plus the single largest increment among the
+ * mechanisms that fired on it.
  */
+
+export type MechanismKind = "host_arbitrage" | "quality_match" | "rightsize";
 
 export interface SavingCandidate {
   /** Workload identity: model | host | task. The unit a switch applies to. */
   key: string;
+  /** Which check produced this candidate. Decides how it composes. */
+  kind: MechanismKind;
   /** Real dollars saved over the selected window. Never a run-rate. */
   saving: number;
   /** False when the finding is real but behind a higher plan. */
@@ -32,7 +46,7 @@ export interface SavingCandidate {
 }
 
 export interface SavingsTotals {
-  /** Best unlocked switch per workload, summed. What you can act on today. */
+  /** Composed value of every workload, using only what this plan can reach. */
   available: number;
   /** What a higher plan would add on top, per workload — never double-counted. */
   locked: number;
@@ -42,23 +56,56 @@ export interface SavingsTotals {
   overlapUsd: number;
   /** Workloads that appear in more than one list. */
   overlapCount: number;
-  /** Workloads with at least one unlocked certified switch. */
+  /** Workloads with at least one unlocked candidate worth money. */
   certifiedCount: number;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+interface Bucket {
+  /** Best arbitrage saving, unlocked / any. */
+  arbUnlocked: number;
+  arbAny: number;
+  /** Best increment (quality or rightsize, whichever is larger), unlocked / any. */
+  incUnlocked: number;
+  incAny: number;
+  n: number;
+}
+
+const emptyBucket = (): Bucket => ({
+  arbUnlocked: 0,
+  arbAny: 0,
+  incUnlocked: 0,
+  incAny: 0,
+  n: 0,
+});
+
+/**
+ * The composed value of one workload: arbitrage plus the best increment.
+ * Exported so callers that need the same rule on their own rows (Govern's
+ * autonomous list, the plan ladder) cannot invent a second one.
+ */
+export function composeWorkload(arbitrage: number, increments: number[]): number {
+  const best = increments.reduce((m, v) => (v > m ? v : m), 0);
+  return Math.max(0, arbitrage) + Math.max(0, best);
+}
+
 export function aggregateSavings(candidates: SavingCandidate[]): SavingsTotals {
-  const byWorkload = new Map<string, { unlocked: number; locked: number; n: number }>();
+  const byWorkload = new Map<string, Bucket>();
   let gross = 0;
 
   for (const c of candidates) {
     if (c.saving <= 0) continue;
     gross += c.saving;
-    const row = byWorkload.get(c.key) ?? { unlocked: 0, locked: 0, n: 0 };
+    const row = byWorkload.get(c.key) ?? emptyBucket();
     row.n += 1;
-    if (c.unlocked) row.unlocked = Math.max(row.unlocked, c.saving);
-    else row.locked = Math.max(row.locked, c.saving);
+    if (c.kind === "host_arbitrage") {
+      row.arbAny = Math.max(row.arbAny, c.saving);
+      if (c.unlocked) row.arbUnlocked = Math.max(row.arbUnlocked, c.saving);
+    } else {
+      row.incAny = Math.max(row.incAny, c.saving);
+      if (c.unlocked) row.incUnlocked = Math.max(row.incUnlocked, c.saving);
+    }
     byWorkload.set(c.key, row);
   }
 
@@ -69,12 +116,14 @@ export function aggregateSavings(candidates: SavingCandidate[]): SavingsTotals {
   let kept = 0;
 
   for (const row of byWorkload.values()) {
-    available += row.unlocked;
-    // Only the increment a higher plan would add: if the locked candidate saves
-    // less than one you can already act on, upgrading buys nothing here.
-    locked += Math.max(0, row.locked - row.unlocked);
-    kept += Math.max(row.unlocked, row.locked);
-    if (row.unlocked > 0) certifiedCount += 1;
+    const reachable = composeWorkload(row.arbUnlocked, [row.incUnlocked]);
+    const everything = composeWorkload(row.arbAny, [row.incAny]);
+    available += reachable;
+    // Only the increment a higher plan would add on top of what is already
+    // reachable. Never the locked candidate's whole figure.
+    locked += Math.max(0, everything - reachable);
+    kept += everything;
+    if (reachable > 0) certifiedCount += 1;
     if (row.n > 1) overlapCount += 1;
   }
 
@@ -106,4 +155,51 @@ export function capturedInWindow(
     total += s.saved * (Math.min(days, windowDays) / days);
   }
   return round2(total);
+}
+
+export interface PlanLadder {
+  /** Compare's reach: the arbitrage saving, best row per workload. */
+  compareReach: number;
+  /** Compare plus the certified increment per workload. */
+  certifyReach: number;
+  /** Compare plus the larger of the certified and right-size increments. */
+  rightsizeReach: number;
+  /** certifyReach minus compareReach. */
+  certifyIncrement: number;
+  /** rightsizeReach minus certifyReach. Zero where rightsize adds nothing. */
+  rightsizeIncrement: number;
+}
+
+/**
+ * What each level adds over the level below it, under the same composition
+ * rule. Plan-independent on purpose: an upsell card states what a workspace
+ * would gain by upgrading, so it must describe the finding, not the gate.
+ */
+export function planLadder(candidates: SavingCandidate[]): PlanLadder {
+  const byWorkload = new Map<string, { arb: number; quality: number; rightsize: number }>();
+  for (const c of candidates) {
+    if (c.saving <= 0) continue;
+    const row = byWorkload.get(c.key) ?? { arb: 0, quality: 0, rightsize: 0 };
+    if (c.kind === "host_arbitrage") row.arb = Math.max(row.arb, c.saving);
+    else if (c.kind === "quality_match") row.quality = Math.max(row.quality, c.saving);
+    else row.rightsize = Math.max(row.rightsize, c.saving);
+    byWorkload.set(c.key, row);
+  }
+
+  let compareReach = 0;
+  let certifyReach = 0;
+  let rightsizeReach = 0;
+  for (const row of byWorkload.values()) {
+    compareReach += row.arb;
+    certifyReach += composeWorkload(row.arb, [row.quality]);
+    rightsizeReach += composeWorkload(row.arb, [row.quality, row.rightsize]);
+  }
+
+  return {
+    compareReach: round2(compareReach),
+    certifyReach: round2(certifyReach),
+    rightsizeReach: round2(rightsizeReach),
+    certifyIncrement: round2(certifyReach - compareReach),
+    rightsizeIncrement: round2(rightsizeReach - certifyReach),
+  };
 }
