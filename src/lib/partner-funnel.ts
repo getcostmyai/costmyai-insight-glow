@@ -10,6 +10,7 @@ export interface FunnelStageRow {
 }
 
 const STAGE_LABELS: Record<string, string> = {
+  referral_click: "Referral link clicked",
   estimator_viewed: "Estimator viewed",
   estimator_engaged: "Estimator engaged",
   estimator_completed: "Estimator completed",
@@ -17,6 +18,7 @@ const STAGE_LABELS: Record<string, string> = {
   plan_changed: "Plan changed",
   switch_activated: "Switch activated",
 };
+
 
 export function stageLabel(stage: string): string {
   return STAGE_LABELS[stage] ?? stage.replace(/_/g, " ");
