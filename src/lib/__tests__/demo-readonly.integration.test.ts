@@ -10,6 +10,30 @@
  * too: a partner has no membership row in the demo workspace either, and the
  * SECURITY DEFINER functions re-derive the actor from auth.uid() the same way
  * for both. No mocks, real database.
+ *
+ * Which SQLSTATE each probe expects, and why it matters:
+ *
+ *   objectives insert  -> 42501, insufficient_privilege. That is the row-level
+ *     security refusal and nothing else. The row offered is otherwise valid, so
+ *     the policy is the only possible reason to fail. The test asserts the code
+ *     is 42501 and explicitly asserts it is NOT 22P02 (invalid enum input) or
+ *     23502 (not-null violation), because a malformed row is rejected before any
+ *     policy is consulted and would make this file pass with RLS switched off.
+ *     A previous version of this probe sent objective: "cheapest", which is not
+ *     a label of objective_kind (cost, latency, quality_floor), and passed for
+ *     exactly that wrong reason.
+ *
+ *   organizations update -> no error is required. An UPDATE filtered out by a
+ *     USING clause matches zero rows and reports success, so the assertion is
+ *     the stored name, read back with the service role, not the error.
+ *
+ *   apply_switch rpc -> P0001, raise_exception, from the SECURITY DEFINER body
+ *     refusing a non-manager and refusing a synthetic org. The probe asserts an
+ *     error and asserts the recommendation's status is unchanged. Its
+ *     precondition, an open recommendation in the demo workspace, is asserted
+ *     rather than skipped: no open row means the probe tested nothing, and that
+ *     must fail loudly instead of reading green. Nothing is ever seeded into the
+ *     demo workspace to create that precondition.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
