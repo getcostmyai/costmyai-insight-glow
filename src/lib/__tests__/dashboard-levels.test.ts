@@ -300,9 +300,23 @@ describe("round 3 spec", () => {
 describe("round 4 · per-mechanism hero KPIs", () => {
   const MECH_LABELS = ["Arbitrage saving", "Benchmark saving", "Rightsize saving"];
 
-  it("Certify keeps its two mechanism cards", () => {
-    for (const label of MECH_LABELS.slice(0, 2)) {
-      expect(LEVEL_FILES.certify, label).toContain(`label="${label}"`);
+  /**
+   * Certify now carries one mechanism card, for arbitrage. The benchmark figure
+   * is the headline, so a tile repeating it was removed as a duplicate, and the
+   * "Benchmark only" tile went earlier still because that distinction no longer
+   * exists: the certified saving is already the increment past the cheaper host.
+   * The rule the page has to keep is therefore "no hero tile restates the
+   * headline figure", which is what this asserts.
+   */
+  it("Certify keeps the arbitrage card and no tile duplicating the headline", () => {
+    expect(LEVEL_FILES.certify).toContain('label="Arbitrage saving"');
+
+    const heroStats = LEVEL_FILES.certify.match(/<HeroStat[\s\S]*?\/>/g) ?? [];
+    expect(heroStats.length).toBeGreaterThan(0);
+    // The headline figure is benchmarkOnly; no tile may print it again.
+    for (const stat of heroStats) {
+      expect(stat, stat).not.toMatch(/value=\{usd\(benchmarkOnly/);
+      expect(stat, stat).not.toMatch(/label="Benchmark (saving|only)"/);
     }
   });
 
