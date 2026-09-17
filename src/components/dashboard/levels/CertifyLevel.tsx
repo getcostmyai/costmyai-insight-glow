@@ -75,13 +75,12 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   // server. Never the three-mechanism total: Certify cannot see the third.
   const certifyIdentified = data.certifySavings.identified;
   /**
-   * The only figure entitled to the phrase "only a benchmark can unlock".
-   * Computed server-side as the certified rows whose workload has no
-   * cheaper-host switch at all, so nothing in it is reachable without a
-   * benchmark. Always at or below the gross benchmark figure.
+   * The figure entitled to the phrase "only a benchmark can unlock". Every
+   * certified switch is priced from the cheapest host for the model you run
+   * today, so the certified saving is already the money past what a host swap
+   * reaches, whether or not a cheaper host exists for that workload.
    */
   const benchmarkOnly = data.certifySavings.benchmarkOnly;
-  const benchmarkAlsoArbitrage = Math.max(0, benchmarkSaving - benchmarkOnly);
 
   // Dispatch 172. Refusals are split by whether a measurement actually
   // happened. A workload with no instrument for its task class was never
@@ -96,17 +95,17 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   const certifiable = data.stats.qualityCertifiable ?? evaluated;
   const certifyRate = certificationRate(data.stats);
 
-  const rightsizeSaving = levelSaving(data, "rightsize");
+  /** What upgrading to Rightsize actually adds on top of this level. */
+  const rightsizeSaving = data.savings.ladder.rightsizeIncrement;
   const rightsizeCount = levelCount(data, "rightsize");
 
   /*
-   * Dispatch 213. The the shared-workload double-count sentence
-   * sentence is gone: Certify's two lists no longer render the same workload
-   * twice, so there is no double count on screen for the prose to reconcile.
-   * The ring still shows the deduped `certifySavings.identified` figure — what
-   * is counted did not change, only how it is laid out.
+   * The two checks stack rather than compete: arbitrage carries a workload to
+   * the cheapest host for the model it runs today, and the benchmark carries
+   * it past that point, so the sentence adds them instead of reconciling a
+   * subtraction that no longer happens.
    */
-  const certifyArithmetic = `The cheaper-host check found ${usd(arbitrageSaving, 0)} and the benchmark check found ${usd(benchmarkSaving, 0)}, but ${usd(benchmarkAlsoArbitrage, 0)} of that benchmark money sits on workloads a cheaper host already reaches, so only ${usd(benchmarkOnly, 0)} of it needs a benchmark at all. A workload can only be saved on once, and we keep the larger of its two options, which is why the two checks come to ${usd(certifyIdentified, 0)} identified on this level instead of adding up.`;
+  const certifyArithmetic = `The cheaper-host check found ${usd(arbitrageSaving, 0)} and the benchmark check found a further ${usd(benchmarkSaving, 0)} on top of it, because every certified switch is priced from the cheapest host for the model you run today, so this level identified ${usd(certifyIdentified, 0)} with each workload counted once.`;
 
   return (
     <>
@@ -145,13 +144,7 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
             <HeroStat
               label="Benchmark saving"
               value={usd(benchmarkSaving, 0)}
-              sub="Different model, quality proven before it is shown, including workloads a cheaper host also reaches"
-              accent="oklch(0.83 0.11 195)"
-            />
-            <HeroStat
-              label="Benchmark only"
-              value={usd(benchmarkOnly, 0)}
-              sub="No cheaper host exists for these workloads, so nothing but a benchmark unlocks them"
+              sub="Different model, quality proven before it is shown, measured on top of the cheaper-host saving so the two add"
               accent="oklch(0.83 0.11 195)"
             />
             <HeroStat

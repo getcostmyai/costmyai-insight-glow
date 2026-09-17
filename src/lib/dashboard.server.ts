@@ -32,7 +32,13 @@ import { ingestConnection } from "./dashboard/ingest-health.server";
 import { readRollupCoverage } from "./dashboard/rollup-health.server";
 
 import { buildComposition } from "./dashboard/composition";
-import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
+import {
+  aggregateSavings,
+  capturedInWindow,
+  composeWorkload,
+  planLadder,
+  type SavingCandidate,
+} from "./dashboard/savings";
 
 import {
   effectiveSelection,
@@ -312,31 +318,26 @@ const refusalLabelFor = (reason: string) => REFUSAL_LABEL[reason] ?? reason.repl
  * one-workload-one-row rule `dedupeByWorkload` applies to Govern's list.
  */
 /**
- * The benchmark-only money: what nothing but a benchmark could unlock.
+ * The benchmark-only money: the certified increment, summed.
  *
- * Certify's headline used to be bound to the whole benchmark figure, but a
- * workload that also has a cheaper-host switch can be saved on with no
- * benchmark at all, so those dollars are reachable either way and the sentence
- * "only a benchmark can unlock this" was false for them. Any workload carrying
- * a host_arbitrage recommendation is therefore removed entirely, not netted
- * off, and what remains is deduped to the single best certified row per
- * workload so one workload can never contribute twice.
+ * Every certified switch is priced from the cheapest host for the model the
+ * workload runs on today, so a certified saving is already the money a
+ * cheaper-host swap cannot reach. A workload holding a cheaper-host switch as
+ * well is therefore not disqualified: the host swap gets it to the baseline,
+ * and only the benchmark gets it past the baseline. Excluding those workloads
+ * deleted real benchmark-only money from the figure that claims to measure it.
  *
- * Callers pass rows that are already headline-eligible; this function does not
- * re-apply that rule.
+ * Rows are deduped to the single best certified row per workload, so one
+ * workload can never contribute twice. Callers pass rows that are already
+ * headline-eligible; this function does not re-apply that rule.
  */
 export function benchmarkOnlySaving(
   qualityMatched: { fromModel: string; fromHost: string; taskHint: string; savingUsd: number }[],
-  hostArbitrage: { fromModel: string; fromHost: string; taskHint: string }[],
 ): number {
-  const key = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
-    `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
-  const alsoArbitrage = new Set(hostArbitrage.map(key));
   const best = new Map<string, number>();
   for (const r of qualityMatched) {
     if (r.savingUsd <= 0) continue;
-    const k = key(r);
-    if (alsoArbitrage.has(k)) continue;
+    const k = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
     best.set(k, Math.max(best.get(k) ?? 0, r.savingUsd));
   }
   return round2([...best.values()].reduce((s, v) => s + v, 0));
@@ -1226,26 +1227,38 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const wl = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
     `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
   const headlineEligible = isHeadlineEligible;
-  const savingsTotals = aggregateSavings([
-    ...result.hostArbitrage.map((r) => ({
+  const arbitrageCandidates: SavingCandidate[] = result.hostArbitrage.map((r) => ({
+    key: wl(r),
+    kind: "host_arbitrage" as const,
+    saving: r.savingUsd,
+    unlocked: arbitrageLevel.unlocked,
+    qualityDelta: r.qualityDelta,
+  }));
+  const qualityCandidates: SavingCandidate[] = result.qualityMatched
+    .filter(headlineEligible)
+    .map((r) => ({
       key: wl(r),
-      saving: r.savingUsd,
-      unlocked: arbitrageLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-    ...result.qualityMatched.filter(headlineEligible).map((r) => ({
-      key: wl(r),
+      kind: "quality_match" as const,
       saving: r.savingUsd,
       unlocked: qualityLevel.unlocked,
       qualityDelta: r.qualityDelta,
-    })),
-    ...result.oversized.map((r) => ({
-      key: wl(r),
-      saving: r.savingUsd,
-      unlocked: oversizedLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-  ]);
+    }));
+  const rightsizeCandidates: SavingCandidate[] = result.oversized.map((r) => ({
+    key: wl(r),
+    kind: "rightsize" as const,
+    saving: r.savingUsd,
+    unlocked: oversizedLevel.unlocked,
+    qualityDelta: r.qualityDelta,
+  }));
+  const allCandidates = [...arbitrageCandidates, ...qualityCandidates, ...rightsizeCandidates];
+  const savingsTotals = aggregateSavings(allCandidates);
+  /**
+   * What each level adds over the level below it, derived from the same
+   * composition rule and never stored. This is what an upsell card must state:
+   * the additional money a higher plan reaches, not the gross sum of a list
+   * whose dollars a lower plan already captures most of.
+   */
+  const ladder = planLadder(allCandidates);
 
   /**
    * Certify's own denominator-free figure: what the two checks Certify is
@@ -1256,36 +1269,16 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    * find. Same helper, same dedupe rule, two lists — `identified` is the full
    * deduped opportunity regardless of plan, which is what the ring shows.
    */
-  const certifyTotals = aggregateSavings([
-    ...result.hostArbitrage.map((r) => ({
-      key: wl(r),
-      saving: r.savingUsd,
-      unlocked: arbitrageLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-    ...result.qualityMatched.filter(headlineEligible).map((r) => ({
-      key: wl(r),
-      saving: r.savingUsd,
-      unlocked: qualityLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-  ]);
+  const certifyTotals = aggregateSavings([...arbitrageCandidates, ...qualityCandidates]);
 
   /**
-   * The money only a benchmark can unlock, which is a strictly smaller claim
-   * than "what the benchmark check found".
-   *
-   * A workload that also has a cheaper-host switch can be saved on without any
-   * benchmark at all, so its dollars are not benchmark-only however large the
-   * certified saving is. This figure is therefore the headline-eligible
-   * quality_match rows whose workload carries NO host_arbitrage
-   * recommendation, deduped to the best row per workload. Plan-independent, on
-   * purpose: it states what exists, not what this plan may act on.
+   * The money only a benchmark can unlock: the certified increment per
+   * workload, deduped to the best certified row. A cheaper-host switch on the
+   * same workload reaches the baseline and stops there, so it takes nothing
+   * away from this figure. Plan-independent, on purpose: it states what
+   * exists, not what this plan may act on.
    */
-  const benchmarkOnlyUsd = benchmarkOnlySaving(
-    result.qualityMatched.filter(headlineEligible),
-    result.hostArbitrage,
-  );
+  const benchmarkOnlyUsd = benchmarkOnlySaving(result.qualityMatched.filter(headlineEligible));
 
 
 
@@ -1412,23 +1405,50 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
     else governRefusals.push({ ...base, reason: verdict.reason, detail: verdict.detail });
   }
   /**
-   * One workload, one autonomous switch. A workload can clear the gate as
-   * arbitrage *and* as a quality match; only the better of the two can ever be
-   * applied, so summing both would promise money twice — the same double count
-   * `aggregateSavings` removes from the headline.
+   * One workload, one autonomous switch, priced the way the dashboard prices
+   * everything else. A workload can clear the gate as arbitrage AND as a
+   * quality or right-size candidate. Those are not competing views of the same
+   * dollars: the cheaper-host figure carries the workload to the baseline and
+   * the certified or right-sized figure carries it past the baseline, so the
+   * switch that actually runs is worth both together. The quality and
+   * right-size destinations are alternatives to each other, so only the larger
+   * of those two increments joins the arbitrage saving.
    */
-  const dedupeByWorkload = <T extends { fromModel: string; fromHost: string; taskHint: string; saving: number }>(
-    rows: T[],
-  ) => {
-    const best = new Map<string, T>();
+  const composeGovern = (rows: GovernCandidate[]): GovernCandidate[] => {
+    const byWorkload = new Map<string, GovernCandidate[]>();
     for (const r of rows) {
       const key = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
-      const seen = best.get(key);
-      if (!seen || r.saving > seen.saving) best.set(key, r);
+      const group = byWorkload.get(key);
+      if (group) group.push(r);
+      else byWorkload.set(key, [r]);
     }
-    return [...best.values()];
+    const out: GovernCandidate[] = [];
+    for (const group of byWorkload.values()) {
+      const arb = group.filter((r) => r.kind === "host_arbitrage");
+      const inc = group.filter((r) => r.kind !== "host_arbitrage");
+      const bestArb = arb.reduce<GovernCandidate | null>(
+        (m, r) => (!m || r.saving > m.saving ? r : m),
+        null,
+      );
+      const bestInc = inc.reduce<GovernCandidate | null>(
+        (m, r) => (!m || r.saving > m.saving ? r : m),
+        null,
+      );
+      // The row the customer sees is the destination that actually runs: the
+      // increment's destination when one exists, otherwise the cheaper host.
+      const lead = bestInc ?? bestArb;
+      if (!lead) continue;
+      out.push({
+        ...lead,
+        saving: round2(composeWorkload(bestArb?.saving ?? 0, [bestInc?.saving ?? 0])),
+        monthlySaving: round2(
+          composeWorkload(bestArb?.monthlySaving ?? 0, [bestInc?.monthlySaving ?? 0]),
+        ),
+      });
+    }
+    return out;
   };
-  const governEligibleUnique = dedupeByWorkload(governEligible);
+  const governEligibleUnique = composeGovern(governEligible);
   governEligibleUnique.sort((a, b) => b.saving - a.saving);
   governEligible.length = 0;
   governEligible.push(...governEligibleUnique);
@@ -1629,6 +1649,14 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       overlapUsd: savingsTotals.overlapUsd,
       overlapCount: savingsTotals.overlapCount,
       savedToDate: round2(runningSwitches.reduce((s, a) => s + a.saved, 0)),
+      /**
+       * What each level adds over the level below it, derived at request time
+       * under the same composition rule. `certifyIncrement` and
+       * `rightsizeIncrement` are what an upsell card may promise; a level's
+       * gross list sum is not, because a lower level already captures part of
+       * it.
+       */
+      ladder,
       /** Labelled run-rate. Never mix this into a window total. */
       activeMonthlyRate,
     },
