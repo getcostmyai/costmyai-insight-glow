@@ -87,9 +87,13 @@ describe("period windows are real sums of real rows", () => {
     // The headline is never the naive list sum when lists overlap.
     expect(snap.savings.available).toBeLessThanOrEqual(Math.round(listSum * 100) / 100 + 0.01);
     expect(snap.savings.overlapUsd).toBeGreaterThanOrEqual(0);
-    if (snap.savings.overlapCount > 0) {
-      expect(snap.savings.available + snap.savings.locked).toBeLessThan(snap.savings.gross);
-    }
+    // What the composition kept is exactly the naive sum minus the alternatives
+    // it discarded. A workload carrying a cheaper host and one increment
+    // discards nothing, because those two figures stack.
+    expect(snap.savings.available + snap.savings.locked).toBeCloseTo(
+      snap.savings.gross - snap.savings.overlapUsd,
+      1,
+    );
   }, 60_000);
 
   it("scopes the donut to the window, so it cannot read identically on every tab", async () => {
