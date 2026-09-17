@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   CreditCard,
   Gauge,
-  Handshake,
   Layers,
   LineChart,
   Lock,
@@ -13,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { useIsPartner } from "@/hooks/use-is-partner";
 import type { DashboardScope } from "@/lib/dashboard-queries";
 import type { LevelKey } from "@/lib/dashboard/levels";
 import { LEVELS } from "@/lib/dashboard/levels";
@@ -27,7 +25,7 @@ import { planAtLeast, type PlanTier } from "@/lib/engine/types";
  * left no way back into the dashboard except the browser's Back button.
  */
 
-export type AccountKey = "settings" | "billing" | "team" | "partner" | "feedback";
+export type AccountKey = "settings" | "billing" | "team" | "feedback";
 
 export const ICONS: Record<LevelKey, typeof Layers> = {
   overview: Layers,
