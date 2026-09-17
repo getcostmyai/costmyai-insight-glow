@@ -1221,26 +1221,38 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
   const wl = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
     `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
   const headlineEligible = isHeadlineEligible;
-  const savingsTotals = aggregateSavings([
-    ...result.hostArbitrage.map((r) => ({
+  const arbitrageCandidates: SavingCandidate[] = result.hostArbitrage.map((r) => ({
+    key: wl(r),
+    kind: "host_arbitrage" as const,
+    saving: r.savingUsd,
+    unlocked: arbitrageLevel.unlocked,
+    qualityDelta: r.qualityDelta,
+  }));
+  const qualityCandidates: SavingCandidate[] = result.qualityMatched
+    .filter(headlineEligible)
+    .map((r) => ({
       key: wl(r),
-      saving: r.savingUsd,
-      unlocked: arbitrageLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-    ...result.qualityMatched.filter(headlineEligible).map((r) => ({
-      key: wl(r),
+      kind: "quality_match" as const,
       saving: r.savingUsd,
       unlocked: qualityLevel.unlocked,
       qualityDelta: r.qualityDelta,
-    })),
-    ...result.oversized.map((r) => ({
-      key: wl(r),
-      saving: r.savingUsd,
-      unlocked: oversizedLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-  ]);
+    }));
+  const rightsizeCandidates: SavingCandidate[] = result.oversized.map((r) => ({
+    key: wl(r),
+    kind: "rightsize" as const,
+    saving: r.savingUsd,
+    unlocked: oversizedLevel.unlocked,
+    qualityDelta: r.qualityDelta,
+  }));
+  const allCandidates = [...arbitrageCandidates, ...qualityCandidates, ...rightsizeCandidates];
+  const savingsTotals = aggregateSavings(allCandidates);
+  /**
+   * What each level adds over the level below it, derived from the same
+   * composition rule and never stored. This is what an upsell card must state:
+   * the additional money a higher plan reaches, not the gross sum of a list
+   * whose dollars a lower plan already captures most of.
+   */
+  const ladder = planLadder(allCandidates);
 
   /**
    * Certify's own denominator-free figure: what the two checks Certify is
