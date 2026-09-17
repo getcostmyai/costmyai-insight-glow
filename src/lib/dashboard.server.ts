@@ -1269,36 +1269,16 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
    * find. Same helper, same dedupe rule, two lists — `identified` is the full
    * deduped opportunity regardless of plan, which is what the ring shows.
    */
-  const certifyTotals = aggregateSavings([
-    ...result.hostArbitrage.map((r) => ({
-      key: wl(r),
-      saving: r.savingUsd,
-      unlocked: arbitrageLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-    ...result.qualityMatched.filter(headlineEligible).map((r) => ({
-      key: wl(r),
-      saving: r.savingUsd,
-      unlocked: qualityLevel.unlocked,
-      qualityDelta: r.qualityDelta,
-    })),
-  ]);
+  const certifyTotals = aggregateSavings([...arbitrageCandidates, ...qualityCandidates]);
 
   /**
-   * The money only a benchmark can unlock, which is a strictly smaller claim
-   * than "what the benchmark check found".
-   *
-   * A workload that also has a cheaper-host switch can be saved on without any
-   * benchmark at all, so its dollars are not benchmark-only however large the
-   * certified saving is. This figure is therefore the headline-eligible
-   * quality_match rows whose workload carries NO host_arbitrage
-   * recommendation, deduped to the best row per workload. Plan-independent, on
-   * purpose: it states what exists, not what this plan may act on.
+   * The money only a benchmark can unlock: the certified increment per
+   * workload, deduped to the best certified row. A cheaper-host switch on the
+   * same workload reaches the baseline and stops there, so it takes nothing
+   * away from this figure. Plan-independent, on purpose: it states what
+   * exists, not what this plan may act on.
    */
-  const benchmarkOnlyUsd = benchmarkOnlySaving(
-    result.qualityMatched.filter(headlineEligible),
-    result.hostArbitrage,
-  );
+  const benchmarkOnlyUsd = benchmarkOnlySaving(result.qualityMatched.filter(headlineEligible));
 
 
 
