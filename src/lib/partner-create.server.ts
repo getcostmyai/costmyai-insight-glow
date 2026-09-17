@@ -137,3 +137,27 @@ export async function createPartnerAndWelcome(
 
   return { partnerId: created.id, referralCode: created.referral_code, email, welcome };
 }
+
+/**
+ * Reissue a partner's referral code.
+ *
+ * The admin check runs here, against the caller's own client, before the
+ * database routine is reached, so a non-admin cannot even learn whether a
+ * partner id exists. The routine itself re-checks and writes the audit row.
+ */
+export async function reissueCode(
+  supabase: Admin,
+  partnerId: string,
+  reason?: string,
+): Promise<{ partner_id: string; previous_code: string; referral_code: string }> {
+  const { data: isAdmin, error: adminError } = await supabase.rpc("is_platform_admin");
+  if (adminError) throw adminError;
+  if (!isAdmin) throw new Error("Not found");
+
+  const { data, error } = await supabase.rpc("reissue_referral_code", {
+    _partner_id: partnerId,
+    _reason: reason,
+  });
+  if (error) throw error;
+  return data as unknown as { partner_id: string; previous_code: string; referral_code: string };
+}

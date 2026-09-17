@@ -73,14 +73,6 @@ export const reissuePartnerCode = createServerFn({ method: "POST" })
     return { partnerId: data.partnerId, reason: reason ? reason.slice(0, 300) : undefined };
   })
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: adminError } = await context.supabase.rpc("is_platform_admin");
-    if (adminError) throw adminError;
-    if (!isAdmin) throw new Error("Not found");
-
-    const { data: result, error } = await context.supabase.rpc("reissue_referral_code", {
-      _partner_id: data.partnerId,
-      _reason: data.reason ?? undefined,
-    });
-    if (error) throw error;
-    return result as { partner_id: string; previous_code: string; referral_code: string };
+    const { reissueCode } = await import("./partner-create.server");
+    return reissueCode(context.supabase as never, data.partnerId, data.reason);
   });
