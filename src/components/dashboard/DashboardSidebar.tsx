@@ -78,7 +78,6 @@ export function DashboardSidebar({
   account?: AccountKey;
 }) {
   const paths = PATHS[scope];
-  const isPartner = useIsPartner() === true;
   // Dispatch 232 reverses Dispatch 172. A customer sees their own rung plus
   // every rung above it (locked, as the upsell path). Rungs *below* their own
   // are never listed: everything those rungs found is merged inline into the
@@ -146,8 +145,6 @@ export function DashboardSidebar({
         <div className="space-y-1 border-t border-border pt-5">
           <p className="eyebrow px-3 pb-1">Account</p>
           {accountNav.map((item) => {
-            // Hidden while the answer is still unknown, so it never flickers.
-            if (item.partnerOnly && !isPartner) return null;
             const Icon = item.icon;
             const active = item.key === account;
             return (
