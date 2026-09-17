@@ -34,6 +34,10 @@ const listMyWorkspaces = vi.fn();
 vi.mock("@/lib/workspace.functions", () => ({
   listMyWorkspaces: () => listMyWorkspaces(),
 }));
+const getDemoAccess = vi.fn();
+vi.mock("@/lib/demo-access.functions", () => ({
+  getDemoAccess: () => getDemoAccess(),
+}));
 
 const ACTIVE_PARTNER = {
   partner: { name: "Quinn Consulting", status: "active", referralCode: "QUINN" },
