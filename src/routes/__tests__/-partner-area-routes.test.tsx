@@ -30,6 +30,18 @@ vi.mock("@/lib/partners.functions", () => ({ getMyPartner: () => getMyPartner() 
 vi.mock("@/lib/partner-application.functions", () => ({
   claimPartnerMembership: () => Promise.resolve({ partnerId: null }),
 }));
+const listMyWorkspaces = vi.fn();
+vi.mock("@/lib/workspace.functions", () => ({
+  listMyWorkspaces: () => listMyWorkspaces(),
+}));
+
+const ACTIVE_PARTNER = {
+  partner: { name: "Quinn Consulting", status: "active", referralCode: "QUINN" },
+  referrals: [],
+  commissions: [],
+  payouts: [],
+  totals: { earnedUsd: 0, outstandingUsd: 0 },
+};
 
 const { PartnerLayout } = await import("@/routes/_authenticated/partner");
 
@@ -46,6 +58,7 @@ beforeEach(() => {
   cleanup();
   vi.clearAllMocks();
   pathname = "/partner";
+  listMyWorkspaces.mockResolvedValue([{ id: "w1", name: "Acme", slug: "acme", plan: "compare", role: "owner" }]);
 });
 
 describe("partner area routes", () => {
@@ -64,19 +77,45 @@ describe("partner area routes", () => {
 
   it("renders the partner sidebar and the child page for a partner", async () => {
     pathname = "/partner/earnings";
-    getMyPartner.mockResolvedValue({
-      partner: { name: "Quinn Consulting", status: "active", referralCode: "QUINN" },
-      referrals: [],
-      commissions: [],
-      payouts: [],
-      totals: { earnedUsd: 0, outstandingUsd: 0 },
-    });
+    getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
     mount();
     await waitFor(() => expect(screen.getByTestId("outlet")).toBeInTheDocument());
     expect(screen.getByText("Quinn Consulting")).toBeInTheDocument();
     expect(screen.getByText("active")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Earnings" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Overview" })).not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("link", { name: /Back to your workspace/i })).toBeInTheDocument();
+    const back = screen.getByRole("link", { name: /Back to your workspace/i });
+    expect(back).toBeInTheDocument();
+    expect(back).toHaveAttribute("href", "/workspace");
+  });
+
+  it.each(["/partner", "/partner/earnings", "/partner/settings"])(
+    "never offers the workspace link to a partner with no workspace, on %s",
+    async (path) => {
+      pathname = path;
+      getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
+      listMyWorkspaces.mockResolvedValue([]);
+      mount();
+      await waitFor(() => expect(screen.getByTestId("outlet")).toBeInTheDocument());
+      expect(screen.queryByRole("link", { name: /Back to your workspace/i })).toBeNull();
+    },
+  );
+
+  it("leaves the workspace link out while the workspace read is still pending", async () => {
+    getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
+    listMyWorkspaces.mockReturnValue(new Promise(() => {}));
+    mount();
+    await waitFor(() => expect(screen.getByTestId("outlet")).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: /Back to your workspace/i })).toBeNull();
+  });
+
+  it("does not push a non-partner without a workspace into workspace creation", async () => {
+    getMyPartner.mockResolvedValue(null);
+    listMyWorkspaces.mockResolvedValue([]);
+    mount();
+    await waitFor(() =>
+      expect(screen.getByText(/aren't part of a partner account yet/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("link", { name: /Back to your workspace/i })).toBeNull();
   });
 });

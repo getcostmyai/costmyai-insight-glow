@@ -5,6 +5,7 @@ import { Check, Copy, Handshake, X } from "lucide-react";
 
 import { getMyPartner } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
+import { listMyWorkspaces } from "@/lib/workspace.functions";
 
 import { PartnerDataProvider } from "@/components/partner/partner-context";
 import { PartnerSidebar, type PartnerNavKey } from "@/components/partner/PartnerSidebar";
@@ -36,6 +37,15 @@ function activeKey(pathname: string): PartnerNavKey {
 export function PartnerLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const partner = useQuery({ queryKey: ["my-partner"], queryFn: () => getMyPartner() });
+  // Same key and staleness as WorkspaceLayout, so the two layouts share one
+  // answer and one round trip rather than each asking separately.
+  const workspaces = useQuery({
+    queryKey: ["my-workspaces"],
+    queryFn: () => listMyWorkspaces(),
+    staleTime: 30_000,
+  });
+  const hasWorkspace =
+    workspaces.isPending || workspaces.isError ? undefined : (workspaces.data?.length ?? 0) > 0;
   const [claim, setClaim] = useState<"idle" | "running" | "done">("idle");
   // The self-link is attempted exactly once per mount. A ref, not effect
   // dependencies: `partner` is a new object every render, so depending on it
@@ -65,13 +75,17 @@ export function PartnerLayout() {
     return <Shell>We could not read your partner account. Try again shortly.</Shell>;
   // Never show "you aren't a partner" while the link is still being checked.
   if (!partner.data && claim !== "done") return <Shell>Linking your partner account…</Shell>;
-  if (!partner.data) return <NotAPartner />;
+  if (!partner.data) return <NotAPartner hasWorkspace={hasWorkspace} />;
 
   return (
     <PartnerDataProvider value={partner.data}>
       <div className="min-h-screen bg-background">
         <div className="mx-auto flex max-w-[1440px] gap-8 px-5 py-8 lg:px-8">
-          <PartnerSidebar partner={partner.data.partner} active={activeKey(pathname)} />
+          <PartnerSidebar
+            partner={partner.data.partner}
+            active={activeKey(pathname)}
+            hasWorkspace={hasWorkspace}
+          />
           <main className="min-w-0 flex-1">
             <Outlet />
           </main>
@@ -174,7 +188,7 @@ export function Kpi({
   );
 }
 
-function NotAPartner() {
+function NotAPartner({ hasWorkspace }: { hasWorkspace?: boolean }) {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8">
@@ -190,12 +204,14 @@ function NotAPartner() {
         >
           Apply to become a partner
         </a>
-        <Link
-          to="/workspace"
-          className="mt-4 block text-xs text-muted-foreground underline hover:text-foreground"
-        >
-          Back to your workspace
-        </Link>
+        {hasWorkspace === true ? (
+          <Link
+            to="/workspace"
+            className="mt-4 block text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Back to your workspace
+          </Link>
+        ) : null}
       </div>
     </main>
   );

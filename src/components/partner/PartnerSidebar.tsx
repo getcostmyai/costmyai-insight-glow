@@ -29,9 +29,16 @@ const STATUS_TONE: Record<string, string> = {
 export function PartnerSidebar({
   partner,
   active,
+  hasWorkspace,
 }: {
   partner: PartnerDashboard["partner"];
   active: PartnerNavKey;
+  /**
+   * A partner account does not imply a workspace. Only true — known, positive —
+   * earns the way-out link; pending or failed reads leave it out, because the
+   * alternative lands someone on a workspace signup form.
+   */
+  hasWorkspace?: boolean;
 }) {
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
@@ -71,15 +78,17 @@ export function PartnerSidebar({
           })}
         </nav>
 
-        <div className="space-y-1 border-t border-border pt-5">
-          <Link
-            to="/workspace"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Back to your workspace
-          </Link>
-        </div>
+        {hasWorkspace === true ? (
+          <div className="space-y-1 border-t border-border pt-5">
+            <Link
+              to="/workspace"
+              className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" />
+              Back to your workspace
+            </Link>
+          </div>
+        ) : null}
       </div>
     </aside>
   );
