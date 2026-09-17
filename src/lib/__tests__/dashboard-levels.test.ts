@@ -132,9 +132,29 @@ describe("level-appropriate copy", () => {
     expect(LEVEL_FILES.overview).toContain("every check your plan includes");
   });
 
-  it("explains arbitrage versus benchmark saving on Certify", () => {
-    expect(LEVEL_FILES.certify).toContain("Same model, cheaper host — no benchmark needed");
-    expect(LEVEL_FILES.certify).toContain("Different model, quality proven before it is shown");
+  /**
+   * The two checks stack, they do not compete: arbitrage carries a workload to
+   * the cheapest host for the model it runs today, and the benchmark carries it
+   * further from there. The old test asserted the copy for a subtraction that
+   * the page no longer performs, so it is rewritten against the property: the
+   * arithmetic sentence must read additively and must never reintroduce a
+   * "minus the arbitrage part" framing.
+   */
+  it("states the two Certify checks as additive, never as a subtraction", () => {
+    const sentence =
+      LEVEL_FILES.certify.match(/const certifyArithmetic = `([^`]+)`/)?.[1] ?? "";
+    expect(sentence, "Certify hero has no arithmetic sentence").not.toBe("");
+    expect(sentence).toMatch(/further/i);
+    expect(sentence).toMatch(/on top of/i);
+    // Both mechanism figures are named, and the total they compose.
+    expect(sentence).toContain("arbitrageSaving");
+    expect(sentence).toContain("benchmarkSaving");
+    expect(sentence).toContain("certifyIdentified");
+    // Each workload still counted once, which is what makes the sum honest.
+    expect(sentence).toMatch(/counted once/i);
+    // A subtraction framing would mean the increment is being described as a
+    // remainder again.
+    expect(sentence).not.toMatch(/minus|subtract|after removing|net of/i);
   });
 
   it("labels both numbers on an active switch", () => {
