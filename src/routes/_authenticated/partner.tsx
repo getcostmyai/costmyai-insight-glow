@@ -5,6 +5,7 @@ import { Check, Copy, Handshake, X } from "lucide-react";
 
 import { getMyPartner } from "@/lib/partners.functions";
 import { claimPartnerMembership } from "@/lib/partner-application.functions";
+import { listMyWorkspaces } from "@/lib/workspace.functions";
 
 import { PartnerDataProvider } from "@/components/partner/partner-context";
 import { PartnerSidebar, type PartnerNavKey } from "@/components/partner/PartnerSidebar";
@@ -36,6 +37,15 @@ function activeKey(pathname: string): PartnerNavKey {
 export function PartnerLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const partner = useQuery({ queryKey: ["my-partner"], queryFn: () => getMyPartner() });
+  // Same key and staleness as WorkspaceLayout, so the two layouts share one
+  // answer and one round trip rather than each asking separately.
+  const workspaces = useQuery({
+    queryKey: ["my-workspaces"],
+    queryFn: () => listMyWorkspaces(),
+    staleTime: 30_000,
+  });
+  const hasWorkspace =
+    workspaces.isPending || workspaces.isError ? undefined : (workspaces.data?.length ?? 0) > 0;
   const [claim, setClaim] = useState<"idle" | "running" | "done">("idle");
   // The self-link is attempted exactly once per mount. A ref, not effect
   // dependencies: `partner` is a new object every render, so depending on it
