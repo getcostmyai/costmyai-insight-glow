@@ -75,13 +75,12 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
   // server. Never the three-mechanism total: Certify cannot see the third.
   const certifyIdentified = data.certifySavings.identified;
   /**
-   * The only figure entitled to the phrase "only a benchmark can unlock".
-   * Computed server-side as the certified rows whose workload has no
-   * cheaper-host switch at all, so nothing in it is reachable without a
-   * benchmark. Always at or below the gross benchmark figure.
+   * The figure entitled to the phrase "only a benchmark can unlock". Every
+   * certified switch is priced from the cheapest host for the model you run
+   * today, so the certified saving is already the money past what a host swap
+   * reaches, whether or not a cheaper host exists for that workload.
    */
   const benchmarkOnly = data.certifySavings.benchmarkOnly;
-  const benchmarkAlsoArbitrage = Math.max(0, benchmarkSaving - benchmarkOnly);
 
   // Dispatch 172. Refusals are split by whether a measurement actually
   // happened. A workload with no instrument for its task class was never
