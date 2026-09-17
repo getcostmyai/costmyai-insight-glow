@@ -95,6 +95,7 @@ export function PartnerLayout() {
             partner={partner.data.partner}
             active={activeKey(pathname)}
             hasWorkspace={hasWorkspace}
+            hasDemoAccess={hasDemoAccess}
           />
           <main className="min-w-0 flex-1">
             <Outlet />
