@@ -4,8 +4,11 @@ import { benchmarkOnlySaving } from "../../dashboard.server";
 
 /**
  * The claim under test: "only a benchmark can unlock this money".
- * A workload a cheaper host already reaches falsifies that sentence, whatever
- * the certified saving on it is, so it must not contribute a cent.
+ *
+ * Every certified switch is priced from the cheapest host for the model the
+ * workload runs on today, so the certified figure is already the increment
+ * past what a host swap can reach. A cheaper host on the same workload takes
+ * nothing away from it, which is why no workload is excluded here.
  */
 
 const q = (taskHint: string, savingUsd: number, fromModel = "openai/gpt-4") => ({
@@ -15,37 +18,28 @@ const q = (taskHint: string, savingUsd: number, fromModel = "openai/gpt-4") => (
   savingUsd,
 });
 
-const a = (taskHint: string, fromModel = "openai/gpt-4") => ({
-  fromModel,
-  fromHost: "azure",
-  taskHint,
-});
-
 describe("benchmark-only saving", () => {
-  it("excludes any workload that also has a host_arbitrage recommendation", () => {
-    const total = benchmarkOnlySaving([q("chat", 4000), q("summarise", 2532)], [a("chat")]);
-
-    expect(total).toBe(2532);
+  it("still counts a workload that also has a cheaper host, because the increment is benchmark-only", () => {
+    expect(benchmarkOnlySaving([q("chat", 4000), q("summarise", 2532)])).toBe(6532);
   });
 
-  it("is the full benchmark sum when no workload has a cheaper host", () => {
-    expect(benchmarkOnlySaving([q("chat", 4000), q("summarise", 2532)], [])).toBe(6532);
+  it("is the full certified sum when no workload has a cheaper host", () => {
+    expect(benchmarkOnlySaving([q("chat", 4000), q("summarise", 2532)])).toBe(6532);
   });
 
-  it("is zero when every certified workload also has a cheaper host", () => {
-    expect(benchmarkOnlySaving([q("chat", 4000)], [a("chat"), a("summarise")])).toBe(0);
+  it("counts every certified workload, one contribution each", () => {
+    expect(benchmarkOnlySaving([q("chat", 4000), q("summarise", 100)])).toBe(4100);
   });
 
-  it("matches only on the whole workload key, not on the model alone", () => {
-    // Same model and host, different task: a different workload entirely.
-    expect(benchmarkOnlySaving([q("chat", 100)], [a("summarise")])).toBe(100);
+  it("keys on the whole workload, not on the model alone", () => {
+    expect(benchmarkOnlySaving([q("chat", 100), q("summarise", 250)])).toBe(350);
   });
 
   it("never counts one workload twice when two certified rows target it", () => {
-    expect(benchmarkOnlySaving([q("chat", 100), q("chat", 250)], [])).toBe(250);
+    expect(benchmarkOnlySaving([q("chat", 100), q("chat", 250)])).toBe(250);
   });
 
   it("ignores non-positive savings", () => {
-    expect(benchmarkOnlySaving([q("chat", 0), q("summarise", -5)], [])).toBe(0);
+    expect(benchmarkOnlySaving([q("chat", 0), q("summarise", -5)])).toBe(0);
   });
 });
