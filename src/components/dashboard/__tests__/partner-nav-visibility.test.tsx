@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import { vi } from "vitest";
 
 /**
- * The Partner entry is for partners. Everyone else used to be sent to a page
- * that told them they are not one, so both the live nav and the loading
- * skeleton must leave the row out until the answer is known and positive.
+ * The partner area is a separate identity surface from a workspace, and the
+ * dashboard is the customer's buying surface. So the account nav lists no
+ * Partner entry at all — for a partner and a non-partner alike, in both
+ * scopes. Partners come in at /partner/login instead. The nav no longer asks
+ * who is a partner, so there is nothing to vary between the two cases beyond
+ * proving the row is gone.
  */
 
 vi.mock("@tanstack/react-router", () => ({
@@ -16,52 +20,41 @@ vi.mock("@/components/dashboard/DashboardChrome", () => ({
   DashboardMasthead: () => <div />,
 }));
 
-const isPartner = vi.fn<() => boolean | undefined>();
-vi.mock("@/hooks/use-is-partner", () => ({ useIsPartner: () => isPartner() }));
-
 const { DashboardSidebar } = await import("@/components/dashboard/DashboardSidebar");
 const { DashboardSkeleton } = await import("@/components/dashboard/DashboardSkeleton");
 
 beforeEach(() => {
   cleanup();
-  isPartner.mockReset();
 });
 
 describe("Partner nav entry", () => {
-  it("is hidden in the sidebar for a non-partner", () => {
-    isPartner.mockReturnValue(false);
+  it.each(["mine", "demo"] as const)("is absent from the sidebar in the %s scope", (scope) => {
     render(
-      <DashboardSidebar workspaceName="Acme" plan="compare" level="overview" scope="mine" />,
+      <DashboardSidebar workspaceName="Acme" plan="compare" level="overview" scope={scope} />,
     );
     expect(screen.queryByText("Partner")).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Partner$/ })).toBeNull();
+    // The rest of the account nav is untouched.
     expect(screen.getByText("Settings")).toBeTruthy();
+    expect(screen.getByText("Billing")).toBeTruthy();
+    expect(screen.getByText("Team")).toBeTruthy();
+    expect(screen.getByText("Suggest a feature")).toBeTruthy();
   });
 
-  it("is hidden while the answer is still unknown, so it never flickers", () => {
-    isPartner.mockReturnValue(undefined);
-    render(
-      <DashboardSidebar workspaceName="Acme" plan="compare" level="overview" scope="mine" />,
+  it.each(["mine", "demo"] as const)(
+    "is absent from the loading skeleton in the %s scope",
+    (scope) => {
+      render(<DashboardSkeleton scope={scope} level="overview" />);
+      expect(screen.queryByText("Partner")).toBeNull();
+      expect(screen.getByText("Settings")).toBeTruthy();
+    },
+  );
+
+  it("never links anywhere under /partner from the dashboard sidebar", () => {
+    const { container } = render(
+      <DashboardSidebar workspaceName="Acme" plan="govern" level="overview" scope="mine" />,
     );
-    expect(screen.queryByText("Partner")).toBeNull();
-  });
-
-  it("is shown in the sidebar for a partner", () => {
-    isPartner.mockReturnValue(true);
-    render(
-      <DashboardSidebar workspaceName="Acme" plan="compare" level="overview" scope="mine" />,
-    );
-    expect(screen.getByText("Partner")).toBeTruthy();
-  });
-
-  it("is hidden in the loading skeleton for a non-partner and shown for a partner", () => {
-    isPartner.mockReturnValue(false);
-    const { unmount } = render(<DashboardSkeleton scope="mine" level="overview" />);
-    expect(screen.queryByText("Partner")).toBeNull();
-    unmount();
-    cleanup();
-
-    isPartner.mockReturnValue(true);
-    render(<DashboardSkeleton scope="mine" level="overview" />);
-    expect(screen.getByText("Partner")).toBeTruthy();
+    const hrefs = [...container.querySelectorAll("a")].map((a) => a.getAttribute("to") ?? a.getAttribute("href") ?? "");
+    expect(hrefs.some((h) => h.startsWith("/partner"))).toBe(false);
   });
 });
