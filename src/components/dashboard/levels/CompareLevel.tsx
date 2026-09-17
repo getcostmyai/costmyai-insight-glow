@@ -91,7 +91,13 @@ export function CompareLevel({ ctl }: { ctl: DashboardController }) {
   // evidence. Absence of data is rendered as absence of data.
   const coveragePct = measuredSpend > 0 ? (onCheapestHost / measuredSpend) * 100 : null;
 
-  const certifySaving = levelSaving(data, "quality_match");
+  /**
+   * What Certify adds over Compare, not what the benchmark check found in
+   * total. On traffic where only the quality check fires the two are the same
+   * figure; where both fire, the gross sum would promise money this page
+   * already captures.
+   */
+  const certifySaving = data.savings.ladder.certifyIncrement;
   const certifyCount = levelCount(data, "quality_match");
 
   return (
