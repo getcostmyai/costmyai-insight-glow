@@ -312,31 +312,26 @@ const refusalLabelFor = (reason: string) => REFUSAL_LABEL[reason] ?? reason.repl
  * one-workload-one-row rule `dedupeByWorkload` applies to Govern's list.
  */
 /**
- * The benchmark-only money: what nothing but a benchmark could unlock.
+ * The benchmark-only money: the certified increment, summed.
  *
- * Certify's headline used to be bound to the whole benchmark figure, but a
- * workload that also has a cheaper-host switch can be saved on with no
- * benchmark at all, so those dollars are reachable either way and the sentence
- * "only a benchmark can unlock this" was false for them. Any workload carrying
- * a host_arbitrage recommendation is therefore removed entirely, not netted
- * off, and what remains is deduped to the single best certified row per
- * workload so one workload can never contribute twice.
+ * Every certified switch is priced from the cheapest host for the model the
+ * workload runs on today, so a certified saving is already the money a
+ * cheaper-host swap cannot reach. A workload holding a cheaper-host switch as
+ * well is therefore not disqualified: the host swap gets it to the baseline,
+ * and only the benchmark gets it past the baseline. Excluding those workloads
+ * deleted real benchmark-only money from the figure that claims to measure it.
  *
- * Callers pass rows that are already headline-eligible; this function does not
- * re-apply that rule.
+ * Rows are deduped to the single best certified row per workload, so one
+ * workload can never contribute twice. Callers pass rows that are already
+ * headline-eligible; this function does not re-apply that rule.
  */
 export function benchmarkOnlySaving(
   qualityMatched: { fromModel: string; fromHost: string; taskHint: string; savingUsd: number }[],
-  hostArbitrage: { fromModel: string; fromHost: string; taskHint: string }[],
 ): number {
-  const key = (o: { fromModel: string; fromHost: string; taskHint: string }) =>
-    `${o.fromModel}|${o.fromHost}|${o.taskHint}`;
-  const alsoArbitrage = new Set(hostArbitrage.map(key));
   const best = new Map<string, number>();
   for (const r of qualityMatched) {
     if (r.savingUsd <= 0) continue;
-    const k = key(r);
-    if (alsoArbitrage.has(k)) continue;
+    const k = `${r.fromModel}|${r.fromHost}|${r.taskHint}`;
     best.set(k, Math.max(best.get(k) ?? 0, r.savingUsd));
   }
   return round2([...best.values()].reduce((s, v) => s + v, 0));
