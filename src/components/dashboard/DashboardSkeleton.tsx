@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { CreditCard, Handshake, Settings, Users } from "lucide-react";
+import { CreditCard, Settings, Users } from "lucide-react";
 
 import { DashboardMasthead } from "@/components/dashboard/DashboardChrome";
-import { useIsPartner } from "@/hooks/use-is-partner";
 import { ICONS, PATHS } from "@/components/dashboard/DashboardSidebar";
 import type { DashboardScope } from "@/lib/dashboard-queries";
 import { LEVELS } from "@/lib/dashboard/levels";
@@ -12,9 +11,8 @@ const accountNav = [
   { label: "Settings", to: "/settings", icon: Settings },
   { label: "Billing", to: "/billing", icon: CreditCard },
   { label: "Team", to: "/team", icon: Users },
-  // Partner appears only for an actual partner, matching the real sidebar, so
-  // the skeleton never shows a row that vanishes once the page loads.
-  { label: "Partner", to: "/partner", icon: Handshake, partnerOnly: true },
+  // No Partner row, matching the real sidebar: the partner area is reached at
+  // /partner/login and is deliberately not listed in the dashboard.
 ] as const;
 
 function Bar({ className = "" }: { className?: string }) {
