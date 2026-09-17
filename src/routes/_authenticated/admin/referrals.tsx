@@ -82,6 +82,7 @@ function ReferralSplitPage() {
                     <th className="px-4 py-3 font-medium">Code</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 text-right font-medium">Referred</th>
+                    <th className="px-4 py-3 text-right font-medium">Code</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -93,6 +94,9 @@ function ReferralSplitPage() {
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{p.status}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{p.referred}</td>
+                      <td className="px-4 py-3 text-right">
+                        <ReissueButton partnerId={p.id} name={p.name} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
