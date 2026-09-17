@@ -188,7 +188,7 @@ export function Kpi({
   );
 }
 
-function NotAPartner() {
+function NotAPartner({ hasWorkspace }: { hasWorkspace?: boolean }) {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8">
@@ -204,12 +204,14 @@ function NotAPartner() {
         >
           Apply to become a partner
         </a>
-        <Link
-          to="/workspace"
-          className="mt-4 block text-xs text-muted-foreground underline hover:text-foreground"
-        >
-          Back to your workspace
-        </Link>
+        {hasWorkspace === true ? (
+          <Link
+            to="/workspace"
+            className="mt-4 block text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Back to your workspace
+          </Link>
+        ) : null}
       </div>
     </main>
   );
