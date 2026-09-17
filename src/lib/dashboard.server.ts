@@ -1649,6 +1649,14 @@ export async function buildDashboardSnapshot(input: RangeDays | SnapshotInput) {
       overlapUsd: savingsTotals.overlapUsd,
       overlapCount: savingsTotals.overlapCount,
       savedToDate: round2(runningSwitches.reduce((s, a) => s + a.saved, 0)),
+      /**
+       * What each level adds over the level below it, derived at request time
+       * under the same composition rule. `certifyIncrement` and
+       * `rightsizeIncrement` are what an upsell card may promise; a level's
+       * gross list sum is not, because a lower level already captures part of
+       * it.
+       */
+      ladder,
       /** Labelled run-rate. Never mix this into a window total. */
       activeMonthlyRate,
     },
