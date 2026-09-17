@@ -32,7 +32,13 @@ import { ingestConnection } from "./dashboard/ingest-health.server";
 import { readRollupCoverage } from "./dashboard/rollup-health.server";
 
 import { buildComposition } from "./dashboard/composition";
-import { aggregateSavings, capturedInWindow } from "./dashboard/savings";
+import {
+  aggregateSavings,
+  capturedInWindow,
+  composeWorkload,
+  planLadder,
+  type SavingCandidate,
+} from "./dashboard/savings";
 
 import {
   effectiveSelection,
