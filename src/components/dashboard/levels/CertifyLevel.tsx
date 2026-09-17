@@ -142,12 +142,6 @@ export function CertifyLevel({ ctl }: { ctl: DashboardController }) {
               accent="oklch(0.86 0.09 265)"
             />
             <HeroStat
-              label="Benchmark saving"
-              value={usd(benchmarkSaving, 0)}
-              sub="Different model, quality proven before it is shown, measured on top of the cheaper-host saving so the two add"
-              accent="oklch(0.83 0.11 195)"
-            />
-            <HeroStat
               label="Patterns checked"
               value={`${evaluated}`}
               sub={`${data.stats.qualityCertified} certified · ${refusedMeasured} refused${noCandidate > 0 ? ` · ${noCandidate} nothing cheaper` : ""}${unmeasurable > 0 ? ` · ${unmeasurable} not measurable` : ""}`}
