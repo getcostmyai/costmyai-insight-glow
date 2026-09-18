@@ -32,6 +32,7 @@ export const usd = (n: number) =>
 function activeKey(pathname: string): PartnerNavKey {
   if (pathname.startsWith("/partner/earnings")) return "earnings";
   if (pathname.startsWith("/partner/settings")) return "settings";
+  if (pathname.startsWith("/partner/feedback")) return "feedback";
   return "overview";
 }
 
