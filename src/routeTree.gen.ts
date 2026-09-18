@@ -79,6 +79,7 @@ import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin/jobs'
 import { Route as AuthenticatedAdminGatewayKeysRouteImport } from './routes/_authenticated/admin/gateway-keys'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin/customers'
+import { Route as AuthenticatedPartnerFeedbackIndexRouteImport } from './routes/_authenticated/partner.feedback.index'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -103,6 +104,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicGatewayIngestRouteImport } from './routes/api/public/gateway/ingest'
 import { Route as ApiPublicEmbedIntelligenceWidgetRouteImport } from './routes/api/public/embed/intelligence-widget'
 import { Route as ApiPublicBadgeCodeRouteImport } from './routes/api/public/badge/$code'
+import { Route as AuthenticatedPartnerFeedbackIdRouteImport } from './routes/_authenticated/partner.feedback.$id'
 import { Route as ApiPublicOgNewsletterChartDotpngRouteImport } from './routes/api/public/og/newsletter/chart[.]png'
 import { Route as ApiPublicOgIntelligenceLiveRouteImport } from './routes/api/public/og/intelligence/live'
 import { Route as ApiPublicOgIntelligenceMonthRouteImport } from './routes/api/public/og/intelligence/$month'
@@ -472,6 +474,12 @@ const AuthenticatedAdminCustomersRoute =
     path: '/admin/customers',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPartnerFeedbackIndexRoute =
+  AuthenticatedPartnerFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -601,6 +609,12 @@ const ApiPublicBadgeCodeRoute = ApiPublicBadgeCodeRouteImport.update({
   path: '/api/public/badge/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPartnerFeedbackIdRoute =
+  AuthenticatedPartnerFeedbackIdRouteImport.update({
+    id: '/feedback/$id',
+    path: '/feedback/$id',
+    getParentRoute: () => AuthenticatedPartnerRoute,
+  } as any)
 const ApiPublicOgNewsletterChartDotpngRoute =
   ApiPublicOgNewsletterChartDotpngRouteImport.update({
     id: '/api/public/og/newsletter/chart.png',
@@ -696,6 +710,7 @@ export interface FileRoutesByFullPath {
   '/partner/': typeof AuthenticatedPartnerIndexRoute
   '/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
+  '/partner/feedback/$id': typeof AuthenticatedPartnerFeedbackIdRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
@@ -720,6 +735,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/partner/feedback/': typeof AuthenticatedPartnerFeedbackIndexRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
@@ -791,6 +807,7 @@ export interface FileRoutesByTo {
   '/partner': typeof AuthenticatedPartnerIndexRoute
   '/workspace': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes': typeof IntelligenceNotesIndexRoute
+  '/partner/feedback/$id': typeof AuthenticatedPartnerFeedbackIdRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
@@ -815,6 +832,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/partner/feedback': typeof AuthenticatedPartnerFeedbackIndexRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
@@ -892,6 +910,7 @@ export interface FileRoutesById {
   '/_authenticated/partner/': typeof AuthenticatedPartnerIndexRoute
   '/_authenticated/workspace/': typeof AuthenticatedWorkspaceIndexRoute
   '/intelligence/notes/': typeof IntelligenceNotesIndexRoute
+  '/_authenticated/partner/feedback/$id': typeof AuthenticatedPartnerFeedbackIdRoute
   '/api/public/badge/$code': typeof ApiPublicBadgeCodeRoute
   '/api/public/embed/intelligence-widget': typeof ApiPublicEmbedIntelligenceWidgetRoute
   '/api/public/gateway/ingest': typeof ApiPublicGatewayIngestRoute
@@ -916,6 +935,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/_authenticated/partner/feedback/': typeof AuthenticatedPartnerFeedbackIndexRoute
   '/api/public/data/intelligence/$month': typeof ApiPublicDataIntelligenceMonthRoute
   '/api/public/og/intelligence/$month': typeof ApiPublicOgIntelligenceMonthRoute
   '/api/public/og/intelligence/live': typeof ApiPublicOgIntelligenceLiveRoute
@@ -993,6 +1013,7 @@ export interface FileRouteTypes {
     | '/partner/'
     | '/workspace/'
     | '/intelligence/notes/'
+    | '/partner/feedback/$id'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/gateway/ingest'
@@ -1017,6 +1038,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/partner/feedback/'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
@@ -1088,6 +1110,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/workspace'
     | '/intelligence/notes'
+    | '/partner/feedback/$id'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/gateway/ingest'
@@ -1112,6 +1135,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/partner/feedback'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
@@ -1188,6 +1212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/partner/'
     | '/_authenticated/workspace/'
     | '/intelligence/notes/'
+    | '/_authenticated/partner/feedback/$id'
     | '/api/public/badge/$code'
     | '/api/public/embed/intelligence-widget'
     | '/api/public/gateway/ingest'
@@ -1212,6 +1237,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/_authenticated/partner/feedback/'
     | '/api/public/data/intelligence/$month'
     | '/api/public/og/intelligence/$month'
     | '/api/public/og/intelligence/live'
@@ -1778,6 +1804,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/partner/feedback/': {
+      id: '/_authenticated/partner/feedback/'
+      path: '/feedback'
+      fullPath: '/partner/feedback/'
+      preLoaderRoute: typeof AuthenticatedPartnerFeedbackIndexRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -1946,6 +1979,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBadgeCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/partner/feedback/$id': {
+      id: '/_authenticated/partner/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/partner/feedback/$id'
+      preLoaderRoute: typeof AuthenticatedPartnerFeedbackIdRouteImport
+      parentRoute: typeof AuthenticatedPartnerRoute
+    }
     '/api/public/og/newsletter/chart.png': {
       id: '/api/public/og/newsletter/chart.png'
       path: '/api/public/og/newsletter/chart.png'
@@ -1981,12 +2021,17 @@ interface AuthenticatedPartnerRouteChildren {
   AuthenticatedPartnerEarningsRoute: typeof AuthenticatedPartnerEarningsRoute
   AuthenticatedPartnerSettingsRoute: typeof AuthenticatedPartnerSettingsRoute
   AuthenticatedPartnerIndexRoute: typeof AuthenticatedPartnerIndexRoute
+  AuthenticatedPartnerFeedbackIdRoute: typeof AuthenticatedPartnerFeedbackIdRoute
+  AuthenticatedPartnerFeedbackIndexRoute: typeof AuthenticatedPartnerFeedbackIndexRoute
 }
 
 const AuthenticatedPartnerRouteChildren: AuthenticatedPartnerRouteChildren = {
   AuthenticatedPartnerEarningsRoute: AuthenticatedPartnerEarningsRoute,
   AuthenticatedPartnerSettingsRoute: AuthenticatedPartnerSettingsRoute,
   AuthenticatedPartnerIndexRoute: AuthenticatedPartnerIndexRoute,
+  AuthenticatedPartnerFeedbackIdRoute: AuthenticatedPartnerFeedbackIdRoute,
+  AuthenticatedPartnerFeedbackIndexRoute:
+    AuthenticatedPartnerFeedbackIndexRoute,
 }
 
 const AuthenticatedPartnerRouteWithChildren =
