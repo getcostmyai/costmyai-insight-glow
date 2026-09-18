@@ -232,19 +232,22 @@ async function notifyAuthor(opts: { postId: string; statusLabel?: string; detail
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: post } = await supabaseAdmin
       .from("feedback_posts")
-      .select("title, profiles!feedback_posts_author_id_fkey(email)")
+      .select("title, board, profiles!feedback_posts_author_id_fkey(email)")
       .eq("id", opts.postId)
       .maybeSingle();
     const email = (post as any)?.profiles?.email as string | undefined;
     if (!email) return;
     const { feedbackPostUrl } = await import("./email-links");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
+    // The board decides the link. A partner sent to /feedback/<id> lands on a
+    // board their own post is not on, and the page reads "does not exist".
+    const board: FeedbackBoard = (post as any).board === "partner" ? "partner" : "customer";
     await sendTemplateEmail("feedback-status", email, {
       templateData: {
         postTitle: (post as any).title,
         statusLabel: opts.statusLabel ?? "New reply",
         detail: opts.detail ?? "The CostMyAI team replied to your suggestion.",
-        postUrl: feedbackPostUrl(opts.postId),
+        postUrl: feedbackPostUrl(opts.postId, board),
       },
       idempotencyKey: `feedback-${opts.postId}-${opts.statusLabel ?? "reply"}-${Date.now()}`,
     });
