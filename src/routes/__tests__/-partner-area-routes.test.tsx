@@ -92,6 +92,22 @@ describe("demo system link", () => {
   });
 });
 
+describe("partner feedback link", () => {
+  it("sits in the nav, below Settings and above the demo and workspace links", async () => {
+    getMyPartner.mockResolvedValue(ACTIVE_PARTNER);
+    mount();
+    const link = await waitFor(() => screen.getByRole("link", { name: /^Feedback$/i }));
+    expect(link).toHaveAttribute("href", "/partner/feedback");
+
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((el) => el.getAttribute("href"))
+      .filter(Boolean) as string[];
+    expect(hrefs.indexOf("/partner/settings")).toBeLessThan(hrefs.indexOf("/partner/feedback"));
+    expect(hrefs.indexOf("/partner/feedback")).toBeLessThan(hrefs.indexOf("/demo"));
+  });
+});
+
 describe("partner area routes", () => {
   it.each(["/partner", "/partner/earnings", "/partner/settings"])(
     "shows the not-a-partner state on %s",
