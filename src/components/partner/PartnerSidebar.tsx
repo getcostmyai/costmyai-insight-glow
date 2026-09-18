@@ -50,7 +50,7 @@ export function PartnerSidebar({
   partner: PartnerDashboard["partner"];
   active: PartnerNavKey;
   /**
-   * A partner account does not imply a workspace. Only true — known, positive —
+   * A partner account does not imply a workspace. Only true, known and positive,
    * earns the way-out link; pending or failed reads leave it out, because the
    * alternative lands someone on a workspace signup form.
    */
