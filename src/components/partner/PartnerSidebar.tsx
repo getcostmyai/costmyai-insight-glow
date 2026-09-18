@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Handshake, MonitorPlay, Settings, Wallet } from "lucide-react";
+import {
+  ArrowLeft,
+  Handshake,
+  MessageSquarePlus,
+  MonitorPlay,
+  Settings,
+  Wallet,
+} from "lucide-react";
 
 import type { PartnerDashboard } from "@/lib/partners.functions";
 
@@ -12,12 +19,20 @@ import type { PartnerDashboard } from "@/lib/partners.functions";
  * sidebar's visual language exactly so the two read as one product.
  */
 
-export type PartnerNavKey = "overview" | "earnings" | "settings";
+export type PartnerNavKey = "overview" | "earnings" | "settings" | "feedback";
 
 const nav = [
   { key: "overview" as const, label: "Overview", to: "/partner", icon: Handshake },
   { key: "earnings" as const, label: "Earnings", to: "/partner/earnings", icon: Wallet },
   { key: "settings" as const, label: "Settings", to: "/partner/settings", icon: Settings },
+  // Account-level, so it sits with Settings rather than with the demo and
+  // workspace links, which are things you reach for during a client call.
+  {
+    key: "feedback" as const,
+    label: "Feedback",
+    to: "/partner/feedback",
+    icon: MessageSquarePlus,
+  },
 ];
 
 const STATUS_TONE: Record<string, string> = {
@@ -35,7 +50,7 @@ export function PartnerSidebar({
   partner: PartnerDashboard["partner"];
   active: PartnerNavKey;
   /**
-   * A partner account does not imply a workspace. Only true — known, positive —
+   * A partner account does not imply a workspace. Only true, known and positive,
    * earns the way-out link; pending or failed reads leave it out, because the
    * alternative lands someone on a workspace signup form.
    */

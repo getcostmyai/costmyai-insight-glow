@@ -3,26 +3,51 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import type {
-  FeedbackCommentItem,
-  FeedbackPostDetail,
-  FeedbackPostSummary,
+import {
+  FEEDBACK_BOARDS,
+  FEEDBACK_CATEGORIES,
+  PARTNER_FEEDBACK_CATEGORIES,
+  type FeedbackBoard,
+  type FeedbackCommentItem,
+  type FeedbackPostDetail,
+  type FeedbackPostSummary,
 } from "./feedback";
 
 /**
- * The customer feedback board. Every function here is authenticated and RLS
- * does the heavy lifting: reads are open to any signed-in user, writes are
+ * The two feedback boards. Every function here is authenticated and RLS does
+ * the heavy lifting: the customer board is readable by any signed-in user, the
+ * partner board only by an active partner or a platform admin, writes are
  * scoped to auth.uid(), status changes go through the guarded
  * set_feedback_status() function. Server-side .server helpers are imported
  * inside handlers so nothing server-only reaches the client bundle.
+ *
+ * The `board` argument below selects which board the caller is looking at. It
+ * is never the authority on whether they may see it: the policies on
+ * feedback_posts, feedback_comments and feedback_votes are, and a partner board
+ * read by a customer comes back empty no matter what the client sends. The
+ * schema check here exists so a partner category cannot be filed on the
+ * customer board or the reverse, which the CHECK constraint also refuses.
  */
 
-const postSchema = z.object({
-  title: z.string().trim().min(3).max(120),
-  body: z.string().trim().min(10).max(2000),
-  category: z.enum(["feature", "improvement", "bug", "integration"]),
-});
+const boardSchema = z.enum(FEEDBACK_BOARDS);
 
+const postSchema = z
+  .object({
+    board: boardSchema.default("customer"),
+    title: z.string().trim().min(3).max(120),
+    body: z.string().trim().min(10).max(2000),
+    category: z.string(),
+  })
+  .refine(
+    (v) =>
+      (v.board === "partner"
+        ? (PARTNER_FEEDBACK_CATEGORIES as readonly string[])
+        : (FEEDBACK_CATEGORIES as readonly string[])
+      ).includes(v.category),
+    { message: "That category does not belong to this board.", path: ["category"] },
+  );
+
+const listSchema = z.object({ board: boardSchema.default("customer") });
 const idSchema = z.object({ id: z.string().uuid() });
 const commentSchema = z.object({
   postId: z.string().uuid(),
@@ -35,6 +60,7 @@ const statusSchema = z.object({
 
 type PostRow = {
   id: string;
+  board: FeedbackBoard;
   title: string;
   body: string;
   category: FeedbackPostSummary["category"];
@@ -47,16 +73,21 @@ type PostRow = {
 };
 
 const POST_SELECT =
-  "id, title, body, category, status, author_id, created_at, profiles!feedback_posts_author_id_fkey(full_name), feedback_votes(count), feedback_comments(count)";
+  "id, board, title, body, category, status, author_id, created_at, profiles!feedback_posts_author_id_fkey(full_name), feedback_votes(count), feedback_comments(count)";
+
+/** Who the person is, on the board they are standing on, when they have no name set. */
+const anonymousAuthor = (board: FeedbackBoard) => (board === "partner" ? "A partner" : "A customer");
 
 function toSummary(row: PostRow, myVotes: Set<string>, userId: string): FeedbackPostSummary {
+  const board: FeedbackBoard = row.board === "partner" ? "partner" : "customer";
   return {
     id: row.id,
+    board,
     title: row.title,
     body: row.body,
     category: row.category,
     status: row.status,
-    authorName: row.profiles?.full_name?.trim() || "A customer",
+    authorName: row.profiles?.full_name?.trim() || anonymousAuthor(board),
     mine: row.author_id === userId,
     voteCount: row.feedback_votes[0]?.count ?? 0,
     commentCount: row.feedback_comments[0]?.count ?? 0,
@@ -75,14 +106,19 @@ async function myVoteSet(supabase: any, userId: string): Promise<Set<string>> {
 
 export const listFeedbackPosts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<FeedbackPostSummary[]> => {
+  .inputValidator((data) => listSchema.parse(data ?? {}))
+  .handler(async ({ data, context }): Promise<FeedbackPostSummary[]> => {
     const { supabase, userId } = context;
-    const [{ data, error }, votes] = await Promise.all([
-      supabase.from("feedback_posts").select(POST_SELECT).order("created_at", { ascending: false }),
+    const [{ data: rows, error }, votes] = await Promise.all([
+      supabase
+        .from("feedback_posts")
+        .select(POST_SELECT)
+        .eq("board", data.board)
+        .order("created_at", { ascending: false }),
       myVoteSet(supabase, userId),
     ]);
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as PostRow[]).map((row) => toSummary(row, votes, userId));
+    return ((rows ?? []) as unknown as PostRow[]).map((row) => toSummary(row, votes, userId));
   });
 
 export const getFeedbackPost = createServerFn({ method: "GET" })
@@ -103,6 +139,8 @@ export const getFeedbackPost = createServerFn({ method: "GET" })
     if (cErr) throw new Error(cErr.message);
     if (!post) throw new Error("Suggestion not found");
 
+    const summary = toSummary(post as unknown as PostRow, votes, userId);
+
     const commentItems: FeedbackCommentItem[] = (
       (comments ?? []) as unknown as {
         id: string;
@@ -115,13 +153,13 @@ export const getFeedbackPost = createServerFn({ method: "GET" })
     ).map((c) => ({
       id: c.id,
       body: c.body,
-      authorName: c.profiles?.full_name?.trim() || "A customer",
+      authorName: c.profiles?.full_name?.trim() || anonymousAuthor(summary.board),
       isAdminReply: c.is_admin_reply,
       mine: c.author_id === userId,
       createdAt: c.created_at,
     }));
 
-    return { ...toSummary(post as unknown as PostRow, votes, userId), comments: commentItems };
+    return { ...summary, comments: commentItems };
   });
 
 export const createFeedbackPost = createServerFn({ method: "POST" })
@@ -134,7 +172,15 @@ export const createFeedbackPost = createServerFn({ method: "POST" })
 
     const { data: row, error } = await supabase
       .from("feedback_posts")
-      .insert({ title: data.title, body: data.body, category: data.category, author_id: userId })
+      // `board` is offered, never trusted: the INSERT policy refuses
+      // board = 'partner' from anyone who is not an active partner.
+      .insert({
+        board: data.board,
+        title: data.title,
+        body: data.body,
+        category: data.category,
+        author_id: userId,
+      })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
@@ -186,19 +232,22 @@ async function notifyAuthor(opts: { postId: string; statusLabel?: string; detail
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: post } = await supabaseAdmin
       .from("feedback_posts")
-      .select("title, profiles!feedback_posts_author_id_fkey(email)")
+      .select("title, board, profiles!feedback_posts_author_id_fkey(email)")
       .eq("id", opts.postId)
       .maybeSingle();
     const email = (post as any)?.profiles?.email as string | undefined;
     if (!email) return;
     const { feedbackPostUrl } = await import("./email-links");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
+    // The board decides the link. A partner sent to /feedback/<id> lands on a
+    // board their own post is not on, and the page reads "does not exist".
+    const board: FeedbackBoard = (post as any).board === "partner" ? "partner" : "customer";
     await sendTemplateEmail("feedback-status", email, {
       templateData: {
         postTitle: (post as any).title,
         statusLabel: opts.statusLabel ?? "New reply",
         detail: opts.detail ?? "The CostMyAI team replied to your suggestion.",
-        postUrl: feedbackPostUrl(opts.postId),
+        postUrl: feedbackPostUrl(opts.postId, board),
       },
       idempotencyKey: `feedback-${opts.postId}-${opts.statusLabel ?? "reply"}-${Date.now()}`,
     });

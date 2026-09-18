@@ -51,6 +51,11 @@ describe("outbound email links", () => {
     );
     expect(newsletterArchiveUrl()).toBe("https://www.costmyai.com/intelligence");
     expect(feedbackPostUrl("abc")).toBe("https://www.costmyai.com/feedback/abc");
+    expect(feedbackPostUrl("abc", "customer")).toBe("https://www.costmyai.com/feedback/abc");
+    // A partner post lives on the partner board, so the email points there.
+    expect(feedbackPostUrl("abc", "partner")).toBe(
+      "https://www.costmyai.com/partner/feedback/abc",
+    );
   });
 
   it("keeps an unsubscribe link resolvable even with no token", () => {
