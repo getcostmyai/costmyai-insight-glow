@@ -43,4 +43,12 @@ export const newsletterUnsubscribeUrl = (token?: string | null) =>
 
 export const newsletterArchiveUrl = () => publicUrl("/intelligence");
 
-export const feedbackPostUrl = (postId: string) => publicUrl(`/feedback/${postId}`);
+/**
+ * There are two feedback boards and they live at different paths. A status
+ * email about a partner post that points at the customer board sends the
+ * partner to a page their post is not on, so the board is part of the link.
+ */
+export const feedbackPostUrl = (postId: string, board: "customer" | "partner" = "customer") =>
+  board === "partner"
+    ? publicUrl(`/partner/feedback/${postId}`)
+    : publicUrl(`/feedback/${postId}`);
