@@ -153,13 +153,13 @@ export const getFeedbackPost = createServerFn({ method: "GET" })
     ).map((c) => ({
       id: c.id,
       body: c.body,
-      authorName: c.profiles?.full_name?.trim() || "A customer",
+      authorName: c.profiles?.full_name?.trim() || anonymousAuthor(summary.board),
       isAdminReply: c.is_admin_reply,
       mine: c.author_id === userId,
       createdAt: c.created_at,
     }));
 
-    return { ...toSummary(post as unknown as PostRow, votes, userId), comments: commentItems };
+    return { ...summary, comments: commentItems };
   });
 
 export const createFeedbackPost = createServerFn({ method: "POST" })
