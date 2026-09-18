@@ -60,6 +60,7 @@ const statusSchema = z.object({
 
 type PostRow = {
   id: string;
+  board: FeedbackBoard;
   title: string;
   body: string;
   category: FeedbackPostSummary["category"];
@@ -72,16 +73,21 @@ type PostRow = {
 };
 
 const POST_SELECT =
-  "id, title, body, category, status, author_id, created_at, profiles!feedback_posts_author_id_fkey(full_name), feedback_votes(count), feedback_comments(count)";
+  "id, board, title, body, category, status, author_id, created_at, profiles!feedback_posts_author_id_fkey(full_name), feedback_votes(count), feedback_comments(count)";
+
+/** Who the person is, on the board they are standing on, when they have no name set. */
+const anonymousAuthor = (board: FeedbackBoard) => (board === "partner" ? "A partner" : "A customer");
 
 function toSummary(row: PostRow, myVotes: Set<string>, userId: string): FeedbackPostSummary {
+  const board: FeedbackBoard = row.board === "partner" ? "partner" : "customer";
   return {
     id: row.id,
+    board,
     title: row.title,
     body: row.body,
     category: row.category,
     status: row.status,
-    authorName: row.profiles?.full_name?.trim() || "A customer",
+    authorName: row.profiles?.full_name?.trim() || anonymousAuthor(board),
     mine: row.author_id === userId,
     voteCount: row.feedback_votes[0]?.count ?? 0,
     commentCount: row.feedback_comments[0]?.count ?? 0,
