@@ -139,6 +139,8 @@ export const getFeedbackPost = createServerFn({ method: "GET" })
     if (cErr) throw new Error(cErr.message);
     if (!post) throw new Error("Suggestion not found");
 
+    const summary = toSummary(post as unknown as PostRow, votes, userId);
+
     const commentItems: FeedbackCommentItem[] = (
       (comments ?? []) as unknown as {
         id: string;
