@@ -172,7 +172,15 @@ export const createFeedbackPost = createServerFn({ method: "POST" })
 
     const { data: row, error } = await supabase
       .from("feedback_posts")
-      .insert({ title: data.title, body: data.body, category: data.category, author_id: userId })
+      // `board` is offered, never trusted: the INSERT policy refuses
+      // board = 'partner' from anyone who is not an active partner.
+      .insert({
+        board: data.board,
+        title: data.title,
+        body: data.body,
+        category: data.category,
+        author_id: userId,
+      })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
