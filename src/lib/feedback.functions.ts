@@ -118,7 +118,7 @@ export const listFeedbackPosts = createServerFn({ method: "GET" })
       myVoteSet(supabase, userId),
     ]);
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as PostRow[]).map((row) => toSummary(row, votes, userId));
+    return ((rows ?? []) as unknown as PostRow[]).map((row) => toSummary(row, votes, userId));
   });
 
 export const getFeedbackPost = createServerFn({ method: "GET" })
