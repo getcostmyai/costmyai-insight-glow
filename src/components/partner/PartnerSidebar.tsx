@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Handshake, MonitorPlay, Settings, Wallet } from "lucide-react";
+import {
+  ArrowLeft,
+  Handshake,
+  MessageSquarePlus,
+  MonitorPlay,
+  Settings,
+  Wallet,
+} from "lucide-react";
 
 import type { PartnerDashboard } from "@/lib/partners.functions";
 
