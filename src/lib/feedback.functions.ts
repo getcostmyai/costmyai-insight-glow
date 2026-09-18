@@ -3,26 +3,51 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import type {
-  FeedbackCommentItem,
-  FeedbackPostDetail,
-  FeedbackPostSummary,
+import {
+  FEEDBACK_BOARDS,
+  FEEDBACK_CATEGORIES,
+  PARTNER_FEEDBACK_CATEGORIES,
+  type FeedbackBoard,
+  type FeedbackCommentItem,
+  type FeedbackPostDetail,
+  type FeedbackPostSummary,
 } from "./feedback";
 
 /**
- * The customer feedback board. Every function here is authenticated and RLS
- * does the heavy lifting: reads are open to any signed-in user, writes are
+ * The two feedback boards. Every function here is authenticated and RLS does
+ * the heavy lifting: the customer board is readable by any signed-in user, the
+ * partner board only by an active partner or a platform admin, writes are
  * scoped to auth.uid(), status changes go through the guarded
  * set_feedback_status() function. Server-side .server helpers are imported
  * inside handlers so nothing server-only reaches the client bundle.
+ *
+ * The `board` argument below selects which board the caller is looking at. It
+ * is never the authority on whether they may see it: the policies on
+ * feedback_posts, feedback_comments and feedback_votes are, and a partner board
+ * read by a customer comes back empty no matter what the client sends. The
+ * schema check here exists so a partner category cannot be filed on the
+ * customer board or the reverse, which the CHECK constraint also refuses.
  */
 
-const postSchema = z.object({
-  title: z.string().trim().min(3).max(120),
-  body: z.string().trim().min(10).max(2000),
-  category: z.enum(["feature", "improvement", "bug", "integration"]),
-});
+const boardSchema = z.enum(FEEDBACK_BOARDS);
 
+const postSchema = z
+  .object({
+    board: boardSchema.default("customer"),
+    title: z.string().trim().min(3).max(120),
+    body: z.string().trim().min(10).max(2000),
+    category: z.string(),
+  })
+  .refine(
+    (v) =>
+      (v.board === "partner"
+        ? (PARTNER_FEEDBACK_CATEGORIES as readonly string[])
+        : (FEEDBACK_CATEGORIES as readonly string[])
+      ).includes(v.category),
+    { message: "That category does not belong to this board.", path: ["category"] },
+  );
+
+const listSchema = z.object({ board: boardSchema.default("customer") });
 const idSchema = z.object({ id: z.string().uuid() });
 const commentSchema = z.object({
   postId: z.string().uuid(),
