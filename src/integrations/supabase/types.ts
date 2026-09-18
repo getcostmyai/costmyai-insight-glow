@@ -491,6 +491,7 @@ export type Database = {
       feedback_posts: {
         Row: {
           author_id: string
+          board: string
           body: string
           category: string
           created_at: string
@@ -501,6 +502,7 @@ export type Database = {
         }
         Insert: {
           author_id: string
+          board?: string
           body: string
           category?: string
           created_at?: string
@@ -511,6 +513,7 @@ export type Database = {
         }
         Update: {
           author_id?: string
+          board?: string
           body?: string
           category?: string
           created_at?: string
@@ -2904,6 +2907,7 @@ export type Database = {
       }
       benchmark_eligible_companies: { Args: never; Returns: number }
       benchmark_k_floor: { Args: never; Returns: number }
+      can_see_feedback_board: { Args: { _board: string }; Returns: boolean }
       claim_partner_membership: { Args: never; Returns: string }
       clawback_commission: {
         Args: {
