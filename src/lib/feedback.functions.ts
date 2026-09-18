@@ -106,10 +106,15 @@ async function myVoteSet(supabase: any, userId: string): Promise<Set<string>> {
 
 export const listFeedbackPosts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<FeedbackPostSummary[]> => {
+  .inputValidator((data) => listSchema.parse(data ?? {}))
+  .handler(async ({ data, context }): Promise<FeedbackPostSummary[]> => {
     const { supabase, userId } = context;
-    const [{ data, error }, votes] = await Promise.all([
-      supabase.from("feedback_posts").select(POST_SELECT).order("created_at", { ascending: false }),
+    const [{ data: rows, error }, votes] = await Promise.all([
+      supabase
+        .from("feedback_posts")
+        .select(POST_SELECT)
+        .eq("board", data.board)
+        .order("created_at", { ascending: false }),
       myVoteSet(supabase, userId),
     ]);
     if (error) throw new Error(error.message);
